@@ -1,0 +1,15 @@
+{
+  "name": "reform-library",
+  "version": "1.0.0",
+  "description": "reform collective utilities",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo No need to build this package directly, let the parent package do it"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^4.9.5"
+  }
+}
