@@ -1,0 +1,95 @@
+import { MouseEventHandler } from "react"
+
+import { Link } from "gatsby"
+
+import { Transitions } from "."
+import { loadPage } from "./TransitionUtils"
+
+export interface UniversalLinkProps {
+  /**
+   * the page to navigate to when clicked
+   */
+  to?: string
+  /**
+   * the transition to use when navigating
+   */
+  transition?: Transitions
+  openInNewTab?: boolean
+  children: React.ReactNode
+  className?: string
+  onMouseEnter?: MouseEventHandler
+  onMouseLeave?: MouseEventHandler
+  onClick?: MouseEventHandler
+  type?: "submit"
+  forwardRef?: React.Ref<HTMLAnchorElement & HTMLButtonElement & Link<unknown>>
+}
+
+/**
+ * a link that navigates when clicked, using the specified transition
+ * @returns
+ */
+export default function UniversalLink({
+  to = "",
+  transition = "slide",
+  openInNewTab = false,
+  children,
+  className = "",
+  onMouseEnter = undefined,
+  onMouseLeave = undefined,
+  onClick = undefined,
+  type = undefined,
+  forwardRef = undefined,
+}: UniversalLinkProps) {
+  const internal = /^\/(?!\/)/.test(to)
+
+  const handleClick: React.MouseEventHandler = e => {
+    e.preventDefault()
+
+    if (openInNewTab || !internal) {
+      window.open(to, "_blank")
+    } else {
+      loadPage(to, transition).catch((err: string) => {
+        throw new Error(err)
+      })
+    }
+  }
+
+  if (onClick || type) {
+    return (
+      <button
+        className={className}
+        onClick={onClick}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        type={type === "submit" ? "submit" : "button"}
+        ref={forwardRef}
+      >
+        {children}
+      </button>
+    )
+  }
+
+  return internal ? (
+    <Link
+      to={to}
+      onClick={handleClick}
+      className={className}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      ref={forwardRef}
+    >
+      {children}
+    </Link>
+  ) : (
+    <a
+      href={to}
+      onClick={handleClick}
+      className={className}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      ref={forwardRef}
+    >
+      {children}
+    </a>
+  )
+}
