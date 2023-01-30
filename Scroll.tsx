@@ -44,7 +44,7 @@ export const useIsSmooth = () => {
 
   // if the device is mobile, set the initial value to false
   useEffect(() => {
-    const hover = window.matchMedia("(hover: hover)")
+    let hover = window.matchMedia("(hover: hover)")
     if (!hover.matches) {
       setSmooth(false)
     }
