@@ -44,11 +44,11 @@ export const useIsSmooth = () => {
 
   // if the device is mobile, set the initial value to false
   useEffect(() => {
-    let hover = window.matchMedia("(hover: hover)")
+    const hover = window.matchMedia("(hover: hover)")
     if (!hover.matches) {
       setSmooth(false)
     }
-  }, [])
+  }, [ScrollSmoother])
 
   return smooth
 }
