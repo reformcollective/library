@@ -156,6 +156,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: generated-types
+        continue-on-error: true
       - uses: sibiraj-s/action-eslint@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }} # Optional
@@ -180,5 +181,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: generated-types
+        continue-on-error: true
       - name: Check types
         run: npx tsc --noEmit
