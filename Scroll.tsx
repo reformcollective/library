@@ -48,7 +48,7 @@ export const useIsSmooth = () => {
     if (!hover.matches) {
       setSmooth(false)
     }
-  }, [ScrollSmoother])
+  }, [])
 
   return smooth
 }
