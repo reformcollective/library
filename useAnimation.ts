@@ -28,17 +28,21 @@ const useAnimation = (
     recreateOnResize?: boolean
   }
 ) => {
-  const [resizeSignal, setResizeSignal] = useState(0)
+  const [resizeSignal, setResizeSignal] = useState(-1)
 
   useEffect(() => {
     if (options?.recreateOnResize) {
       const onResize = () => {
         const currentScroll = ScrollSmoother.get()?.scrollTop()
-        setResizeSignal(window.innerWidth)
-        setTimeout(() => {
-          if (currentScroll)
-            ScrollSmoother.get()?.scrollTo(currentScroll, false)
-        }, 1)
+        setResizeSignal(previous => {
+          const newValue = Math.round(window.innerWidth / 10)
+          if (newValue !== previous && previous !== -1)
+            setTimeout(() => {
+              if (currentScroll)
+                ScrollSmoother.get()?.scrollTo(currentScroll, false)
+            }, 1)
+          return newValue
+        })
       }
       window.addEventListener("resize", onResize)
       return () => window.removeEventListener("resize", onResize)
