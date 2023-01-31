@@ -34,11 +34,15 @@ const useAnimation = (
     if (options?.recreateOnResize) {
       const onResize = () => {
         const currentScroll = ScrollSmoother.get()?.scrollTop()
-        setResizeSignal(window.innerWidth)
-        setTimeout(() => {
-          if (currentScroll)
-            ScrollSmoother.get()?.scrollTo(currentScroll, false)
-        }, 1)
+        setResizeSignal(previous => {
+          const newValue = Math.round(window.innerWidth / 10)
+          if (newValue !== previous && previous !== 0)
+            setTimeout(() => {
+              if (currentScroll)
+                ScrollSmoother.get()?.scrollTo(currentScroll, false)
+            }, 1)
+          return newValue
+        })
       }
       window.addEventListener("resize", onResize)
       return () => window.removeEventListener("resize", onResize)
