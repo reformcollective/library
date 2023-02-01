@@ -76,8 +76,6 @@ export default function CustomTextOverflow({
 
       const newText = `${textBeforeEllipsis}${ellipsis}${textAfterEllipsis}`
 
-      console.log("shrinking text to", newText)
-
       wrapper.innerText = newText
       if (getNumberOfLines(wrapper) <= maxLines) return
       if (numberOfCharsToRemove >= children.length) return
@@ -99,7 +97,6 @@ export default function CustomTextOverflow({
       window,
       "resize",
       () => {
-        console.log("invalidating text measurement")
         setRefreshSignal((s) => s + 1)
       },
       100
