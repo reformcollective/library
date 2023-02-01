@@ -97,7 +97,7 @@ export default function CustomTextOverflow({
       window,
       "resize",
       () => {
-        setRefreshSignal((s) => s + 1)
+        setRefreshSignal(s => s + 1)
       },
       100
     )
