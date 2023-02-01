@@ -1,6 +1,6 @@
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
-import useAnimation from "library/useAnimation"
+import { addDebouncedEventListener } from "./functions"
 
 interface CustomTextOverflowProps {
   /**
@@ -38,60 +38,74 @@ export default function CustomTextOverflow({
   truncatePosition = -1,
 }: CustomTextOverflowProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const [refreshSignal, setRefreshSignal] = useState(0)
 
   /**
    * measure the number of lines taken up by the text, and recursively
    * shorten the text until it fits within the given number of lines
    */
-  useAnimation(
-    () => {
-      const wrapper = wrapperRef.current
-      if (!wrapper) return
-      const cleanup = () => {
+  useEffect(() => {
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
+    const lines = getNumberOfLines(wrapperRef.current)
+
+    if (lines <= maxLines) {
+      wrapper.innerText = children
+      return () => {
         wrapper.innerText = `${children}${ellipsis}`
       }
-      const lines = getNumberOfLines(wrapperRef.current)
-
-      if (lines <= maxLines) {
-        wrapper.innerText = children
-        return cleanup
-      }
-
-      // recursively shrink the text until it fits
-      const shrinkText = (numberOfCharsToRemove: number) => {
-        // where we shrink the text needs to change if the truncate position is pos/neg
-        const shrinkBefore = truncatePosition < 0
-        // we need to use slightly different math to put the ellipses at the very end
-        const ellipsisAtEnd = truncatePosition === 0
-        const textBeforeEllipsis = ellipsisAtEnd
-          ? children.slice(0, children.length - numberOfCharsToRemove)
-          : children.slice(
-              0,
-              truncatePosition - (shrinkBefore ? numberOfCharsToRemove : 0)
-            )
-        const textAfterEllipsis = ellipsisAtEnd
-          ? ""
-          : children.slice(
-              truncatePosition + (shrinkBefore ? 0 : numberOfCharsToRemove)
-            )
-
-        const newText = `${textBeforeEllipsis}${ellipsis}${textAfterEllipsis}`
-
-        wrapper.innerText = newText
-        if (getNumberOfLines(wrapper) <= maxLines) return
-        if (numberOfCharsToRemove >= children.length) return
-        shrinkText(numberOfCharsToRemove + 1)
-      }
-
-      shrinkText(1)
-
-      return cleanup
-    },
-    [children, ellipsis, maxLines, truncatePosition],
-    {
-      recreateOnResize: true,
     }
-  )
+
+    // recursively shrink the text until it fits
+    const shrinkText = (numberOfCharsToRemove: number) => {
+      // where we shrink the text needs to change if the truncate position is pos/neg
+      const shrinkBefore = truncatePosition < 0
+      // we need to use slightly different math to put the ellipses at the very end
+      const ellipsisAtEnd = truncatePosition === 0
+      const textBeforeEllipsis = ellipsisAtEnd
+        ? children.slice(0, children.length - numberOfCharsToRemove)
+        : children.slice(
+            0,
+            truncatePosition - (shrinkBefore ? numberOfCharsToRemove : 0)
+          )
+      const textAfterEllipsis = ellipsisAtEnd
+        ? ""
+        : children.slice(
+            truncatePosition + (shrinkBefore ? 0 : numberOfCharsToRemove)
+          )
+
+      const newText = `${textBeforeEllipsis}${ellipsis}${textAfterEllipsis}`
+
+      console.log("shrinking text to", newText)
+
+      wrapper.innerText = newText
+      if (getNumberOfLines(wrapper) <= maxLines) return
+      if (numberOfCharsToRemove >= children.length) return
+      shrinkText(numberOfCharsToRemove + 1)
+    }
+
+    shrinkText(1)
+
+    return () => {
+      wrapper.innerText = `${children}${ellipsis}`
+    }
+  }, [children, ellipsis, maxLines, truncatePosition, refreshSignal])
+
+  /**
+   * invalidate the text measurement when the window is resized
+   */
+  useEffect(() => {
+    const removeListener = addDebouncedEventListener(
+      window,
+      "resize",
+      () => {
+        console.log("invalidating text measurement")
+        setRefreshSignal((s) => s + 1)
+      },
+      100
+    )
+    return removeListener
+  }, [])
 
   // prompt a CSS solution if possible
   if (ellipsis === "..." && truncatePosition === 0)
@@ -120,5 +134,5 @@ const getNumberOfLines = (element: HTMLElement) => {
   const lineHeight = parseFloat(
     window.getComputedStyle(element).getPropertyValue("line-height")
   )
-  return Math.ceil(height / lineHeight)
+  return Math.round(height / lineHeight)
 }
