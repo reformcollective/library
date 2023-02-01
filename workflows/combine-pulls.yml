@@ -1,11 +1,7 @@
 name: Package Updater
-# run daily at noon MST
 on:
-  schedule:
-    - cron: "0 19 * * *"
   workflow_dispatch:
   workflow_call:
-    secrets: inherit
 
 jobs:
   Update_Packages:

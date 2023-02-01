@@ -1,7 +1,6 @@
 name: Code Checks
 on:
   workflow_call:
-    secrets: inherit
 
 jobs:
   Automatically_Format:
