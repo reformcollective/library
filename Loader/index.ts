@@ -1,6 +1,9 @@
 import { sleep } from "library/functions"
 import { TransitionNames } from "libraryConfig"
 
+/**
+ * transitionNames are configured in src/libraryConfig.ts
+ */
 export type Transitions = TransitionNames
 export type InternalTransitions = "initial" | "any" | "none"
 
