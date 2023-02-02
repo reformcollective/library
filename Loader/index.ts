@@ -1,6 +1,7 @@
 import { sleep } from "library/functions"
+import { TransitionNames } from "libraryConfig"
 
-export type Transitions = "slide"
+export type Transitions = TransitionNames
 export type InternalTransitions = "initial" | "any" | "none"
 
 interface EventMaps {
