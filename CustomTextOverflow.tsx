@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react"
 
-import { addDebouncedEventListener } from "./functions"
-
 interface CustomTextOverflowProps {
   /**
    * the text to display
@@ -93,15 +91,24 @@ export default function CustomTextOverflow({
    * invalidate the text measurement when the window is resized
    */
   useEffect(() => {
-    const removeListener = addDebouncedEventListener(
-      window,
-      "resize",
-      () => {
-        setRefreshSignal(s => s + 1)
-      },
-      100
-    )
-    return removeListener
+    let timeout: NodeJS.Timeout | undefined
+    const handleResize = () => {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => {
+        setRefreshSignal(p => p + 1)
+      })
+    }
+
+    const observer = new ResizeObserver(handleResize)
+    if (wrapperRef.current instanceof HTMLElement)
+      getAllParents(wrapperRef.current, 10).forEach(parent => {
+        observer.observe(parent)
+      })
+
+    return () => {
+      observer.disconnect()
+      clearTimeout(timeout)
+    }
   }, [])
 
   // prompt a CSS solution if possible
@@ -132,4 +139,17 @@ const getNumberOfLines = (element: HTMLElement) => {
     window.getComputedStyle(element).getPropertyValue("line-height")
   )
   return Math.round(height / lineHeight)
+}
+
+/**
+ * given an element, get all of its parents from nearest to farthest
+ */
+const getAllParents = (element: HTMLElement, limit: number) => {
+  const parents = []
+  let current = element.parentElement
+  while (current && parents.length < limit) {
+    parents.push(current)
+    current = current.parentElement
+  }
+  return parents
 }
