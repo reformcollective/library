@@ -13,6 +13,7 @@ jobs:
         with:
           ref: main
           token: ${{ secrets.FORMATTER_TOKEN }}
+          submodules: recursive
       # run npm-check-updates to update package.json and save the output
       - name: Update package.json
         run: |
