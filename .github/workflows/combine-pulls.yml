@@ -24,7 +24,7 @@ jobs:
       # if there aren't any differences, exit the workflow
       - name: Diff package.json
         run: |
-          if git diff --exit-code main package-updates -- package.json; then
+          if git diff --exit-code main origin/package-updates -- package.json; then
             echo "No changes to package.json"
             echo "NO_CHANGES=true" >> $GITHUB_ENV
           fi
