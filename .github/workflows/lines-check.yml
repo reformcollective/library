@@ -1,0 +1,90 @@
+# best branch protections require a check to pass before merging
+# which is really the only reason i have this workflow
+name: Line Check
+on:
+  pull_request:
+
+jobs:
+  Check_Lines:
+    # only run if not authored by dependabot
+    if: github.actor != 'dependabot[bot]'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          submodules: recursive
+      - name: Get lines changed
+        id: lines
+        run: |
+          echo "::set-output name=num_lines::$(git diff --numstat origin/${{ github.base_ref }} HEAD | grep -E "\.ts$|\.tsx$" | grep -v ".d.ts" | awk '{print $1}' | awk '{s+=$1} END {print s}')"
+      - name: Log lines changed
+        run: echo "${{ steps.lines.outputs.num_lines }} lines changed"
+      - name: Find Comment
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: changed
+      - name: Comment on PR (Soft Limit)
+        # comment on the PR if the number of lines changed is greater than 400 and less than 800
+        # if a previous comment exists, edit it
+        if: steps.lines.outputs.num_lines > 400 && steps.lines.outputs.num_lines < 800
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: This PR has ${{ steps.lines.outputs.num_lines }} lines of typescript code changed. Please keep PRs short and focused.
+          edit-mode: replace
+      - name: Comment on PR (Hard Limit)
+        # comment on the PR if the number of lines changed is greater than or equal to 800
+        # if a previous comment exists, edit it
+        if: steps.lines.outputs.num_lines >= 800
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            This PR is over the hard limit of 800 lines of typescript code changed, with ${{ steps.lines.outputs.num_lines }} lines changed. Please split this PR into multiple smaller PRs if possible.
+
+            <details>
+            <summary>How do I split a PR?</summary>
+            <br>
+            How to split a PR (Method 1):
+            <br>
+            <ol>
+              <li>Delete or reset all the files you don't want to change in this PR</li>
+              <li>Commit and push. This will create a new commit on this PR</li>
+              <li>Create a new branch with <code>git branch new-branch-name</code></li>
+              <li>Checkout the new branch with <code>git checkout new-branch-name</code></li>
+              <li>Revert the last commit with <code>git revert HEAD</code></li>
+              <li>You should now have two branches, and can PR them separately</li>
+            </ol>
+            <br>
+            How to split a PR (Method 2):
+            <br>
+            <ol>
+              <li>Hard reset to a previous commit with <code>git reset --hard <commit-hash></code></li>
+              <li>Create a new branch with <code>git branch new-branch-name</code></li>
+              <li>Checkout the new branch with <code>git checkout new-branch-name</code></li>
+              <li>Push the new branch with <code>git push -u origin new-branch-name</code></li>
+              <li>You should now have two branches, and can PR them separately</li>
+            </ol>
+            </details>
+          edit-mode: replace
+      # - name: Fail Check if over Hard Limit
+      #   # fail the check if the number of lines changed is greater than or equal to 800
+      #   if: steps.lines.outputs.num_lines >= 800
+      #   run: exit 1
+      - name: Update if comment exists
+        # delete the old comment if the number of lines changed is less than 400
+        # only if the comment exists
+        if: steps.lines.outputs.num_lines <= 400 && steps.fc.outputs.comment-id != ''
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: This PR is below the line limit with ${{ steps.lines.outputs.num_lines }} lines of typescript code changed. Awesome!
+          edit-mode: replace
