@@ -8,7 +8,7 @@ jobs:
   Check_Lines:
     # only run if not authored by dependabot
     if: github.actor != 'dependabot[bot]'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
