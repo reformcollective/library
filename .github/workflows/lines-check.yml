@@ -3,6 +3,7 @@
 name: Line Check
 on:
   pull_request:
+  merge_group:
 
 jobs:
   Check_Lines:
