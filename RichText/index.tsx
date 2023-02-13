@@ -1,11 +1,10 @@
-import React from "react"
 
 import { Options } from "@contentful/rich-text-react-renderer"
 import { BLOCKS, MARKS, INLINES } from "@contentful/rich-text-types"
 import { PageProps } from "gatsby"
 import { IGatsbyImageData } from "gatsby-plugin-image"
 
-import renderContent from "utils/renderContent"
+import renderContent from "./renderContent"
 
 import RichLink from "./modules/Link"
 import {
