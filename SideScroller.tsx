@@ -2,6 +2,9 @@ import "./styles.css";
 import styled from "styled-components";
 import { useState, useEffect } from "react";
 import gsap, { ScrollTrigger } from "gsap/all";
+import useCanHover from "library/canHover"
+import { usePinType } from "library/Scroll"
+import useAnimation from "library/useAnimation"
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -12,6 +15,9 @@ export default function App() {
   const [innerEl, setInnerEl] = useState<HTMLDivElement | null>(null);
   const [innerWidth, setInnerWidth] = useState(0);
   const [wrapperHeight, setWrapperHeight] = useState(0);
+
+  const pinType = usePinType()
+  const touchscreenMode = !useCanHover()
 
   useEffect(() => {
     if (innerEl) {
@@ -29,7 +35,9 @@ export default function App() {
     }
   }, [setWrapperHeight, innerWidth]);
 
-  useEffect(() => {
+  useAnimation(() => {
+    if (touchscreenMode) return
+
     if (wrapperEl && innerEl && innerWidth) {
       const x = -(innerWidth > window.innerWidth
         ? innerWidth - window.innerWidth
@@ -42,11 +50,12 @@ export default function App() {
           start: "top top",
           end: "bottom bottom",
           pin: innerEl,
+          pinType,
           scrub: true
         }
       });
     }
-  }, [wrapperEl, innerEl, innerWidth]);
+  }, [wrapperEl, innerEl, innerWidth, pinType, touchscreenMode]);
 
   const cards = DATA.map((item) => <Card key={item} />);
 
@@ -63,6 +72,11 @@ const Wrapper = styled.section<{height: number}>`
   overflow: hidden;
   width: 100%;
   height: ${(props) => props.height}px;
+
+  @media (hover: none) {
+    height: fit-content;
+    overflow-x: auto;
+  }
 `;
 
 const Inner = styled.div`
@@ -75,6 +89,11 @@ const Inner = styled.div`
   top: 0;
   left: 0;
   padding: 0px 200px;
+
+  @media (hover: none) {
+    width: fit-content;
+    height: fit-content;
+  }
 `;
 
 const Card = styled.div`
