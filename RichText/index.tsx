@@ -1,10 +1,7 @@
-
 import { Options } from "@contentful/rich-text-react-renderer"
 import { BLOCKS, MARKS, INLINES } from "@contentful/rich-text-types"
-import { PageProps } from "gatsby"
+// import { PageProps } from "gatsby"
 import { IGatsbyImageData } from "gatsby-plugin-image"
-
-import renderContent from "./renderContent"
 
 import RichLink from "./modules/Link"
 import {
@@ -26,15 +23,11 @@ import {
   H5,
   H6,
 } from "./modules/StyledComponents"
+import renderContent from "./renderContent"
 
-type Props = {
-  content:
-    | NonNullable<
-        PageProps<Queries.BlogArticleQuery>["data"]["contentfulBlogArticle"]
-      >["content"]
-    | NonNullable<
-        PageProps<Queries.CaseStudyQuery>["data"]["contentfulCaseStudy"]
-      >["content"]
+// TODO: YOU BETTER UPDATE THIS
+interface RichTextProps {
+  content: unknown
 }
 
 /**
@@ -143,6 +136,8 @@ const options: Options = {
   },
 }
 
-export default function RichText({ content }: Props) {
+export default function RichText({ content }: RichTextProps) {
+  // TODO: GET RID OF THIS CHECK AND UPDATE TYPE
+  // eslint-disable-next-line
   return <>{renderContent(content, options)}</>
 }

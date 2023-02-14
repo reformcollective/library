@@ -2,7 +2,7 @@ import styled from "styled-components"
 
 import UniversalLink from "library/Loader/UniversalLink"
 
-type Props = {
+interface Props {
   data: {
     url: string
     newTab: boolean
