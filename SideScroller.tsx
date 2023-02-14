@@ -51,7 +51,6 @@ export default function App() {
           pin: innerEl,
           pinType,
           scrub: true,
-          markers: true
         }
       });
     }
