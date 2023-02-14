@@ -1,4 +1,3 @@
-import "./styles.css";
 import styled from "styled-components";
 import { useState, useEffect } from "react";
 import gsap, { ScrollTrigger } from "gsap/all";
@@ -38,7 +37,7 @@ export default function App() {
   useAnimation(() => {
     if (touchscreenMode) return
 
-    if (wrapperEl && innerEl && innerWidth) {
+    if (wrapperEl && innerEl && innerWidth && wrapperHeight) {
       const x = -(innerWidth > window.innerWidth
         ? innerWidth - window.innerWidth
         : 0);
@@ -51,11 +50,11 @@ export default function App() {
           end: "bottom bottom",
           pin: innerEl,
           pinType,
-          scrub: true
+          scrub: true,
         }
       });
     }
-  }, [wrapperEl, innerEl, innerWidth, pinType, touchscreenMode]);
+  }, [wrapperEl, innerEl, innerWidth, pinType, touchscreenMode, wrapperHeight]);
 
   const cards = DATA.map((item) => <Card key={item} />);
 
