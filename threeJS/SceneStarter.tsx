@@ -1,18 +1,18 @@
 import { Suspense, useEffect, useRef } from "react"
-import * as THREE from 'three'
+
 import { Canvas } from "@react-three/fiber"
-import { useFrame } from "@react-three/fiber"
-import gsap from 'gsap'
+import gsap from "gsap"
+import * as THREE from "three"
 
 import AdaptivePixelRatio from "library/threeJS/ThreeJSHelpers"
 
 export default function Scene() {
   return (
-    <Canvas camera={{position: [2, 2, 2]}}>
+    <Canvas camera={{ position: [2, 2, 2] }}>
       <AdaptivePixelRatio />
       <Suspense fallback={null}>
-        <Lights/>
-        <Models/>
+        <Lights />
+        <Models />
       </Suspense>
     </Canvas>
   )
@@ -22,7 +22,7 @@ function Lights() {
   return (
     <>
       <spotLight intensity={0.5} position={[0, 10, 10]} color="white" />
-      <ambientLight intensity={0.5} color="white"/>
+      <ambientLight intensity={0.5} color="white" />
     </>
   )
 }
@@ -31,7 +31,7 @@ function Models() {
   const meshRef = useRef<THREE.Mesh>(null)
 
   const geometry = new THREE.BoxGeometry(1, 1)
-  const material = new THREE.MeshStandardMaterial({color: 'red'})
+  const material = new THREE.MeshStandardMaterial({ color: "red" })
 
   useEffect(() => {
     if (meshRef.current) {
@@ -40,7 +40,7 @@ function Models() {
         y: "+=1",
         repeat: -1,
         repeatRefresh: true,
-        ease: 'none'
+        ease: "none",
       })
     }
   }, [])
