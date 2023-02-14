@@ -35,7 +35,7 @@ function isObject(x: unknown): x is Record<string | number | symbol, unknown> {
   return typeof x === "object" && x !== null && !Array.isArray(x)
 }
 
-type WithReferencesType = {
+interface WithReferencesType {
   contentful_id: string
   __typename: string // not type safe, but is this used anywhere?
 }
@@ -79,7 +79,7 @@ export default function renderContent(
     )
   }
 
-  if (content && content.raw) {
+  if (content?.raw) {
     // parse the raw content and verify that it is valid JSON
     const parsedContent = JSON.parse(content.raw) as unknown
 

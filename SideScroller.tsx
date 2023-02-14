@@ -1,38 +1,40 @@
-import styled from "styled-components";
-import { useState, useEffect } from "react";
-import gsap, { ScrollTrigger } from "gsap/all";
+import { useState, useEffect } from "react"
+
+import gsap, { ScrollTrigger } from "gsap/all"
+import styled from "styled-components"
+
 import useCanHover from "library/canHover"
 import { usePinType } from "library/Scroll"
 import useAnimation from "library/useAnimation"
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger)
 
-const DATA = [1, 2, 3, 4, 5, 6];
+const DATA = [1, 2, 3, 4, 5, 6]
 
 export default function App() {
-  const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null);
-  const [innerEl, setInnerEl] = useState<HTMLDivElement | null>(null);
-  const [innerWidth, setInnerWidth] = useState(0);
-  const [wrapperHeight, setWrapperHeight] = useState(0);
+  const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null)
+  const [innerEl, setInnerEl] = useState<HTMLDivElement | null>(null)
+  const [innerWidth, setInnerWidth] = useState(0)
+  const [wrapperHeight, setWrapperHeight] = useState(0)
 
   const pinType = usePinType()
   const touchscreenMode = !useCanHover()
 
   useEffect(() => {
     if (innerEl) {
-      const newInnerWidth = innerEl.getBoundingClientRect().width;
-      setInnerWidth(newInnerWidth);
+      const newInnerWidth = innerEl.getBoundingClientRect().width
+      setInnerWidth(newInnerWidth)
     }
-  }, [innerEl]);
+  }, [innerEl])
 
   useEffect(() => {
     if (innerWidth) {
-      const multiplyBy = innerWidth / window.innerWidth;
-      const height = window.innerHeight * multiplyBy;
+      const multiplyBy = innerWidth / window.innerWidth
+      const height = window.innerHeight * multiplyBy
 
-      setWrapperHeight(height);
+      setWrapperHeight(height)
     }
-  }, [setWrapperHeight, innerWidth]);
+  }, [setWrapperHeight, innerWidth])
 
   useAnimation(() => {
     if (touchscreenMode) return
@@ -40,7 +42,7 @@ export default function App() {
     if (wrapperEl && innerEl && innerWidth && wrapperHeight) {
       const x = -(innerWidth > window.innerWidth
         ? innerWidth - window.innerWidth
-        : 0);
+        : 0)
 
       gsap.to(innerEl, {
         x,
@@ -51,32 +53,38 @@ export default function App() {
           pin: innerEl,
           pinType,
           scrub: true,
-        }
-      });
+        },
+      })
     }
-  }, [wrapperEl, innerEl, innerWidth, pinType, touchscreenMode, wrapperHeight]);
+  }, [wrapperEl, innerEl, innerWidth, pinType, touchscreenMode, wrapperHeight])
 
-  const cards = DATA.map((item) => <Card key={item} />);
+  const cards = DATA.map(item => <Card key={item} />)
 
   return (
-    <Wrapper ref={(ref) => setWrapperEl(ref)} height={wrapperHeight}>
-      <Inner ref={(ref) => setInnerEl(ref)}>{cards}</Inner>
+    <Wrapper ref={ref => setWrapperEl(ref)} height={wrapperHeight}>
+      <Inner ref={ref => setInnerEl(ref)}>{cards}</Inner>
     </Wrapper>
-  );
+  )
 }
 
-const Wrapper = styled.section<{height: number}>`
+const Card = styled.div`
+  background-color: blue;
+  width: 400px;
+  height: 400px;
+`
+
+const Wrapper = styled.section<{ height: number }>`
   position: relative;
   background-color: #020207;
   overflow: hidden;
   width: 100%;
-  height: ${(props) => props.height}px;
+  height: ${props => props.height}px;
 
   @media (hover: none) {
     height: fit-content;
     overflow-x: auto;
   }
-`;
+`
 
 const Inner = styled.div`
   position: absolute;
@@ -93,10 +101,4 @@ const Inner = styled.div`
     width: fit-content;
     height: fit-content;
   }
-`;
-
-const Card = styled.div`
-  background-color: blue;
-  width: 400px;
-  height: 400px;
-`;
+`
