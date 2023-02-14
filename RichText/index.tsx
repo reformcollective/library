@@ -25,20 +25,9 @@ import {
 } from "./modules/StyledComponents"
 import renderContent from "./renderContent"
 
-// type Props = {
-//   content:
-//     | NonNullable<
-//         PageProps<Queries.BlogArticleQuery>["data"]["contentfulBlogArticle"]
-//       >["content"]
-//     | NonNullable<
-//         PageProps<Queries.CaseStudyQuery>["data"]["contentfulCaseStudy"]
-//       >["content"]
-// }
-
-// TODO: YOU BETTER NOT BE USING THIS FOR ANY PROJECTS
-interface Props {
-  // eslint-disable-next-line
-  content: any
+// TODO: YOU BETTER UPDATE THIS
+interface RichTextProps {
+  content: unknown
 }
 
 /**
@@ -147,7 +136,7 @@ const options: Options = {
   },
 }
 
-export default function RichText({ content }: Props) {
+export default function RichText({ content }: RichTextProps) {
   // TODO: GET RID OF THIS CHECK AND UPDATE TYPE
   // eslint-disable-next-line
   return <>{renderContent(content, options)}</>
