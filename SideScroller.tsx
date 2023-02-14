@@ -37,7 +37,7 @@ export default function App() {
   useAnimation(() => {
     if (touchscreenMode) return
 
-    if (wrapperEl && innerEl && innerWidth) {
+    if (wrapperEl && innerEl && innerWidth && wrapperHeight) {
       const x = -(innerWidth > window.innerWidth
         ? innerWidth - window.innerWidth
         : 0);
@@ -50,11 +50,12 @@ export default function App() {
           end: "bottom bottom",
           pin: innerEl,
           pinType,
-          scrub: true
+          scrub: true,
+          markers: true
         }
       });
     }
-  }, [wrapperEl, innerEl, innerWidth, pinType, touchscreenMode]);
+  }, [wrapperEl, innerEl, innerWidth, pinType, touchscreenMode, wrapperHeight]);
 
   const cards = DATA.map((item) => <Card key={item} />);
 
