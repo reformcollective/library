@@ -27,7 +27,7 @@ import renderContent from "./renderContent"
 
 // TODO: YOU BETTER UPDATE THIS
 interface RichTextProps {
-  content: unknown
+  content: null
 }
 
 /**
