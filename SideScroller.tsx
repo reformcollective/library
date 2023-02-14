@@ -1,4 +1,3 @@
-import "./styles.css";
 import styled from "styled-components";
 import { useState, useEffect } from "react";
 import gsap, { ScrollTrigger } from "gsap/all";
