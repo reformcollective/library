@@ -69,6 +69,17 @@ async function onComplete() {
  * and calls all the progress callbacks with the new percentage every frame
  */
 const updatePercent = () => {
+  pageReady()
+    .then(async () => {
+      // short circuit if there are no callbacks or animations
+      if (progressCallbacks.length === 0 && animations.length === 0) {
+        if (!isComplete) await onComplete()
+      }
+    })
+    .catch(async () => {
+      if (!isComplete) await onComplete()
+    })
+
   if (isComplete) return
   const currentTime = performance.now()
   const progress = ((currentTime - startTime) / timeNeeded) * 100

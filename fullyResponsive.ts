@@ -1,5 +1,6 @@
 import { css, FlattenSimpleInterpolation } from "styled-components"
 
+import config from "libraryConfig"
 import media, {
   mobileDesignSize,
   tabletDesignSize,
@@ -56,12 +57,15 @@ export default function fullyResponsive(
   // generate media queries for each breakpoint
   const out = css`
     ${cssAsString}
-    ${media.fullWidth} {
-      ${onlyPxValues.replace(
-        regex,
-        (_, px: string) => `${replacer(px, desktopDesignSize)}vw`
-      )}
-    }
+    ${config.scaleFully &&
+    css`
+      ${media.fullWidth} {
+        ${onlyPxValues.replace(
+          regex,
+          (_, px: string) => `${replacer(px, desktopDesignSize)}vw`
+        )}
+      }
+    `};
 
     ${media.desktop} {
       ${onlyPxValues.replace(
