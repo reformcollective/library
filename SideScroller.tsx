@@ -1,51 +1,70 @@
 import { useState, useEffect } from "react"
 
-import gsap, { ScrollTrigger } from "gsap/all"
-import styled from "styled-components"
+import gsap from "gsap/all"
+import styled, { css } from "styled-components"
 
 import useCanHover from "library/canHover"
 import { usePinType } from "library/Scroll"
 import useAnimation from "library/useAnimation"
 
-gsap.registerPlugin(ScrollTrigger)
+interface SideScrollerProps {
+  children: React.ReactNode
+  /**
+   * the easing to use for the side-to-side animation
+   */
+  ease?: string
+}
 
-const DATA = [1, 2, 3, 4, 5, 6]
-
-export default function App() {
+export default function SideScroller({
+  children,
+  ease = "none",
+}: SideScrollerProps) {
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null)
   const [innerEl, setInnerEl] = useState<HTMLDivElement | null>(null)
-  const [innerWidth, setInnerWidth] = useState(0)
-  const [wrapperHeight, setWrapperHeight] = useState(0)
+
+  const [widthOfChildren, setWidthOfChildren] = useState(0)
+  const [pinAmount, setPinAmount] = useState(0)
 
   const pinType = usePinType()
   const touchscreenMode = !useCanHover()
 
+  /**
+   * track the width of the children
+   */
   useEffect(() => {
     if (innerEl) {
+      gsap.set(innerEl, { clearProps: "all" })
       const newInnerWidth = innerEl.getBoundingClientRect().width
-      setInnerWidth(newInnerWidth)
+      setWidthOfChildren(newInnerWidth)
     }
   }, [innerEl])
 
+  /**
+   * calculate the amount of pinning needed
+   */
   useEffect(() => {
-    if (innerWidth) {
-      const multiplyBy = innerWidth / window.innerWidth
+    if (widthOfChildren) {
+      const multiplyBy = widthOfChildren / window.innerWidth
       const height = window.innerHeight * multiplyBy
 
-      setWrapperHeight(height)
+      setPinAmount(height)
     }
-  }, [setWrapperHeight, innerWidth])
+  }, [setPinAmount, widthOfChildren])
 
+  /**
+   * animate the children
+   */
   useAnimation(() => {
     if (touchscreenMode) return
 
-    if (wrapperEl && innerEl && innerWidth && wrapperHeight) {
-      const x = -(innerWidth > window.innerWidth
-        ? innerWidth - window.innerWidth
+    if (wrapperEl && innerEl && widthOfChildren && pinAmount) {
+      const x = -(widthOfChildren > window.innerWidth
+        ? widthOfChildren - window.innerWidth
         : 0)
 
       gsap.to(innerEl, {
         x,
+        ease,
         scrollTrigger: {
           trigger: wrapperEl,
           start: "top top",
@@ -56,49 +75,60 @@ export default function App() {
         },
       })
     }
-  }, [wrapperEl, innerEl, innerWidth, pinType, touchscreenMode, wrapperHeight])
-
-  const cards = DATA.map(item => <Card key={item} />)
+  }, [
+    ease,
+    innerEl,
+    pinAmount,
+    pinType,
+    touchscreenMode,
+    widthOfChildren,
+    wrapperEl,
+  ])
 
   return (
-    <Wrapper ref={ref => setWrapperEl(ref)} height={wrapperHeight}>
-      <Inner ref={ref => setInnerEl(ref)}>{cards}</Inner>
+    <Wrapper
+      ref={setWrapperEl}
+      height={pinAmount}
+      touchscreenMode={touchscreenMode}
+    >
+      <Inner ref={setInnerEl} touchscreenMode={touchscreenMode}>
+        {children}
+      </Inner>
     </Wrapper>
   )
 }
 
-const Card = styled.div`
-  background-color: blue;
-  width: 400px;
-  height: 400px;
-`
-
-const Wrapper = styled.section<{ height: number }>`
+const Wrapper = styled.section<{ height: number; touchscreenMode: boolean }>`
   position: relative;
-  background-color: #020207;
   overflow: hidden;
   width: 100%;
   height: ${props => props.height}px;
 
-  @media (hover: none) {
-    height: fit-content;
-    overflow-x: auto;
-  }
+  ${({ touchscreenMode }) =>
+    touchscreenMode &&
+    css`
+      height: fit-content;
+      overflow-x: auto;
+    `}
 `
 
-const Inner = styled.div`
+const Inner = styled.div<{
+  touchscreenMode: boolean
+}>`
   position: absolute;
-  display: flex;
-  align-items: center;
   width: fit-content;
-  gap: 40px;
-  height: 100vh;
   top: 0;
   left: 0;
-  padding: 0 200px;
 
-  @media (hover: none) {
+  > div {
     width: fit-content;
     height: fit-content;
   }
+
+  ${({ touchscreenMode }) =>
+    touchscreenMode &&
+    css`
+      width: fit-content;
+      height: fit-content;
+    `}
 `
