@@ -95,7 +95,7 @@ const Inner = styled.div`
   height: 100vh;
   top: 0;
   left: 0;
-  padding: 0px 200px;
+  padding: 0 200px;
 
   @media (hover: none) {
     width: fit-content;
