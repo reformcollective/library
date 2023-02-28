@@ -29,27 +29,25 @@ export default function SideScroller({
   const touchscreenMode = !useCanHover()
 
   /**
-   * track the width of the children
+   * track the width of the children and calculate the amount of pinning needed
    */
   useEffect(() => {
-    if (innerEl) {
-      gsap.set(innerEl, { clearProps: "all" })
-      const newInnerWidth = innerEl.getBoundingClientRect().width
-      setWidthOfChildren(newInnerWidth)
+    const onResize = () => {
+      if (innerEl) {
+        gsap.set(innerEl, { clearProps: "all" })
+        const newInnerWidth = innerEl.getBoundingClientRect().width
+        setWidthOfChildren(newInnerWidth)
+
+        const multiplyBy = newInnerWidth / window.innerWidth
+        const height = window.innerHeight * multiplyBy
+
+        setPinAmount(height)
+      }
     }
+    onResize()
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
   }, [innerEl])
-
-  /**
-   * calculate the amount of pinning needed
-   */
-  useEffect(() => {
-    if (widthOfChildren) {
-      const multiplyBy = widthOfChildren / window.innerWidth
-      const height = window.innerHeight * multiplyBy
-
-      setPinAmount(height)
-    }
-  }, [setPinAmount, widthOfChildren])
 
   /**
    * animate the children
@@ -122,7 +120,6 @@ const Inner = styled.div<{
 
   > div {
     width: fit-content;
-    height: fit-content;
   }
 
   ${({ touchscreenMode }) =>
