@@ -1,3 +1,5 @@
+import { ScrollSmoother } from "gsap/ScrollSmoother"
+
 import loader, { promisesToAwait, recursiveAllSettled } from "."
 import { isBrowser, sleep } from "../functions"
 import { pageReady } from "../pageReady"
@@ -57,6 +59,8 @@ async function onComplete() {
 
   await sleep(longestAnimation * 1000 + 10)
   loaderIsDone = true
+
+  ScrollSmoother.get()?.paused(false)
 
   loader.dispatchEvent("anyEnd", new CustomEvent("anyEnd"))
   loader.dispatchEvent("initialEnd", new CustomEvent("initialEnd"))
