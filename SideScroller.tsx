@@ -16,13 +16,13 @@ interface SideScrollerProps {
   /**
    * allows the side scroller to be scrolled manually on touchscreen devices
    */
-  allowTouchscreenScroll?: boolean
+  disableTouchscreenMode?: boolean
 }
 
 export default function SideScroller({
   children,
   ease = "none",
-  allowTouchscreenScroll = true,
+  disableTouchscreenMode = false,
 }: SideScrollerProps) {
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null)
   const [innerEl, setInnerEl] = useState<HTMLDivElement | null>(null)
@@ -31,7 +31,7 @@ export default function SideScroller({
   const [pinAmount, setPinAmount] = useState(0)
 
   const pinType = usePinType()
-  const touchscreenMode = !useCanHover() && allowTouchscreenScroll
+  const touchscreenMode = !useCanHover() && !disableTouchscreenMode
 
   /**
    * track the width of the children and calculate the amount of pinning needed
