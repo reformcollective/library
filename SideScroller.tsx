@@ -13,11 +13,16 @@ interface SideScrollerProps {
    * the easing to use for the side-to-side animation
    */
   ease?: string
+  /**
+   * allows the side scroller to be scrolled manually on touchscreen devices
+   */
+  allowTouchscreenScroll?: boolean
 }
 
 export default function SideScroller({
   children,
   ease = "none",
+  allowTouchscreenScroll = true,
 }: SideScrollerProps) {
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null)
   const [innerEl, setInnerEl] = useState<HTMLDivElement | null>(null)
@@ -26,7 +31,7 @@ export default function SideScroller({
   const [pinAmount, setPinAmount] = useState(0)
 
   const pinType = usePinType()
-  const touchscreenMode = !useCanHover()
+  const touchscreenMode = !useCanHover() && allowTouchscreenScroll
 
   /**
    * track the width of the children and calculate the amount of pinning needed
@@ -82,6 +87,48 @@ export default function SideScroller({
     widthOfChildren,
     wrapperEl,
   ])
+
+  /**
+   * translate horizontal scroll events to vertical scroll events
+   */
+  useEffect(() => {
+    if (touchscreenMode || !wrapperEl) return
+
+    const onWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        event.preventDefault()
+        window.scrollBy(0, event.deltaX)
+      }
+    }
+
+    let previousTouch: Touch | undefined
+    const onTouchStart = (event: TouchEvent) => {
+      ;[previousTouch] = event.touches
+    }
+    const onTouchMove = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        const touch = event.touches[0]
+        if (previousTouch && touch) {
+          const deltaY = touch.clientY - previousTouch.clientY
+          const deltaX = touch.clientX - previousTouch.clientX
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            event.preventDefault()
+            window.scrollBy(0, -deltaX)
+          }
+        }
+        previousTouch = touch
+      }
+    }
+
+    wrapperEl.addEventListener("wheel", onWheel, { passive: false })
+    wrapperEl.addEventListener("touchstart", onTouchStart)
+    wrapperEl.addEventListener("touchmove", onTouchMove, { passive: false })
+    return () => {
+      wrapperEl.removeEventListener("wheel", onWheel)
+      wrapperEl.removeEventListener("touchstart", onTouchStart)
+      wrapperEl.removeEventListener("touchmove", onTouchMove)
+    }
+  }, [touchscreenMode, wrapperEl])
 
   return (
     <Wrapper
