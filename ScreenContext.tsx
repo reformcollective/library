@@ -21,6 +21,7 @@ interface Props {
   children: React.ReactNode
 }
 
+// TODO setup providers properly in starter
 export function ScreenProvider({ children }: Props) {
   const [fw, setFw] = useState<boolean>(false)
   const [d, setD] = useState<boolean>(false)
