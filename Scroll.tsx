@@ -9,7 +9,7 @@ interface ScrollProps {
   /**
    * by default we save compute on mobile by ignoring resize
    * (triggers shouldn't depend on innerHeight anyway)
-   * 
+   *
    * if you want to enable mobile resize checks, set this to true
    */
   mobileResize?: boolean
