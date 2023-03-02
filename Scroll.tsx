@@ -6,6 +6,13 @@ import { onUnmount, pageReady } from "library/pageReady"
 
 interface ScrollProps {
   children: React.ReactNode
+  /**
+   * by default we save compute on mobile by ignoring resize
+   * (triggers shouldn't depend on innerHeight anyway)
+   *
+   * if you want to enable mobile resize checks, set this to true
+   */
+  mobileResize?: boolean
 }
 
 /**
@@ -53,7 +60,10 @@ export const useIsSmooth = () => {
   return smooth
 }
 
-export default function Scroll({ children }: ScrollProps) {
+export default function Scroll({
+  children,
+  mobileResize = false,
+}: ScrollProps) {
   const isSmooth = useIsSmooth()
   const isPaused = useRef(true)
   const [refreshSignal, setRefreshSignal] = useState(0)
@@ -65,8 +75,7 @@ export default function Scroll({ children }: ScrollProps) {
     const smoother = ScrollSmoother.create({
       smooth: isSmooth ? 1 : 0,
       smoothTouch: isSmooth ? 1 : 0,
-      // save compute on mobile by ignoring resize (triggers shouldn't depend on innerHeight anyway)
-      ignoreMobileResize: true,
+      ignoreMobileResize: !mobileResize,
       onUpdate: e => {
         // if at the top, enable overscroll behavior (pull to refresh)
         const maxScroll = document.body.scrollHeight - window.innerHeight
@@ -92,7 +101,7 @@ export default function Scroll({ children }: ScrollProps) {
       isPaused.current = smoother.paused()
       smoother.kill()
     }
-  }, [isSmooth, refreshSignal])
+  }, [isSmooth, mobileResize, refreshSignal])
 
   /**
    * kill the smoother when back/forward buttons are pressed
