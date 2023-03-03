@@ -1,3 +1,6 @@
+// *make sure to uncomment this after copying the default config*
+// import defaultConfig from "library/defaultConfig"
+
 /**
  * config for the reform util library
  * see src/library/defaultConfig.ts for the default config
@@ -9,6 +12,8 @@
 export type TransitionNames = "blue" | "fade" | "slide"
 
 const config = {
+  // *make sure to uncomment this after copying the default config*
+  // ...defaultConfig,
   /**
    * if true, the fresponsive util will scale on fullWidth breakpoints
    */
