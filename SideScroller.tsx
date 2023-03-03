@@ -7,6 +7,8 @@ import useCanHover from "library/canHover"
 import { usePinType } from "library/Scroll"
 import useAnimation from "library/useAnimation"
 
+import getVH from "./getVH"
+
 interface SideScrollerProps {
   children: React.ReactNode
   /**
@@ -44,7 +46,7 @@ export default function SideScroller({
         setWidthOfChildren(newInnerWidth)
 
         const multiplyBy = newInnerWidth / window.innerWidth
-        const height = window.innerHeight * multiplyBy
+        const height = getVH(100) * multiplyBy
 
         setPinAmount(height)
       }
@@ -65,7 +67,7 @@ export default function SideScroller({
         ? widthOfChildren - window.innerWidth
         : 0)
 
-      gsap.to(innerEl, {
+      const tween = gsap.to(innerEl, {
         x,
         ease,
         scrollTrigger: {
@@ -74,9 +76,19 @@ export default function SideScroller({
           end: "bottom bottom",
           pin: innerEl,
           pinType,
+          pinSpacing: false,
           scrub: true,
+          anticipatePin: 1,
         },
       })
+
+      // it's important that this trigger is refreshed immediately when resized
+      // by default the refresh is delayed until scroll stops
+      const onResize = () => {
+        tween.scrollTrigger?.refresh()
+      }
+      window.addEventListener("resize", onResize)
+      return () => window.removeEventListener("resize", onResize)
     }
   }, [
     ease,

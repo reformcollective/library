@@ -4,6 +4,9 @@ import { DependencyList, EffectCallback, useEffect, useState } from "react"
 
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+
+import { isBrowser } from "./functions"
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
@@ -28,19 +31,31 @@ const useAnimation = (
     recreateOnResize?: boolean
   }
 ) => {
-  const [resizeSignal, setResizeSignal] = useState(0)
+  const [resizeSignal, setResizeSignal] = useState(
+    isBrowser() && Math.round(window.innerWidth / 10)
+  )
 
+  /**
+   * when the window is resized, we need to re-create animations
+   * if the width of the window changes by more than 10px
+   */
   useEffect(() => {
     if (options?.recreateOnResize) {
       const onResize = () => {
-        const currentScroll = ScrollSmoother.get()?.scrollTop()
         setResizeSignal(previous => {
+          const currentScroll = ScrollSmoother.get()?.scrollTop()
           const newValue = Math.round(window.innerWidth / 10)
-          if (newValue !== previous && previous !== 0)
+          // if the value has changed
+          if (newValue !== previous) {
+            // make sure scroll is maintained and scrolltrigger gets refreshed
             setTimeout(() => {
               if (currentScroll)
                 ScrollSmoother.get()?.scrollTo(currentScroll, false)
             }, 1)
+            setTimeout(() => {
+              ScrollTrigger.refresh()
+            }, 1000)
+          }
           return newValue
         })
       }
