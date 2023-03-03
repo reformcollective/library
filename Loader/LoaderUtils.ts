@@ -1,5 +1,7 @@
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 
+import libraryConfig from "libraryConfig"
+
 import loader, { promisesToAwait, recursiveAllSettled } from "."
 import { isBrowser, sleep } from "../functions"
 import { pageReady } from "../pageReady"
@@ -9,7 +11,7 @@ import { pageReady } from "../pageReady"
  * how long it's taken to load so far
  * the amount of time needed to load the page is pretty arbitrary, so you can adjust this function to fit
  */
-const GET_TIME_NEEDED = (rawMs: number) => rawMs * 4 + 1000
+const GET_TIME_NEEDED = libraryConfig.getTimeNeeded
 
 /**
  * extra number of milliseconds to wait after the document is ready
