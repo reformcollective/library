@@ -18,7 +18,7 @@ export default function ConstantMarquee({
 }: MarqueeProps) {
   const marquee = useRef<HTMLDivElement>(null)
   const [array, setArray] = useState<undefined[]>([undefined])
-  const hash = useRef(0)
+  const [hash, setHash] = useState(0)
   const offset = useRef(0)
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function ConstantMarquee({
         const newNumber = Math.ceil((window.innerWidth + 1500) / width) + 1
         setArray(Array(newNumber).fill(undefined))
       }
-      hash.current += 1
+      setHash(p => p + 1)
     }
 
     update()
