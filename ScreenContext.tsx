@@ -1,4 +1,10 @@
-import { createContext, useState, useEffect, useMemo } from "react"
+import {
+  createContext,
+  useState,
+  useEffect,
+  useMemo,
+  startTransition,
+} from "react"
 
 import { addDebouncedEventListener, isBrowser } from "library/functions"
 import {
@@ -31,10 +37,12 @@ export function ScreenProvider({ children }: Props) {
   useEffect(() => {
     if (isBrowser()) {
       const setScreenContext = () => {
-        setM(window.innerWidth <= mobile)
-        setT(window.innerWidth > mobile && window.innerWidth <= tablet)
-        setD(window.innerWidth > tablet && window.innerWidth <= desktop)
-        setFw(window.innerWidth > desktop)
+        startTransition(() => {
+          setM(window.innerWidth <= mobile)
+          setT(window.innerWidth > mobile && window.innerWidth <= tablet)
+          setD(window.innerWidth > tablet && window.innerWidth <= desktop)
+          setFw(window.innerWidth > desktop)
+        })
       }
 
       setScreenContext()

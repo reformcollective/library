@@ -22,6 +22,7 @@ export interface UniversalLinkProps {
   onClick?: MouseEventHandler
   type?: "submit"
   forwardRef?: React.Ref<HTMLAnchorElement & HTMLButtonElement & Link<unknown>>
+  ariaLabel?: string
 }
 
 /**
@@ -39,6 +40,7 @@ export default function UniversalLink({
   onClick = undefined,
   type = undefined,
   forwardRef = undefined,
+  ariaLabel = undefined,
 }: UniversalLinkProps) {
   const internal = /^\/(?!\/)/.test(to)
 
@@ -63,6 +65,7 @@ export default function UniversalLink({
         onMouseLeave={onMouseLeave}
         type={type === "submit" ? "submit" : "button"}
         ref={forwardRef}
+        aria-label={ariaLabel}
       >
         {children}
       </button>
@@ -77,6 +80,7 @@ export default function UniversalLink({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       ref={forwardRef}
+      aria-label={ariaLabel}
     >
       {children}
     </Link>
@@ -88,6 +92,7 @@ export default function UniversalLink({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       ref={forwardRef}
+      aria-label={ariaLabel}
     >
       {children}
     </a>

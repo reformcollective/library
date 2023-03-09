@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { startTransition, useCallback, useEffect, useState } from "react"
 
 import {
   desktopBreakpoint as desktop,
@@ -16,13 +16,15 @@ export default function useMedia<InputType>(
 ) {
   const handleUpdate = useCallback(() => {
     if (isBrowser()) {
-      if (window.innerWidth > desktop) {
-        setCurrent(fw)
-      } else if (window.innerWidth > tablet) {
-        setCurrent(d)
-      } else if (window.innerWidth > mobile) {
-        setCurrent(t)
-      } else setCurrent(m)
+      startTransition(() => {
+        if (window.innerWidth > desktop) {
+          setCurrent(fw)
+        } else if (window.innerWidth > tablet) {
+          setCurrent(d)
+        } else if (window.innerWidth > mobile) {
+          setCurrent(t)
+        } else setCurrent(m)
+      })
     }
   }, [fw, d, t, m])
 
