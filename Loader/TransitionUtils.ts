@@ -147,6 +147,7 @@ export const loadPage = async (
     onUnmount(() => {
       pageReady()
         .then(() => {
+          ScrollSmoother.get()?.paused(false)
           ScrollSmoother.get()?.scrollTo(0)
           window.scrollTo(0, 1)
           // fire event with detail "none"
@@ -184,6 +185,7 @@ export const loadPage = async (
     "transitionStart",
     new CustomEvent("transitionStart", { detail: transition })
   )
+  ScrollSmoother.get()?.paused(true)
 
   // wait for entrance animation to finish
   await sleep(entranceDuration * 1000)
@@ -217,6 +219,7 @@ export const loadPage = async (
     "transitionEnd",
     new CustomEvent("transitionEnd", { detail: transition })
   )
+  ScrollSmoother.get()?.paused(false)
 
   // cleanup and reset
   animationContext.revert()
@@ -283,6 +286,7 @@ export function useBackButton() {
                 "anyEnd",
                 new CustomEvent("anyEnd", { detail: "none" })
               )
+              ScrollSmoother.get()?.paused(false)
             }, 500)
           })
           .catch(console.error)
