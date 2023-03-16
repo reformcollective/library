@@ -11,8 +11,10 @@ interface ScrollProps {
    * (triggers shouldn't depend on innerHeight anyway)
    *
    * if you want to enable mobile resize checks, set this to true
+   * add a class name if you need to style the scroll div
    */
   mobileResize?: boolean
+  className?: string
 }
 
 /**
@@ -63,6 +65,7 @@ export const useIsSmooth = () => {
 export default function Scroll({
   children,
   mobileResize = false,
+  className = "",
 }: ScrollProps) {
   const isSmooth = useIsSmooth()
   const isPaused = useRef(true)
@@ -130,7 +133,7 @@ export default function Scroll({
   }, [])
 
   return (
-    <div id="smooth-wrapper">
+    <div className={className} id="smooth-wrapper">
       <div id="smooth-content">{children}</div>
     </div>
   )
