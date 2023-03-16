@@ -11,6 +11,7 @@ interface ScrollProps {
    * (triggers shouldn't depend on innerHeight anyway)
    *
    * if you want to enable mobile resize checks, set this to true
+   * add a class name if you need to style the scroll div
    */
   mobileResize?: boolean
   className?: string
