@@ -29,7 +29,7 @@ export default function fullyResponsive(
   only?: "mobile" | "tablet" | "desktop"
 ) {
   // if not a string, convert to string
-  const cssAsString = typeof cssIn === "string" ? cssIn : cssIn.join("\n")
+  const cssAsString = typeof cssIn === "string" ? cssIn : cssIn.join("")
   const onlyPxValues = cssAsString
     .replaceAll("{", "{\n")
     .replaceAll("}", "\n}")
