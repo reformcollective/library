@@ -1,7 +1,7 @@
 import {
   desktopBreakpoint as desktop,
-  tabletBreakpoint as tablet,
   mobileBreakpoint as mobile,
+  tabletBreakpoint as tablet,
 } from "styles/media"
 
 export default function getMedia<Type>(fw: Type, d: Type, t: Type, m: Type) {

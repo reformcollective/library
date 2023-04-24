@@ -1,9 +1,8 @@
 import { startTransition, useCallback, useEffect, useState } from "react"
-
 import {
   desktopBreakpoint as desktop,
-  tabletBreakpoint as tablet,
   mobileBreakpoint as mobile,
+  tabletBreakpoint as tablet,
 } from "styles/media"
 
 import { isBrowser } from "./functions"

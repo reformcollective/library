@@ -9,7 +9,7 @@ const createMeasuringElement = () => {
   div.style.width = "100vw"
   div.style.height = "100vh"
   div.style.visibility = "hidden"
-  document.body.appendChild(div)
+  document.body.append(div)
   return div
 }
 

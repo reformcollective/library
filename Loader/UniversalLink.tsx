@@ -1,6 +1,5 @@
-import { MouseEventHandler } from "react"
-
 import { Link } from "gatsby"
+import { MouseEventHandler } from "react"
 
 import { Transitions } from "."
 import { loadPage } from "./TransitionUtils"
@@ -35,12 +34,12 @@ export default function UniversalLink({
   openInNewTab = false,
   children,
   className = "",
-  onMouseEnter = undefined,
-  onMouseLeave = undefined,
-  onClick = undefined,
-  type = undefined,
-  forwardRef = undefined,
-  ariaLabel = undefined,
+  onMouseEnter,
+  onMouseLeave,
+  onClick,
+  type,
+  forwardRef,
+  ariaLabel,
 }: UniversalLinkProps) {
   const internal = /^\/(?!\/)/.test(to)
 
@@ -50,8 +49,8 @@ export default function UniversalLink({
     if (openInNewTab || !internal) {
       window.open(to, "_blank")
     } else {
-      loadPage(to, transition).catch((err: string) => {
-        throw new Error(err)
+      loadPage(to, transition).catch((error: string) => {
+        throw new Error(error)
       })
     }
   }

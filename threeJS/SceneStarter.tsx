@@ -1,10 +1,8 @@
-import { Suspense, useEffect, useRef } from "react"
-
 import { Canvas } from "@react-three/fiber"
 import gsap from "gsap"
-import * as THREE from "three"
-
 import AdaptivePixelRatio from "library/threeJS/ThreeJSHelpers"
+import { Suspense, useEffect, useRef } from "react"
+import * as THREE from "three"
 
 export default function Scene() {
   return (

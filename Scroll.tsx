@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from "react"
-
 import ScrollSmoother from "gsap/ScrollSmoother"
-
 import { onUnmount, pageReady } from "library/pageReady"
+import { useEffect, useRef, useState } from "react"
 
 interface ScrollProps {
   children: React.ReactNode

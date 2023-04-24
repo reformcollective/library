@@ -1,10 +1,9 @@
 import { ScrollSmoother } from "gsap/ScrollSmoother"
-
 import libraryConfig from "libraryConfig"
 
-import loader, { promisesToAwait, recursiveAllSettled } from "."
 import { isBrowser, sleep } from "../functions"
 import { pageReady } from "../pageReady"
+import loader, { promisesToAwait, recursiveAllSettled } from "."
 
 /**
  * we get a percentage by simply guessing how long the page will take to load based on
@@ -78,9 +77,12 @@ const updatePercent = () => {
   pageReady()
     .then(async () => {
       // short circuit if there are no callbacks or animations
-      if (progressCallbacks.length === 0 && animations.length === 0) {
-        if (!isComplete) await onComplete()
-      }
+      if (
+        progressCallbacks.length === 0 &&
+        animations.length === 0 &&
+        !isComplete
+      )
+        await onComplete()
     })
     .catch(async () => {
       if (!isComplete) await onComplete()

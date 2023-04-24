@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react"
-
 import { PerformanceMonitor, PerformanceMonitorApi } from "@react-three/drei"
 import { useThree } from "@react-three/fiber"
-
 import { isBrowser } from "library/functions"
+import { useEffect, useState } from "react"
 
 const getDevicePixelRatio = () => {
   if (!isBrowser()) return 1

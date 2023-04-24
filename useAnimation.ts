@@ -1,10 +1,9 @@
 // we have to spread deps for the hook to work properly
 /* eslint-disable react-hooks/exhaustive-deps */
-import { DependencyList, EffectCallback, useEffect, useState } from "react"
-
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { DependencyList, EffectCallback, useEffect, useState } from "react"
 
 import { isBrowser } from "./functions"
 

@@ -1,6 +1,5 @@
-import styled from "styled-components"
-
 import UniversalLink from "library/Loader/UniversalLink"
+import styled from "styled-components"
 
 interface Props {
   data: {

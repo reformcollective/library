@@ -88,7 +88,7 @@ export const promisesToAwait: Promise<unknown>[] = []
  * @param promise promise to await
  */
 export function transitionAwaitPromise(promise: Promise<unknown>) {
-  promisesToAwait.push(Promise.race([promise, sleep(10000)]))
+  promisesToAwait.push(Promise.race([promise, sleep(10_000)]))
 }
 
 export const recursiveAllSettled = async (

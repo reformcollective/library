@@ -1,10 +1,9 @@
-import { css, FlattenSimpleInterpolation } from "styled-components"
-
 import config from "libraryConfig"
+import { css, FlattenSimpleInterpolation } from "styled-components"
 import media, {
+  desktopDesignSize,
   mobileDesignSize,
   tabletDesignSize,
-  desktopDesignSize,
 } from "styles/media"
 
 const PRECISION = 3
@@ -55,7 +54,7 @@ export default function fullyResponsive(
   }
 
   // generate media queries for each breakpoint
-  const out = css`
+  return css`
     ${cssAsString}
     ${config.scaleFully &&
     css`
@@ -88,8 +87,6 @@ export default function fullyResponsive(
       )}
     }
   `
-
-  return out
 }
 
 const fresponsive = fullyResponsive
@@ -101,4 +98,4 @@ const ftablet = (cssIn: FlattenSimpleInterpolation | string) =>
 const fmobile = (cssIn: FlattenSimpleInterpolation | string) =>
   fullyResponsive(cssIn, "mobile")
 
-export { fresponsive, fdesktop, ftablet, fmobile }
+export { fdesktop, fmobile, fresponsive, ftablet }

@@ -1,27 +1,27 @@
 import { Options } from "@contentful/rich-text-react-renderer"
-import { BLOCKS, MARKS, INLINES } from "@contentful/rich-text-types"
+import { BLOCKS, INLINES, MARKS } from "@contentful/rich-text-types"
 // import { PageProps } from "gatsby"
 import { IGatsbyImageData } from "gatsby-plugin-image"
 
 import RichLink from "./modules/Link"
 import {
-  Strong,
+  A,
   Code,
+  EM,
   H1,
   H2,
   H3,
-  P,
-  A,
-  UL,
-  OL,
-  LI,
-  Quote,
-  U,
-  EM,
-  Image,
   H4,
   H5,
   H6,
+  Image,
+  LI,
+  OL,
+  P,
+  Quote,
+  Strong,
+  U,
+  UL,
 } from "./modules/StyledComponents"
 import renderContent from "./renderContent"
 

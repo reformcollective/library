@@ -1,6 +1,6 @@
 const calculateSupport = () => {
   const elem =
-    typeof document !== "undefined" ? document.createElement("canvas") : null
+    typeof document === "undefined" ? null : document.createElement("canvas")
 
   if (elem?.getContext && elem.getContext("2d")) {
     // was able or not to get WebP representation
