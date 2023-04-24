@@ -1,6 +1,3 @@
-// need to await within loops since transition utils exists outside of react
-/* eslint-disable no-await-in-loop */
-
 import { navigate as gatsbyNavigate } from "@reach/router"
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
