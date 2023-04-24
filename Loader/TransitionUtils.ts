@@ -5,7 +5,7 @@ import { navigate as gatsbyNavigate } from "@reach/router"
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { pathnameMatches, sleep } from "library/functions"
-import { onUnmount, pageReady } from "library/pageReady"
+import { pageReady, pageUnmounted } from "library/pageReady"
 import { startTransition, useEffect } from "react"
 
 import loader, {
@@ -130,7 +130,7 @@ export const loadPage = async (
       top: 0,
       behavior: "smooth",
     })
-    loader.dispatchEvent("scrollToTop", new CustomEvent("scrollToTop"))
+    loader.dispatchEvent("scrollToTop")
     return
   }
 
@@ -140,26 +140,16 @@ export const loadPage = async (
   if (!transition || !allTransitions[transition]) {
     currentAnimation = null
     await navigate(to)
+    await pageUnmounted()
+    await pageReady()
 
-    // we need to wait for the *next* page to load, so wait for unmount, then pageReady
-    onUnmount(() => {
-      pageReady()
-        .then(() => {
-          ScrollSmoother.get()?.paused(false)
-          ScrollSmoother.get()?.scrollTo(0)
-          window.scrollTo(0, 1)
-          // fire event with detail "none"
-          loader.dispatchEvent(
-            "transitionEnd",
-            new CustomEvent<"none">("transitionEnd", { detail: "none" })
-          )
-          loader.dispatchEvent(
-            "anyEnd",
-            new CustomEvent<"none">("anyEnd", { detail: "none" })
-          )
-        })
-        .catch(console.error)
-    })
+    ScrollSmoother.get()?.paused(false)
+    ScrollSmoother.get()?.scrollTo(0)
+    window.scrollTo(0, 1)
+
+    // fire event with detail "none"
+    loader.dispatchEvent("transitionEnd", "none")
+    loader.dispatchEvent("anyEnd", "none")
 
     return
   }
@@ -171,18 +161,16 @@ export const loadPage = async (
   const enterAnimations = allTransitions[transition]?.inAnimation ?? []
 
   // run each animation, add it to the context, and get the duration of the longest one
-  const entranceDuration = enterAnimations.reduce((duration, animation) => {
+  let entranceDuration = 0
+  for (const animation of enterAnimations) {
     const { callback, duration: animationDuration } = animation
     animationContext.add(callback)
-    return Math.max(duration, animationDuration)
-  }, 0)
+    entranceDuration = Math.max(entranceDuration, animationDuration)
+  }
 
   // dispatch events
-  loader.dispatchEvent("anyStart", new CustomEvent("anyStart"))
-  loader.dispatchEvent(
-    "transitionStart",
-    new CustomEvent("transitionStart", { detail: transition })
-  )
+  loader.dispatchEvent("anyStart", transition)
+  loader.dispatchEvent("transitionStart", transition)
   ScrollSmoother.get()?.paused(true)
 
   // wait for entrance animation to finish
@@ -202,21 +190,19 @@ export const loadPage = async (
   const exitAnimations = allTransitions[transition]?.outAnimation ?? []
 
   // run each animation, add it to the context, and get the duration of the longest one
-  const exitDuration = exitAnimations.reduce((duration, animation) => {
+  let exitDuration = 0
+  for (const animation of exitAnimations) {
     const { callback, duration: animationDuration } = animation
     animationContext.add(callback)
-    return Math.max(duration, animationDuration)
-  }, 0)
+    exitDuration = Math.max(exitDuration, animationDuration)
+  }
 
   // wait for exit animation to finish
   await sleep(exitDuration * 1000 + 10)
 
   // dispatch finished events
-  loader.dispatchEvent("anyEnd", new CustomEvent("anyEnd"))
-  loader.dispatchEvent(
-    "transitionEnd",
-    new CustomEvent("transitionEnd", { detail: transition })
-  )
+  loader.dispatchEvent("anyEnd", transition)
+  loader.dispatchEvent("transitionEnd", transition)
   ScrollSmoother.get()?.paused(false)
 
   // cleanup and reset
@@ -242,7 +228,7 @@ export const navigate = async (to: string, cleanupFunction?: VoidFunction) => {
   const isExternal = to.slice(0, 8).includes("//")
 
   if (isExternal) {
-    window.location.href = to
+    window.open(to)
 
     // if the user presses the back button after navigation, we'll need to cleanup any animations
     setTimeout(() => {
@@ -264,31 +250,16 @@ export const navigate = async (to: string, cleanupFunction?: VoidFunction) => {
 export function useBackButton() {
   useEffect(() => {
     const handleBackButton = () => {
-      loader.dispatchEvent("initialStart", new CustomEvent("initialStart"))
-      loader.dispatchEvent(
-        "anyStart",
-        new CustomEvent("anyStart", { detail: "none" })
-      )
-
-      // we need to wait for the *next* page to load, so wait for unmount, then pageReady
-      onUnmount(() => {
-        pageReady()
-          .then(() => {
-            setTimeout(() => {
-              // fire event with detail "none"
-              loader.dispatchEvent(
-                "transitionEnd",
-                new CustomEvent("transitionEnd", { detail: "none" })
-              )
-              loader.dispatchEvent(
-                "anyEnd",
-                new CustomEvent("anyEnd", { detail: "none" })
-              )
-              ScrollSmoother.get()?.paused(false)
-            }, 500)
-          })
-          .catch(console.error)
-      })
+      ;(async () => {
+        loader.dispatchEvent("initialStart")
+        loader.dispatchEvent("anyStart", "none")
+        await pageUnmounted()
+        await pageReady()
+        window.scrollTo(0, 1)
+        await sleep(500)
+        loader.dispatchEvent("transitionEnd", "none")
+        loader.dispatchEvent("anyEnd", "none")
+      })().catch(console.error)
     }
     window.addEventListener("popstate", handleBackButton)
     return () => window.removeEventListener("popstate", handleBackButton)

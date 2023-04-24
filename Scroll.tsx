@@ -1,5 +1,5 @@
 import ScrollSmoother from "gsap/ScrollSmoother"
-import { onUnmount, pageReady } from "library/pageReady"
+import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect, useRef, useState } from "react"
 
 interface ScrollProps {
@@ -109,19 +109,13 @@ export default function Scroll({
    */
   useEffect(() => {
     const killSmoother = () => {
-      const smoother = ScrollSmoother.get()
-      if (smoother) smoother.kill()
-
-      // we want to wait for the *next* page to be ready before refreshing
-      onUnmount(() => {
-        pageReady()
-          .then(() => {
-            setRefreshSignal(s => s + 1)
-          })
-          .catch(() => {
-            setRefreshSignal(s => s + 1)
-          })
-      })
+      ;(async () => {
+        const smoother = ScrollSmoother.get()
+        if (smoother) smoother.kill()
+        await pageUnmounted()
+        await pageReady()
+        setRefreshSignal(s => s + 1)
+      })()
     }
 
     window.addEventListener("popstate", killSmoother)

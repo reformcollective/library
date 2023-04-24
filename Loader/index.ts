@@ -1,4 +1,5 @@
 import { sleep } from "library/functions"
+import TypedEventEmitter from "library/TypedEventEmitter"
 import { TransitionNames } from "libraryConfig"
 
 /**
@@ -6,46 +7,6 @@ import { TransitionNames } from "libraryConfig"
  */
 export type Transitions = TransitionNames
 export type InternalTransitions = "initial" | "any" | "none"
-
-interface EventMaps {
-  anyStart: CustomEvent<Transitions | InternalTransitions>
-  anyEnd: CustomEvent<Transitions | InternalTransitions>
-  initialStart: CustomEvent<never>
-  initialEnd: CustomEvent<never>
-  progressUpdated: CustomEvent<number>
-  transitionStart: CustomEvent<Transitions | InternalTransitions>
-  transitionEnd: CustomEvent<Transitions | InternalTransitions>
-  scrollToTop: CustomEvent<never>
-}
-type EventName = keyof EventMaps
-
-// a strongly typed event emitter
-
-class Loader {
-  private eventTarget: EventTarget
-
-  constructor() {
-    this.eventTarget = new EventTarget()
-  }
-
-  public addEventListener<T extends EventName>(
-    eventName: T,
-    listener: (event: EventMaps[T]) => void
-  ) {
-    this.eventTarget.addEventListener(eventName, listener as EventListener)
-  }
-
-  public removeEventListener<T extends EventName>(
-    eventName: T,
-    listener: (event: EventMaps[T]) => void
-  ) {
-    this.eventTarget.removeEventListener(eventName, listener as EventListener)
-  }
-
-  public dispatchEvent<T extends EventName>(eventType: T, event: EventMaps[T]) {
-    this.eventTarget.dispatchEvent(event)
-  }
-}
 
 /**
  * EVENTS
@@ -76,7 +37,16 @@ class Loader {
  * scrollToTop
  * - fires when the page is scrolled to the top via a link click
  */
-const loader = new Loader()
+const loader = new TypedEventEmitter<{
+  anyStart: [Transitions | InternalTransitions]
+  anyEnd: [Transitions | InternalTransitions]
+  initialStart: []
+  initialEnd: []
+  progressUpdated: [number]
+  transitionStart: [Transitions | InternalTransitions]
+  transitionEnd: [Transitions | InternalTransitions]
+  scrollToTop: []
+}>()
 
 export default loader
 
