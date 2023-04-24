@@ -48,9 +48,9 @@ export default function CustomTextOverflow({
     const lines = getNumberOfLines(wrapperRef.current)
 
     if (lines <= maxLines) {
-      wrapper.innerText = children
+      wrapper.textContent = children
       return () => {
-        wrapper.innerText = `${children}${ellipsis}`
+        wrapper.textContent = `${children}${ellipsis}`
       }
     }
 
@@ -74,7 +74,7 @@ export default function CustomTextOverflow({
 
       const newText = `${textBeforeEllipsis}${ellipsis}${textAfterEllipsis}`
 
-      wrapper.innerText = newText
+      wrapper.textContent = newText
       if (getNumberOfLines(wrapper) <= maxLines) return
       if (numberOfCharsToRemove >= children.length) return
       shrinkText(numberOfCharsToRemove + 1)
@@ -83,7 +83,7 @@ export default function CustomTextOverflow({
     shrinkText(1)
 
     return () => {
-      wrapper.innerText = `${children}${ellipsis}`
+      wrapper.textContent = `${children}${ellipsis}`
     }
   }, [children, ellipsis, maxLines, truncatePosition, refreshSignal])
 

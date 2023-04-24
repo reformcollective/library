@@ -7,7 +7,7 @@ import RichLink from "./modules/Link"
 import {
   A,
   Code,
-  EM,
+  Em,
   H1,
   H2,
   H3,
@@ -15,13 +15,13 @@ import {
   H5,
   H6,
   Image,
-  LI,
-  OL,
+  Li,
+  Ol,
   P,
   Quote,
   Strong,
   U,
-  UL,
+  Ul,
 } from "./modules/StyledComponents"
 import renderContent from "./renderContent"
 
@@ -49,7 +49,7 @@ const options: Options = {
   renderMark: {
     [MARKS.BOLD]: children => <Strong>{children}</Strong>,
     [MARKS.UNDERLINE]: children => <U>{children}</U>,
-    [MARKS.ITALIC]: children => <EM>{children}</EM>,
+    [MARKS.ITALIC]: children => <Em>{children}</Em>,
     [MARKS.CODE]: children => <Code>{children}</Code>,
   },
   renderNode: {
@@ -60,9 +60,9 @@ const options: Options = {
     [BLOCKS.HEADING_5]: (node, children) => <H5>{children}</H5>,
     [BLOCKS.HEADING_6]: (node, children) => <H6>{children}</H6>,
     [BLOCKS.PARAGRAPH]: (node, children) => <P>{children}</P>,
-    [BLOCKS.UL_LIST]: (node, children) => <UL>{children}</UL>,
-    [BLOCKS.OL_LIST]: (node, children) => <OL>{children}</OL>,
-    [BLOCKS.LIST_ITEM]: (node, children) => <LI>{children}</LI>,
+    [BLOCKS.UL_LIST]: (node, children) => <Ul>{children}</Ul>,
+    [BLOCKS.OL_LIST]: (node, children) => <Ol>{children}</Ol>,
+    [BLOCKS.LIST_ITEM]: (node, children) => <Li>{children}</Li>,
     [INLINES.HYPERLINK]: (node, children) => {
       const { data } = node
       const { uri } = data
@@ -137,7 +137,5 @@ const options: Options = {
 }
 
 export default function RichText({ content }: RichTextProps) {
-  // TODO: GET RID OF THIS CHECK AND UPDATE TYPE
-  // eslint-disable-next-line
   return <>{renderContent(content, options)}</>
 }
