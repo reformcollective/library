@@ -154,7 +154,9 @@ export const loadPage = async (
   // wait for the loader to finish animation before starting the transition
   while (!getLoaderIsDone()) await sleep(100)
 
-  const animationContext = gsap.context(() => {})
+  const animationContext = gsap.context(() => {
+    // we need to pass a function in order to create a new context
+  })
   const enterAnimations = allTransitions[transition]?.inAnimation ?? []
 
   // run each animation, add it to the context, and get the duration of the longest one

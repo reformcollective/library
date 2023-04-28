@@ -115,7 +115,7 @@ export default function Scroll({
         await pageUnmounted()
         await pageReady()
         setRefreshSignal(s => s + 1)
-      })()
+      })().catch(console.error)
     }
 
     window.addEventListener("popstate", killSmoother)

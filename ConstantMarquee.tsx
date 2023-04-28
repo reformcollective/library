@@ -55,7 +55,6 @@ export default function ConstantMarquee({
           offset.current = parseInt(first.style.left, 10)
       }
     }
-    return () => {}
   }, [array.length, timing, hash])
 
   useEffect(() => {
