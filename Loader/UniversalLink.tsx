@@ -1,4 +1,5 @@
 import { Link } from "gatsby"
+import libraryConfig from "libraryConfig"
 import { MouseEventHandler } from "react"
 
 import { Transitions } from "."
@@ -30,7 +31,7 @@ export interface UniversalLinkProps {
  */
 export default function UniversalLink({
   to = "",
-  transition = "slide",
+  transition = libraryConfig.defaultTransition,
   openInNewTab = false,
   children,
   className = "",
