@@ -1,9 +1,7 @@
-import { useRef } from "react"
-
 import gsap from "gsap"
-import styled from "styled-components"
-
 import useAnimation from "library/useAnimation"
+import { useRef } from "react"
+import styled from "styled-components"
 import media from "styles/media"
 
 interface MarqueeProps {
@@ -23,7 +21,9 @@ export default function ScrubMarquee({
 
   useAnimation(() => {
     if (marquee.current && triggerEnd) {
-      gsap.fromTo(marquee.current, {
+      gsap.fromTo(
+        marquee.current,
+        {
           x: right ? "-100vw" : 0,
         },
         {
@@ -35,7 +35,8 @@ export default function ScrubMarquee({
             end: triggerEnd,
             scrub: true,
           },
-        })
+        }
+      )
     }
   }, [right, triggerEnd])
 

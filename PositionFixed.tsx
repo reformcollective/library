@@ -1,6 +1,5 @@
-import { ReactNode, useState } from "react"
-
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { ReactNode, useState } from "react"
 import styled from "styled-components"
 
 import { usePinType } from "./Scroll"

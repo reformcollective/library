@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from "react"
-
 import gsap from "gsap"
+import React, { useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 
 import { addDebouncedEventListener } from "./functions"
@@ -17,7 +16,7 @@ export default function ConstantMarquee({
   className = "",
 }: MarqueeProps) {
   const marquee = useRef<HTMLDivElement>(null)
-  const [array, setArray] = useState<undefined[]>([undefined])
+  const [array, setArray] = useState<null[]>([null])
   const [hash, setHash] = useState(0)
   const offset = useRef(0)
 
@@ -56,21 +55,18 @@ export default function ConstantMarquee({
           offset.current = parseInt(first.style.left, 10)
       }
     }
-    return () => {}
   }, [array.length, timing, hash])
 
   useEffect(() => {
     const update = () => {
       if (marquee.current) {
         const width = Math.max(
-          ...Array.from(marquee.current.children).map(
-            child => child.clientWidth
-          )
+          ...[...marquee.current.children].map(child => child.clientWidth)
         )
 
         // number needed to fill width plus some buffer
         const newNumber = Math.ceil((window.innerWidth + 1500) / width) + 1
-        setArray(Array(newNumber).fill(undefined))
+        setArray(Array.from({ length: newNumber }, () => null))
       }
       setHash(p => p + 1)
     }

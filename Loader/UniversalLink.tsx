@@ -1,47 +1,80 @@
-import { MouseEventHandler } from "react"
-
 import { Link } from "gatsby"
+import libraryConfig from "libraryConfig"
+import { MouseEventHandler } from "react"
 
 import { Transitions } from "."
 import { loadPage } from "./TransitionUtils"
 
-export interface UniversalLinkProps {
+interface BaseLinkProps {
   /**
-   * the page to navigate to when clicked
+   * should the link open in a new tab?
    */
-  to?: string
-  /**
-   * the transition to use when navigating
-   */
-  transition?: Transitions
   openInNewTab?: boolean
   children: React.ReactNode
   className?: string
   onMouseEnter?: MouseEventHandler
   onMouseLeave?: MouseEventHandler
-  onClick?: MouseEventHandler
-  type?: "submit"
-  forwardRef?: React.Ref<HTMLAnchorElement & HTMLButtonElement & Link<unknown>>
   ariaLabel?: string
 }
+
+interface ButtonProps extends BaseLinkProps {
+  /**
+   * what should happen when the button is clicked?
+   */
+  onClick?: MouseEventHandler
+  /**
+   * what type of button is this?
+   */
+  type: "submit" | "button" | "reset"
+  /**
+   * forward a ref to the button
+   */
+  forwardRef?: React.Ref<HTMLButtonElement>
+  to?: never
+  transition?: never
+}
+
+interface AnchorProps extends BaseLinkProps {
+  /**
+   * where should the link navigate to?
+   */
+  to: string
+  /**
+   * which transition should be used when navigating to this link?
+   */
+  transition?: Transitions
+  /**
+   * forward a ref to the link or anchor tag
+   */
+  forwardRef?: React.Ref<HTMLAnchorElement & Link<unknown>>
+  onClick?: never
+  type?: never
+}
+
+export type UniversalLinkProps = ButtonProps | AnchorProps
 
 /**
  * a link that navigates when clicked, using the specified transition
  * @returns
  */
 export default function UniversalLink({
-  to = "",
-  transition = "slide",
+  to,
+  transition = libraryConfig.defaultTransition,
   openInNewTab = false,
+  forwardRef,
+  type,
   children,
-  className = "",
-  onMouseEnter = undefined,
-  onMouseLeave = undefined,
-  onClick = undefined,
-  type = undefined,
-  forwardRef = undefined,
-  ariaLabel = undefined,
+  ariaLabel,
+  ...props
 }: UniversalLinkProps) {
+  if (type) {
+    return (
+      <button type={type} ref={forwardRef} {...props}>
+        {children}
+      </button>
+    )
+  }
+
   const internal = /^\/(?!\/)/.test(to)
 
   const handleClick: React.MouseEventHandler = e => {
@@ -50,37 +83,19 @@ export default function UniversalLink({
     if (openInNewTab || !internal) {
       window.open(to, "_blank")
     } else {
-      loadPage(to, transition).catch((err: string) => {
-        throw new Error(err)
+      loadPage(to, transition).catch((error: string) => {
+        throw new Error(error)
       })
     }
-  }
-
-  if (onClick || type) {
-    return (
-      <button
-        className={className}
-        onClick={onClick}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        type={type === "submit" ? "submit" : "button"}
-        ref={forwardRef}
-        aria-label={ariaLabel}
-      >
-        {children}
-      </button>
-    )
   }
 
   return internal ? (
     <Link
       to={to}
       onClick={handleClick}
-      className={className}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       ref={forwardRef}
       aria-label={ariaLabel}
+      {...props}
     >
       {children}
     </Link>
@@ -88,11 +103,9 @@ export default function UniversalLink({
     <a
       href={to}
       onClick={handleClick}
-      className={className}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       ref={forwardRef}
       aria-label={ariaLabel}
+      {...props}
     >
       {children}
     </a>

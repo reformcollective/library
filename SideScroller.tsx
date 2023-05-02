@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react"
-
 import gsap from "gsap/all"
-import styled, { css } from "styled-components"
-
 import useCanHover from "library/canHover"
 import { usePinType } from "library/Scroll"
 import useAnimation from "library/useAnimation"
+import { useEffect, useState } from "react"
+import styled, { css } from "styled-components"
 
 import getVH from "./getVH"
 

@@ -1,8 +1,7 @@
 import { GatsbyImage } from "gatsby-plugin-image"
-import styled, { css } from "styled-components"
-
 import fullyResponsive from "library/fullyResponsive"
 import UniversalLink from "library/Loader/UniversalLink"
+import styled, { css } from "styled-components"
 
 export const Code = styled.pre`
   ${fullyResponsive(css``)}
@@ -32,15 +31,15 @@ export const P = styled.p`
   ${fullyResponsive(css``)}
 `
 
-export const UL = styled.ul`
+export const Ul = styled.ul`
   ${fullyResponsive(css``)}
 `
 
-export const OL = styled.ol`
+export const Ol = styled.ol`
   ${fullyResponsive(css``)}
 `
 
-export const LI = styled.li``
+export const Li = styled.li``
 
 export const A = styled(UniversalLink)``
 
@@ -52,7 +51,7 @@ export const Strong = styled.strong``
 
 export const U = styled.u``
 
-export const EM = styled.em``
+export const Em = styled.em``
 
 export const Image = styled(GatsbyImage)`
   ${fullyResponsive(css``)}

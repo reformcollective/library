@@ -23,6 +23,10 @@ const config = {
    * @param startTime the number of MS the page spent loading on the network so far
    */
   getTimeNeeded: (startTime: number) => startTime * 4 + 1000,
+  /**
+   * the transition that will be used by default
+   */
+  defaultTransition: "slide" as TransitionNames,
 }
 
 export default config
