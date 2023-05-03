@@ -269,7 +269,7 @@ export function useBackButton() {
       loader.dispatchEvent("initialStart", new CustomEvent("initialStart"))
       loader.dispatchEvent(
         "anyStart",
-        new CustomEvent("anyStart", { detail: "none" })
+        new CustomEvent<"none">("anyStart", { detail: "none" })
       )
 
       // we need to wait for the *next* page to load, so wait for unmount, then pageReady
@@ -280,11 +280,11 @@ export function useBackButton() {
               // fire event with detail "none"
               loader.dispatchEvent(
                 "transitionEnd",
-                new CustomEvent("transitionEnd", { detail: "none" })
+                new CustomEvent<"none">("transitionEnd", { detail: "none" })
               )
               loader.dispatchEvent(
                 "anyEnd",
-                new CustomEvent("anyEnd", { detail: "none" })
+                new CustomEvent<"none">("anyEnd", { detail: "none" })
               )
               ScrollSmoother.get()?.paused(false)
             }, 500)
