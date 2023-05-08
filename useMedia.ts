@@ -1,5 +1,7 @@
 import { startTransition, useCallback, useEffect, useState } from "react"
 
+import { IGatsbyImageData } from "gatsby-plugin-image"
+
 import {
   desktopBreakpoint as desktop,
   tabletBreakpoint as tablet,
@@ -10,7 +12,16 @@ import { isBrowser } from "./functions"
 
 export default function useMedia<
   // anything that doesn't change by reference
-  InputType extends string | number | boolean | null | undefined
+  InputType extends
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    /**
+     * image data technically changes by reference, but is stable when provided by gatsby
+     */
+    | IGatsbyImageData
 >(fw: InputType, d: InputType, t: InputType, m: InputType) {
   const handleUpdate = useCallback(() => {
     if (isBrowser()) {
