@@ -8,12 +8,10 @@ import {
 
 import { isBrowser } from "./functions"
 
-export default function useMedia<InputType>(
-  fw: InputType,
-  d: InputType,
-  t: InputType,
-  m: InputType
-) {
+export default function useMedia<
+  // anything that doesn't change by reference
+  InputType extends string | number | boolean | null | undefined
+>(fw: InputType, d: InputType, t: InputType, m: InputType) {
   const handleUpdate = useCallback(() => {
     if (isBrowser()) {
       startTransition(() => {
