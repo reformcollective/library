@@ -109,3 +109,25 @@ export function getVwToPx(vw: number) {
 export function useVwToPx(vw: number) {
   return useHookify(getVwToPx, vw)
 }
+
+/**
+ * given, a pixel value, scale it with the current viewport width
+ * for example, 720 pixels would be 50vw on a 1440px wide screen
+ * which would always scale to half the screen width
+ * @param px the number of pixels to scale
+ * @returns the calculated px value
+ */
+export function getResponsivePixels(px: number) {
+  return getVwToPx(getPxToVw(px))
+}
+
+/**
+ * given, a pixel value, scale it with the current viewport width
+ * for example, 720 pixels would be 50vw on a 1440px wide screen
+ * which would always scale to half the screen width
+ * @param px the number of pixels to scale
+ * @returns the calculated px value
+ */
+export function useResponsivePixels(px: number) {
+  return useHookify(getResponsivePixels, px)
+}
