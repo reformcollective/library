@@ -5,7 +5,7 @@ import useAnimation from "library/useAnimation"
 import { useEffect, useState } from "react"
 import styled, { css } from "styled-components"
 
-import getVH from "./getVH"
+import { getVH } from "./viewportUtils"
 
 interface SideScrollerProps {
   children: React.ReactNode

@@ -17,26 +17,6 @@ export const addDebouncedEventListener = (
   return () => element.removeEventListener(event, debouncedCallback)
 }
 
-export const vwToPx = (vw: number) => {
-  if (isBrowser()) {
-    return vw * (window.innerWidth / 100)
-  }
-  return 0
-}
-
-export const pxToVw = (px: number, breakpoint: number) => {
-  if (isBrowser()) {
-    return px / (breakpoint / 100)
-  }
-}
-
-export const vhToPx = (vh: number) => {
-  if (isBrowser()) {
-    return (vh * window.innerHeight) / 100
-  }
-  return 0
-}
-
 export const sleep = (ms: number) =>
   new Promise(resolve => {
     setTimeout(resolve, ms)
