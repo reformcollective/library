@@ -27,8 +27,11 @@ const measuringElement = createMeasuringElement()
 /**
  * hookify a get function to update on resize
  */
-function useHookify<P, R, T extends (input: P) => R>(fn: T, arg: P) {
-  const [value, setValue] = useState<R>()
+function useHookify<P, T extends (input: P) => ReturnType<T>>(
+  fn: T,
+  arg: P
+): ReturnType<T> {
+  const [value, setValue] = useState<ReturnType<T>>(fn(arg))
   useEffect(() => {
     const handleResize = () => setValue(fn(arg))
 
