@@ -17,6 +17,9 @@ export const addDebouncedEventListener = (
   return () => element.removeEventListener(event, debouncedCallback)
 }
 
+/**
+ * @deprecated see viewportUtils.ts
+ */
 export const vwToPx = (vw: number) => {
   if (isBrowser()) {
     const px = vw * (window.innerWidth / 100)
@@ -25,6 +28,9 @@ export const vwToPx = (vw: number) => {
   return 0
 }
 
+/**
+ * @deprecated see viewportUtils.ts
+ */
 export const pxToVw = (px: number, breakpoint: number) => {
   if (isBrowser()) {
     const vw = px / (breakpoint / 100)
@@ -32,6 +38,9 @@ export const pxToVw = (px: number, breakpoint: number) => {
   }
 }
 
+/**
+ * @deprecated see viewportUtils.ts
+ */
 export const vhToPx = (vh: number) => {
   if (isBrowser()) {
     const px = (vh * window.innerHeight) / 100

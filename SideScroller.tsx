@@ -7,7 +7,7 @@ import useCanHover from "library/canHover"
 import { usePinType } from "library/Scroll"
 import useAnimation from "library/useAnimation"
 
-import getVH from "./getVH"
+import { getVH } from "./viewportUtils"
 
 interface SideScrollerProps {
   children: React.ReactNode
