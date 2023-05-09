@@ -69,10 +69,15 @@ export default function UniversalLink({
 }: UniversalLinkProps) {
   if (type) {
     return (
-      // eslint-disable-next-line react/button-has-type
-      <button type={type} ref={forwardRef} {...props} style={{
-        cursor: "pointer",
-      }}>
+      <button
+        // eslint-disable-next-line react/button-has-type
+        type={type}
+        ref={forwardRef}
+        {...props}
+        style={{
+          cursor: "pointer",
+        }}
+      >
         {children}
       </button>
     )
