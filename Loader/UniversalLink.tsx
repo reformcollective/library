@@ -69,7 +69,14 @@ export default function UniversalLink({
 }: UniversalLinkProps) {
   if (type) {
     return (
-      <button type={type} ref={forwardRef} {...props}>
+      <button
+        type={type}
+        ref={forwardRef}
+        {...props}
+        style={{
+          cursor: "pointer",
+        }}
+      >
         {children}
       </button>
     )
