@@ -3,12 +3,16 @@ import { useEffect } from "react"
 import { isBrowser } from "./functions"
 
 // eslint-disable-next-line ssr-friendly/no-dom-globals-in-module-scope
-const systemRequestFrame = isBrowser() ? requestAnimationFrame : undefined
+const canTrackFrames = isBrowser() && window.location.href.includes("localhost")
+
+// eslint-disable-next-line ssr-friendly/no-dom-globals-in-module-scope
+const systemRequestFrame = canTrackFrames ? requestAnimationFrame : undefined
 
 const requests: FrameRequestCallback[] = []
 let startIndex = 0
 
-if (isBrowser()) {
+if (canTrackFrames) {
+  console.info("tracking frame times")
   window.requestAnimationFrame = request => {
     requests.push(request)
     return startIndex + requests.length - 1
@@ -45,10 +49,11 @@ const onFrame = (time: number) => {
 
 export default function useTrackFrameTime() {
   useEffect(() => {
-    systemRequestFrame?.(onFrame)
+    if (canTrackFrames) systemRequestFrame?.(onFrame)
   }, [])
 
   useEffect(() => {
+    if (!canTrackFrames) return
     const logFrameTimes = () => {
       if (!lastThirtySeconds.length) return
       let average = 0
