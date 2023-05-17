@@ -61,8 +61,9 @@ export const useIsSmooth = () => {
     }
   }, [])
 
-  // if the url contains ?noSmooth then disable smooth scrolling
+  // check for url flags
   if (isBrowser() && window.location.search.includes("noSmooth")) return false
+  if (isBrowser() && window.location.search.includes("forceSmooth")) return true
 
   return smooth
 }
