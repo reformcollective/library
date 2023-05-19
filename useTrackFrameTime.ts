@@ -73,7 +73,7 @@ export default function useTrackFrameTime() {
       )
     }
 
-    const interval = setInterval(logFrameTimes, 1000)
+    const interval = setInterval(logFrameTimes, 10_000)
     return () => clearInterval(interval)
   }, [])
 }
