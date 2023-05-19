@@ -2,6 +2,8 @@ import ScrollSmoother from "gsap/ScrollSmoother"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect, useRef, useState } from "react"
 
+import { isBrowser } from "./functions"
+
 interface ScrollProps {
   children: React.ReactNode
   /**
@@ -56,6 +58,10 @@ export const useIsSmooth = () => {
       setSmooth(false)
     }
   }, [])
+
+  // check for url flags
+  if (isBrowser() && window.location.search.includes("noSmooth")) return false
+  if (isBrowser() && window.location.search.includes("forceSmooth")) return true
 
   return smooth
 }

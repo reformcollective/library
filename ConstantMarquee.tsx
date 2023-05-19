@@ -27,7 +27,7 @@ export default function ConstantMarquee({
       const width = first?.clientWidth ?? 0
       offset.current = Math.min(0, offset.current)
       gsap.set(marquee.current.children, {
-        left: i => i * width + offset.current,
+        x: i => i * width + offset.current,
       })
 
       gsap.to(marquee.current, {})
@@ -35,9 +35,9 @@ export default function ConstantMarquee({
       const tween = gsap.to(marquee.current.children, {
         duration: timing,
         ease: "none",
-        left: `-=${width}`, // move each box 500px to right
+        x: `-=${width}`, // move each box 500px to right
         modifiers: {
-          left: gsap.utils.unitize((x: number) => {
+          x: gsap.utils.unitize((x: number) => {
             if (x < -width) {
               return x + width * array.length
             }
@@ -52,7 +52,7 @@ export default function ConstantMarquee({
 
       return () => {
         if (first instanceof HTMLElement)
-          offset.current = parseInt(first.style.left, 10)
+          offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
       }
     }
   }, [array.length, timing, hash])
@@ -103,7 +103,7 @@ const StyledMarquee = styled.div<{ number: number }>`
   grid-template-columns: repeat(${({ number }) => number}, max-content);
 
   /* always have a width of 100vw by default */
-  width: 100vw;
+  width: 100%;
   left: 50%;
   transform: translateX(-50%);
 
