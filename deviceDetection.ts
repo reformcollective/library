@@ -1,6 +1,6 @@
 import { isBrowser } from "./functions"
 
-const isIOS = () => {
+export const isIOS = () => {
   if (!isBrowser()) return false
   const userAgent = window.navigator.userAgent.toLowerCase()
   const userAgentMatch = /iphone|ipad|ipod/.test(userAgent)
@@ -10,4 +10,12 @@ const isIOS = () => {
   return userAgentMatch || isMacWithTouch
 }
 
-export default isIOS
+export const isAndroid = () => {
+  if (!isBrowser()) return false
+  const userAgent = window.navigator.userAgent.toLowerCase()
+  return userAgent.includes("android")
+}
+
+export const isMobile = () => {
+  return isIOS() || isAndroid()
+}
