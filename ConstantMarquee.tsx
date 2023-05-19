@@ -107,7 +107,7 @@ const StyledMarquee = styled.div<{ number: number }>`
   grid-template-columns: repeat(${({ number }) => number}, max-content);
 
   /* always have a width of 100vw by default */
-  width: 100vw;
+  width: 100%;
   left: 50%;
   transform: translateX(-50%);
 
