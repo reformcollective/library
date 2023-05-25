@@ -7,6 +7,7 @@ import {
   tabletBreakpoint as tablet,
   mobileBreakpoint as mobile,
 } from "styles/media"
+import { GatsbyImageType } from "types"
 
 import { isBrowser } from "./functions"
 
@@ -22,6 +23,8 @@ export default function useMedia<
      * image data technically changes by reference, but is stable when provided by gatsby
      */
     | IGatsbyImageData
+    | IGatsbyImageData[]
+    | GatsbyImageType[]
 >(fw: InputType, d: InputType, t: InputType, m: InputType) {
   const handleUpdate = useCallback(() => {
     if (isBrowser()) {
