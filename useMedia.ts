@@ -3,9 +3,9 @@ import { startTransition, useCallback, useEffect, useState } from "react"
 import { IGatsbyImageData } from "gatsby-plugin-image"
 
 import {
-  desktopBreakpoint as desktop,
-  tabletBreakpoint as tablet,
-  mobileBreakpoint as mobile,
+  desktopAspectRatio as desktop,
+  tabletAspectRatio as tablet,
+  mobileAspectRatio as mobile,
 } from "styles/media"
 
 import { isBrowser } from "./functions"
@@ -26,13 +26,14 @@ export default function useMedia<
   const handleUpdate = useCallback(() => {
     if (isBrowser()) {
       startTransition(() => {
-        if (window.innerWidth > desktop) {
-          setCurrent(fw)
-        } else if (window.innerWidth > tablet) {
-          setCurrent(d)
-        } else if (window.innerWidth > mobile) {
+        const aspectRatio = window.innerWidth / window.innerHeight
+        if (aspectRatio <= mobile) {
+          setCurrent(m)
+        } else if (aspectRatio <= tablet) {
           setCurrent(t)
-        } else setCurrent(m)
+        } else if (aspectRatio <= desktop) {
+          setCurrent(d)
+        } else setCurrent(fw)
       })
     }
   }, [fw, d, t, m])
