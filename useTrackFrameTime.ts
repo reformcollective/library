@@ -21,7 +21,9 @@ if (canTrackFrames) {
   window.cancelAnimationFrame = (id: number) => {
     const indexToClear = id - startIndex
     if (indexToClear >= 0) {
-      requests[indexToClear] = () => {}
+      requests[indexToClear] = () => {
+        // this function replaces the callback, so it's a no-op
+      }
     }
   }
 }
@@ -55,7 +57,7 @@ export default function useTrackFrameTime() {
   useEffect(() => {
     if (!canTrackFrames) return
     const logFrameTimes = () => {
-      if (!lastThirtySeconds.length) return
+      if (lastThirtySeconds.length === 0) return
       let average = 0
       let max = -Infinity
       let min = Infinity
