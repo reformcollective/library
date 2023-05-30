@@ -13,7 +13,8 @@ interface SequenceProps {
 type PropsScroll = SequenceProps & {
   type: "scroll"
   trigger: HTMLElement | string | null
-  endVal?: string
+  triggerStart?: string | number
+  triggerEnd?: string | number
   ease?: string
 
   frame?: never
@@ -21,13 +22,14 @@ type PropsScroll = SequenceProps & {
 }
 
 type PropsAuto = SequenceProps & {
-  type: "auto"
+  type?: "auto"
   ease?: string
 
   frame?: never
   trigger?: never
-  endVal?: never
   duration?: number
+  triggerStart?: never
+  triggerEnd?: never
 }
 
 type PropsManual = SequenceProps & {
@@ -35,9 +37,10 @@ type PropsManual = SequenceProps & {
   frame: number
 
   trigger?: never
-  endVal?: never
   duration?: never
   ease?: never
+  triggerStart?: never
+  triggerEnd?: never
 }
 
 export default function ImageSequence({
@@ -45,10 +48,12 @@ export default function ImageSequence({
   length,
   folder,
   trigger,
-  endVal,
+  triggerStart,
+  triggerEnd,
   frame,
   ease,
   duration,
+  type = "auto",
 }: PropsAuto | PropsScroll | PropsManual) {
   const [sequenceData] = useState({
     frame: 0,
@@ -122,17 +127,16 @@ export default function ImageSequence({
       const imageNumber = i.toString().padStart(maxLen, "0")
 
       // eslint-disable-next-line no-unsanitized/method
-      const prom = import(`images/sequences/${folder}/${imageNumber}.webp`)
+      const prom = import(`../images/sequences/${folder}/${imageNumber}.webp`)
         .then((image: { default: string }) => {
           return createImage(image.default, i)
         })
         .catch(console.error)
 
       // if this is an auto sequence, the loader should wait for all images to settle (max 5s)
-      if (trigger === undefined && frame === undefined)
-        transitionAwaitPromise(prom)
+      if (type === "auto") transitionAwaitPromise(prom)
     }
-  }, [length, folder, trigger, createImage, frame])
+  }, [createImage, folder, length, type])
 
   /**
    * Update the drawing context when the canvas element is created
@@ -145,12 +149,16 @@ export default function ImageSequence({
    * Create the timeline and play it when ready
    */
   useEffect(() => {
+    // if in manual mode, render the frame when it changes
     if (
-      canvasEl &&
-      frame === undefined // skip timeline creation if in manual mode
+      type === "manual" // skip timeline creation if in manual mode
     ) {
-      const tl = gsap.timeline({ paused: true })
-      tl.fromTo(
+      sequenceData.frame = frame ?? 0
+      requestAnimationFrame(() => {
+        latestRender.current()
+      })
+    } else {
+      const tween = gsap.fromTo(
         sequenceData,
         {
           frame: 0,
@@ -158,8 +166,10 @@ export default function ImageSequence({
         {
           frame: length - 1,
           snap: "frame",
+          delay: 1,
           duration: duration ?? 3,
           ease: ease ?? "none",
+          paused: true,
           onUpdate: () => {
             requestAnimationFrame(() => {
               latestRender.current()
@@ -169,44 +179,52 @@ export default function ImageSequence({
             ? {
                 trigger,
                 scrub: 0.5,
-                start: "top top",
-                end: endVal,
+                start: triggerStart ?? "top top",
+                end: triggerEnd ?? "bottom top",
               }
             : undefined,
-        },
-        1
+        }
       )
 
       const onReady = () => {
-        Promise.allSettled(sequenceData.images)
-          .then(() => {
-            return tl.play(0)
-          })
-          .catch(console.error)
+        if (type === "auto")
+          Promise.allSettled(sequenceData.images)
+            .then(() => {
+              return tween.play(0)
+            })
+            .catch(console.error)
       }
 
       loader.addEventListener("anyEnd", onReady)
       return () => {
         loader.removeEventListener("anyEnd", onReady)
-        tl.revert()
+        tween.kill()
       }
     }
-    // if in manual mode, render the frame when it changes
-    if (frame !== undefined) {
-      sequenceData.frame = frame
-      requestAnimationFrame(() => {
-        latestRender.current()
-      })
-    }
-  }, [canvasEl, duration, ease, endVal, frame, length, sequenceData, trigger])
+  }, [
+    duration,
+    ease,
+    frame,
+    length,
+    sequenceData,
+    trigger,
+    triggerEnd,
+    triggerStart,
+    type,
+  ])
 
   /**
    * change in width or height should trigger a re-render
    */
   useEffect(() => {
-    requestAnimationFrame(() => {
-      latestRender.current()
-    })
+    const onResize = () => {
+      requestAnimationFrame(() => {
+        latestRender.current()
+      })
+    }
+    onResize()
+    window.addEventListener("resize", onResize)
+    return () => window.removeEventListener("resize", onResize)
   }, [canvasWidth, canvasHeight])
 
   return (
@@ -220,9 +238,6 @@ export default function ImageSequence({
 }
 
 const Canvas = styled.canvas<{ height: number; width: number }>`
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
 
   ${({ height, width }) =>
