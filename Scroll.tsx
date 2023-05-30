@@ -75,6 +75,11 @@ export default function Scroll({
   const isPaused = useRef(true)
   const [refreshSignal, setRefreshSignal] = useState(0)
 
+  useEffect(() => {
+    if (window.location.hostname === "localhost" && performance.now() > 10)
+      isPaused.current = false
+  })
+
   /**
    * create the smoother
    */
