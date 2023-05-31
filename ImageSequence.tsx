@@ -181,6 +181,7 @@ export default function ImageSequence({
                 scrub: 0.5,
                 start: triggerStart ?? "top top",
                 end: triggerEnd ?? "bottom top",
+                refreshPriority: 999,
               }
             : undefined,
         }
