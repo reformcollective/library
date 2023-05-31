@@ -1,23 +1,22 @@
 import {
-  desktopAspectRatio as desktop,
-  tabletAspectRatio as tablet,
-  mobileAspectRatio as mobile,
+  desktopBreakpoint as desktop,
+  tabletBreakpoint as tablet,
+  mobileBreakpoint as mobile,
 } from "styles/media"
 
 export default function getMedia<Type>(fw: Type, d: Type, t: Type, m: Type) {
   if (typeof window !== "undefined") {
-    const aspectRatio = window.innerWidth / window.innerHeight
-    if (aspectRatio <= mobile) {
-      return m
+    if (window.innerWidth > desktop) {
+      return fw
     }
-    if (aspectRatio <= tablet) {
-      return t
-    }
-    if (aspectRatio <= desktop) {
+    if (window.innerWidth > tablet) {
       return d
     }
-    if (aspectRatio > desktop) {
-      return fw
+    if (window.innerWidth > mobile) {
+      return t
+    }
+    if (window.innerWidth <= mobile) {
+      return m
     }
   }
 
