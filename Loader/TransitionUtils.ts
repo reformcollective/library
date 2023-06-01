@@ -141,6 +141,10 @@ export const loadPage = async (
   if (!transition || !allTransitions[transition]) {
     currentAnimation = null
     await navigate(to)
+
+    ScrollSmoother.get()?.paused(false)
+    ScrollSmoother.get()?.scrollTo(0)
+
     await pageUnmounted()
     await pageReady()
 
