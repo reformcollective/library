@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 
 import libraryConfig from "libraryConfig"
@@ -43,29 +44,27 @@ export const getLoaderIsDone = () => loaderIsDone
 async function onComplete() {
   await recursiveAllSettled(promisesToAwait)
 
-  loader.dispatchEvent("anyStart", new CustomEvent("anyStart"))
-  loader.dispatchEvent("initialStart", new CustomEvent("initialStart"))
+  loader.dispatchEvent("anyStart", "initial")
+  loader.dispatchEvent("initialStart")
 
   progressCallbacks.forEach(cb => cb(100))
-  loader.dispatchEvent(
-    "progressUpdated",
-    new CustomEvent("progressUpdated", { detail: 100 })
-  )
+  loader.dispatchEvent("progressUpdated", 100)
   isComplete = true
   await sleep(250)
 
-  const longestAnimation = animations.reduce((longest, animation) => {
+  let longestAnimation = 0
+  for (const animation of animations) {
     animation.callback()
-    return Math.max(longest, animation.duration)
-  }, 0)
+    longestAnimation = Math.max(longestAnimation, animation.duration)
+  }
 
   await sleep(longestAnimation * 1000 + 10)
   loaderIsDone = true
 
   ScrollSmoother.get()?.paused(false)
 
-  loader.dispatchEvent("anyEnd", new CustomEvent("anyEnd"))
-  loader.dispatchEvent("initialEnd", new CustomEvent("initialEnd"))
+  loader.dispatchEvent("anyEnd", "initial")
+  loader.dispatchEvent("initialEnd")
 }
 
 /**
@@ -78,9 +77,11 @@ const updatePercent = () => {
   pageReady()
     .then(async () => {
       // short circuit if there are no callbacks or animations
-      if (progressCallbacks.length === 0 && animations.length === 0) {
-        if (!isComplete) await onComplete()
-      }
+      return progressCallbacks.length === 0 &&
+        animations.length === 0 &&
+        !isComplete
+        ? onComplete()
+        : null
     })
     .catch(async () => {
       if (!isComplete) await onComplete()
@@ -92,17 +93,14 @@ const updatePercent = () => {
   if (progress >= 99) {
     pageReady()
       .then(async () => {
-        if (!isComplete) await onComplete()
+        return isComplete ? null : onComplete()
       })
       .catch(async () => {
         if (!isComplete) await onComplete()
       })
   } else {
     progressCallbacks.forEach(cb => cb(progress))
-    loader.dispatchEvent(
-      "progressUpdated",
-      new CustomEvent("progressUpdated", { detail: progress })
-    )
+    loader.dispatchEvent("progressUpdated", progress)
     if (isBrowser()) requestAnimationFrame(updatePercent)
   }
 }
@@ -118,7 +116,7 @@ if (isBrowser())
   pageReady()
     .then(async () => {
       await sleep(EXTRA_DELAY)
-      if (!isComplete) await onComplete()
+      return isComplete ? null : onComplete()
     })
     .catch(async () => {
       await sleep(EXTRA_DELAY)

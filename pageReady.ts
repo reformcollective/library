@@ -1,45 +1,36 @@
-import { useEffect, useState } from "react"
-
-import { sleep } from "./functions"
+import { useEffect } from "react"
 
 let waitingForPage = true
 
-export async function pageReady(callback?: VoidFunction) {
-  // need to await in loop since pageReady is outside the react cycle
-  // eslint-disable-next-line no-await-in-loop
-  while (waitingForPage) await sleep(100)
-
-  return callback?.()
-}
-
-export const usePageReady = () => {
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    pageReady(() => setReady(true)).catch(console.error)
-
-    return () => {
-      setReady(false)
-    }
-  })
-
-  return ready
-}
-
-const functionsToRunOnUnmount: VoidFunction[] = []
+const promisesToResolveOnReady: VoidFunction[] = []
+const promisesToResolveOnUnmount: VoidFunction[] = []
 
 export function useTrackPageReady() {
   useEffect(() => {
     waitingForPage = false
+    promisesToResolveOnReady.forEach(fn => fn())
+    promisesToResolveOnReady.length = 0
 
     return () => {
       waitingForPage = true
-      functionsToRunOnUnmount.forEach(fn => fn())
-      functionsToRunOnUnmount.length = 0
+      promisesToResolveOnUnmount.forEach(fn => fn())
+      promisesToResolveOnUnmount.length = 0
     }
   })
 }
 
-export function onUnmount(callback: VoidFunction) {
-  functionsToRunOnUnmount.push(callback)
+export async function pageReady() {
+  return new Promise<void>(resolve => {
+    if (waitingForPage) {
+      promisesToResolveOnReady.push(() => resolve())
+    } else {
+      resolve()
+    }
+  })
+}
+
+export function pageUnmounted() {
+  return new Promise<void>(resolve => {
+    promisesToResolveOnUnmount.push(() => resolve())
+  })
 }

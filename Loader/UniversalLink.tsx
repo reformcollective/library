@@ -1,6 +1,9 @@
+/* eslint-disable react/button-has-type */
 import { MouseEventHandler } from "react"
 
 import { Link } from "gatsby"
+
+import libraryConfig from "libraryConfig"
 
 import { Transitions } from "."
 import { loadPage } from "./TransitionUtils"
@@ -59,7 +62,7 @@ export type UniversalLinkProps = ButtonProps | AnchorProps
  */
 export default function UniversalLink({
   to,
-  transition = "slide",
+  transition = libraryConfig.defaultTransition,
   openInNewTab = false,
   forwardRef,
   type,
@@ -70,7 +73,6 @@ export default function UniversalLink({
   if (type) {
     return (
       <button
-        // eslint-disable-next-line react/button-has-type
         type={type}
         ref={forwardRef}
         {...props}
