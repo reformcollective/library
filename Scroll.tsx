@@ -75,6 +75,14 @@ export default function Scroll({
   const isPaused = useRef(true)
   const [refreshSignal, setRefreshSignal] = useState(0)
 
+  // sometimes the smoother gets paused during HMR, so its helpful to unpause it
+  useEffect(() => {
+    if (window.location.hostname === "localhost" && performance.now() > 10) {
+      isPaused.current = false
+      ScrollSmoother.get()?.paused(false)
+    }
+  })
+
   /**
    * create the smoother
    */

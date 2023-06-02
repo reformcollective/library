@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react"
 import {
-  desktopDesignSize,
-  mobileDesignSize,
-  tabletDesignSize,
-} from "styles/media"
-import {
   desktopBreakpoint,
+  desktopDesignSize,
   mobileBreakpoint,
+  mobileDesignSize,
   tabletBreakpoint,
+  tabletDesignSize,
 } from "styles/media"
 
 import { isBrowser } from "./functions"

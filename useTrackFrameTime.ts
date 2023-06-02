@@ -2,6 +2,8 @@ import { useEffect } from "react"
 
 import { isBrowser } from "./functions"
 
+const MAX_FRAME_TIME_MS = 0.5
+
 // eslint-disable-next-line ssr-friendly/no-dom-globals-in-module-scope
 const canTrackFrames = isBrowser() && window.location.href.includes("localhost")
 
@@ -21,7 +23,9 @@ if (canTrackFrames) {
   window.cancelAnimationFrame = (id: number) => {
     const indexToClear = id - startIndex
     if (indexToClear >= 0) {
-      requests[indexToClear] = () => {}
+      requests[indexToClear] = () => {
+        // this function replaces the callback, so it's a no-op
+      }
     }
   }
 }
@@ -55,7 +59,7 @@ export default function useTrackFrameTime() {
   useEffect(() => {
     if (!canTrackFrames) return
     const logFrameTimes = () => {
-      if (!lastThirtySeconds.length) return
+      if (lastThirtySeconds.length === 0) return
       let average = 0
       let max = -Infinity
       let min = Infinity
@@ -66,11 +70,22 @@ export default function useTrackFrameTime() {
       })
       average /= lastThirtySeconds.length
 
-      console.info(
-        `Last 30s Frame Times: ${average.toFixed(2)}ms (min: ${min.toFixed(
-          2
-        )}ms, max: ${max.toFixed(2)}ms)`
-      )
+      // console.info(
+      //   `Last 30s Frame Times: ${average.toFixed(2)}ms (min: ${min.toFixed(
+      //     2
+      //   )}ms, max: ${max.toFixed(2)}ms)`
+      // )
+      if (average > MAX_FRAME_TIME_MS) {
+        console.warn(
+          `
+
+High frame times in the last 30s. Check your performance!
+
+  Average: ${average.toFixed(2)}ms
+  Min: ${min.toFixed(2)}ms
+  Max: ${max.toFixed(2)}ms`
+        )
+      }
     }
 
     const interval = setInterval(logFrameTimes, 10_000)
