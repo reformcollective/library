@@ -22,7 +22,7 @@ export default function ConstantMarquee({
   buffer = 0,
 }: MarqueeProps) {
   const marquee = useRef<HTMLDivElement>(null)
-  const [array, setArray] = useState<undefined[]>([undefined])
+  const [array, setArray] = useState<null[]>([null])
   const [hash, setHash] = useState(0)
   const offset = useRef(0)
 
@@ -61,21 +61,18 @@ export default function ConstantMarquee({
           offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
       }
     }
-    return () => {}
   }, [array.length, timing, hash])
 
   useEffect(() => {
     const update = () => {
       if (marquee.current) {
         const width = Math.max(
-          ...Array.from(marquee.current.children).map(
-            child => child.clientWidth
-          )
+          ...[...marquee.current.children].map(child => child.clientWidth)
         )
 
         // number needed to fill width plus some buffer
         const newNumber = Math.ceil((window.innerWidth + buffer) / width) + 1
-        setArray(Array(newNumber).fill(undefined))
+        setArray(Array.from({ length: newNumber }, () => null))
       }
       setHash(p => p + 1)
     }
