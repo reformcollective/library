@@ -72,7 +72,9 @@ export default function ConstantMarquee({
 
         // number needed to fill width plus some buffer
         const newNumber = Math.ceil((window.innerWidth + buffer) / width) + 1
-        setArray(Array.from({ length: newNumber }, () => null))
+        if (Number.isFinite(newNumber) && newNumber > 0)
+          setArray(Array.from({ length: newNumber }, () => null))
+        else console.warn("[marquee] invalid array length", newNumber)
       }
       setHash(p => p + 1)
     }
