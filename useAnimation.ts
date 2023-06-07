@@ -73,8 +73,8 @@ const useAnimation = (
 
   useEffect(() => {
     if (isBrowser()) startTransition(() => setFirstRender(false))
-
     if (firstRender) return
+
     // create animations using a gsap context so they can be reverted easily
     const ctx = gsap.context(createAnimations, options?.scope ?? undefined)
     return () => {
