@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 import { isBrowser } from "./functions"
 
 export const isIOS = () => {
@@ -16,6 +18,29 @@ export const isAndroid = () => {
   return userAgent.includes("android")
 }
 
-export const isMobile = () => {
+export const isMobileOS = () => {
   return isIOS() || isAndroid()
+}
+
+/**
+ * hookify a get function to update after hydration
+ */
+export const useHookify = (fn: () => boolean) => {
+  const [value, setValue] = useState<boolean>()
+  useEffect(() => {
+    if (isBrowser()) setValue(fn())
+  }, [fn])
+  return value
+}
+
+export const useIsIOS = () => {
+  return useHookify(isIOS)
+}
+
+export const useIsAndroid = () => {
+  return useHookify(isAndroid)
+}
+
+export const useIsMobileOS = () => {
+  return useHookify(isMobileOS)
 }
