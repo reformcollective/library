@@ -30,6 +30,7 @@ const config = {
 }
 
 // *make sure to uncomment this after copying the default config*
+// as const
 // config satisfies Partial<typeof defaultConfig>
 
 export default config
