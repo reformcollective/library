@@ -8,12 +8,17 @@ interface MarqueeProps {
   children: React.ReactNode
   timing?: number
   className?: string
+  /**
+   * How much extra buffer should be maintained offscreen?
+   */
+  buffer?: number
 }
 
 export default function ConstantMarquee({
   children,
   timing = 20,
   className = "",
+  buffer = 0,
 }: MarqueeProps) {
   const marquee = useRef<HTMLDivElement>(null)
   const [array, setArray] = useState<null[]>([null])
@@ -65,8 +70,9 @@ export default function ConstantMarquee({
         )
 
         // number needed to fill width plus some buffer
-        const newNumber = Math.ceil((window.innerWidth + 1500) / width) + 1
-        setArray(Array.from({ length: newNumber }, () => null))
+        const newNumber = Math.ceil((window.innerWidth + buffer) / width) + 1
+        if (Number.isFinite(newNumber) && newNumber > 0)
+          setArray(Array.from({ length: newNumber }, () => null))
       }
       setHash(p => p + 1)
     }
@@ -85,7 +91,7 @@ export default function ConstantMarquee({
       remove()
       observer.disconnect()
     }
-  }, [children])
+  }, [buffer, children])
 
   return (
     <StyledMarquee ref={marquee} number={array.length} className={className}>
