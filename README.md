@@ -9,7 +9,7 @@ you can add them to the exclude property in your tsconfig.json
 
 For example, if you're don't have three.js installed, you can add it to the exclude property like so:
 
-```json
+```
 {
   "exclude": ["node_modules", "src/library/threeJS"]
 }
