@@ -78,7 +78,7 @@ const updatePercent = () => {
       return progressCallbacks.length === 0 &&
         animations.length === 0 &&
         !isComplete
-        ? await onComplete()
+        ? onComplete()
         : null
     })
     .catch(async () => {
@@ -92,6 +92,7 @@ const updatePercent = () => {
     pageReady()
       .then(async () => {
         return isComplete ? null : await onComplete()
+        return isComplete ? null : onComplete()
       })
       .catch(async () => {
         if (!isComplete) await onComplete()
@@ -115,6 +116,7 @@ if (isBrowser())
     .then(async () => {
       await sleep(EXTRA_DELAY)
       return isComplete ? null : await onComplete()
+      return isComplete ? null : onComplete()
     })
     .catch(async () => {
       await sleep(EXTRA_DELAY)

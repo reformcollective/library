@@ -3,7 +3,13 @@
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { DependencyList, EffectCallback, useEffect, useState } from "react"
+import {
+  DependencyList,
+  EffectCallback,
+  startTransition,
+  useEffect,
+  useState,
+} from "react"
 
 import { isBrowser } from "./functions"
 
@@ -33,6 +39,7 @@ const useAnimation = (
   const [resizeSignal, setResizeSignal] = useState(
     isBrowser() && Math.round(window.innerWidth / 10)
   )
+  const [firstRender, setFirstRender] = useState(true)
 
   /**
    * when the window is resized, we need to re-create animations
@@ -64,6 +71,9 @@ const useAnimation = (
   }, [options?.recreateOnResize])
 
   useEffect(() => {
+    if (isBrowser()) startTransition(() => setFirstRender(false))
+    if (firstRender) return
+
     // create animations using a gsap context so they can be reverted easily
     const ctx = gsap.context(createAnimations, options?.scope ?? undefined)
     return () => {
@@ -71,7 +81,7 @@ const useAnimation = (
         ctx.kill()
       } else ctx.revert()
     }
-  }, [options?.kill, options?.scope, resizeSignal, ...deps])
+  }, [options?.kill, options?.scope, firstRender, resizeSignal, ...deps])
 }
 
 export default useAnimation

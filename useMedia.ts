@@ -35,7 +35,7 @@ export default function useMedia<
     }
   }, [fw, d, t, m])
 
-  const [current, setCurrent] = useState(d)
+  const [current, setCurrent] = useState(m)
 
   useEffect(() => {
     handleUpdate()

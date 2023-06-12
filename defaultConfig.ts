@@ -26,7 +26,7 @@ const config = {
   /**
    * the transition that will be used by default
    */
-  defaultTransition: "slide" as TransitionNames,
+  defaultTransition: "slide" satisfies TransitionNames as TransitionNames,
 }
 
 export default config
