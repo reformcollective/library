@@ -15,7 +15,7 @@ const createMeasuringElement = () => {
   div.style.position = "absolute"
   div.style.top = "0"
   div.style.left = "0"
-  div.style.width = "100vw"
+  div.style.width = "100%"
   div.style.height = "100vh"
   div.style.visibility = "hidden"
   document.body.appendChild(div)
