@@ -1,8 +1,7 @@
 import gsap from "gsap"
-import fullyResponsive from "library/fullyResponsive"
 import loader, { transitionAwaitPromise } from "library/Loader"
 import { useCallback, useEffect, useRef, useState } from "react"
-import styled, { css } from "styled-components"
+import styled from "styled-components"
 
 interface SequenceProps {
   className?: string
@@ -238,12 +237,7 @@ export default function ImageSequence({
   )
 }
 
-const Canvas = styled.canvas<{ height: number; width: number }>`
+const Canvas = styled.canvas`
   width: 100%;
-
-  ${({ height, width }) =>
-    fullyResponsive(css`
-      height: ${height}px;
-      width: ${width}px;
-    `)}
+  height: 100%;
 `
