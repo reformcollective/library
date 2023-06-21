@@ -17,12 +17,18 @@ interface SideScrollerProps {
    * allows the side scroller to be scrolled manually on touchscreen devices
    */
   disableTouchscreenMode?: boolean
+
+  setContainerAnimation?: (animation: gsap.core.Tween) => void
+  /**
+   * allows adds the capability to add the timeline to another animation so that the containerAnimation property can be set on that scrolltrigger.
+   */
 }
 
 export default function SideScroller({
   children,
   ease = "none",
   disableTouchscreenMode = false,
+  setContainerAnimation = () => {},
 }: SideScrollerProps) {
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null)
   const [innerEl, setInnerEl] = useState<HTMLDivElement | null>(null)
@@ -79,6 +85,8 @@ export default function SideScroller({
           anticipatePin: 1,
         },
       })
+
+      setContainerAnimation(tween)
 
       // it's important that this trigger is refreshed immediately when resized
       // by default the refresh is delayed until scroll stops
