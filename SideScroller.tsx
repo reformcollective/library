@@ -86,7 +86,9 @@ export default function SideScroller({
         },
       })
 
-      setContainerAnimation(tween)
+      if (setContainerAnimation) {
+        setContainerAnimation(tween)
+      }
 
       // it's important that this trigger is refreshed immediately when resized
       // by default the refresh is delayed until scroll stops
