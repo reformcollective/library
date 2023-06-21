@@ -106,6 +106,7 @@ export default function SideScroller({
     touchscreenMode,
     widthOfChildren,
     wrapperEl,
+    setContainerAnimation,
   ])
 
   return (
