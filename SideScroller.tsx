@@ -20,7 +20,7 @@ interface SideScrollerProps {
   /**
    * allows adds the capability to add the timeline to another animation so that the containerAnimation property can be set on that scrolltrigger.
    */
-  setContainerAnimation?: (animation: gsap.core.Tween) => void
+  setContainerAnimation?: (animation: gsap.core.Tween) => unknown
 }
 
 export default function SideScroller({
