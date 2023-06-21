@@ -18,7 +18,7 @@ interface SideScrollerProps {
    */
   disableTouchscreenMode?: boolean
 
-  setContainerAnimation?: (animation: gsap.core.Tween) => void
+  setContainerAnimation?: (animation: gsap.core.Tween) => void | undefined
   /**
    * allows adds the capability to add the timeline to another animation so that the containerAnimation property can be set on that scrolltrigger.
    */
@@ -28,7 +28,7 @@ export default function SideScroller({
   children,
   ease = "none",
   disableTouchscreenMode = false,
-  setContainerAnimation = () => {},
+  setContainerAnimation = undefined,
 }: SideScrollerProps) {
   const [wrapperEl, setWrapperEl] = useState<HTMLElement | null>(null)
   const [innerEl, setInnerEl] = useState<HTMLDivElement | null>(null)
