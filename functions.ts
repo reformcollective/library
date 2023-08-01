@@ -4,7 +4,7 @@ export const addDebouncedEventListener = (
   element: Window | HTMLElement,
   event: string,
   callback: () => void,
-  delay: number
+  delay: number,
 ) => {
   let timeout: NodeJS.Timeout
 

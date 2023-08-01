@@ -83,7 +83,7 @@ High frame times in the last 30s. Check your performance!
 
   Average: ${average.toFixed(2)}ms
   Min: ${min.toFixed(2)}ms
-  Max: ${max.toFixed(2)}ms`
+  Max: ${max.toFixed(2)}ms`,
         )
       }
     }

@@ -148,7 +148,7 @@ export const registerProgress = (callback: ProgressCallback) => {
  */
 export const unregisterLoaderCallback = (completionFunction: VoidFunction) => {
   animations = animations.filter(
-    animation => animation.callback !== completionFunction
+    animation => animation.callback !== completionFunction,
   )
 }
 

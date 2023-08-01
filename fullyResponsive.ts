@@ -25,7 +25,7 @@ const designSizes = {
  */
 export default function fullyResponsive(
   cssIn: FlattenSimpleInterpolation | string,
-  only?: "mobile" | "tablet" | "desktop"
+  only?: "mobile" | "tablet" | "desktop",
 ) {
   // if not a string, convert to string
   const cssAsString = typeof cssIn === "string" ? cssIn : cssIn.join("")
@@ -47,7 +47,7 @@ export default function fullyResponsive(
       ${media[only]} {
         ${cssAsString.replaceAll(
           regex,
-          (_, px: string) => `${replacer(px, designSizes[only])}vw`
+          (_, px: string) => `${replacer(px, designSizes[only])}vw`,
         )}
       }
     `
@@ -61,7 +61,7 @@ export default function fullyResponsive(
       ${media.fullWidth} {
         ${onlyPxValues.replaceAll(
           regex,
-          (_, px: string) => `${replacer(px, desktopDesignSize)}vw`
+          (_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
         )}
       }
     `};
@@ -69,21 +69,21 @@ export default function fullyResponsive(
     ${media.desktop} {
       ${onlyPxValues.replaceAll(
         regex,
-        (_, px: string) => `${replacer(px, desktopDesignSize)}vw`
+        (_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
       )}
     }
 
     ${media.tablet} {
       ${onlyPxValues.replaceAll(
         regex,
-        (_, px: string) => `${replacer(px, tabletDesignSize)}vw`
+        (_, px: string) => `${replacer(px, tabletDesignSize)}vw`,
       )}
     }
 
     ${media.mobile} {
       ${onlyPxValues.replaceAll(
         regex,
-        (_, px: string) => `${replacer(px, mobileDesignSize)}vw`
+        (_, px: string) => `${replacer(px, mobileDesignSize)}vw`,
       )}
     }
   `
