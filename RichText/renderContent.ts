@@ -44,13 +44,13 @@ interface WithReferencesType {
  * returns true if the given object is similar to a Contentful Rich Text Gatsby Reference
  */
 function isContentfulRichTextGatsbyReference(
-  x: unknown
+  x: unknown,
 ): x is WithReferencesType {
   return isObject(x)
 }
 
 function isArrayOfContentfulRichTextGatsbyReference(
-  x: unknown
+  x: unknown,
 ): x is WithReferencesType[] {
   return Array.isArray(x) && x.every(isContentfulRichTextGatsbyReference)
 }
@@ -60,7 +60,7 @@ export default function renderContent(
     raw?: string | null
     references?: unknown
   } | null,
-  options?: Options
+  options?: Options,
 ) {
   /**
    * use a different renderer if we have references
@@ -75,7 +75,7 @@ export default function renderContent(
         raw: content.raw ?? "",
         references,
       },
-      options
+      options,
     )
   }
 

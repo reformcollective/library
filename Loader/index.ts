@@ -63,10 +63,10 @@ export function transitionAwaitPromise(promise: Promise<unknown>) {
 
 export const recursiveAllSettled = async (
   promises: Promise<unknown>[],
-  promisesToExclude: Promise<unknown>[] = []
+  promisesToExclude: Promise<unknown>[] = [],
 ): Promise<void> => {
   const promisesCopy = [...promises].filter(
-    promise => !promisesToExclude.includes(promise)
+    promise => !promisesToExclude.includes(promise),
   )
   if (promisesCopy.length === 0) return
 

@@ -47,7 +47,7 @@ export const registerTransition = (
     out: VoidFunction
     inDuration: number
     outDuration: number
-  }
+  },
 ) => {
   const {
     in: inAnimation,
@@ -79,7 +79,7 @@ export const registerTransition = (
  */
 export const unregisterTransition = (
   name: string,
-  callbacksToRemove?: VoidFunction[]
+  callbacksToRemove?: VoidFunction[],
 ) => {
   if (callbacksToRemove) {
     const previous = allTransitions[name] ?? {
@@ -88,10 +88,10 @@ export const unregisterTransition = (
     }
     allTransitions[name] = {
       inAnimation: previous.inAnimation.filter(
-        ({ callback }) => !callbacksToRemove.includes(callback)
+        ({ callback }) => !callbacksToRemove.includes(callback),
       ),
       outAnimation: previous.outAnimation.filter(
-        ({ callback }) => !callbacksToRemove.includes(callback)
+        ({ callback }) => !callbacksToRemove.includes(callback),
       ),
     }
   } else {
@@ -111,7 +111,7 @@ let currentAnimation: string | null = null
  */
 export const loadPage = async (
   to: string,
-  transition?: Transitions | InternalTransitions
+  transition?: Transitions | InternalTransitions,
 ) => {
   // if a transition is already in progress, wait for it to finish before loading the next page
   if (currentAnimation !== null) {
@@ -216,7 +216,7 @@ export const loadPage = async (
     loadPage(pendingTransition.name, pendingTransition.transition).catch(
       (error: string) => {
         throw new Error(error)
-      }
+      },
     )
     pendingTransition = null
   }

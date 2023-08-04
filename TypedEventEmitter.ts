@@ -1,7 +1,7 @@
 type Listener<T extends unknown[]> = (...args: T) => void
 
 export default class TypedEventEmitter<
-  EventMap extends Record<string, unknown[]>
+  EventMap extends Record<string, unknown[]>,
 > {
   private eventListeners: {
     [K in keyof EventMap]?: Set<Listener<EventMap[K]>>
@@ -9,7 +9,7 @@ export default class TypedEventEmitter<
 
   public addEventListener<K extends keyof EventMap>(
     eventName: K,
-    listener: Listener<EventMap[K]>
+    listener: Listener<EventMap[K]>,
   ) {
     const listeners = this.eventListeners[eventName] ?? new Set()
     listeners.add(listener)
@@ -18,7 +18,7 @@ export default class TypedEventEmitter<
 
   public removeEventListener<K extends keyof EventMap>(
     eventName: K,
-    listener: Listener<EventMap[K]>
+    listener: Listener<EventMap[K]>,
   ) {
     const listeners = this.eventListeners[eventName] ?? new Set()
     listeners.delete(listener)

@@ -19,7 +19,7 @@ export default function useMedia<
     /**
      * image data technically changes by reference, but is stable when provided by gatsby
      */
-    | IGatsbyImageData
+    | IGatsbyImageData,
 >(fw: InputType, d: InputType, t: InputType, m: InputType) {
   const handleUpdate = useCallback(() => {
     if (isBrowser()) {

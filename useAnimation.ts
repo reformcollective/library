@@ -34,10 +34,10 @@ const useAnimation = (
     scope?: string | Element | null
     kill?: boolean
     recreateOnResize?: boolean
-  }
+  },
 ) => {
   const [resizeSignal, setResizeSignal] = useState(
-    isBrowser() && Math.round(window.innerWidth / 10)
+    isBrowser() && Math.round(window.innerWidth / 10),
   )
   const [firstRender, setFirstRender] = useState(true)
 
