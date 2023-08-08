@@ -16,8 +16,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 8
       - name: Install Modules
-        run: npm install
+        run: npx @antfu/ni
       - name: format
         run: npm run format > /dev/null
         continue-on-error: true
@@ -137,8 +141,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 8
       - name: Install Modules
-        run: npm ci
+        run: npx @antfu/ni
       - name: Build
         run: npm run build
       - name: Cache generated-types
@@ -162,8 +170,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 8
       - name: Install
-        run: npm ci
+        run: npx @antfu/ni
       - name: Fetch Generated Types
         uses: actions/download-artifact@v2
         with:
@@ -190,8 +202,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          version: 8
       - name: Install
-        run: npm ci
+        run: npx @antfu/ni
       - name: Fetch Generated Types
         uses: actions/download-artifact@v2
         with:
