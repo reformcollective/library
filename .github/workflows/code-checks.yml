@@ -16,10 +16,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        with:
-          version: 8
       - name: Install Modules
         run: npm install
       - name: format
@@ -141,10 +137,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        with:
-          version: 8
       - name: Install Modules
         run: npm ci
       - name: Build
@@ -170,10 +162,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        with:
-          version: 8
       - name: Install
         run: npm ci
       - name: Fetch Generated Types
@@ -202,10 +190,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - uses: pnpm/action-setup@v2
-        name: Install pnpm
-        with:
-          version: 8
       - name: Install
         run: npm ci
       - name: Fetch Generated Types
