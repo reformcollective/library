@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 18
       - name: Install Modules
-        run: npm install
+        run: npx @antfu/ni
       - name: format
         run: npm run format > /dev/null
         continue-on-error: true
@@ -138,7 +138,7 @@ jobs:
         with:
           node-version: 18
       - name: Install Modules
-        run: npm ci
+        run: npx @antfu/ni
       - name: Build
         run: npm run build
       - name: Cache generated-types
@@ -163,7 +163,7 @@ jobs:
         with:
           node-version: 18
       - name: Install
-        run: npm ci
+        run: npx @antfu/ni
       - name: Fetch Generated Types
         uses: actions/download-artifact@v2
         with:
@@ -191,7 +191,7 @@ jobs:
         with:
           node-version: 18
       - name: Install
-        run: npm ci
+        run: npx @antfu/ni
       - name: Fetch Generated Types
         uses: actions/download-artifact@v2
         with:
