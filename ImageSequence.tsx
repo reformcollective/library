@@ -54,6 +54,7 @@ export default function ImageSequence({
   duration,
   type = "auto",
 }: PropsAuto | PropsScroll | PropsManual) {
+  console.log(type)
   const [sequenceData] = useState({
     frame: 0,
     images: [] as HTMLImageElement[],
@@ -178,9 +179,9 @@ export default function ImageSequence({
             ? {
                 trigger,
                 scrub: 0.5,
+                markers: true,
                 start: triggerStart ?? "top top",
                 end: triggerEnd ?? "bottom top",
-                refreshPriority: 999,
               }
             : undefined,
         },
