@@ -42,12 +42,13 @@ export const getLoaderIsDone = () => loaderIsDone
 async function onComplete() {
   await recursiveAllSettled(promisesToAwait)
 
+  if (isComplete) return
+  isComplete = true
   loader.dispatchEvent("anyStart", "initial")
   loader.dispatchEvent("initialStart")
-
   progressCallbacks.forEach(cb => cb(100))
   loader.dispatchEvent("progressUpdated", 100)
-  isComplete = true
+
   await sleep(250)
 
   let longestAnimation = 0
@@ -75,14 +76,12 @@ const updatePercent = () => {
   pageReady()
     .then(async () => {
       // short circuit if there are no callbacks or animations
-      return progressCallbacks.length === 0 &&
-        animations.length === 0 &&
-        !isComplete
+      return progressCallbacks.length === 0 && animations.length === 0
         ? onComplete()
         : null
     })
     .catch(async () => {
-      if (!isComplete) await onComplete()
+      return onComplete()
     })
 
   if (isComplete) return
@@ -91,11 +90,10 @@ const updatePercent = () => {
   if (progress >= 99) {
     pageReady()
       .then(async () => {
-        return isComplete ? null : await onComplete()
-        return isComplete ? null : onComplete()
+        return onComplete()
       })
       .catch(async () => {
-        if (!isComplete) await onComplete()
+        return onComplete()
       })
   } else {
     progressCallbacks.forEach(cb => cb(progress))
@@ -115,12 +113,11 @@ if (isBrowser())
   pageReady()
     .then(async () => {
       await sleep(EXTRA_DELAY)
-      return isComplete ? null : await onComplete()
-      return isComplete ? null : onComplete()
+      return onComplete()
     })
     .catch(async () => {
       await sleep(EXTRA_DELAY)
-      if (!isComplete) await onComplete()
+      return onComplete()
     })
 
 /**
