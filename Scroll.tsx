@@ -1,3 +1,4 @@
+import { gsap } from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect, useRef, useState } from "react"
@@ -41,6 +42,7 @@ export const useIsSmooth = () => {
     }
     const disableSmooth = () => {
       setSmooth(false)
+      gsap.set("#smooth-content", { clearProps: "transform" })
     }
 
     window.addEventListener("wheel", enableSmooth, { passive: true })
