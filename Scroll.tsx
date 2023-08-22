@@ -1,6 +1,7 @@
+import { gsap } from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { pageReady, pageUnmounted } from "library/pageReady"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { isBrowser } from "./functions"
 
@@ -41,6 +42,7 @@ export const useIsSmooth = () => {
     }
     const disableSmooth = () => {
       setSmooth(false)
+      gsap.set("#smooth-content", { clearProps: "transform" })
     }
 
     window.addEventListener("wheel", enableSmooth, { passive: true })
@@ -141,6 +143,14 @@ export default function Scroll({
       window.removeEventListener("popstate", killSmoother)
     }
   }, [])
+
+  /**
+   * maintain scroll position when smooth is toggled
+   */
+  useLayoutEffect(() => {
+    const currentScroll = window.scrollY
+    setTimeout(() => window.scrollTo(0, currentScroll), 0)
+  }, [isSmooth])
 
   return (
     <div className={className} id="smooth-wrapper">
