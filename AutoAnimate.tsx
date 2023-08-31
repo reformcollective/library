@@ -70,5 +70,8 @@ const Wrapper = styled.div`
     grid-area: 1 / 1 / 2 / 2;
     display: grid;
     align-items: center;
+
+    /* text very commonly overflows its bounds on the bottom in letters like g */
+    padding-bottom: 0.1em;
   }
 `
