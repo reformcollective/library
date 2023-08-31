@@ -1,5 +1,3 @@
-// we have to spread deps for the hook to work properly
-/* eslint-disable react-hooks/exhaustive-deps */
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -39,7 +37,7 @@ const useAnimation = <F, T extends object>(
     effect?: typeof useEffect
   },
 ) => {
-  const effectToUse = options?.effect ?? useEffect
+  const useEffectToUse = options?.effect ?? useEffect
   const [resizeSignal, setResizeSignal] = useState(
     isBrowser() && window.innerWidth,
   )
@@ -76,7 +74,7 @@ const useAnimation = <F, T extends object>(
     }
   }, [options?.recreateOnResize])
 
-  effectToUse(() => {
+  useEffectToUse(() => {
     if (isBrowser()) startTransition(() => setFirstRender(false))
     if (firstRender) return
 
