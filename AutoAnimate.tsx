@@ -54,7 +54,7 @@ export default function AutoAnimate({
 
   return (
     <Wrapper>
-      <Previous ref={previous}>{lastTime}</Previous>
+      <div ref={previous}>{lastTime}</div>
       <div ref={current}>{currentTime}</div>
     </Wrapper>
   )
@@ -63,8 +63,12 @@ export default function AutoAnimate({
 const Wrapper = styled.div`
   overflow: hidden;
   position: relative;
-`
+  display: grid;
+  grid-template: 1fr / 1fr;
 
-const Previous = styled.div`
-  position: absolute;
+  > * {
+    grid-area: 1 / 1 / 2 / 2;
+    display: grid;
+    align-items: center;
+  }
 `
