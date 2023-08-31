@@ -3,13 +3,7 @@
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import {
-  DependencyList,
-  EffectCallback,
-  startTransition,
-  useEffect,
-  useState,
-} from "react"
+import { DependencyList, startTransition, useEffect, useState } from "react"
 
 import { isBrowser } from "./functions"
 
@@ -24,7 +18,8 @@ import { isBrowser } from "./functions"
  *   })
  * }, [wrapperEl])
  *  ```
- * @param createAnimations - function that creates the animations
+ * @param createAnimations - function that creates the animation. you can return a cleanup function that will be called
+ * or an object that will be returned by the hook
  * @param deps - any dependencies that should cause the animations to be re-created
  * @param options - options for the hook
  * @param options.scope - the scope of the animation for GSAP to use
@@ -33,8 +28,8 @@ import { isBrowser } from "./functions"
  * @param options.extraDeps - any extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
  * @param options.effect - the effect to use (defaults to useEffect)
  */
-const useAnimation = (
-  createAnimations: EffectCallback,
+const useAnimation = <F, T extends object>(
+  createAnimations: F extends VoidFunction ? F : () => T | VoidFunction,
   deps: DependencyList,
   options?: {
     scope?: string | Element | null
@@ -50,6 +45,7 @@ const useAnimation = (
   )
   const [firstRender, setFirstRender] = useState(true)
   const extraDeps = options?.extraDeps ?? []
+  const [returnValue, setReturnValue] = useState<T>()
 
   /**
    * when the window is resized, we need to re-create animations
@@ -85,7 +81,19 @@ const useAnimation = (
     if (firstRender) return
 
     // create animations using a gsap context so they can be reverted easily
-    const ctx = gsap.context(createAnimations, options?.scope ?? undefined)
+    const ctx = gsap.context(
+      () => {
+        const result = createAnimations()
+        if (typeof result === "function") {
+          return result
+        } else if (typeof result === "object") {
+          setReturnValue(result)
+        } else {
+          setReturnValue(undefined)
+        }
+      },
+      options?.scope ?? undefined,
+    )
     return () => {
       if (options?.kill) {
         ctx.kill()
@@ -99,6 +107,8 @@ const useAnimation = (
     ...deps,
     ...extraDeps,
   ])
+
+  return returnValue
 }
 
 export default useAnimation
