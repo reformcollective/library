@@ -26,6 +26,12 @@ import { isBrowser } from "./functions"
  *  ```
  * @param createAnimations - function that creates the animations
  * @param deps - any dependencies that should cause the animations to be re-created
+ * @param options - options for the hook
+ * @param options.scope - the scope of the animation for GSAP to use
+ * @param options.kill - whether to kill the animation when the component is unmounted, rather than reverting it
+ * @param options.recreateOnResize - whether to re-create the animations when the window is resized
+ * @param options.extraDeps - any extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
+ * @param options.effect - the effect to use (defaults to useEffect)
  */
 const useAnimation = (
   createAnimations: EffectCallback,
@@ -34,12 +40,16 @@ const useAnimation = (
     scope?: string | Element | null
     kill?: boolean
     recreateOnResize?: boolean
+    extraDeps?: DependencyList
+    effect?: typeof useEffect
   },
 ) => {
+  const effectToUse = options?.effect ?? useEffect
   const [resizeSignal, setResizeSignal] = useState(
-    isBrowser() && Math.round(window.innerWidth / 10),
+    isBrowser() && window.innerWidth,
   )
   const [firstRender, setFirstRender] = useState(true)
+  const extraDeps = options?.extraDeps ?? []
 
   /**
    * when the window is resized, we need to re-create animations
@@ -50,7 +60,7 @@ const useAnimation = (
       const onResize = () => {
         setResizeSignal(previous => {
           const currentScroll = ScrollSmoother.get()?.scrollTop()
-          const newValue = Math.round(window.innerWidth / 10)
+          const newValue = window.innerWidth
           // if the value has changed
           if (newValue !== previous) {
             // make sure scroll is maintained and scrolltrigger gets refreshed
@@ -70,7 +80,7 @@ const useAnimation = (
     }
   }, [options?.recreateOnResize])
 
-  useEffect(() => {
+  effectToUse(() => {
     if (isBrowser()) startTransition(() => setFirstRender(false))
     if (firstRender) return
 
@@ -81,7 +91,14 @@ const useAnimation = (
         ctx.kill()
       } else ctx.revert()
     }
-  }, [options?.kill, options?.scope, firstRender, resizeSignal, ...deps])
+  }, [
+    options?.kill,
+    options?.scope,
+    firstRender,
+    resizeSignal,
+    ...deps,
+    ...extraDeps,
+  ])
 }
 
 export default useAnimation
