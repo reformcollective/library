@@ -1,6 +1,6 @@
 import { sleep } from "library/functions"
 import TypedEventEmitter from "library/TypedEventEmitter"
-import { TransitionNames } from "libraryConfig"
+import type { TransitionNames } from "libraryConfig"
 
 /**
  * transitionNames are configured in src/libraryConfig.ts

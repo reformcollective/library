@@ -5,12 +5,8 @@ import { pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import { startTransition, useEffect } from "react"
 
-import loader, {
-  InternalTransitions,
-  promisesToAwait,
-  recursiveAllSettled,
-  Transitions,
-} from "."
+import type { InternalTransitions, Transitions } from "."
+import loader, { promisesToAwait, recursiveAllSettled } from "."
 import { getLoaderIsDone } from "./LoaderUtils"
 
 /**

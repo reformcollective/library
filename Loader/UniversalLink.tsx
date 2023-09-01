@@ -1,8 +1,8 @@
 import { Link } from "gatsby"
 import libraryConfig from "libraryConfig"
-import { MouseEventHandler } from "react"
+import type { MouseEventHandler } from "react"
 
-import { Transitions } from "."
+import type { Transitions } from "."
 import { loadPage } from "./TransitionUtils"
 
 export type UniversalLinkRef = HTMLButtonElement &

@@ -1,4 +1,4 @@
-import { IGatsbyImageData } from "gatsby-plugin-image"
+import type { IGatsbyImageData } from "gatsby-plugin-image"
 import { startTransition, useCallback, useEffect, useState } from "react"
 import {
   desktopBreakpoint as desktop,
