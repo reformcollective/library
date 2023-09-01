@@ -19,6 +19,10 @@ jobs:
             echo "PNPM=false" >> $GITHUB_OUTPUT
           fi
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.FORMATTER_TOKEN }}
+          submodules: recursive
       - uses: pnpm/action-setup@v2
         with:
           version: 8
@@ -157,6 +161,10 @@ jobs:
             echo "PNPM=false" >> $GITHUB_OUTPUT
           fi
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.FORMATTER_TOKEN }}
+          submodules: recursive
       - uses: pnpm/action-setup@v2
         with:
           version: 8
@@ -200,6 +208,10 @@ jobs:
             echo "PNPM=false" >> $GITHUB_OUTPUT
           fi
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.FORMATTER_TOKEN }}
+          submodules: recursive
       - uses: pnpm/action-setup@v2
         with:
           version: 8
@@ -246,6 +258,10 @@ jobs:
             echo "PNPM=false" >> $GITHUB_OUTPUT
           fi
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.FORMATTER_TOKEN }}
+          submodules: recursive
       - uses: pnpm/action-setup@v2
         with:
           version: 8
