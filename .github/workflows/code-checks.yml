@@ -231,12 +231,8 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: generated-types
-      - uses: sibiraj-s/action-eslint@v3
-        with:
-          extensions: "js,jsx,ts,tsx"
-          annotations: true
-      - name: Lint Submodules
-        run: npx eslint src/library
+      - name: Lint
+        run: npm run lint
 
   Type_Checking:
     runs-on: ubuntu-latest
