@@ -8,16 +8,32 @@ jobs:
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
+      # BEGIN INSTALLATION
+      - name: Determine package manager
+        id: package-manager
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "PNPM=true" >> $GITHUB_OUTPUT
+          fi
+          if [ -f "package-lock.json" ]; then
+            echo "PNPM=false" >> $GITHUB_OUTPUT
+          fi
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.FORMATTER_TOKEN }}
-          submodules: recursive
-      - uses: actions/setup-node@v3
+          version: 8
+      - name: Use Node
+        uses: actions/setup-node@v3
+        if: steps.package-manager.outputs.PNPM == 'true'
         with:
-          node-version: 18
-      - name: Install Modules
-        run: npm install
+          cache: "pnpm"
+      - name: Use Node
+        uses: actions/setup-node@v3
+        if: steps.package-manager.outputs.PNPM != 'true'
+      - name: Install dependencies
+        run: npx @antfu/ni
+      # END INSTALLATION
+
       - name: format
         run: npm run format > /dev/null
         continue-on-error: true
@@ -130,15 +146,32 @@ jobs:
       CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
       CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
     steps:
+      # BEGIN INSTALLATION
+      - name: Determine package manager
+        id: package-manager
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "PNPM=true" >> $GITHUB_OUTPUT
+          fi
+          if [ -f "package-lock.json" ]; then
+            echo "PNPM=false" >> $GITHUB_OUTPUT
+          fi
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
         with:
-          ref: ${{ github.head_ref }}
-          submodules: recursive
-      - uses: actions/setup-node@v3
+          version: 8
+      - name: Use Node
+        uses: actions/setup-node@v3
+        if: steps.package-manager.outputs.PNPM == 'true'
         with:
-          node-version: 18
-      - name: Install Modules
-        run: npm ci
+          cache: "pnpm"
+      - name: Use Node
+        uses: actions/setup-node@v3
+        if: steps.package-manager.outputs.PNPM != 'true'
+      - name: Install dependencies
+        run: npx @antfu/ni
+      # END INSTALLATION
+
       - name: Build
         run: npm run build
       - name: Cache generated-types
@@ -156,14 +189,32 @@ jobs:
     runs-on: ubuntu-latest
     needs: Generate_Types
     steps:
+      # BEGIN INSTALLATION
+      - name: Determine package manager
+        id: package-manager
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "PNPM=true" >> $GITHUB_OUTPUT
+          fi
+          if [ -f "package-lock.json" ]; then
+            echo "PNPM=false" >> $GITHUB_OUTPUT
+          fi
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
         with:
-          submodules: recursive
-      - uses: actions/setup-node@v3
+          version: 8
+      - name: Use Node
+        uses: actions/setup-node@v3
+        if: steps.package-manager.outputs.PNPM == 'true'
         with:
-          node-version: 18
-      - name: Install
-        run: npm ci
+          cache: "pnpm"
+      - name: Use Node
+        uses: actions/setup-node@v3
+        if: steps.package-manager.outputs.PNPM != 'true'
+      - name: Install dependencies
+        run: npx @antfu/ni
+      # END INSTALLATION
+
       - name: Fetch Generated Types
         uses: actions/download-artifact@v2
         with:
@@ -184,14 +235,32 @@ jobs:
       CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
       CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
     steps:
+      # BEGIN INSTALLATION
+      - name: Determine package manager
+        id: package-manager
+        run: |
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "PNPM=true" >> $GITHUB_OUTPUT
+          fi
+          if [ -f "package-lock.json" ]; then
+            echo "PNPM=false" >> $GITHUB_OUTPUT
+          fi
       - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
         with:
-          submodules: recursive
-      - uses: actions/setup-node@v3
+          version: 8
+      - name: Use Node
+        uses: actions/setup-node@v3
+        if: steps.package-manager.outputs.PNPM == 'true'
         with:
-          node-version: 18
-      - name: Install
-        run: npm ci
+          cache: "pnpm"
+      - name: Use Node
+        uses: actions/setup-node@v3
+        if: steps.package-manager.outputs.PNPM != 'true'
+      - name: Install dependencies
+        run: npx @antfu/ni
+      # END INSTALLATION
+
       - name: Fetch Generated Types
         uses: actions/download-artifact@v2
         with:
