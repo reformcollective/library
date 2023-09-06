@@ -1,9 +1,23 @@
-import { useDeepCompareEffect, usePrevious, useThrottle } from "ahooks"
+import { useDeepCompareLayoutEffect, usePrevious, useThrottle } from "ahooks"
 import { gsap } from "gsap"
 import { useRef } from "react"
 import styled from "styled-components"
 
 import useAnimation from "./useAnimation"
+
+const extractKey = (item: unknown): string => {
+  if (
+    typeof item === "object" &&
+    item !== null &&
+    "key" in item &&
+    typeof item.key === "string"
+  ) {
+    return item.key
+  }
+  if (typeof item === "object" && item !== null)
+    throw new Error("Element passed to AutoAnimate must have a key!")
+  return String(item)
+}
 
 export default function AutoAnimate({
   children,
@@ -49,14 +63,18 @@ export default function AutoAnimate({
     [duration, parameters, skipFirstAnimation],
     {
       extraDeps: [currentTime, lastTime],
-      effect: useDeepCompareEffect,
+      effect: useDeepCompareLayoutEffect,
     },
   )
 
   return (
     <Wrapper>
-      <div ref={previous}>{lastTime}</div>
-      <div ref={current}>{currentTime}</div>
+      <div ref={previous} key={extractKey(lastTime)}>
+        {lastTime}
+      </div>
+      <div ref={current} key={extractKey(currentTime)}>
+        {currentTime}
+      </div>
     </Wrapper>
   )
 }
