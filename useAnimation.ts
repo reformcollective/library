@@ -1,7 +1,8 @@
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { DependencyList, startTransition, useEffect, useState } from "react"
+import type { DependencyList } from "react"
+import { startTransition, useEffect, useState } from "react"
 
 import { isBrowser } from "./functions"
 

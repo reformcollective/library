@@ -1,8 +1,6 @@
-import {
-  documentToReactComponents,
-  Options,
-} from "@contentful/rich-text-react-renderer"
-import { Document } from "@contentful/rich-text-types"
+import type { Options } from "@contentful/rich-text-react-renderer"
+import { documentToReactComponents } from "@contentful/rich-text-react-renderer"
+import type { Document } from "@contentful/rich-text-types"
 import { renderRichText } from "gatsby-source-contentful/rich-text"
 
 function hasNodeType(x: object): x is { nodeType: unknown } {
