@@ -1,4 +1,3 @@
-import type { IGatsbyImageData } from "gatsby-plugin-image"
 import { startTransition, useCallback, useEffect, useState } from "react"
 import {
   desktopBreakpoint as desktop,
@@ -7,6 +6,7 @@ import {
 } from "styles/media"
 
 import { isBrowser } from "./functions"
+import type { UniversalImageData } from "./UniversalImage"
 
 export default function useMedia<
   // anything that doesn't change by reference
@@ -19,7 +19,7 @@ export default function useMedia<
     /**
      * image data technically changes by reference, but is stable when provided by gatsby
      */
-    | IGatsbyImageData,
+    | UniversalImageData,
 >(fw: InputType, d: InputType, t: InputType, m: InputType) {
   const handleUpdate = useCallback(() => {
     if (isBrowser()) {
