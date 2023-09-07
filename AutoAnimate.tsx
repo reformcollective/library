@@ -67,9 +67,14 @@ export default function AutoAnimate({
     },
   )
 
+  const keysMatch = extractKey(currentTime) === extractKey(lastTime)
+
   return (
     <Wrapper>
-      <div ref={previous} key={extractKey(lastTime)}>
+      <div
+        ref={previous}
+        key={keysMatch ? Math.random() : extractKey(lastTime)}
+      >
         {lastTime}
       </div>
       <div ref={current} key={extractKey(currentTime)}>
