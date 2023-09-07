@@ -27,8 +27,8 @@ import { isBrowser } from "./functions"
  * @param options.extraDeps - any extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
  * @param options.effect - the effect to use (defaults to useEffect)
  */
-const useAnimation = <F, T extends object>(
-  createAnimations: F extends VoidFunction ? F : () => T | VoidFunction,
+const useAnimation = <F, T>(
+  createAnimations: F extends VoidFunction ? F : () => T,
   deps: DependencyList,
   options?: {
     scope?: string | Element | null
@@ -44,7 +44,16 @@ const useAnimation = <F, T extends object>(
   )
   const [firstRender, setFirstRender] = useState(true)
   const extraDeps = options?.extraDeps ?? []
-  const [returnValue, setReturnValue] = useState<T>()
+
+  // need Function to get the correct type
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  type ReturnType = T extends Function
+    ? undefined
+    : T extends object
+    ? T | undefined
+    : undefined
+
+  const [returnValue, setReturnValue] = useState<ReturnType>()
 
   /**
    * when the window is resized, we need to re-create animations
@@ -85,8 +94,8 @@ const useAnimation = <F, T extends object>(
         const result = createAnimations()
         if (typeof result === "function") {
           return result
-        } else if (typeof result === "object") {
-          setReturnValue(result)
+        } else if (typeof result === "object" && result) {
+          setReturnValue(result as ReturnType)
         } else {
           setReturnValue(undefined)
         }
