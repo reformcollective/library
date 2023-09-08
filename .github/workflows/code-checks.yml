@@ -35,7 +35,7 @@ jobs:
         uses: actions/setup-node@v3
         if: steps.package-manager.outputs.PNPM != 'true'
       - name: Install dependencies
-        run: npx @antfu/ni
+        run: npx @antfu/ni --no-frozen-lockfile
       # END INSTALLATION
 
       - name: format
