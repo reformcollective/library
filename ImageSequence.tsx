@@ -114,7 +114,7 @@ export default function ImageSequence({
       img.addEventListener("load", onImageLoad)
       return () => img.removeEventListener("load", onImageLoad)
     },
-    [sequenceData.images]
+    [sequenceData.images],
   )
 
   /**
@@ -180,10 +180,9 @@ export default function ImageSequence({
                 scrub: 0.5,
                 start: triggerStart ?? "top top",
                 end: triggerEnd ?? "bottom top",
-                refreshPriority: 999,
               }
             : undefined,
-        }
+        },
       )
 
       const onReady = () => {

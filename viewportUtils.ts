@@ -15,7 +15,7 @@ import { isBrowser } from "./functions"
  */
 function useHookify<P, T extends (input: P) => ReturnType<T>>(
   fn: T,
-  arg: P
+  arg: P,
 ): ReturnType<T> {
   const [value, setValue] = useState<ReturnType<T>>(fn(arg))
   useEffect(() => {

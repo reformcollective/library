@@ -1,4 +1,5 @@
-import { PerformanceMonitor, PerformanceMonitorApi } from "@react-three/drei"
+import type { PerformanceMonitorApi } from "@react-three/drei"
+import { PerformanceMonitor } from "@react-three/drei"
 import { useThree } from "@react-three/fiber"
 import { isBrowser } from "library/functions"
 import { useEffect, useState } from "react"

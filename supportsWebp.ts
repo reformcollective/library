@@ -2,7 +2,7 @@ const calculateSupport = () => {
   const elem =
     typeof document === "object" ? document.createElement("canvas") : null
 
-  if (elem?.getContext && elem.getContext("2d")) {
+  if (elem?.getContext("2d")) {
     // was able or not to get WebP representation
     return elem.toDataURL("image/webp").startsWith("data:image/webp")
   }

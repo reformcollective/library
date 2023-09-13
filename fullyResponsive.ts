@@ -1,5 +1,6 @@
 import config from "libraryConfig"
-import { RuleSet, css } from "styled-components"
+import type { RuleSet } from "styled-components"
+import { css } from "styled-components"
 import media, {
   desktopDesignSize,
   mobileDesignSize,
@@ -47,7 +48,7 @@ export default function fullyResponsive(
       ${media[only]} {
         ${cssAsString.replaceAll(
           regex,
-          (_, px: string) => `${replacer(px, designSizes[only])}vw`
+          (_, px: string) => `${replacer(px, designSizes[only])}vw`,
         )}
       }
     `
@@ -61,7 +62,7 @@ export default function fullyResponsive(
       ${media.fullWidth} {
         ${onlyPxValues.replaceAll(
           regex,
-          (_, px: string) => `${replacer(px, desktopDesignSize)}vw`
+          (_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
         )}
       }
     `};
@@ -69,21 +70,21 @@ export default function fullyResponsive(
     ${media.desktop} {
       ${onlyPxValues.replaceAll(
         regex,
-        (_, px: string) => `${replacer(px, desktopDesignSize)}vw`
+        (_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
       )}
     }
 
     ${media.tablet} {
       ${onlyPxValues.replaceAll(
         regex,
-        (_, px: string) => `${replacer(px, tabletDesignSize)}vw`
+        (_, px: string) => `${replacer(px, tabletDesignSize)}vw`,
       )}
     }
 
     ${media.mobile} {
       ${onlyPxValues.replaceAll(
         regex,
-        (_, px: string) => `${replacer(px, mobileDesignSize)}vw`
+        (_, px: string) => `${replacer(px, mobileDesignSize)}vw`,
       )}
     }
   `

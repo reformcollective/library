@@ -1,5 +1,6 @@
 import gsap from "gsap"
-import React, { useEffect, useRef, useState } from "react"
+import type React from "react"
+import { useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 
 import { addDebouncedEventListener } from "./functions"
@@ -66,7 +67,7 @@ export default function ConstantMarquee({
     const update = () => {
       if (marquee.current) {
         const width = Math.max(
-          ...[...marquee.current.children].map(child => child.clientWidth)
+          ...[...marquee.current.children].map(child => child.clientWidth),
         )
 
         // number needed to fill width plus some buffer

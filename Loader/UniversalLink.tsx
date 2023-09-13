@@ -1,9 +1,12 @@
 import { Link } from "gatsby"
 import libraryConfig from "libraryConfig"
-import { MouseEventHandler } from "react"
+import type { MouseEventHandler } from "react"
 
-import { Transitions } from "."
+import type { Transitions } from "."
 import { loadPage } from "./TransitionUtils"
+
+export type UniversalLinkRef = HTMLButtonElement &
+  (HTMLAnchorElement & Link<unknown>)
 
 interface BaseLinkProps {
   /**
@@ -29,7 +32,7 @@ interface ButtonProps extends BaseLinkProps {
   /**
    * forward a ref to the button
    */
-  forwardRef?: React.Ref<HTMLButtonElement>
+  forwardRef?: React.RefObject<HTMLButtonElement>
   to?: never
   transition?: never
 }
@@ -46,7 +49,7 @@ interface AnchorProps extends BaseLinkProps {
   /**
    * forward a ref to the link or anchor tag
    */
-  forwardRef?: React.Ref<HTMLAnchorElement & Link<unknown>>
+  forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
   onClick?: never
   type?: never
 }

@@ -35,7 +35,7 @@ export default function ScrubMarquee({
             end: triggerEnd,
             scrub: true,
           },
-        }
+        },
       )
     }
   }, [right, triggerEnd])

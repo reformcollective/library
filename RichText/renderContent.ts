@@ -1,8 +1,6 @@
-import {
-  documentToReactComponents,
-  Options,
-} from "@contentful/rich-text-react-renderer"
-import { Document } from "@contentful/rich-text-types"
+import type { Options } from "@contentful/rich-text-react-renderer"
+import { documentToReactComponents } from "@contentful/rich-text-react-renderer"
+import type { Document } from "@contentful/rich-text-types"
 import { renderRichText } from "gatsby-source-contentful/rich-text"
 
 function hasNodeType(x: object): x is { nodeType: unknown } {
@@ -44,13 +42,13 @@ interface WithReferencesType {
  * returns true if the given object is similar to a Contentful Rich Text Gatsby Reference
  */
 function isContentfulRichTextGatsbyReference(
-  x: unknown
+  x: unknown,
 ): x is WithReferencesType {
   return isObject(x)
 }
 
 function isArrayOfContentfulRichTextGatsbyReference(
-  x: unknown
+  x: unknown,
 ): x is WithReferencesType[] {
   return Array.isArray(x) && x.every(isContentfulRichTextGatsbyReference)
 }
@@ -60,7 +58,7 @@ export default function renderContent(
     raw?: string | null
     references?: unknown
   } | null,
-  options?: Options
+  options?: Options,
 ) {
   /**
    * use a different renderer if we have references
@@ -75,7 +73,7 @@ export default function renderContent(
         raw: content.raw ?? "",
         references,
       },
-      options
+      options,
     )
   }
 
