@@ -26,7 +26,7 @@ const designSizes = {
  */
 export default function fullyResponsive(
   cssIn: RuleSet<object> | string,
-  only?: "mobile" | "tablet" | "desktop"
+  only?: "mobile" | "tablet" | "desktop",
 ) {
   // if not a string, convert to string
   const cssAsString = typeof cssIn === "string" ? cssIn : cssIn.join("")
