@@ -1,5 +1,5 @@
 import config from "libraryConfig"
-import type { FlattenSimpleInterpolation } from "styled-components"
+import type { RuleSet } from "styled-components"
 import { css } from "styled-components"
 import media, {
   desktopDesignSize,
@@ -25,7 +25,7 @@ const designSizes = {
  * @returns
  */
 export default function fullyResponsive(
-  cssIn: FlattenSimpleInterpolation | string,
+  cssIn: RuleSet<object> | string,
   only?: "mobile" | "tablet" | "desktop",
 ) {
   // if not a string, convert to string
@@ -92,11 +92,11 @@ export default function fullyResponsive(
 
 const fresponsive = fullyResponsive
 
-const fdesktop = (cssIn: FlattenSimpleInterpolation | string) =>
+const fdesktop = (cssIn: RuleSet<object> | string) =>
   fullyResponsive(cssIn, "desktop")
-const ftablet = (cssIn: FlattenSimpleInterpolation | string) =>
+const ftablet = (cssIn: RuleSet<object> | string) =>
   fullyResponsive(cssIn, "tablet")
-const fmobile = (cssIn: FlattenSimpleInterpolation | string) =>
+const fmobile = (cssIn: RuleSet<object> | string) =>
   fullyResponsive(cssIn, "mobile")
 
 export { fdesktop, fmobile, fresponsive, ftablet }
