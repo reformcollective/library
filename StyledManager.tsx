@@ -23,6 +23,7 @@ export default function StyledManager({
     <StyleSheetManager
       enableVendorPrefixes
       shouldForwardProp={e => {
+        if (e === "image") return true
         isValidConfig.current = true
         return isPropValid(e)
       }}
