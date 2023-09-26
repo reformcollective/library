@@ -22,7 +22,7 @@ export const LazyVideo = ({
   sourceWEBM,
 }: Props) => {
   useEffect(() => {
-    if (isBrowser()) loader?.update()
+    loader?.update()
   }, [])
 
   return (
