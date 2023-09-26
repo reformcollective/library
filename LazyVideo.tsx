@@ -1,7 +1,9 @@
 import { useEffect } from "react"
 import Lazy from "vanilla-lazyload"
 
-const loader = new Lazy()
+import { isBrowser } from "./functions"
+
+const loader = isBrowser() ? new Lazy() : undefined
 
 type Props = {
   poster: string
@@ -20,7 +22,7 @@ export const LazyVideo = ({
   sourceWEBM,
 }: Props) => {
   useEffect(() => {
-    loader.update()
+    if (isBrowser()) loader?.update()
   }, [])
 
   return (
