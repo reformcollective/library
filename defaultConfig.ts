@@ -11,6 +11,8 @@
  */
 export type TransitionNames = "blue" | "fade" | "slide"
 
+//* make sure to uncomment this after copying the default config *
+// const config: typeof defaultConfig = {
 const config = {
   // *make sure to uncomment this after copying the default config*
   // ...defaultConfig,
@@ -29,7 +31,5 @@ const config = {
   defaultTransition: "slide" satisfies TransitionNames as TransitionNames,
   validStyledProps: ["image"],
 }
-//* make sure to uncomment this after copying the default config *
-// satisfies typeof defaultConfig
 
 export default config
