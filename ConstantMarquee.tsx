@@ -9,6 +9,7 @@ interface MarqueeProps {
   children: React.ReactNode
   timing?: number
   className?: string
+  toLeft?: boolean
   /**
    * How much extra buffer should be maintained offscreen?
    */
@@ -20,6 +21,7 @@ export default function ConstantMarquee({
   timing = 20,
   className = "",
   buffer = 0,
+  toLeft = true,
 }: MarqueeProps) {
   const marquee = useRef<HTMLDivElement>(null)
   const [array, setArray] = useState<null[]>([null])
@@ -41,11 +43,17 @@ export default function ConstantMarquee({
       const tween = gsap.to(marquee.current.children, {
         duration: timing,
         ease: "none",
-        x: `-=${width}`, // move each box 500px to right
+        x: toLeft ? `-=${width}` : `+=${width}`, // move each box 500px to right
         modifiers: {
           x: gsap.utils.unitize((x: number) => {
-            if (x < -width) {
-              return x + width * array.length
+            if (toLeft) {
+              if (x < -width) {
+                return x + width * array.length
+              }
+            } else {
+              if (x > width) {
+                return x - width * array.length
+              }
             }
             return x
           }),
@@ -61,7 +69,7 @@ export default function ConstantMarquee({
           offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
       }
     }
-  }, [array.length, timing, hash])
+  }, [array.length, timing, hash, toLeft])
 
   useEffect(() => {
     const update = () => {
@@ -95,7 +103,12 @@ export default function ConstantMarquee({
   }, [buffer, children])
 
   return (
-    <StyledMarquee ref={marquee} number={array.length} className={className}>
+    <StyledMarquee
+      ref={marquee}
+      number={array.length}
+      className={className}
+      toLeft={toLeft}
+    >
       {/* repeat children NUMBER times */}
       {array.map(() => {
         return <div key={Math.random()}>{children}</div>
@@ -104,7 +117,7 @@ export default function ConstantMarquee({
   )
 }
 
-const StyledMarquee = styled.div<{ number: number }>`
+const StyledMarquee = styled.div<{ number: number; toLeft: boolean }>`
   position: relative;
   display: grid;
   grid-template-columns: repeat(${({ number }) => number}, max-content);
@@ -112,7 +125,7 @@ const StyledMarquee = styled.div<{ number: number }>`
   /* always have a width of 100vw by default */
   width: 100%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(${({ toLeft }) => (toLeft ? "-50%" : "-150%")});
 
   & > div {
     white-space: pre;
