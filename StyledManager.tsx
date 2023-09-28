@@ -1,4 +1,5 @@
 import isPropValid from "@emotion/is-prop-valid"
+import libraryConfig from "libraryConfig"
 import { useEffect, useRef } from "react"
 import { StyleSheetManager } from "styled-components"
 
@@ -23,7 +24,7 @@ export default function StyledManager({
     <StyleSheetManager
       enableVendorPrefixes
       shouldForwardProp={e => {
-        if (e === "image") return true
+        if (libraryConfig.validStyledProps.includes(e)) return true
         isValidConfig.current = true
         return isPropValid(e)
       }}
