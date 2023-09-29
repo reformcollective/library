@@ -9,6 +9,7 @@ type Props = {
   poster: string
   className?: string
   style?: React.CSSProperties
+  forwardRef?: React.Ref<HTMLVideoElement>
 } & (
   | { sourceMP4: string; sourceWEBM?: string }
   | { sourceMP4?: string; sourceWEBM: string }
@@ -20,6 +21,7 @@ export const LazyVideo = ({
   style,
   sourceMP4,
   sourceWEBM,
+  forwardRef,
 }: Props) => {
   useEffect(() => {
     loader?.update()
@@ -35,6 +37,7 @@ export const LazyVideo = ({
       muted
       loop
       playsInline
+      ref={forwardRef}
     >
       {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
       {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
