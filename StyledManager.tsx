@@ -1,5 +1,3 @@
-import isPropValid from "@emotion/is-prop-valid"
-import libraryConfig from "libraryConfig"
 import { useEffect, useRef } from "react"
 import { StyleSheetManager } from "styled-components"
 
@@ -14,7 +12,7 @@ export default function StyledManager({
     const timeout = setTimeout(() => {
       if (!isValidConfig.current)
         console.warn(
-          "StyledManager isn't doing anything, which may cause react errors! Is it set up correctly? It must go in wrapPageElement, not wrapRootElement.",
+          "StyledManager isn't doing anything! Is it set up correctly? It must go in wrapPageElement, not wrapRootElement.",
         )
     }, 1000)
     return () => clearTimeout(timeout)
@@ -23,10 +21,9 @@ export default function StyledManager({
   return (
     <StyleSheetManager
       enableVendorPrefixes
-      shouldForwardProp={e => {
-        if (libraryConfig.validStyledProps.includes(e)) return true
+      shouldForwardProp={() => {
         isValidConfig.current = true
-        return isPropValid(e)
+        return true
       }}
     >
       {children}

@@ -29,7 +29,6 @@ const config = {
    * the transition that will be used by default
    */
   defaultTransition: "slide" satisfies TransitionNames as TransitionNames,
-  validStyledProps: ["image"],
 }
 
 export default config
