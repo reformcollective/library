@@ -14,5 +14,6 @@ export default function UniversalImage({
   image,
   ...props
 }: UniversalImageProps) {
+  if (!image) console.warn("UniversalImage: image is null or undefined")
   return image ? <GatsbyImage image={image} {...props} /> : null
 }
