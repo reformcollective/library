@@ -76,6 +76,7 @@ const updatePercent = () => {
   pageReady()
     .then(async () => {
       // short circuit if there are no callbacks or animations
+      await recursiveAllSettled(promisesToAwait) // but not before promises are settled
       return progressCallbacks.length === 0 && animations.length === 0
         ? onComplete()
         : null
@@ -97,6 +98,7 @@ const updatePercent = () => {
       })
   } else {
     progressCallbacks.forEach(cb => cb(progress))
+    console.log(progress)
     loader.dispatchEvent("progressUpdated", progress)
     if (isBrowser()) requestAnimationFrame(updatePercent)
   }
