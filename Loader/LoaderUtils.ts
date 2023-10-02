@@ -98,7 +98,6 @@ const updatePercent = () => {
       })
   } else {
     progressCallbacks.forEach(cb => cb(progress))
-    console.log(progress)
     loader.dispatchEvent("progressUpdated", progress)
     if (isBrowser()) requestAnimationFrame(updatePercent)
   }
