@@ -3,7 +3,11 @@ import Lazy from "vanilla-lazyload"
 
 import { isBrowser } from "./functions"
 
-const loader = isBrowser() ? new Lazy() : undefined
+const loader = isBrowser()
+  ? new Lazy({
+      threshold: 50,
+    })
+  : undefined
 
 type Props = {
   poster: string
