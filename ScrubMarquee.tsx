@@ -9,6 +9,7 @@ interface MarqueeProps {
   className?: string
   triggerEnd?: string
   right?: boolean
+  scrub?: boolean | number
 }
 
 export default function ScrubMarquee({
@@ -16,6 +17,7 @@ export default function ScrubMarquee({
   className = "",
   right = false,
   triggerEnd = "bottom top",
+  scrub = true,
 }: MarqueeProps) {
   const marquee = useRef<HTMLDivElement>(null)
 
@@ -33,12 +35,12 @@ export default function ScrubMarquee({
             trigger: marquee.current,
             start: "top bottom",
             end: triggerEnd,
-            scrub: true,
+            scrub,
           },
         },
       )
     }
-  }, [right, triggerEnd])
+  }, [right, scrub, triggerEnd])
 
   return (
     <MarqueeWrapper ref={marquee} className={className}>
