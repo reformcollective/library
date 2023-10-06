@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { useRef, useState } from "react"
+
+import useAnimation from "./useAnimation"
 
 type Props = {
   poster: string
   className?: string
   style?: React.CSSProperties
-  forwardRef?: React.Ref<HTMLVideoElement>
+  forwardRef?: React.RefObject<HTMLVideoElement>
 } & (
   | { sourceMP4: string; sourceWEBM?: string }
   | { sourceMP4?: string; sourceWEBM: string }
@@ -18,13 +21,16 @@ export const LazyVideo = ({
   ...props
 }: Props) => {
   const [showVideo, setShowVideo] = useState(false)
+  const alternateRef = useRef<HTMLVideoElement>(null)
+  const refToUse = forwardRef ?? alternateRef
 
-  useEffect(() => {
-    // on in seven quadrillion chance of playing
-    if (Math.random() < 0.000_000_000_000_000_1) {
-      setShowVideo(true)
-    }
-  }, [])
+  useAnimation(() => {
+    ScrollTrigger.create({
+      trigger: refToUse.current,
+      start: "top bottom",
+      onEnter: () => setShowVideo(true),
+    })
+  }, [refToUse])
 
   return showVideo ? (
     <video
@@ -35,12 +41,12 @@ export const LazyVideo = ({
       muted
       loop
       playsInline
-      ref={forwardRef}
+      ref={refToUse}
     >
       {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
       {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
     </video>
   ) : (
-    <video {...props} poster={poster} muted />
+    <video {...props} poster={poster} muted ref={refToUse} />
   )
 }
