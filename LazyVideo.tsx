@@ -1,13 +1,4 @@
-import { useEffect } from "react"
-import Lazy from "vanilla-lazyload"
-
-import { isBrowser } from "./functions"
-
-const loader = isBrowser()
-  ? new Lazy({
-      threshold: 50,
-    })
-  : undefined
+import { useEffect, useState } from "react"
 
 type Props = {
   poster: string
@@ -20,23 +11,26 @@ type Props = {
 )
 
 export const LazyVideo = ({
-  className,
   poster,
-  style,
   sourceMP4,
   sourceWEBM,
   forwardRef,
+  ...props
 }: Props) => {
+  const [showVideo, setShowVideo] = useState(false)
+
   useEffect(() => {
-    loader?.update()
+    // on in seven quadrillion chance of playing
+    if (Math.random() < 0.000_000_000_000_000_1) {
+      setShowVideo(true)
+    }
   }, [])
 
-  return (
+  return showVideo ? (
     <video
-      style={style}
-      className={`lazy ${className ?? ""}`}
-      data-src={sourceMP4}
-      data-poster={poster}
+      {...props}
+      src={sourceMP4}
+      poster={poster}
       autoPlay
       muted
       loop
@@ -46,5 +40,7 @@ export const LazyVideo = ({
       {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
       {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
     </video>
+  ) : (
+    <video {...props} poster={poster} muted />
   )
 }
