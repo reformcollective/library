@@ -1,6 +1,7 @@
 import { navigate as gatsbyNavigate } from "@reach/router"
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import { startTransition, useEffect } from "react"
@@ -107,6 +108,7 @@ let currentAnimation: string | null = null
  */
 export const loadPage = async (
   to: string,
+  anchor: string,
   transition?: Transitions | InternalTransitions,
 ) => {
   // if a transition is already in progress, wait for it to finish before loading the next page
@@ -119,11 +121,16 @@ export const loadPage = async (
   // if we're already on the page we're trying to load, don't do anything, just scroll to the top
   if (pathnameMatches(to, window.location.pathname)) {
     ScrollSmoother.get()?.paused(false)
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    })
-    loader.dispatchEvent("scrollToTop")
+    if (anchor) {
+      ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+    } else {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      })
+      loader.dispatchEvent("scrollToTop")
+    }
+
     return
   }
 
@@ -142,11 +149,17 @@ export const loadPage = async (
 
     ScrollSmoother.get()?.paused(false)
     ScrollSmoother.get()?.scrollTo(0)
+
     window.scrollTo(0, 1)
 
     // fire event with detail "none"
     loader.dispatchEvent("transitionEnd", "none")
     loader.dispatchEvent("anyEnd", "none")
+    // if the desired behavior is to scroll to a certain point on the page after the transition, do so
+    if (anchor) {
+      ScrollTrigger.refresh()
+      ScrollSmoother.get()?.scrollTo(anchor, true, "top 100px")
+    }
 
     return
   }
@@ -181,6 +194,7 @@ export const loadPage = async (
   })
   await pageReady()
   ScrollSmoother.get()?.scrollTo(0)
+
   window.scrollTo(0, 1)
 
   promisesToAwait.push(sleep(100))
@@ -204,10 +218,16 @@ export const loadPage = async (
   loader.dispatchEvent("transitionEnd", transition)
   ScrollSmoother.get()?.paused(false)
 
+  // if the desired behavior is to scroll to a certain point on the page after the transition, do so
+
   // cleanup and reset
   animationContext.revert()
   currentAnimation = null
-  if (pendingTransition) {
+  if (anchor) {
+    ScrollTrigger.refresh()
+    ScrollSmoother.get()?.scrollTo(anchor, true, "top 100px")
+  }
+  if (pendingTransition?.transition) {
     // start the next transition if applicable
     loadPage(pendingTransition.name, pendingTransition.transition).catch(
       (error: string) => {
