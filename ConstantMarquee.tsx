@@ -44,6 +44,12 @@ export default function ConstantMarquee({
         duration: timing,
         ease: "none",
         x: toLeft ? `-=${width}` : `+=${width}`, // move each box 500px to right
+        scrollTrigger: {
+          trigger: marquee.current,
+          start: "top bottom",
+          end: "bottom top",
+          toggleActions: "play pause resume pause",
+        },
         modifiers: {
           x: gsap.utils.unitize((x: number) => {
             if (toLeft) {
