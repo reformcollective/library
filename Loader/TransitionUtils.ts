@@ -1,13 +1,19 @@
-import { navigate as gatsbyNavigate } from "@reach/router"
+import { navigate as gatsbyNavigate } from "gatsby"
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
-import { startTransition, useEffect } from "react"
+import { useEffect } from "react"
 
 import type { InternalTransitions, Transitions } from "."
 import loader, { promisesToAwait, recursiveAllSettled } from "."
 import { getLoaderIsDone } from "./LoaderUtils"
+
+const pushPage = (to: string) => {
+  // the type of the gatsby navigate function is incorrect
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
+  gatsbyNavigate(to)
+}
 
 /**
  * A function that runs an animation and returns the duration of that animation in seconds
@@ -100,6 +106,7 @@ let pendingTransition: {
   transition?: Transitions | InternalTransitions
 } | null = null
 let currentAnimation: string | null = null
+
 /**
  * load a page, making use of the specified transition
  * @param to page to load
@@ -117,11 +124,13 @@ export const loadPage = async (
     return
   }
 
-  // if we're already on the page we're trying to load, don't do anything, just scroll to the top
+  // if we're already on the page we're trying to load, just scroll to the top
   if (pathnameMatches(to, window.location.pathname)) {
     ScrollSmoother.get()?.paused(false)
+
+    // scroll to anchor if applicable, otherwise scroll to top
     if (anchor) {
-      ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+      ScrollSmoother.get()?.scrollTo(anchor, true, "top 100px")
     } else {
       window.scrollTo({
         top: 0,
@@ -133,33 +142,34 @@ export const loadPage = async (
     return
   }
 
-  currentAnimation = to
-
-  // if no transition is specified, instant transition
+  // if no transition is specified, instantly transition pages
   if (!transition || !allTransitions[transition]) {
-    currentAnimation = null
-    await navigate(to)
+    navigate(to)
     await pageUnmounted()
     await pageReady()
 
-    // if the desired behavior is to scroll to a certain point on the page after the transition, do so. This is not currently supported for transitions without animations
-
+    // if the desired behavior is to scroll to a certain point on the page after the transition, do so.
+    // This is not currently supported for transitions without animations
     ScrollSmoother.get()?.paused(false)
     if (anchor) {
       throw new Error("anchors without transitions not supported!")
     } else {
-      ScrollSmoother.get()?.scrollTo(0)
+      // an anchor is not specified, scroll to the top of the page
+      ScrollSmoother.get()?.scrollTo(0, false)
       window.scrollTo(0, 1)
     }
 
-    // fire event with detail "none"
+    // fire events with detail "none"
     loader.dispatchEvent("transitionEnd", "none")
     loader.dispatchEvent("anyEnd", "none")
 
     return
   }
 
-  // wait for the loader to finish animation before starting the transition
+  // start this animation
+  currentAnimation = to
+
+  // wait for the initial loader to finish animation before starting the transition
   while (!getLoaderIsDone()) await sleep(100)
 
   const animationContext = gsap.context(() => {
@@ -184,12 +194,13 @@ export const loadPage = async (
   await sleep(entranceDuration * 1000)
 
   // actually navigate to the page
-  await navigate(to, () => {
+  navigate(to, () => {
     animationContext.revert()
   })
   await pageReady()
 
-  promisesToAwait.push(sleep(100))
+  // wait for any promises to settle
+  promisesToAwait.push(sleep(0))
   await recursiveAllSettled(promisesToAwait)
 
   const exitAnimations = allTransitions[transition]?.outAnimation ?? []
@@ -201,8 +212,11 @@ export const loadPage = async (
     animationContext.add(callback)
     exitDuration = Math.max(exitDuration, animationDuration)
   }
-  // if the desired behavior is to scroll to a certain point on the page after the transition, do so. This is done after the exit animation to prevent the page from jumping around, it also recalls the scrollTo function multiple times to ensure the scroll is maintained
 
+  // if the desired behavior is to scroll to a certain point on the page
+  // after the transition, do so. This is done after the exit animation
+  // to prevent the page from jumping around, it also recalls the scrollTo
+  // function multiple times to ensure the scroll is maintained
   if (anchor) {
     ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
     ;(async () => {
@@ -214,11 +228,9 @@ export const loadPage = async (
       }
     })().catch(console.error)
   } else {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    })
-    loader.dispatchEvent("scrollToTop")
+    // if no anchor, scroll to the top of the page
+    window.scrollTo(0, 0)
+    ScrollSmoother.get()?.scrollTo(0, false)
   }
 
   // wait for exit animation to finish
@@ -233,8 +245,8 @@ export const loadPage = async (
   animationContext.revert()
   currentAnimation = null
 
+  // start the next transition if applicable
   if (pendingTransition?.transition) {
-    // start the next transition if applicable
     loadPage(pendingTransition.name, pendingTransition.transition).catch(
       (error: string) => {
         throw new Error(error)
@@ -249,7 +261,7 @@ export const loadPage = async (
  * @param to the link to navigate to
  * @param cleanupFunction a function to reset the page to its original state (if back button is pressed after external link)
  */
-export const navigate = async (to: string, cleanupFunction?: VoidFunction) => {
+export const navigate = (to: string, cleanupFunction?: VoidFunction) => {
   const isExternal = to.slice(0, 8).includes("//")
 
   if (isExternal) {
@@ -260,11 +272,7 @@ export const navigate = async (to: string, cleanupFunction?: VoidFunction) => {
       cleanupFunction?.()
     }, 1000)
   } else {
-    return new Promise<void>((resolve, reject) => {
-      startTransition(() => {
-        gatsbyNavigate(to).then(resolve).catch(reject)
-      })
-    })
+    pushPage(to)
   }
 }
 
