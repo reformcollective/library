@@ -74,7 +74,6 @@ export default function UniversalLink({
   forwardRef,
   type,
   children,
-  anchor = "",
   ariaLabel,
   ...props
 }: UniversalLinkProps) {
@@ -94,6 +93,7 @@ export default function UniversalLink({
   }
 
   const internal = /^\/(?!\/)/.test(to)
+  const isAnchor = to.includes("#")
 
   const handleClick: React.MouseEventHandler = e => {
     e.preventDefault()
@@ -101,7 +101,10 @@ export default function UniversalLink({
     if (openInNewTab || !internal) {
       window.open(to, "_blank")
     } else {
-      loadPage(to, anchor, transition).catch((error: string) => {
+      const anchor = ""
+      const checkedAnchor = isAnchor ? `#${to.split("#")[1]}` : anchor
+      const checkedTo = isAnchor ? to.split("#")[0] ?? "" : to
+      loadPage(checkedTo, checkedAnchor, transition).catch((error: string) => {
         throw new Error(error)
       })
     }
@@ -113,8 +116,6 @@ export default function UniversalLink({
       onClick={handleClick}
       ref={forwardRef}
       aria-label={ariaLabel}
-      state={{ anchor }}
-      anchor={anchor}
       {...props}
     >
       {children}
