@@ -18,6 +18,7 @@ interface BaseLinkProps {
   onMouseEnter?: MouseEventHandler
   onMouseLeave?: MouseEventHandler
   ariaLabel?: string
+  anchor?: string
 }
 
 interface ButtonProps extends BaseLinkProps {
@@ -33,6 +34,11 @@ interface ButtonProps extends BaseLinkProps {
    * forward a ref to the button
    */
   forwardRef?: React.RefObject<HTMLButtonElement>
+  /**
+   * Do you want to scroll to a specific location after the transition?
+   */
+  anchor?: string
+
   to?: never
   transition?: never
 }
@@ -50,6 +56,7 @@ interface AnchorProps extends BaseLinkProps {
    * forward a ref to the link or anchor tag
    */
   forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
+
   onClick?: never
   type?: never
 }
@@ -93,7 +100,10 @@ export default function UniversalLink({
     if (openInNewTab || !internal) {
       window.open(to, "_blank")
     } else {
-      loadPage(to, transition).catch((error: string) => {
+      const anchor = new URL(to).hash
+      const checkedTo = new URL(to).pathname
+
+      loadPage(checkedTo, anchor, transition).catch((error: string) => {
         throw new Error(error)
       })
     }

@@ -107,6 +107,7 @@ let currentAnimation: string | null = null
  */
 export const loadPage = async (
   to: string,
+  anchor: string,
   transition?: Transitions | InternalTransitions,
 ) => {
   // if a transition is already in progress, wait for it to finish before loading the next page
@@ -119,11 +120,16 @@ export const loadPage = async (
   // if we're already on the page we're trying to load, don't do anything, just scroll to the top
   if (pathnameMatches(to, window.location.pathname)) {
     ScrollSmoother.get()?.paused(false)
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    })
-    loader.dispatchEvent("scrollToTop")
+    if (anchor) {
+      ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+    } else {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      })
+      loader.dispatchEvent("scrollToTop")
+    }
+
     return
   }
 
@@ -133,16 +139,18 @@ export const loadPage = async (
   if (!transition || !allTransitions[transition]) {
     currentAnimation = null
     await navigate(to)
-
-    ScrollSmoother.get()?.paused(false)
-    ScrollSmoother.get()?.scrollTo(0)
-
     await pageUnmounted()
     await pageReady()
 
+    // if the desired behavior is to scroll to a certain point on the page after the transition, do so. This is not currently supported for transitions without animations
+
     ScrollSmoother.get()?.paused(false)
-    ScrollSmoother.get()?.scrollTo(0)
-    window.scrollTo(0, 1)
+    if (anchor) {
+      throw new Error("anchors without transitions not supported!")
+    } else {
+      ScrollSmoother.get()?.scrollTo(0)
+      window.scrollTo(0, 1)
+    }
 
     // fire event with detail "none"
     loader.dispatchEvent("transitionEnd", "none")
@@ -180,8 +188,6 @@ export const loadPage = async (
     animationContext.revert()
   })
   await pageReady()
-  ScrollSmoother.get()?.scrollTo(0)
-  window.scrollTo(0, 1)
 
   promisesToAwait.push(sleep(100))
   await recursiveAllSettled(promisesToAwait)
@@ -195,6 +201,25 @@ export const loadPage = async (
     animationContext.add(callback)
     exitDuration = Math.max(exitDuration, animationDuration)
   }
+  // if the desired behavior is to scroll to a certain point on the page after the transition, do so. This is done after the exit animation to prevent the page from jumping around, it also recalls the scrollTo function multiple times to ensure the scroll is maintained
+
+  if (anchor) {
+    ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+    ;(async () => {
+      const interval = 100
+      const timesToRun = Math.ceil(exitDuration / (interval / 1000))
+      for (let i = 0; i < timesToRun; i++) {
+        ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+        await sleep(interval)
+      }
+    })().catch(console.error)
+  } else {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    })
+    loader.dispatchEvent("scrollToTop")
+  }
 
   // wait for exit animation to finish
   await sleep(exitDuration * 1000 + 10)
@@ -207,7 +232,8 @@ export const loadPage = async (
   // cleanup and reset
   animationContext.revert()
   currentAnimation = null
-  if (pendingTransition) {
+
+  if (pendingTransition?.transition) {
     // start the next transition if applicable
     loadPage(pendingTransition.name, pendingTransition.transition).catch(
       (error: string) => {
