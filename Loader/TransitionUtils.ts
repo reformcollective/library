@@ -142,6 +142,8 @@ export const loadPage = async (
     await pageUnmounted()
     await pageReady()
 
+    // if the desired behavior is to scroll to a certain point on the page after the transition, do so. This is not currently supported for transitions without animations
+
     ScrollSmoother.get()?.paused(false)
     if (anchor) {
       throw new Error("anchors without transitions not supported!")
@@ -153,7 +155,6 @@ export const loadPage = async (
     // fire event with detail "none"
     loader.dispatchEvent("transitionEnd", "none")
     loader.dispatchEvent("anyEnd", "none")
-    // if the desired behavior is to scroll to a certain point on the page after the transition, do so
 
     return
   }
@@ -200,6 +201,7 @@ export const loadPage = async (
     animationContext.add(callback)
     exitDuration = Math.max(exitDuration, animationDuration)
   }
+  // if the desired behavior is to scroll to a certain point on the page after the transition, do so. This is done after the exit animation to prevent the page from jumping around, it also recalls the scrollTo function multiple times to ensure the scroll is maintained
 
   if (anchor) {
     ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
@@ -226,8 +228,6 @@ export const loadPage = async (
   loader.dispatchEvent("anyEnd", transition)
   loader.dispatchEvent("transitionEnd", transition)
   ScrollSmoother.get()?.paused(false)
-
-  // if the desired behavior is to scroll to a certain point on the page after the transition, do so
 
   // cleanup and reset
   animationContext.revert()

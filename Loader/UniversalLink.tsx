@@ -93,7 +93,6 @@ export default function UniversalLink({
   }
 
   const internal = /^\/(?!\/)/.test(to)
-  const isAnchor = to.includes("#")
 
   const handleClick: React.MouseEventHandler = e => {
     e.preventDefault()
@@ -101,10 +100,10 @@ export default function UniversalLink({
     if (openInNewTab || !internal) {
       window.open(to, "_blank")
     } else {
-      const anchor = ""
-      const checkedAnchor = isAnchor ? `#${to.split("#")[1]}` : anchor
-      const checkedTo = isAnchor ? to.split("#")[0] ?? "" : to
-      loadPage(checkedTo, checkedAnchor, transition).catch((error: string) => {
+      const anchor = new URL(to).hash
+      const checkedTo = new URL(to).pathname
+
+      loadPage(checkedTo, anchor, transition).catch((error: string) => {
         throw new Error(error)
       })
     }
