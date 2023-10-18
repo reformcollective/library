@@ -113,7 +113,7 @@ export default function ConstantMarquee({
       ref={marquee}
       number={array.length}
       className={className}
-      toLeft={toLeft}
+      $toLeft={toLeft}
     >
       {/* repeat children NUMBER times */}
       {array.map(() => {
@@ -123,7 +123,7 @@ export default function ConstantMarquee({
   )
 }
 
-const StyledMarquee = styled.div<{ number: number; toLeft: boolean }>`
+const StyledMarquee = styled.div<{ number: number; $toLeft: boolean }>`
   position: relative;
   display: grid;
   grid-template-columns: repeat(${({ number }) => number}, max-content);
@@ -131,7 +131,7 @@ const StyledMarquee = styled.div<{ number: number; toLeft: boolean }>`
   /* always have a width of 100vw by default */
   width: 100%;
   left: 50%;
-  transform: translateX(${({ toLeft }) => (toLeft ? "-50%" : "-150%")});
+  transform: translateX(${({ $toLeft }) => ($toLeft ? "-50%" : "-150%")});
 
   & > div {
     white-space: pre;

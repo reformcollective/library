@@ -100,8 +100,9 @@ export default function UniversalLink({
     if (openInNewTab || !internal) {
       window.open(to, "_blank")
     } else {
-      const anchor = new URL(to).hash
-      const checkedTo = new URL(to).pathname
+      const base = window.location.origin
+      const anchor = new URL(to, base).hash
+      const checkedTo = new URL(to, base).pathname
 
       loadPage(checkedTo, anchor, transition).catch((error: string) => {
         throw new Error(error)
