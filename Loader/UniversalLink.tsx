@@ -103,7 +103,7 @@ export default function UniversalLink({
       const anchor = new URL(to, window.location.origin).hash
       const checkedTo = new URL(to, window.location.origin).pathname
 
-      loadPage(checkedTo, anchor, transition).catch((error: string) => {
+      loadPage(checkedTo, transition, anchor).catch((error: string) => {
         throw new Error(error)
       })
     }
