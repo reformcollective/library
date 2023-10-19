@@ -104,6 +104,7 @@ export const unregisterTransition = (
 let pendingTransition: {
   name: string
   transition?: Transitions | InternalTransitions
+  anchor?: string
 } | null = null
 let currentAnimation: string | null = null
 
@@ -114,13 +115,13 @@ let currentAnimation: string | null = null
  */
 export const loadPage = async (
   to: string,
-  anchor: string,
   transition?: Transitions | InternalTransitions,
+  anchor?: string,
 ) => {
   // if a transition is already in progress, wait for it to finish before loading the next page
   if (currentAnimation !== null) {
     if (!pathnameMatches(to, currentAnimation))
-      pendingTransition = { name: to, transition }
+      pendingTransition = { name: to, transition, anchor }
     return
   }
 
@@ -247,11 +248,13 @@ export const loadPage = async (
 
   // start the next transition if applicable
   if (pendingTransition?.transition) {
-    loadPage(pendingTransition.name, pendingTransition.transition).catch(
-      (error: string) => {
-        throw new Error(error)
-      },
-    )
+    loadPage(
+      pendingTransition.name,
+      pendingTransition.transition,
+      pendingTransition.anchor,
+    ).catch((error: string) => {
+      throw new Error(error)
+    })
     pendingTransition = null
   }
 }
