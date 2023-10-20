@@ -204,6 +204,32 @@ export const loadPage = async (
   promisesToAwait.push(sleep(0))
   await recursiveAllSettled(promisesToAwait)
 
+  // if the desired behavior is to scroll to a certain point on the page
+  // after the transition, do so. This is done after the exit animation
+  // to prevent the page from jumping around, it also recalls the scrollTo
+  // function multiple times to ensure the scroll is maintained
+  if (anchor) {
+    ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+
+    // scroll to the anchor multiple times to ensure we're at the right place
+    let goodAttemptCount = 0
+    let scrollPosition = 0
+    while (goodAttemptCount < 3) {
+      ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+
+      // if we moved less than 10 pixels, count it as a good attempt
+      const newPosition = ScrollSmoother.get()?.scrollTop() ?? 0
+      if (Math.abs(newPosition - scrollPosition) < 10) goodAttemptCount += 1
+      scrollPosition = newPosition
+
+      await sleep(50)
+    }
+  } else {
+    // if no anchor, scroll to the top of the page
+    window.scrollTo(0, 0)
+    ScrollSmoother.get()?.scrollTo(0, false)
+  }
+
   const exitAnimations = allTransitions[transition]?.outAnimation ?? []
 
   // run each animation, add it to the context, and get the duration of the longest one
@@ -212,26 +238,6 @@ export const loadPage = async (
     const { callback, duration: animationDuration } = animation
     animationContext.add(callback)
     exitDuration = Math.max(exitDuration, animationDuration)
-  }
-
-  // if the desired behavior is to scroll to a certain point on the page
-  // after the transition, do so. This is done after the exit animation
-  // to prevent the page from jumping around, it also recalls the scrollTo
-  // function multiple times to ensure the scroll is maintained
-  if (anchor) {
-    ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
-    ;(async () => {
-      const interval = 100
-      const timesToRun = Math.ceil(exitDuration / (interval / 1000))
-      for (let i = 0; i < timesToRun; i++) {
-        ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
-        await sleep(interval)
-      }
-    })().catch(console.error)
-  } else {
-    // if no anchor, scroll to the top of the page
-    window.scrollTo(0, 0)
-    ScrollSmoother.get()?.scrollTo(0, false)
   }
 
   // wait for exit animation to finish
