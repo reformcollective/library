@@ -111,24 +111,24 @@ export default function SideScroller({
   return (
     <Wrapper
       ref={setWrapperEl}
-      height={pinAmount}
-      touchscreenMode={touchscreenMode}
+      $height={pinAmount}
+      $touchscreenMode={touchscreenMode}
     >
-      <Inner ref={setInnerEl} touchscreenMode={touchscreenMode}>
+      <Inner ref={setInnerEl} $touchscreenMode={touchscreenMode}>
         {children}
       </Inner>
     </Wrapper>
   )
 }
 
-const Wrapper = styled.section<{ height: number; touchscreenMode: boolean }>`
+const Wrapper = styled.section<{ $height: number; $touchscreenMode: boolean }>`
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: ${props => props.height}px;
+  height: ${props => props.$height}px;
 
-  ${({ touchscreenMode }) =>
-    touchscreenMode &&
+  ${({ $touchscreenMode }) =>
+    $touchscreenMode &&
     css`
       height: fit-content;
       overflow-x: auto;
@@ -136,7 +136,7 @@ const Wrapper = styled.section<{ height: number; touchscreenMode: boolean }>`
 `
 
 const Inner = styled.div<{
-  touchscreenMode: boolean
+  $touchscreenMode: boolean
 }>`
   position: absolute;
   width: fit-content;
@@ -147,8 +147,8 @@ const Inner = styled.div<{
     width: fit-content;
   }
 
-  ${({ touchscreenMode }) =>
-    touchscreenMode &&
+  ${({ $touchscreenMode }) =>
+    $touchscreenMode &&
     css`
       width: fit-content;
       height: fit-content;

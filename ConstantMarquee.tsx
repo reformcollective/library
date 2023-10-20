@@ -111,7 +111,7 @@ export default function ConstantMarquee({
   return (
     <StyledMarquee
       ref={marquee}
-      number={array.length}
+      $number={array.length}
       className={className}
       $toLeft={toLeft}
     >
@@ -123,10 +123,10 @@ export default function ConstantMarquee({
   )
 }
 
-const StyledMarquee = styled.div<{ number: number; $toLeft: boolean }>`
+const StyledMarquee = styled.div<{ $number: number; $toLeft: boolean }>`
   position: relative;
   display: grid;
-  grid-template-columns: repeat(${({ number }) => number}, max-content);
+  grid-template-columns: repeat(${({ $number }) => $number}, max-content);
 
   /* always have a width of 100vw by default */
   width: 100%;
