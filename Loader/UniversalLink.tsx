@@ -39,7 +39,7 @@ interface ButtonProps extends BaseLinkProps {
    */
   anchor?: string
 
-  to?: never
+  to?: string | undefined
   transition?: never
 }
 
@@ -57,7 +57,7 @@ interface AnchorProps extends BaseLinkProps {
    */
   forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
 
-  onClick?: never
+  onClick?: () => void
   type?: never
 }
 
