@@ -8,6 +8,7 @@ type Props = {
   className?: string
   style?: React.CSSProperties
   forwardRef?: React.RefObject<HTMLVideoElement>
+  loop?: boolean
 } & (
   | { sourceMP4: string; sourceWEBM?: string }
   | { sourceMP4?: string; sourceWEBM: string }
@@ -18,6 +19,7 @@ export const LazyVideo = ({
   sourceMP4,
   sourceWEBM,
   forwardRef,
+  loop = true,
   ...props
 }: Props) => {
   const [showVideo, setShowVideo] = useState(false)
@@ -39,7 +41,7 @@ export const LazyVideo = ({
       poster={poster}
       autoPlay
       muted
-      loop
+      loop={loop}
       playsInline
       ref={refToUse}
     >
