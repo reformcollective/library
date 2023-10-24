@@ -263,6 +263,7 @@ export const loadPage = async (
     })
     pendingTransition = null
   }
+  ScrollTrigger.refresh()
 }
 
 /**
