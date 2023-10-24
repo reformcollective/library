@@ -102,9 +102,8 @@ export const unregisterTransition = (
 }
 
 let pendingTransition: {
-  name: string
+  to: string
   transition?: Transitions | InternalTransitions
-  anchor?: string
 } | null = null
 let currentAnimation: string | null = null
 
@@ -114,14 +113,17 @@ let currentAnimation: string | null = null
  * @param transition the transition to use
  */
 export const loadPage = async (
-  to: string,
+  navigateTo: string,
   transition?: Transitions | InternalTransitions,
-  anchor?: string,
 ) => {
+  // extract the anchor from the pathname if applicable
+  const anchor = new URL(navigateTo, window.location.origin).hash
+  const to = new URL(navigateTo, window.location.origin).pathname
+
   // if a transition is already in progress, wait for it to finish before loading the next page
   if (currentAnimation !== null) {
     if (!pathnameMatches(to, currentAnimation))
-      pendingTransition = { name: to, transition, anchor }
+      pendingTransition = { to, transition }
     return
   }
 
@@ -132,12 +134,13 @@ export const loadPage = async (
     // scroll to anchor if applicable, otherwise scroll to top
     if (anchor) {
       ScrollSmoother.get()?.scrollTo(anchor, true, "top 100px")
+      loader.dispatchEvent("scrollTo")
     } else {
       window.scrollTo({
         top: 0,
         behavior: "smooth",
       })
-      loader.dispatchEvent("scrollToTop")
+      loader.dispatchEvent("scrollTo")
     }
 
     return
@@ -254,13 +257,11 @@ export const loadPage = async (
 
   // start the next transition if applicable
   if (pendingTransition?.transition) {
-    loadPage(
-      pendingTransition.name,
-      pendingTransition.transition,
-      pendingTransition.anchor,
-    ).catch((error: string) => {
-      throw new Error(error)
-    })
+    loadPage(pendingTransition.to, pendingTransition.transition).catch(
+      (error: string) => {
+        throw new Error(error)
+      },
+    )
     pendingTransition = null
   }
 }
