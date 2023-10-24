@@ -209,6 +209,7 @@ export const loadPage = async (
   // to prevent the page from jumping around, it also recalls the scrollTo
   // function multiple times to ensure the scroll is maintained
   if (anchor) {
+    window.scrollTo(0, 0)
     ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
 
     // scroll to the anchor multiple times to ensure we're at the right place
@@ -263,7 +264,6 @@ export const loadPage = async (
     })
     pendingTransition = null
   }
-  ScrollTrigger.refresh()
 }
 
 /**
