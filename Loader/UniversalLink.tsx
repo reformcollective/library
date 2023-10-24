@@ -39,8 +39,8 @@ interface ButtonProps extends BaseLinkProps {
    */
   anchor?: string
 
-  to?: never
-  transition?: never
+  to?: undefined
+  transition?: undefined
 }
 
 interface AnchorProps extends BaseLinkProps {
@@ -57,8 +57,8 @@ interface AnchorProps extends BaseLinkProps {
    */
   forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
 
-  onClick?: never
-  type?: never
+  onClick?: undefined
+  type?: undefined
 }
 
 export type UniversalLinkProps = ButtonProps | AnchorProps
@@ -100,10 +100,7 @@ export default function UniversalLink({
     if (openInNewTab || !internal) {
       window.open(to, "_blank")
     } else {
-      const anchor = new URL(to, window.location.origin).hash
-      const checkedTo = new URL(to, window.location.origin).pathname
-
-      loadPage(checkedTo, transition, anchor).catch((error: string) => {
+      loadPage(to, transition).catch((error: string) => {
         throw new Error(error)
       })
     }
