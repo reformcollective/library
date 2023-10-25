@@ -102,7 +102,7 @@ export const unregisterTransition = (
 }
 
 let pendingTransition: {
-  name: string
+  to: string
   transition?: Transitions | InternalTransitions
 } | null = null
 let currentAnimation: string | null = null
@@ -113,14 +113,17 @@ let currentAnimation: string | null = null
  * @param transition the transition to use
  */
 export const loadPage = async (
-  to: string,
-  anchor: string,
+  navigateTo: string,
   transition?: Transitions | InternalTransitions,
 ) => {
+  // extract the anchor from the pathname if applicable
+  const anchor = new URL(navigateTo, window.location.origin).hash
+  const to = new URL(navigateTo, window.location.origin).pathname
+
   // if a transition is already in progress, wait for it to finish before loading the next page
   if (currentAnimation !== null) {
     if (!pathnameMatches(to, currentAnimation))
-      pendingTransition = { name: to, transition }
+      pendingTransition = { to, transition }
     return
   }
 
@@ -131,12 +134,13 @@ export const loadPage = async (
     // scroll to anchor if applicable, otherwise scroll to top
     if (anchor) {
       ScrollSmoother.get()?.scrollTo(anchor, true, "top 100px")
+      loader.dispatchEvent("scrollTo")
     } else {
       window.scrollTo({
         top: 0,
         behavior: "smooth",
       })
-      loader.dispatchEvent("scrollToTop")
+      loader.dispatchEvent("scrollTo")
     }
 
     return
@@ -203,6 +207,32 @@ export const loadPage = async (
   promisesToAwait.push(sleep(0))
   await recursiveAllSettled(promisesToAwait)
 
+  // if the desired behavior is to scroll to a certain point on the page
+  // after the transition, do so. This is done after the exit animation
+  // to prevent the page from jumping around, it also recalls the scrollTo
+  // function multiple times to ensure the scroll is maintained
+  if (anchor) {
+    ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+
+    // scroll to the anchor multiple times to ensure we're at the right place
+    let goodAttemptCount = 0
+    let scrollPosition = 0
+    while (goodAttemptCount < 3) {
+      ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+
+      // if we moved less than 10 pixels, count it as a good attempt
+      const newPosition = ScrollSmoother.get()?.scrollTop() ?? 0
+      if (Math.abs(newPosition - scrollPosition) < 10) goodAttemptCount += 1
+      scrollPosition = newPosition
+
+      await sleep(50)
+    }
+  } else {
+    // if no anchor, scroll to the top of the page
+    window.scrollTo(0, 0)
+    ScrollSmoother.get()?.scrollTo(0, false)
+  }
+
   const exitAnimations = allTransitions[transition]?.outAnimation ?? []
 
   // run each animation, add it to the context, and get the duration of the longest one
@@ -211,26 +241,6 @@ export const loadPage = async (
     const { callback, duration: animationDuration } = animation
     animationContext.add(callback)
     exitDuration = Math.max(exitDuration, animationDuration)
-  }
-
-  // if the desired behavior is to scroll to a certain point on the page
-  // after the transition, do so. This is done after the exit animation
-  // to prevent the page from jumping around, it also recalls the scrollTo
-  // function multiple times to ensure the scroll is maintained
-  if (anchor) {
-    ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
-    ;(async () => {
-      const interval = 100
-      const timesToRun = Math.ceil(exitDuration / (interval / 1000))
-      for (let i = 0; i < timesToRun; i++) {
-        ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
-        await sleep(interval)
-      }
-    })().catch(console.error)
-  } else {
-    // if no anchor, scroll to the top of the page
-    window.scrollTo(0, 0)
-    ScrollSmoother.get()?.scrollTo(0, false)
   }
 
   // wait for exit animation to finish
@@ -247,7 +257,7 @@ export const loadPage = async (
 
   // start the next transition if applicable
   if (pendingTransition?.transition) {
-    loadPage(pendingTransition.name, pendingTransition.transition).catch(
+    loadPage(pendingTransition.to, pendingTransition.transition).catch(
       (error: string) => {
         throw new Error(error)
       },

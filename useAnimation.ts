@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 import type { DependencyList } from "react"
 import { startTransition, useEffect, useState } from "react"
 
+import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./functions"
 
 /**
@@ -120,3 +121,5 @@ const useAnimation = <F, T>(
 }
 
 export default useAnimation
+
+checkGSAP()

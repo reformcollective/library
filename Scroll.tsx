@@ -3,6 +3,7 @@ import ScrollSmoother from "gsap/ScrollSmoother"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 
+import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./functions"
 
 interface ScrollProps {
@@ -158,3 +159,5 @@ export default function Scroll({
     </div>
   )
 }
+
+checkGSAP()
