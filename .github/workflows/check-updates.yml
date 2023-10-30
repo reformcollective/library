@@ -17,7 +17,7 @@ jobs:
       # if the main branch hasn't been updated in a while, exit the workflow with a failure
       - name: Check for updates
         run: |
-          if [ $(git log --since="30 days ago" | wc -l) -eq 0 ]; then
+          if [ $(git log --since="3 days ago" | wc -l) -eq 0 ]; then
             echo "Repository is stale"
             exit 1
           fi
