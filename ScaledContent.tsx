@@ -32,6 +32,15 @@ export default function ScaledContent({
     // when the inner div changes size
     const observer = new ResizeObserver(update)
     observer.observe(inner.current)
+
+    // and as the page loads, we may need to update the size
+    // easier to just do it on an interval
+    const interval = setInterval(update, 1000)
+
+    return () => {
+      observer.disconnect()
+      clearInterval(interval)
+    }
   }, [])
 
   return (
