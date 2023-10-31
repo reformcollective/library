@@ -1,3 +1,4 @@
+import config from "libraryConfig"
 import { useEffect, useState } from "react"
 import {
   desktopBreakpoint,
@@ -9,6 +10,7 @@ import {
 } from "styles/media"
 
 import { isBrowser } from "./functions"
+import getMedia from "./getMedia"
 
 /**
  * hookify a get function to update on resize
@@ -169,7 +171,12 @@ export function useVwToPx(vw: number) {
  * @returns the calculated px value
  */
 export function getResponsivePixels(px: number) {
-  return getVwToPx(getPxToVw(px))
+  const value = getVwToPx(getPxToVw(px))
+
+  // short circuit if we're not using responsive pixels
+  if (!config.scaleFully) return getMedia(px, value, value, value)
+
+  return value
 }
 
 /**
