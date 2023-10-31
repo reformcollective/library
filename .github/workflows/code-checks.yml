@@ -6,7 +6,7 @@ jobs:
   Automatically_Format:
     # only run if not authored by dependabot
     if: github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       # BEGIN INSTALLATION
       - name: Determine package manager
@@ -60,7 +60,7 @@ jobs:
   Check_Lines:
     # only run if not authored by dependabot
     if: github.actor != 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
         with:
@@ -144,7 +144,7 @@ jobs:
 
   Generate_Types:
     # install modules, run a build, then cache and upload so we can use in other builds
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: Automatically_Format
     env:
       CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
@@ -194,7 +194,7 @@ jobs:
           path: src/types/gatsby-types.d.ts
 
   Check_Linting:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: Generate_Types
     steps:
       # BEGIN INSTALLATION
@@ -235,7 +235,7 @@ jobs:
         run: npm run lint
 
   Type_Checking:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: Generate_Types
     env:
       CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
