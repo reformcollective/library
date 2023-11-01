@@ -31,9 +31,12 @@ jobs:
         if: steps.package-manager.outputs.PNPM == 'true'
         with:
           cache: "pnpm"
+          node-version-file: .nvmrc
       - name: Use Node
         uses: actions/setup-node@v3
         if: steps.package-manager.outputs.PNPM != 'true'
+        with:
+          node-version-file: .nvmrc
       - name: Install dependencies
         run: npx @antfu/ni --no-frozen-lockfile
       # END INSTALLATION
@@ -173,9 +176,12 @@ jobs:
         if: steps.package-manager.outputs.PNPM == 'true'
         with:
           cache: "pnpm"
+          node-version-file: .nvmrc
       - name: Use Node
         uses: actions/setup-node@v3
         if: steps.package-manager.outputs.PNPM != 'true'
+        with:
+          node-version-file: .nvmrc
       - name: Install dependencies
         run: npx @antfu/ni
       # END INSTALLATION
@@ -220,9 +226,12 @@ jobs:
         if: steps.package-manager.outputs.PNPM == 'true'
         with:
           cache: "pnpm"
+          node-version-file: .nvmrc
       - name: Use Node
         uses: actions/setup-node@v3
         if: steps.package-manager.outputs.PNPM != 'true'
+        with:
+          node-version-file: .nvmrc
       - name: Install dependencies
         run: npx @antfu/ni
       # END INSTALLATION
@@ -264,9 +273,12 @@ jobs:
         if: steps.package-manager.outputs.PNPM == 'true'
         with:
           cache: "pnpm"
+          node-version-file: .nvmrc
       - name: Use Node
         uses: actions/setup-node@v3
         if: steps.package-manager.outputs.PNPM != 'true'
+        with:
+          node-version-file: .nvmrc
       - name: Install dependencies
         run: npx @antfu/ni
       # END INSTALLATION
