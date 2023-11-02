@@ -1,6 +1,7 @@
 import { navigate as gatsbyNavigate } from "gatsby"
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect } from "react"
@@ -217,13 +218,16 @@ export const loadPage = async (
     // scroll to the anchor multiple times to ensure we're at the right place
     let goodAttemptCount = 0
     let scrollPosition = 0
-    while (goodAttemptCount < 3) {
-      ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+    while (goodAttemptCount < 5) {
+      if (document.querySelector(anchor)) {
+        ScrollTrigger.refresh()
+        ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
 
-      // if we moved less than 10 pixels, count it as a good attempt
-      const newPosition = ScrollSmoother.get()?.scrollTop() ?? 0
-      if (Math.abs(newPosition - scrollPosition) < 10) goodAttemptCount += 1
-      scrollPosition = newPosition
+        // if we moved less than 10 pixels, count it as a good attempt
+        const newPosition = ScrollSmoother.get()?.scrollTop() ?? 0
+        if (Math.abs(newPosition - scrollPosition) < 10) goodAttemptCount += 1
+        scrollPosition = newPosition
+      }
 
       await sleep(50)
     }

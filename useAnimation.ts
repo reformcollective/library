@@ -7,6 +7,8 @@ import { startTransition, useEffect, useState } from "react"
 import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./functions"
 
+let globalRefresh: NodeJS.Timeout | undefined
+
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
  * This hook will take care of cleaning up the animation and clearing inline styles when the component is unmounted or when the dependencies change.
@@ -73,7 +75,8 @@ const useAnimation = <F, T>(
               if (currentScroll)
                 ScrollSmoother.get()?.scrollTo(currentScroll, false)
             }, 1)
-            setTimeout(() => {
+            clearTimeout(globalRefresh)
+            globalRefresh = setTimeout(() => {
               ScrollTrigger.refresh()
             }, 1000)
           }
