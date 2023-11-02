@@ -94,6 +94,7 @@ export default function ConstantMarquee({
     [array.length, timing, toLeft],
     {
       kill: true,
+      recreateOnResize: true,
     },
   )
 
