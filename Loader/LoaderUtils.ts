@@ -1,4 +1,5 @@
 import { ScrollSmoother } from "gsap/ScrollSmoother"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 import libraryConfig from "libraryConfig"
 
 import { isBrowser, sleep } from "../functions"
@@ -60,6 +61,7 @@ async function onComplete() {
   await sleep(longestAnimation * 1000 + 10)
   loaderIsDone = true
 
+  ScrollTrigger.refresh(true)
   ScrollSmoother.get()?.paused(false)
 
   loader.dispatchEvent("anyEnd", "initial")
