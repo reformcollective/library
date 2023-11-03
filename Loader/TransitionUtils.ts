@@ -254,6 +254,7 @@ export const loadPage = async (
   loader.dispatchEvent("anyEnd", transition)
   loader.dispatchEvent("transitionEnd", transition)
   ScrollSmoother.get()?.paused(false)
+  ScrollTrigger.refresh()
 
   // cleanup and reset
   animationContext.revert()
