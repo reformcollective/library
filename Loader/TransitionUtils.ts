@@ -220,6 +220,7 @@ export const loadPage = async (
     let scrollPosition = 0
     while (goodAttemptCount < 5) {
       if (document.querySelector(anchor)) {
+        ScrollTrigger.refresh()
         ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
 
         // if we moved less than 10 pixels, count it as a good attempt
@@ -229,7 +230,6 @@ export const loadPage = async (
       }
 
       await sleep(50)
-      ScrollTrigger.refresh()
     }
   } else {
     // if no anchor, scroll to the top of the page
@@ -254,6 +254,7 @@ export const loadPage = async (
   loader.dispatchEvent("anyEnd", transition)
   loader.dispatchEvent("transitionEnd", transition)
   ScrollSmoother.get()?.paused(false)
+  ScrollTrigger.refresh()
 
   // cleanup and reset
   animationContext.revert()
