@@ -134,7 +134,8 @@ export const loadPage = async (
 
     // scroll to anchor if applicable, otherwise scroll to top
     if (anchor) {
-      ScrollSmoother.get()?.scrollTo(anchor, true, "top 100px")
+      // ScrollSmoother.get()?.scrollTo(anchor, true, "top 100px")
+      gsap.to(window, { scrollTo: { y: anchor, offsetY: 100 }, duration: 0.4 })
       loader.dispatchEvent("scrollTo")
     } else {
       window.scrollTo({
