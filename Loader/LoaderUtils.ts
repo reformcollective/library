@@ -61,7 +61,7 @@ async function onComplete() {
   await sleep(longestAnimation * 1000 + 10)
   loaderIsDone = true
 
-  ScrollTrigger.refresh(true)
+  ScrollTrigger.refresh()
   ScrollSmoother.get()?.paused(false)
 
   loader.dispatchEvent("anyEnd", "initial")
