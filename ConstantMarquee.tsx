@@ -16,7 +16,7 @@ interface MarqueeProps {
   /**
    * if true, reverses direction
    */
-  toLeft?: boolean
+  reversed?: boolean
   /**
    * How much extra buffer (in pixels) should be maintained offscreen?
    *
@@ -30,7 +30,7 @@ export default function ConstantMarquee({
   className,
   timing = 20,
   buffer = 0,
-  toLeft = true,
+  reversed = false,
 }: MarqueeProps) {
   const marquee = useRef<HTMLDivElement>(null)
   const [array, setArray] = useState<null[]>([null])
@@ -56,7 +56,7 @@ export default function ConstantMarquee({
       const tween = gsap.to(marquee.current.children, {
         duration: timing,
         ease: "none",
-        x: toLeft ? `-=${width}` : `+=${width}`,
+        x: reversed ? `+=${width}` : `-=${width}`,
         // pause when the marquee is offscreen (for performance)
         scrollTrigger: {
           trigger: marquee.current,
@@ -67,13 +67,13 @@ export default function ConstantMarquee({
         // when each child goes offscreen, move it to the other side
         modifiers: {
           x: gsap.utils.unitize((x: number) => {
-            if (toLeft) {
-              if (x < -width) {
-                return x + width * array.length
-              }
-            } else {
+            if (reversed) {
               if (x > width) {
                 return x - width * array.length
+              }
+            } else {
+              if (x < -width) {
+                return x + width * array.length
               }
             }
             return x
@@ -91,7 +91,7 @@ export default function ConstantMarquee({
           offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
       }
     },
-    [array.length, timing, toLeft],
+    [array.length, timing, reversed],
     {
       kill: true,
       recreateOnResize: true,
@@ -134,12 +134,7 @@ export default function ConstantMarquee({
   }, [buffer, children])
 
   return (
-    <StyledMarquee
-      ref={marquee}
-      $number={array.length}
-      className={className}
-      $toLeft={toLeft}
-    >
+    <StyledMarquee ref={marquee} $number={array.length} className={className}>
       {/* repeat children NUMBER times */}
       {array.map((_, index) => {
         return <div key={index}>{children}</div>
@@ -148,7 +143,7 @@ export default function ConstantMarquee({
   )
 }
 
-const StyledMarquee = styled.div<{ $number: number; $toLeft: boolean }>`
+const StyledMarquee = styled.div<{ $number: number }>`
   position: relative;
   display: grid;
   grid-template-columns: repeat(${({ $number }) => $number}, max-content);
@@ -156,7 +151,7 @@ const StyledMarquee = styled.div<{ $number: number; $toLeft: boolean }>`
   /* always have a width of 100vw by default */
   width: 100%;
   left: 50%;
-  transform: translateX(${({ $toLeft }) => ($toLeft ? "-50%" : "-150%")});
+  translate: -50% 0;
 
   & > div {
     white-space: pre;
