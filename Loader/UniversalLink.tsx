@@ -82,6 +82,7 @@ export default function UniversalLink({
       <button
         type={type}
         ref={forwardRef}
+        aria-label={ariaLabel}
         {...props}
         style={{
           cursor: "pointer",
