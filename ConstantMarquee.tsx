@@ -1,50 +1,80 @@
 import gsap from "gsap"
-import React, { useEffect, useRef, useState } from "react"
+import type React from "react"
+import { useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 
 import { addDebouncedEventListener } from "./functions"
+import useAnimation from "./useAnimation"
 
 interface MarqueeProps {
   children: React.ReactNode
-  timing?: number
   className?: string
   /**
-   * How much extra buffer should be maintained offscreen?
+   * how many seconds should it take to loop once?
+   */
+  timing?: number
+  /**
+   * if true, reverses direction
+   */
+  reversed?: boolean
+  /**
+   * How much extra buffer (in pixels) should be maintained offscreen?
+   *
+   * useful for when you need a marquee wider than the screen (eg an animated one)
    */
   buffer?: number
 }
 
 export default function ConstantMarquee({
   children,
+  className,
   timing = 20,
-  className = "",
   buffer = 0,
+  reversed = false,
 }: MarqueeProps) {
   const marquee = useRef<HTMLDivElement>(null)
   const [array, setArray] = useState<null[]>([null])
-  const [hash, setHash] = useState(0)
   const offset = useRef(0)
 
-  useEffect(() => {
-    if (marquee.current) {
-      const first = marquee.current.children[0]
+  useAnimation(
+    () => {
+      if (!marquee.current) return
 
+      /**
+       * give each child an initial x position
+       */
+      const first = marquee.current.children[0]
       const width = first?.clientWidth ?? 0
       offset.current = Math.min(0, offset.current)
       gsap.set(marquee.current.children, {
         x: i => i * width + offset.current,
       })
 
-      gsap.to(marquee.current, {})
-
+      /**
+       * animate each child on the x axis
+       */
       const tween = gsap.to(marquee.current.children, {
         duration: timing,
         ease: "none",
-        x: `-=${width}`, // move each box 500px to right
+        x: reversed ? `+=${width}` : `-=${width}`,
+        // pause when the marquee is offscreen (for performance)
+        scrollTrigger: {
+          trigger: marquee.current,
+          start: "top bottom",
+          end: "bottom top",
+          toggleActions: "play pause resume pause",
+        },
+        // when each child goes offscreen, move it to the other side
         modifiers: {
           x: gsap.utils.unitize((x: number) => {
-            if (x < -width) {
-              return x + width * array.length
+            if (reversed) {
+              if (x > width) {
+                return x - width * array.length
+              }
+            } else {
+              if (x < -width) {
+                return x + width * array.length
+              }
             }
             return x
           }),
@@ -56,13 +86,22 @@ export default function ConstantMarquee({
       })
 
       return () => {
+        // when we refresh, keep the position constant to minimize jumps
         if (first instanceof HTMLElement)
           offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
       }
-    }
-  }, [array.length, timing, hash])
+    },
+    [array.length, timing, reversed],
+    {
+      kill: true,
+      recreateOnResize: true,
+    },
+  )
 
   useEffect(() => {
+    /**
+     * calculate how many children we need to fill the screen
+     */
     const update = () => {
       if (marquee.current) {
         const width = Math.max(
@@ -74,17 +113,18 @@ export default function ConstantMarquee({
         if (Number.isFinite(newNumber) && newNumber > 0)
           setArray(Array.from({ length: newNumber }, () => null))
       }
-      setHash(p => p + 1)
     }
 
     update()
 
+    // update when the marquee children change size
     const elementsToObserve = marquee.current?.querySelectorAll("*") ?? []
-
     const observer = new ResizeObserver(update)
     elementsToObserve.forEach(element => {
       observer.observe(element)
     })
+
+    // update when the screen size changes
     const remove = addDebouncedEventListener(window, "resize", update, 100)
 
     return () => {
@@ -94,24 +134,24 @@ export default function ConstantMarquee({
   }, [buffer, children])
 
   return (
-    <StyledMarquee ref={marquee} number={array.length} className={className}>
+    <StyledMarquee ref={marquee} $number={array.length} className={className}>
       {/* repeat children NUMBER times */}
-      {array.map(() => {
-        return <div key={Math.random()}>{children}</div>
+      {array.map((_, index) => {
+        return <div key={index}>{children}</div>
       })}
     </StyledMarquee>
   )
 }
 
-const StyledMarquee = styled.div<{ number: number }>`
+const StyledMarquee = styled.div<{ $number: number }>`
   position: relative;
   display: grid;
-  grid-template-columns: repeat(${({ number }) => number}, max-content);
+  grid-template-columns: repeat(${({ $number }) => $number}, max-content);
 
   /* always have a width of 100vw by default */
   width: 100%;
   left: 50%;
-  transform: translateX(-50%);
+  translate: -50% 0;
 
   & > div {
     white-space: pre;
