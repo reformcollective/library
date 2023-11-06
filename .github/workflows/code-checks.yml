@@ -2,6 +2,10 @@ name: Code Checks
 on:
   workflow_call:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   Automatically_Format:
     # only run if not authored by dependabot
