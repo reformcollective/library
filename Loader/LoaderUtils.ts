@@ -61,7 +61,9 @@ async function onComplete() {
   await sleep(longestAnimation * 1000 + 10)
   loaderIsDone = true
 
-  ScrollTrigger.refresh()
+  // refreshing immediately can cause ScrollSmoother to jump to top
+  // so we do a safe refresh instead
+  ScrollTrigger.refresh(true)
   ScrollSmoother.get()?.paused(false)
 
   loader.dispatchEvent("anyEnd", "initial")

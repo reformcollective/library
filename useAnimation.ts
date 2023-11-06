@@ -66,20 +66,17 @@ const useAnimation = <F, T>(
     if (options?.recreateOnResize) {
       const onResize = () => {
         setResizeSignal(previous => {
-          const currentScroll = ScrollSmoother.get()?.scrollTop()
           const newValue = window.innerWidth
+
           // if the value has changed
+          // make sure scrolltrigger gets refreshed
           if (newValue !== previous) {
-            // make sure scroll is maintained and scrolltrigger gets refreshed
-            setTimeout(() => {
-              if (currentScroll)
-                ScrollSmoother.get()?.scrollTo(currentScroll, false)
-            }, 1)
             clearTimeout(globalRefresh)
             globalRefresh = setTimeout(() => {
               ScrollTrigger.refresh()
-            }, 1000)
+            }, 1)
           }
+
           return newValue
         })
       }
