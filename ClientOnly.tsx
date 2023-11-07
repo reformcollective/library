@@ -19,3 +19,20 @@ export default function ClientOnly({
 
   return <>{children}</>
 }
+
+export const useClientOnly = <T, F = undefined>(
+  value: T,
+  fallbackValue?: F,
+) => {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    startTransition(() => {
+      setMounted(isBrowser())
+    })
+  }, [])
+
+  if (!mounted) return fallbackValue
+
+  return value
+}
