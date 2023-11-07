@@ -165,6 +165,9 @@ export const loadPage = async (
       window.scrollTo(0, 1)
     }
 
+    // refresh smoother effects
+    ScrollSmoother.get()?.effects("[data-speed], [data-lag]", {})
+
     // fire events with detail "none"
     loader.dispatchEvent("transitionEnd", "none")
     loader.dispatchEvent("anyEnd", "none")
@@ -235,6 +238,9 @@ export const loadPage = async (
     window.scrollTo(0, 0)
     ScrollSmoother.get()?.scrollTo(0, false)
   }
+
+  // refresh smoother effects
+  ScrollSmoother.get()?.effects("[data-speed], [data-lag]", {})
 
   const exitAnimations = allTransitions[transition]?.outAnimation ?? []
 
