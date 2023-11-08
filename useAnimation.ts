@@ -1,5 +1,4 @@
 import gsap from "gsap"
-import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import type { DependencyList } from "react"
 import { startTransition, useEffect, useState } from "react"
