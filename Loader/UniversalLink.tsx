@@ -18,6 +18,7 @@ interface BaseLinkProps {
   onMouseEnter?: MouseEventHandler
   onMouseLeave?: MouseEventHandler
   ariaLabel?: string
+  anchor?: string
 }
 
 interface ButtonProps extends BaseLinkProps {
@@ -33,8 +34,13 @@ interface ButtonProps extends BaseLinkProps {
    * forward a ref to the button
    */
   forwardRef?: React.RefObject<HTMLButtonElement>
-  to?: never
-  transition?: never
+  /**
+   * Do you want to scroll to a specific location after the transition?
+   */
+  anchor?: string
+
+  to?: undefined
+  transition?: undefined
 }
 
 interface AnchorProps extends BaseLinkProps {
@@ -50,8 +56,9 @@ interface AnchorProps extends BaseLinkProps {
    * forward a ref to the link or anchor tag
    */
   forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
-  onClick?: never
-  type?: never
+
+  onClick?: undefined
+  type?: undefined
 }
 
 export type UniversalLinkProps = ButtonProps | AnchorProps
@@ -75,6 +82,7 @@ export default function UniversalLink({
       <button
         type={type}
         ref={forwardRef}
+        aria-label={ariaLabel}
         {...props}
         style={{
           cursor: "pointer",

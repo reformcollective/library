@@ -3,6 +3,7 @@ import ScrollSmoother from "gsap/ScrollSmoother"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 
+import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./functions"
 
 interface ScrollProps {
@@ -97,6 +98,7 @@ export default function Scroll({
       smooth: isSmooth ? 1 : 0,
       smoothTouch: isSmooth ? 1 : 0,
       ignoreMobileResize: !mobileResize,
+      effects: true,
       onUpdate: e => {
         // if at the top, enable overscroll behavior (pull to refresh)
         const maxScroll = document.body.scrollHeight - window.innerHeight
@@ -158,3 +160,5 @@ export default function Scroll({
     </div>
   )
 }
+
+checkGSAP()

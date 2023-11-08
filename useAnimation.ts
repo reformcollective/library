@@ -1,10 +1,12 @@
 import gsap from "gsap"
-import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import type { DependencyList } from "react"
 import { startTransition, useEffect, useState } from "react"
 
+import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./functions"
+
+let globalRefresh: NodeJS.Timeout | undefined
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
@@ -63,19 +65,17 @@ const useAnimation = <F, T>(
     if (options?.recreateOnResize) {
       const onResize = () => {
         setResizeSignal(previous => {
-          const currentScroll = ScrollSmoother.get()?.scrollTop()
           const newValue = window.innerWidth
+
           // if the value has changed
+          // make sure scrolltrigger gets refreshed
           if (newValue !== previous) {
-            // make sure scroll is maintained and scrolltrigger gets refreshed
-            setTimeout(() => {
-              if (currentScroll)
-                ScrollSmoother.get()?.scrollTo(currentScroll, false)
-            }, 1)
-            setTimeout(() => {
+            clearTimeout(globalRefresh)
+            globalRefresh = setTimeout(() => {
               ScrollTrigger.refresh()
-            }, 1000)
+            }, 1)
           }
+
           return newValue
         })
       }
@@ -120,3 +120,5 @@ const useAnimation = <F, T>(
 }
 
 export default useAnimation
+
+checkGSAP()

@@ -21,26 +21,30 @@ export default function ScrubMarquee({
 }: MarqueeProps) {
   const marquee = useRef<HTMLDivElement>(null)
 
-  useAnimation(() => {
-    if (marquee.current && triggerEnd) {
-      gsap.fromTo(
-        marquee.current,
-        {
-          x: right ? "-100vw" : 0,
-        },
-        {
-          x: right ? 0 : "-100vw",
-          ease: "linear",
-          scrollTrigger: {
-            trigger: marquee.current,
-            start: "top bottom",
-            end: triggerEnd,
-            scrub,
+  useAnimation(
+    () => {
+      if (marquee.current && triggerEnd) {
+        gsap.fromTo(
+          marquee.current,
+          {
+            x: right ? "-100vw" : 0,
           },
-        },
-      )
-    }
-  }, [right, scrub, triggerEnd])
+          {
+            x: right ? 0 : "-100vw",
+            ease: "linear",
+            scrollTrigger: {
+              trigger: marquee.current,
+              start: "top bottom",
+              end: triggerEnd,
+              scrub,
+            },
+          },
+        )
+      }
+    },
+    [right, scrub, triggerEnd],
+    { recreateOnResize: true },
+  )
 
   return (
     <MarqueeWrapper ref={marquee} className={className}>

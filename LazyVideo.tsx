@@ -1,3 +1,4 @@
+import { useRafInterval } from "ahooks"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { useRef, useState } from "react"
 
@@ -8,6 +9,8 @@ type Props = {
   className?: string
   style?: React.CSSProperties
   forwardRef?: React.RefObject<HTMLVideoElement>
+  loop?: boolean
+  autoPlay?: boolean
   sourceMP4Mobile?: string
   sourceWEBMMobile?: string
   mobileBreakpoint?: number
@@ -24,28 +27,38 @@ export const LazyVideo = ({
   sourceWEBMMobile,
   mobileBreakpoint,
   forwardRef,
+  loop = true,
+  autoPlay = true,
   ...props
 }: Props) => {
   const [showVideo, setShowVideo] = useState(false)
   const alternateRef = useRef<HTMLVideoElement>(null)
   const refToUse = forwardRef ?? alternateRef
 
-  useAnimation(() => {
-    ScrollTrigger.create({
+  const trigger = useAnimation(() => {
+    return ScrollTrigger.create({
       trigger: refToUse.current,
       start: "top bottom",
       onEnter: () => setShowVideo(true),
     })
   }, [refToUse])
 
+  /**
+   * if the video starts off screen and animates in, the trigger might not catch it
+   * so we need to refresh the trigger every couple frames
+   */
+  useRafInterval(() => {
+    if (!showVideo) trigger?.refresh()
+  }, 32)
+
   return showVideo ? (
     <video
       {...props}
       src={sourceMP4}
       poster={poster}
-      autoPlay
+      autoPlay={autoPlay}
       muted
-      loop
+      loop={loop}
       playsInline
       ref={refToUse}
     >

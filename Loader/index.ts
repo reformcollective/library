@@ -45,7 +45,7 @@ const loader = new TypedEventEmitter<{
   progressUpdated: [number]
   transitionStart: [Transitions | InternalTransitions]
   transitionEnd: [Transitions | InternalTransitions]
-  scrollToTop: []
+  scrollTo: []
 }>()
 
 export default loader
