@@ -65,8 +65,11 @@ async function onComplete() {
   loaderIsDone = true
 
   // refreshing immediately can cause ScrollSmoother to jump to top
-  // so we do a safe refresh instead
-  ScrollTrigger.refresh(true)
+  // doing a safe refresh doesn't math correctly
+  // so we do a standard refresh after a short delay
+  requestAnimationFrame(() => {
+    ScrollTrigger.refresh()
+  })
   ScrollSmoother.get()?.paused(false)
 
   // give refresh time to finish
