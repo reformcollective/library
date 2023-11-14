@@ -60,8 +60,6 @@ async function onComplete() {
   await sleep(longestAnimation * 1000 + 10)
   loaderIsDone = true
 
-  ScrollSmoother.get()?.paused(false)
-
   loader.dispatchEvent("anyEnd", "initial")
   loader.dispatchEvent("initialEnd")
 }
