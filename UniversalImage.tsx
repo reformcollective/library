@@ -4,15 +4,15 @@ import type { ComponentProps } from "react"
 
 type GatsbyImageProps = ComponentProps<typeof GatsbyImage>
 
-export type UniversalImageProps = Omit<GatsbyImageProps, "image"> & {
-  image:
-    | IGatsbyImageData
-    | { childImageSharp: { gatsbyImageData: IGatsbyImageData | null } | null }
-    | null
-    | undefined
-}
+export type UniversalImageData =
+  | IGatsbyImageData
+  | { childImageSharp: { gatsbyImageData: IGatsbyImageData | null } | null }
+  | null
+  | undefined
 
-export type UniversalImageData = IGatsbyImageData | null | undefined
+export type UniversalImageProps = Omit<GatsbyImageProps, "image"> & {
+  image: UniversalImageData
+}
 
 export default function UniversalImage({
   image,
