@@ -11,6 +11,9 @@ type Props = {
   forwardRef?: React.RefObject<HTMLVideoElement>
   loop?: boolean
   autoPlay?: boolean
+  sourceMP4Mobile?: string
+  sourceWEBMMobile?: string
+  mobileBreakpoint?: number
 } & (
   | { sourceMP4: string; sourceWEBM?: string }
   | { sourceMP4?: string; sourceWEBM: string }
@@ -20,6 +23,9 @@ export const LazyVideo = ({
   poster,
   sourceMP4,
   sourceWEBM,
+  sourceMP4Mobile,
+  sourceWEBMMobile,
+  mobileBreakpoint,
   forwardRef,
   loop = true,
   autoPlay = true,
@@ -56,6 +62,20 @@ export const LazyVideo = ({
       playsInline
       ref={refToUse}
     >
+      {sourceWEBMMobile && (
+        <source
+          src={sourceWEBMMobile}
+          type="video/webm"
+          media={`(max-width:${mobileBreakpoint}px)`}
+        />
+      )}
+      {sourceMP4Mobile && (
+        <source
+          src={sourceMP4Mobile}
+          type="video/mp4"
+          media={`(max-width:${mobileBreakpoint}px)`}
+        />
+      )}
       {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
       {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
     </video>
