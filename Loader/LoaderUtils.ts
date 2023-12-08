@@ -48,7 +48,7 @@ async function onComplete() {
 
   loader.dispatchEvent("anyStart", "initial")
   loader.dispatchEvent("initialStart")
-  progressCallbacks.forEach(cb => cb(100))
+  progressCallbacks.forEach((cb) => cb(100))
   loader.dispatchEvent("progressUpdated", 100)
 
   await sleep(250)
@@ -90,8 +90,8 @@ const updatePercent = () => {
     .then(async () => {
       // short circuit if there are no callbacks or animations
       await recursiveAllSettled(promisesToAwait) // but not before promises are settled
-      return progressCallbacks.length === 0 && animations.length === 0
-        ? onComplete()
+      return progressCallbacks.length === 0 && animations.length === 0 ?
+          onComplete()
         : null
     })
     .catch(async () => {
@@ -111,7 +111,7 @@ const updatePercent = () => {
         return onComplete()
       })
   } else {
-    progressCallbacks.forEach(cb => cb(progress))
+    progressCallbacks.forEach((cb) => cb(progress))
     loader.dispatchEvent("progressUpdated", progress)
     if (isBrowser()) requestAnimationFrame(updatePercent)
   }
@@ -160,7 +160,7 @@ export const registerProgress = (callback: ProgressCallback) => {
  */
 export const unregisterLoaderCallback = (completionFunction: VoidFunction) => {
   animations = animations.filter(
-    animation => animation.callback !== completionFunction,
+    (animation) => animation.callback !== completionFunction,
   )
 }
 

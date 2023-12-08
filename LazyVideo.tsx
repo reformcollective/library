@@ -16,7 +16,7 @@ type Props = {
   | { sourceMP4?: string; sourceWEBM: string }
 )
 
-export const LazyVideo = ({
+export function LazyVideo({
   poster,
   sourceMP4,
   sourceWEBM,
@@ -24,7 +24,7 @@ export const LazyVideo = ({
   loop = true,
   autoPlay = true,
   ...props
-}: Props) => {
+}: Props) {
   const [showVideo, setShowVideo] = useState(false)
   const alternateRef = useRef<HTMLVideoElement>(null)
   const refToUse = forwardRef ?? alternateRef
@@ -45,21 +45,19 @@ export const LazyVideo = ({
     if (!showVideo) trigger?.refresh()
   }, 32)
 
-  return showVideo ? (
-    <video
-      {...props}
-      src={sourceMP4}
-      poster={poster}
-      autoPlay={autoPlay}
-      muted
-      loop={loop}
-      playsInline
-      ref={refToUse}
-    >
-      {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
-      {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
-    </video>
-  ) : (
-    <video {...props} poster={poster} muted ref={refToUse} />
-  )
+  return showVideo ?
+      <video
+        {...props}
+        src={sourceMP4}
+        poster={poster}
+        autoPlay={autoPlay}
+        muted
+        loop={loop}
+        playsInline
+        ref={refToUse}
+      >
+        {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
+        {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
+      </video>
+    : <video {...props} poster={poster} muted ref={refToUse} />
 }

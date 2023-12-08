@@ -35,7 +35,7 @@ export default function fullyResponsive(
     .replaceAll("}", "\n}")
     .replaceAll(";", ";\n")
     .split("\n")
-    .filter(x => x.match(/px|{|}/g))
+    .filter((x) => x.match(/px|{|}/g))
     .join("\n")
 
   const regex = /(?=[\S ]*;)([\d.]+)px/g

@@ -47,12 +47,11 @@ const useAnimation = <F, T>(
   const [firstRender, setFirstRender] = useState(true)
   const extraDeps = options?.extraDeps ?? []
 
-  // need Function to get the correct type
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  type ReturnType = T extends Function
-    ? undefined
-    : T extends object
-    ? T | undefined
+  type ReturnType =
+    // need Function to get the correct type
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    T extends Function ? undefined
+    : T extends object ? T | undefined
     : undefined
 
   const [returnValue, setReturnValue] = useState<ReturnType>()
@@ -64,7 +63,7 @@ const useAnimation = <F, T>(
   useEffect(() => {
     if (options?.recreateOnResize) {
       const onResize = () => {
-        setResizeSignal(previous => {
+        setResizeSignal((previous) => {
           const newValue = window.innerWidth
 
           // if the value has changed
