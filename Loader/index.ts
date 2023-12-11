@@ -66,7 +66,7 @@ export const recursiveAllSettled = async (
   promisesToExclude: Promise<unknown>[] = [],
 ): Promise<void> => {
   const promisesCopy = [...promises].filter(
-    promise => !promisesToExclude.includes(promise),
+    (promise) => !promisesToExclude.includes(promise),
   )
   if (promisesCopy.length === 0) return
 

@@ -99,7 +99,7 @@ export default function Scroll({
       smoothTouch: isSmooth ? 1 : 0,
       ignoreMobileResize: !mobileResize,
       effects: true,
-      onUpdate: e => {
+      onUpdate: (e) => {
         // if at the top, enable overscroll behavior (pull to refresh)
         const maxScroll = document.body.scrollHeight - window.innerHeight
         if (e.scrollTop() === 0 || maxScroll - e.scrollTop() < 100) {
@@ -136,7 +136,7 @@ export default function Scroll({
         if (smoother) smoother.kill()
         await pageUnmounted()
         await pageReady()
-        setRefreshSignal(s => s + 1)
+        setRefreshSignal((s) => s + 1)
       })().catch(console.error)
     }
 

@@ -47,7 +47,7 @@ export default function ConstantMarquee({
       const width = first?.clientWidth ?? 0
       offset.current = Math.min(0, offset.current)
       gsap.set(marquee.current.children, {
-        x: i => i * width + offset.current,
+        x: (i) => i * width + offset.current,
       })
 
       /**
@@ -105,7 +105,7 @@ export default function ConstantMarquee({
     const update = () => {
       if (marquee.current) {
         const width = Math.max(
-          ...[...marquee.current.children].map(child => child.clientWidth),
+          ...[...marquee.current.children].map((child) => child.clientWidth),
         )
 
         // number needed to fill width plus some buffer
@@ -120,7 +120,7 @@ export default function ConstantMarquee({
     // update when the marquee children change size
     const elementsToObserve = marquee.current?.querySelectorAll("*") ?? []
     const observer = new ResizeObserver(update)
-    elementsToObserve.forEach(element => {
+    elementsToObserve.forEach((element) => {
       observer.observe(element)
     })
 

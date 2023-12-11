@@ -60,17 +60,19 @@ export default function CustomTextOverflow({
       const shrinkBefore = truncatePosition < 0
       // we need to use slightly different math to put the ellipses at the very end
       const ellipsisAtEnd = truncatePosition === 0
-      const textBeforeEllipsis = ellipsisAtEnd
-        ? children.slice(0, children.length - numberOfCharsToRemove)
+      const textBeforeEllipsis =
+        ellipsisAtEnd ?
+          children.slice(0, children.length - numberOfCharsToRemove)
         : children.slice(
             0,
             truncatePosition - (shrinkBefore ? numberOfCharsToRemove : 0),
           )
-      const textAfterEllipsis = ellipsisAtEnd
-        ? ""
-        : children.slice(
+      const textAfterEllipsis =
+        ellipsisAtEnd ? "" : (
+          children.slice(
             truncatePosition + (shrinkBefore ? 0 : numberOfCharsToRemove),
           )
+        )
 
       const newText = `${textBeforeEllipsis}${ellipsis}${textAfterEllipsis}`
 
@@ -95,13 +97,13 @@ export default function CustomTextOverflow({
     const handleResize = () => {
       clearTimeout(timeout)
       timeout = setTimeout(() => {
-        setRefreshSignal(p => p + 1)
+        setRefreshSignal((p) => p + 1)
       })
     }
 
     const observer = new ResizeObserver(handleResize)
     if (wrapperRef.current instanceof HTMLElement)
-      getAllParents(wrapperRef.current, 10).forEach(parent => {
+      getAllParents(wrapperRef.current, 10).forEach((parent) => {
         observer.observe(parent)
       })
 

@@ -104,8 +104,8 @@ export default function ImageSequence({
       sequenceData.images[index] = img
 
       const onImageLoad = () => {
-        setWidth(width => Math.max(width, img.naturalWidth))
-        setHeight(height => Math.max(height, img.naturalHeight))
+        setWidth((width) => Math.max(width, img.naturalWidth))
+        setHeight((height) => Math.max(height, img.naturalHeight))
         requestAnimationFrame(() => {
           latestRender.current()
         })
@@ -174,8 +174,9 @@ export default function ImageSequence({
               latestRender.current()
             })
           },
-          scrollTrigger: trigger
-            ? {
+          scrollTrigger:
+            trigger ?
+              {
                 trigger,
                 scrub: 0.5,
                 start: triggerStart ?? "top top",

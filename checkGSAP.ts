@@ -15,8 +15,8 @@ const runCheck = async () => {
   if (process.env.NODE_ENV === "development") {
     // fetch the latest version metadata
     const data = await fetch("https://registry.npmjs.org/gsap")
-      .then(response => response.json())
-      .then(d => d as PackageResponse)
+      .then((response) => response.json())
+      .then((d) => d as PackageResponse)
 
     // get the latest version
     const latestVersion = data["dist-tags"].latest
@@ -34,7 +34,7 @@ const runCheck = async () => {
 }
 
 export const checkGSAP = () => {
-  runCheck().catch(error => {
+  runCheck().catch((error) => {
     console.error("Could not check for GSAP updates", error)
   })
 }

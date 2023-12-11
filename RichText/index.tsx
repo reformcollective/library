@@ -47,10 +47,10 @@ const PROJECT_DOMAIN = "https://boostinsurance.com"
 
 const options: Options = {
   renderMark: {
-    [MARKS.BOLD]: children => <Strong>{children}</Strong>,
-    [MARKS.UNDERLINE]: children => <U>{children}</U>,
-    [MARKS.ITALIC]: children => <Em>{children}</Em>,
-    [MARKS.CODE]: children => <Code>{children}</Code>,
+    [MARKS.BOLD]: (children) => <Strong>{children}</Strong>,
+    [MARKS.UNDERLINE]: (children) => <U>{children}</U>,
+    [MARKS.ITALIC]: (children) => <Em>{children}</Em>,
+    [MARKS.CODE]: (children) => <Code>{children}</Code>,
   },
   renderNode: {
     [BLOCKS.HEADING_1]: (node, children) => <H1>{children}</H1>,
@@ -68,14 +68,13 @@ const options: Options = {
       const { uri } = data
       // check if internal link
       if (typeof uri === "string") {
-        const link = uri.includes(PROJECT_DOMAIN)
-          ? uri.replace(PROJECT_DOMAIN, "")
-          : uri
+        const link =
+          uri.includes(PROJECT_DOMAIN) ? uri.replace(PROJECT_DOMAIN, "") : uri
         return <A to={link}>{children}</A>
       }
     },
     [BLOCKS.QUOTE]: (node, children) => <Quote>{children}</Quote>,
-    [INLINES.EMBEDDED_ENTRY]: node => {
+    [INLINES.EMBEDDED_ENTRY]: (node) => {
       const { data } = node
       const target = data.target as unknown
 
@@ -91,8 +90,9 @@ const options: Options = {
         "newTab" in target &&
         typeof target.newTab === "boolean"
       ) {
-        const link = target.url.includes(PROJECT_DOMAIN)
-          ? target.url.replace(PROJECT_DOMAIN, "")
+        const link =
+          target.url.includes(PROJECT_DOMAIN) ?
+            target.url.replace(PROJECT_DOMAIN, "")
           : target.url
 
         return (
@@ -109,7 +109,7 @@ const options: Options = {
       return <span>Invalid Link</span>
     },
     // images
-    [BLOCKS.EMBEDDED_ASSET]: node => {
+    [BLOCKS.EMBEDDED_ASSET]: (node) => {
       const { data } = node
       const target = data.target as unknown
 

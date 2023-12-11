@@ -66,9 +66,9 @@ export default function SideScroller({
     if (touchscreenMode) return
 
     if (wrapperEl && innerEl && widthOfChildren && pinAmount) {
-      const x = -(widthOfChildren > window.innerWidth
-        ? widthOfChildren - window.innerWidth
-        : 0)
+      const x = -(widthOfChildren > window.innerWidth ?
+        widthOfChildren - window.innerWidth
+      : 0)
 
       const tween = gsap.to(innerEl, {
         x,
@@ -125,7 +125,7 @@ const Wrapper = styled.section<{ $height: number; $touchscreenMode: boolean }>`
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: ${props => props.$height}px;
+  height: ${(props) => props.$height}px;
 
   ${({ $touchscreenMode }) =>
     $touchscreenMode &&
