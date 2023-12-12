@@ -22,6 +22,13 @@ export const isMobileOS = () => {
   return isIOS() || isAndroid()
 }
 
+export const isDesktopSafari = () => {
+  const isMobile = isMobileOS()
+  const isSafari = Boolean(window.safari)
+
+  return !isMobile && isSafari
+}
+
 /**
  * hookify a get function to update after hydration
  */
@@ -43,4 +50,8 @@ export const useIsAndroid = () => {
 
 export const useIsMobileOS = () => {
   return useHookify(isMobileOS)
+}
+
+export const useIsDesktopSafari = () => {
+  return useHookify(isDesktopSafari)
 }
