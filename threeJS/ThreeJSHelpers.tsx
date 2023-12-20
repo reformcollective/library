@@ -11,7 +11,7 @@ const getDevicePixelRatio = () => {
 }
 
 export default function AdaptivePixelRatio() {
-  const sendDPRtoThree = useThree(state => state.setDpr)
+  const sendDPRtoThree = useThree((state) => state.setDpr)
   const [DPR, setDPR] = useState(getDevicePixelRatio())
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function AdaptivePixelRatio() {
   const incline = () => {
     const maxDPR = getDevicePixelRatio()
 
-    setDPR(previous => {
+    setDPR((previous) => {
       const newDPR = previous + 0.1
       return Math.min(newDPR, maxDPR)
     })
@@ -33,7 +33,7 @@ export default function AdaptivePixelRatio() {
 
     const factorToDecrease = 1 - e.factor
 
-    setDPR(previous => {
+    setDPR((previous) => {
       const newDPR = previous - factorToDecrease
       return Math.max(newDPR, minDPR)
     })

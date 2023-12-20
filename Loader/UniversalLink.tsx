@@ -82,6 +82,7 @@ export default function UniversalLink({
       <button
         type={type}
         ref={forwardRef}
+        aria-label={ariaLabel}
         {...props}
         style={{
           cursor: "pointer",
@@ -94,7 +95,7 @@ export default function UniversalLink({
 
   const internal = /^\/(?!\/)/.test(to)
 
-  const handleClick: React.MouseEventHandler = e => {
+  const handleClick: React.MouseEventHandler = (e) => {
     e.preventDefault()
 
     if (openInNewTab || !internal) {
@@ -106,25 +107,23 @@ export default function UniversalLink({
     }
   }
 
-  return internal ? (
-    <Link
-      to={to}
-      onClick={handleClick}
-      ref={forwardRef}
-      aria-label={ariaLabel}
-      {...props}
-    >
-      {children}
-    </Link>
-  ) : (
-    <a
-      href={to}
-      onClick={handleClick}
-      ref={forwardRef}
-      aria-label={ariaLabel}
-      {...props}
-    >
-      {children}
-    </a>
-  )
+  return internal ?
+      <Link
+        to={to}
+        onClick={handleClick}
+        ref={forwardRef}
+        aria-label={ariaLabel}
+        {...props}
+      >
+        {children}
+      </Link>
+    : <a
+        href={to}
+        onClick={handleClick}
+        ref={forwardRef}
+        aria-label={ariaLabel}
+        {...props}
+      >
+        {children}
+      </a>
 }

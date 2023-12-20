@@ -2,11 +2,15 @@ name: Code Checks
 on:
   workflow_call:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   Automatically_Format:
     # only run if not authored by dependabot
     if: github.actor != 'dependabot[bot]'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       # BEGIN INSTALLATION
       - name: Determine package manager
@@ -63,7 +67,7 @@ jobs:
   Check_Lines:
     # only run if not authored by dependabot
     if: github.actor != 'dependabot[bot]'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
@@ -147,7 +151,7 @@ jobs:
 
   Generate_Types:
     # install modules, run a build, then cache and upload so we can use in other builds
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: Automatically_Format
     env:
       CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
@@ -200,7 +204,7 @@ jobs:
           path: src/types/gatsby-types.d.ts
 
   Check_Linting:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: Generate_Types
     steps:
       # BEGIN INSTALLATION
@@ -244,7 +248,7 @@ jobs:
         run: npm run lint
 
   Type_Checking:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: Generate_Types
     env:
       CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}

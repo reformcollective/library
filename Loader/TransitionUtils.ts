@@ -158,12 +158,17 @@ export const loadPage = async (
     // This is not currently supported for transitions without animations
     ScrollSmoother.get()?.paused(false)
     if (anchor) {
-      throw new Error("anchors without transitions not supported!")
+      setTimeout(() => {
+        ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+      })
     } else {
       // an anchor is not specified, scroll to the top of the page
       ScrollSmoother.get()?.scrollTo(0, false)
       window.scrollTo(0, 1)
     }
+
+    // refresh smoother effects
+    ScrollSmoother.get()?.effects("[data-speed], [data-lag]", {})
 
     // fire events with detail "none"
     loader.dispatchEvent("transitionEnd", "none")
@@ -235,6 +240,9 @@ export const loadPage = async (
     window.scrollTo(0, 0)
     ScrollSmoother.get()?.scrollTo(0, false)
   }
+
+  // refresh smoother effects
+  ScrollSmoother.get()?.effects("[data-speed], [data-lag]", {})
 
   const exitAnimations = allTransitions[transition]?.outAnimation ?? []
 

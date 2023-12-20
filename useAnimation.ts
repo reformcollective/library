@@ -1,5 +1,4 @@
 import gsap from "gsap"
-import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import type { DependencyList } from "react"
 import { startTransition, useEffect, useState } from "react"
@@ -48,12 +47,11 @@ const useAnimation = <F, T>(
   const [firstRender, setFirstRender] = useState(true)
   const extraDeps = options?.extraDeps ?? []
 
-  // need Function to get the correct type
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  type ReturnType = T extends Function
-    ? undefined
-    : T extends object
-    ? T | undefined
+  type ReturnType =
+    // need Function to get the correct type
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    T extends Function ? undefined
+    : T extends object ? T | undefined
     : undefined
 
   const [returnValue, setReturnValue] = useState<ReturnType>()
@@ -65,21 +63,18 @@ const useAnimation = <F, T>(
   useEffect(() => {
     if (options?.recreateOnResize) {
       const onResize = () => {
-        setResizeSignal(previous => {
-          const currentScroll = ScrollSmoother.get()?.scrollTop()
+        setResizeSignal((previous) => {
           const newValue = window.innerWidth
+
           // if the value has changed
+          // make sure scrolltrigger gets refreshed
           if (newValue !== previous) {
-            // make sure scroll is maintained and scrolltrigger gets refreshed
-            setTimeout(() => {
-              if (currentScroll)
-                ScrollSmoother.get()?.scrollTo(currentScroll, false)
-            }, 1)
             clearTimeout(globalRefresh)
             globalRefresh = setTimeout(() => {
               ScrollTrigger.refresh()
-            }, 1000)
+            }, 1)
           }
+
           return newValue
         })
       }
