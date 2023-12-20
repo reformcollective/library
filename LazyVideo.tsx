@@ -45,19 +45,22 @@ export function LazyVideo({
     if (!showVideo) trigger?.refresh()
   }, 32)
 
-  return showVideo ?
-      <video
-        {...props}
-        src={sourceMP4}
-        poster={poster}
-        autoPlay={autoPlay}
-        muted
-        loop={loop}
-        playsInline
-        ref={refToUse}
-      >
-        {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
-        {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
-      </video>
-    : <video {...props} poster={poster} muted ref={refToUse} />
+  return (
+    <video
+      {...props}
+      poster={poster}
+      autoPlay={autoPlay}
+      muted
+      loop={loop}
+      playsInline
+      ref={refToUse}
+    >
+      {showVideo && (
+        <>
+          {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
+          {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
+        </>
+      )}
+    </video>
+  )
 }
