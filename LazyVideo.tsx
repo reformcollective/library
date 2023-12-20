@@ -45,10 +45,9 @@ export const LazyVideo = ({
     if (!showVideo) trigger?.refresh()
   }, 32)
 
-  return showVideo ? (
+  return (
     <video
       {...props}
-      src={sourceMP4}
       poster={poster}
       autoPlay={autoPlay}
       muted
@@ -56,10 +55,12 @@ export const LazyVideo = ({
       playsInline
       ref={refToUse}
     >
-      {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
-      {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
+      {showVideo && (
+        <>
+          {sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
+          {sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
+        </>
+      )}
     </video>
-  ) : (
-    <video {...props} poster={poster} muted ref={refToUse} />
   )
 }
