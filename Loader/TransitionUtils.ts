@@ -156,7 +156,6 @@ export const loadPage = async (
 
     // if the desired behavior is to scroll to a certain point on the page after the transition, do so.
     // This is not currently supported for transitions without animations
-    ScrollSmoother.get()?.paused(false)
     if (anchor) {
       setTimeout(() => {
         ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
@@ -260,7 +259,6 @@ export const loadPage = async (
   // dispatch finished events
   loader.dispatchEvent("anyEnd", transition)
   loader.dispatchEvent("transitionEnd", transition)
-  ScrollSmoother.get()?.paused(false)
   ScrollTrigger.refresh()
 
   // cleanup and reset
