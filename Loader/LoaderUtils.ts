@@ -70,7 +70,6 @@ async function onComplete() {
   requestAnimationFrame(() => {
     ScrollTrigger.refresh()
   })
-  ScrollSmoother.get()?.paused(false)
 
   // give refresh time to finish
   await sleep(50)
