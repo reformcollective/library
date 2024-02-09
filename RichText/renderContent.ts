@@ -79,7 +79,7 @@ export default function renderContent(
 
   if (content?.raw) {
     // parse the raw content and verify that it is valid JSON
-    const parsedContent = JSON.parse(content.raw) as unknown
+    const parsedContent: unknown = JSON.parse(content.raw)
 
     if (isObject(parsedContent) && isDocument(parsedContent)) {
       return documentToReactComponents(parsedContent, options)
