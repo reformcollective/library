@@ -11,6 +11,7 @@ import loader, { promisesToAwait, recursiveAllSettled } from "."
 import { getLoaderIsDone } from "./LoaderUtils"
 
 const pushPage = (to: string) => {
+  console.log("pushPage", to)
   // the type of the gatsby navigate function is incorrect
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
   gatsbyNavigate(to)
@@ -119,17 +120,17 @@ export const loadPage = async (
 ) => {
   // extract the anchor from the pathname if applicable
   const anchor = new URL(navigateTo, window.location.origin).hash
-  const to = new URL(navigateTo, window.location.origin).pathname
+  const pathname = new URL(navigateTo, window.location.origin).pathname
 
   // if a transition is already in progress, wait for it to finish before loading the next page
   if (currentAnimation !== null) {
-    if (!pathnameMatches(to, currentAnimation))
-      pendingTransition = { to, transition }
+    if (!pathnameMatches(pathname, currentAnimation))
+      pendingTransition = { to: navigateTo, transition }
     return
   }
 
   // if we're already on the page we're trying to load, just scroll to the top
-  if (pathnameMatches(to, window.location.pathname)) {
+  if (pathnameMatches(pathname, window.location.pathname)) {
     ScrollSmoother.get()?.paused(false)
 
     // scroll to anchor if applicable, otherwise scroll to top
@@ -150,7 +151,7 @@ export const loadPage = async (
 
   // if no transition is specified, instantly transition pages
   if (!transition || !allTransitions[transition]) {
-    navigate(to)
+    navigate(navigateTo)
     await pageUnmounted()
     await pageReady()
 
@@ -178,7 +179,7 @@ export const loadPage = async (
   }
 
   // start this animation
-  currentAnimation = to
+  currentAnimation = navigateTo
 
   // wait for the initial loader to finish animation before starting the transition
   while (!getLoaderIsDone()) await sleep(100)
@@ -205,7 +206,7 @@ export const loadPage = async (
   await sleep(entranceDuration * 1000)
 
   // actually navigate to the page
-  navigate(to, () => {
+  navigate(navigateTo, () => {
     animationContext.revert()
   })
   await pageReady()
