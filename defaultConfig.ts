@@ -14,21 +14,21 @@ export type TransitionNames = "blue" | "fade" | "slide"
 //* make sure to uncomment this after copying the default config *
 // const config: typeof defaultConfig = {
 const config = {
-	// *make sure to uncomment this after copying the default config*
-	// ...defaultConfig,
-	/**
-	 * if true, the fresponsive util will scale on fullWidth breakpoints
-	 */
-	scaleFully: false,
-	/**
-	 * get the amount of time needed to load the page
-	 * @param startTime the number of MS the page spent loading on the network so far
-	 */
-	getTimeNeeded: (startTime: number) => startTime * 4 + 1000,
-	/**
-	 * the transition that will be used by default
-	 */
-	defaultTransition: "slide" satisfies TransitionNames as TransitionNames,
+  // *make sure to uncomment this after copying the default config*
+  // ...defaultConfig,
+  /**
+   * if true, the fresponsive util will scale on fullWidth breakpoints
+   */
+  scaleFully: false,
+  /**
+   * get the amount of time needed to load the page
+   * @param startTime the number of MS the page spent loading on the network so far
+   */
+  getTimeNeeded: (startTime: number) => startTime * 4 + 1000,
+  /**
+   * the transition that will be used by default
+   */
+  defaultTransition: "slide" satisfies TransitionNames as TransitionNames,
 }
 
 export default config
