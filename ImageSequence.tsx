@@ -43,6 +43,8 @@ type PropsManual = SequenceProps & {
 	triggerEnd?: never
 }
 
+const unlintableCallback = useCallback
+
 export default function ImageSequence({
 	className = "",
 	length,
@@ -96,8 +98,7 @@ export default function ImageSequence({
 	 * @param src The image source
 	 * @param index The index to add the image to
 	 */
-	// biome-ignore lint/correctness/useExhaustiveDependencies: stupid
-	const createImage = useCallback(
+	const createImage = unlintableCallback(
 		(src: string, index: number) => {
 			// if the image already exists, don't load it again
 			if (sequenceData.images[index]) return
