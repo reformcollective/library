@@ -115,7 +115,7 @@ export default function ImageSequence({
 			img.addEventListener("load", onImageLoad)
 			return () => img.removeEventListener("load", onImageLoad)
 		},
-		[sequenceData.images],
+		[sequenceData],
 	)
 
 	/**
