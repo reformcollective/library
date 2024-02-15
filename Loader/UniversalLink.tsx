@@ -118,13 +118,7 @@ export default function UniversalLink({
 			{children}
 		</Link>
 	) : (
-		<a
-			href={to}
-			onClick={handleClick}
-			ref={forwardRef}
-			aria-label={ariaLabel}
-			{...props}
-		>
+		<a href={to} ref={forwardRef} aria-label={ariaLabel} {...props}>
 			{children}
 		</a>
 	)

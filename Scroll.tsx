@@ -93,6 +93,7 @@ export default function Scroll({
 	/**
 	 * create the smoother
 	 */
+	// biome-ignore lint/correctness/useExhaustiveDependencies: refreshSignal is required to handle specific navigation cases
 	useEffect(() => {
 		const smoother = ScrollSmoother.create({
 			smooth: isSmooth ? 1 : 0,
@@ -145,14 +146,6 @@ export default function Scroll({
 			window.removeEventListener("popstate", killSmoother)
 		}
 	}, [])
-
-	/**
-	 * maintain scroll position when smooth is toggled
-	 */
-	useLayoutEffect(() => {
-		const currentScroll = window.scrollY
-		setTimeout(() => window.scrollTo(0, currentScroll), 0)
-	}, [isSmooth])
 
 	return (
 		<div className={className} id="smooth-wrapper">

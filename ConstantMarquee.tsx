@@ -120,9 +120,9 @@ export default function ConstantMarquee({
 		// update when the marquee children change size
 		const elementsToObserve = marquee.current?.querySelectorAll("*") ?? []
 		const observer = new ResizeObserver(update)
-		elementsToObserve.forEach((element) => {
+		for (const element of elementsToObserve) {
 			observer.observe(element)
-		})
+		}
 
 		// update when the screen size changes
 		const remove = addDebouncedEventListener(window, "resize", update, 100)
@@ -131,12 +131,13 @@ export default function ConstantMarquee({
 			remove()
 			observer.disconnect()
 		}
-	}, [buffer, children])
+	})
 
 	return (
 		<StyledMarquee ref={marquee} $number={array.length} className={className}>
 			{/* repeat children NUMBER times */}
 			{array.map((_, index) => {
+				// biome-ignore lint/suspicious/noArrayIndexKey: index is the only unique identifier here, since all children are identical
 				return <div key={index}>{children}</div>
 			})}
 		</StyledMarquee>

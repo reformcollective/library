@@ -36,7 +36,9 @@ const onFrame = (time: number) => {
 	requests.length = 0
 
 	const frameStart = performance.now()
-	requestsCopy.forEach((r) => r(time))
+	for (const r of requestsCopy) {
+		r(time)
+	}
 	const frameEnd = performance.now()
 
 	if (frameStart > 5 * 1000) {
@@ -60,11 +62,11 @@ export default function useTrackFrameTime() {
 			let average = 0
 			let max = -Infinity
 			let min = Infinity
-			lastThirtySeconds.forEach((time) => {
+			for (const time of lastThirtySeconds) {
 				average += time
 				max = Math.max(max, time)
 				min = Math.min(min, time)
-			})
+			}
 			average /= lastThirtySeconds.length
 
 			// console.info(

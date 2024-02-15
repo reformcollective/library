@@ -8,12 +8,16 @@ const promisesToResolveOnUnmount: VoidFunction[] = []
 export function useTrackPageReady() {
 	useEffect(() => {
 		waitingForPage = false
-		promisesToResolveOnReady.forEach((fn) => fn())
+		for (const fn of promisesToResolveOnReady) {
+			fn()
+		}
 		promisesToResolveOnReady.length = 0
 
 		return () => {
 			waitingForPage = true
-			promisesToResolveOnUnmount.forEach((fn) => fn())
+			for (const fn of promisesToResolveOnUnmount) {
+				fn()
+			}
 			promisesToResolveOnUnmount.length = 0
 		}
 	})

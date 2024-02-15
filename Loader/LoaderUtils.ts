@@ -48,7 +48,9 @@ async function onComplete() {
 
 	loader.dispatchEvent("anyStart", "initial")
 	loader.dispatchEvent("initialStart")
-	progressCallbacks.forEach((cb) => cb(100))
+	for (const cb of progressCallbacks) {
+		cb(100)
+	}
 	loader.dispatchEvent("progressUpdated", 100)
 
 	await sleep(250)
@@ -111,7 +113,9 @@ const updatePercent = () => {
 				return onComplete()
 			})
 	} else {
-		progressCallbacks.forEach((cb) => cb(progress))
+		for (const cb of progressCallbacks) {
+			cb(progress)
+		}
 		loader.dispatchEvent("progressUpdated", progress)
 		if (isBrowser()) requestAnimationFrame(updatePercent)
 	}
