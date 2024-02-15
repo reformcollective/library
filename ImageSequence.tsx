@@ -1,4 +1,3 @@
-import { useEventListener } from "ahooks"
 import gsap from "gsap"
 import loader, { transitionAwaitPromise } from "library/Loader"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -91,16 +90,13 @@ export default function ImageSequence({
 	latestRender.current = render
 
 	/**
-	 * Preload the images
+	 * Given an image source, create an image and add it to the sequenceData.images array
+	 * at the given index.
+	 * @param src The image source
+	 * @param index The index to add the image to
 	 */
-	useEffect(() => {
-		/**
-		 * Given an image source, create an image and add it to the sequenceData.images array
-		 * at the given index.
-		 * @param src The image source
-		 * @param index The index to add the image to
-		 */
-		const createImage = (src: string, index: number) => {
+	const createImage = useCallback(
+		(src: string, index: number) => {
 			// if the image already exists, don't load it again
 			if (sequenceData.images[index]) return
 			const img = new Image()
@@ -117,12 +113,19 @@ export default function ImageSequence({
 
 			img.addEventListener("load", onImageLoad)
 			return () => img.removeEventListener("load", onImageLoad)
-		}
+		},
+		[sequenceData.images],
+	)
 
+	/**
+	 * Preload the images
+	 */
+	useEffect(() => {
 		for (let i = 0; i < length; i += 1) {
 			const maxLen = length.toString().length
 			const imageNumber = i.toString().padStart(maxLen, "0")
 
+			// eslint-disable-next-line no-unsanitized/method
 			const prom = import(`../images/sequences/${folder}/${imageNumber}.webp`)
 				.then((image: { default: string }) => {
 					return createImage(image.default, i)
@@ -132,7 +135,7 @@ export default function ImageSequence({
 			// if this is an auto sequence, the loader should wait for all images to settle (max 5s)
 			if (type === "auto") transitionAwaitPromise(prom)
 		}
-	}, [sequenceData.images, folder, length, type])
+	}, [createImage, folder, length, type])
 
 	/**
 	 * Update the drawing context when the canvas element is created
@@ -212,16 +215,17 @@ export default function ImageSequence({
 	/**
 	 * change in width or height should trigger a re-render
 	 */
+	// biome-ignore lint/correctness/useExhaustiveDependencies: allowable extra deps
 	useEffect(() => {
-		requestAnimationFrame(() => {
-			latestRender.current()
-		})
-	})
-	useEventListener("resize", () => {
-		requestAnimationFrame(() => {
-			latestRender.current()
-		})
-	})
+		const onResize = () => {
+			requestAnimationFrame(() => {
+				latestRender.current()
+			})
+		}
+		onResize()
+		window.addEventListener("resize", onResize)
+		return () => window.removeEventListener("resize", onResize)
+	}, [canvasWidth, canvasHeight])
 
 	return (
 		<Canvas
