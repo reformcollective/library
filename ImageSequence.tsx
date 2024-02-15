@@ -95,6 +95,7 @@ export default function ImageSequence({
 	 * @param src The image source
 	 * @param index The index to add the image to
 	 */
+	// biome-ignore lint/correctness/useExhaustiveDependencies: stupid
 	const createImage = useCallback(
 		(src: string, index: number) => {
 			// if the image already exists, don't load it again
