@@ -1,3 +1,4 @@
+import { useEventListener } from "ahooks"
 import gsap from "gsap"
 import loader, { transitionAwaitPromise } from "library/Loader"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -216,17 +217,11 @@ export default function ImageSequence({
 	/**
 	 * change in width or height should trigger a re-render
 	 */
-	// biome-ignore lint/correctness/useExhaustiveDependencies: allowable extra deps
-	useEffect(() => {
-		const onResize = () => {
-			requestAnimationFrame(() => {
-				latestRender.current()
-			})
-		}
-		onResize()
-		window.addEventListener("resize", onResize)
-		return () => window.removeEventListener("resize", onResize)
-	}, [canvasWidth, canvasHeight])
+	useEventListener("resize", () => {
+		requestAnimationFrame(() => {
+			latestRender.current()
+		})
+	})
 
 	return (
 		<Canvas
