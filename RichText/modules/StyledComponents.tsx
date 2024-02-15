@@ -1,6 +1,6 @@
 import { GatsbyImage } from "gatsby-plugin-image"
-import fullyResponsive from "library/fullyResponsive"
 import UniversalLink from "library/Loader/UniversalLink"
+import fullyResponsive from "library/fullyResponsive"
 import styled, { css } from "styled-components"
 
 export const Code = styled.pre`

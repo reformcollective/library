@@ -7,140 +7,140 @@ import { addDebouncedEventListener } from "./functions"
 import useAnimation from "./useAnimation"
 
 interface MarqueeProps {
-  children: React.ReactNode
-  className?: string
-  /**
-   * how many seconds should it take to loop once?
-   */
-  timing?: number
-  /**
-   * if true, reverses direction
-   */
-  reversed?: boolean
-  /**
-   * How much extra buffer (in pixels) should be maintained offscreen?
-   *
-   * useful for when you need a marquee wider than the screen (eg an animated one)
-   */
-  buffer?: number
+	children: React.ReactNode
+	className?: string
+	/**
+	 * how many seconds should it take to loop once?
+	 */
+	timing?: number
+	/**
+	 * if true, reverses direction
+	 */
+	reversed?: boolean
+	/**
+	 * How much extra buffer (in pixels) should be maintained offscreen?
+	 *
+	 * useful for when you need a marquee wider than the screen (eg an animated one)
+	 */
+	buffer?: number
 }
 
 export default function ConstantMarquee({
-  children,
-  className,
-  timing = 20,
-  buffer = 0,
-  reversed = false,
+	children,
+	className,
+	timing = 20,
+	buffer = 0,
+	reversed = false,
 }: MarqueeProps) {
-  const marquee = useRef<HTMLDivElement>(null)
-  const [array, setArray] = useState<null[]>([null])
-  const offset = useRef(0)
+	const marquee = useRef<HTMLDivElement>(null)
+	const [array, setArray] = useState<null[]>([null])
+	const offset = useRef(0)
 
-  useAnimation(
-    () => {
-      if (!marquee.current) return
+	useAnimation(
+		() => {
+			if (!marquee.current) return
 
-      /**
-       * give each child an initial x position
-       */
-      const first = marquee.current.children[0]
-      const width = first?.clientWidth ?? 0
-      offset.current = Math.min(0, offset.current)
-      gsap.set(marquee.current.children, {
-        x: (i) => i * width + offset.current,
-      })
+			/**
+			 * give each child an initial x position
+			 */
+			const first = marquee.current.children[0]
+			const width = first?.clientWidth ?? 0
+			offset.current = Math.min(0, offset.current)
+			gsap.set(marquee.current.children, {
+				x: (i) => i * width + offset.current,
+			})
 
-      /**
-       * animate each child on the x axis
-       */
-      const tween = gsap.to(marquee.current.children, {
-        duration: timing,
-        ease: "none",
-        x: reversed ? `+=${width}` : `-=${width}`,
-        // pause when the marquee is offscreen (for performance)
-        scrollTrigger: {
-          trigger: marquee.current,
-          start: "top bottom",
-          end: "bottom top",
-          toggleActions: "play pause resume pause",
-        },
-        // when each child goes offscreen, move it to the other side
-        modifiers: {
-          x: gsap.utils.unitize((x: number) => {
-            if (reversed) {
-              if (x > width) {
-                return x - width * array.length
-              }
-            } else {
-              if (x < -width) {
-                return x + width * array.length
-              }
-            }
-            return x
-          }),
-        },
-        onComplete: () => {
-          tween.invalidate()
-          tween.restart()
-        },
-      })
+			/**
+			 * animate each child on the x axis
+			 */
+			const tween = gsap.to(marquee.current.children, {
+				duration: timing,
+				ease: "none",
+				x: reversed ? `+=${width}` : `-=${width}`,
+				// pause when the marquee is offscreen (for performance)
+				scrollTrigger: {
+					trigger: marquee.current,
+					start: "top bottom",
+					end: "bottom top",
+					toggleActions: "play pause resume pause",
+				},
+				// when each child goes offscreen, move it to the other side
+				modifiers: {
+					x: gsap.utils.unitize((x: number) => {
+						if (reversed) {
+							if (x > width) {
+								return x - width * array.length
+							}
+						} else {
+							if (x < -width) {
+								return x + width * array.length
+							}
+						}
+						return x
+					}),
+				},
+				onComplete: () => {
+					tween.invalidate()
+					tween.restart()
+				},
+			})
 
-      return () => {
-        // when we refresh, keep the position constant to minimize jumps
-        if (first instanceof HTMLElement)
-          offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
-      }
-    },
-    [array.length, timing, reversed],
-    {
-      kill: true,
-      recreateOnResize: true,
-    },
-  )
+			return () => {
+				// when we refresh, keep the position constant to minimize jumps
+				if (first instanceof HTMLElement)
+					offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
+			}
+		},
+		[array.length, timing, reversed],
+		{
+			kill: true,
+			recreateOnResize: true,
+		},
+	)
 
-  useEffect(() => {
-    /**
-     * calculate how many children we need to fill the screen
-     */
-    const update = () => {
-      if (marquee.current) {
-        const width = Math.max(
-          ...[...marquee.current.children].map((child) => child.clientWidth),
-        )
+	useEffect(() => {
+		/**
+		 * calculate how many children we need to fill the screen
+		 */
+		const update = () => {
+			if (marquee.current) {
+				const width = Math.max(
+					...[...marquee.current.children].map((child) => child.clientWidth),
+				)
 
-        // number needed to fill width plus some buffer
-        const newNumber = Math.ceil((window.innerWidth + buffer) / width) + 1
-        if (Number.isFinite(newNumber) && newNumber > 0)
-          setArray(Array.from({ length: newNumber }, () => null))
-      }
-    }
+				// number needed to fill width plus some buffer
+				const newNumber = Math.ceil((window.innerWidth + buffer) / width) + 1
+				if (Number.isFinite(newNumber) && newNumber > 0)
+					setArray(Array.from({ length: newNumber }, () => null))
+			}
+		}
 
-    update()
+		update()
 
-    // update when the marquee children change size
-    const elementsToObserve = marquee.current?.querySelectorAll("*") ?? []
-    const observer = new ResizeObserver(update)
-    elementsToObserve.forEach((element) => {
-      observer.observe(element)
-    })
+		// update when the marquee children change size
+		const elementsToObserve = marquee.current?.querySelectorAll("*") ?? []
+		const observer = new ResizeObserver(update)
+		elementsToObserve.forEach((element) => {
+			observer.observe(element)
+		})
 
-    // update when the screen size changes
-    const remove = addDebouncedEventListener(window, "resize", update, 100)
+		// update when the screen size changes
+		const remove = addDebouncedEventListener(window, "resize", update, 100)
 
-    return () => {
-      remove()
-      observer.disconnect()
-    }
-  }, [buffer, children])
+		return () => {
+			remove()
+			observer.disconnect()
+		}
+	}, [buffer, children])
 
-  return (
-    <StyledMarquee ref={marquee} $number={array.length} className={className}>
-      {/* repeat children NUMBER times */}
-      {array.map((_, index) => {
-        return <div key={index}>{children}</div>
-      })}
-    </StyledMarquee>
-  )
+	return (
+		<StyledMarquee ref={marquee} $number={array.length} className={className}>
+			{/* repeat children NUMBER times */}
+			{array.map((_, index) => {
+				return <div key={index}>{children}</div>
+			})}
+		</StyledMarquee>
+	)
 }
 
 const StyledMarquee = styled.div<{ $number: number }>`
