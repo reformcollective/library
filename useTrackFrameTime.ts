@@ -37,7 +37,7 @@ const onFrame = (time: number) => {
 
 	const frameStart = performance.now()
 	for (const r of requestsCopy) {
-		r(time)
+		if (typeof r === "function") r(time)
 	}
 	const frameEnd = performance.now()
 

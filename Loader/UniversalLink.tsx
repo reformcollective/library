@@ -21,7 +21,7 @@ interface BaseLinkProps {
 	anchor?: string
 }
 
-interface ButtonProps extends BaseLinkProps {
+type ButtonProps = BaseLinkProps & {
 	/**
 	 * what should happen when the button is clicked?
 	 */
@@ -39,27 +39,40 @@ interface ButtonProps extends BaseLinkProps {
 	 */
 	anchor?: string
 
+	href?: undefined
 	to?: undefined
 	transition?: undefined
 }
 
-interface AnchorProps extends BaseLinkProps {
-	/**
-	 * where should the link navigate to?
-	 */
-	to: string
-	/**
-	 * which transition should be used when navigating to this link?
-	 */
-	transition?: Transitions
-	/**
-	 * forward a ref to the link or anchor tag
-	 */
-	forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
+type AnchorProps = BaseLinkProps &
+	(
+		| {
+				/**
+				 * where should the link navigate to?
+				 */
+				to: string
+				href?: undefined
+		  }
+		| {
+				/**
+				 * where should the link navigate to?
+				 */
+				href: string
+				to?: undefined
+		  }
+	) & {
+		/**
+		 * which transition should be used when navigating to this link?
+		 */
+		transition?: Transitions
+		/**
+		 * forward a ref to the link or anchor tag
+		 */
+		forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
 
-	onClick?: undefined
-	type?: undefined
-}
+		onClick?: undefined
+		type?: undefined
+	}
 
 export type UniversalLinkProps = ButtonProps | AnchorProps
 
@@ -68,6 +81,7 @@ export type UniversalLinkProps = ButtonProps | AnchorProps
  * @returns
  */
 export default function UniversalLink({
+	href,
 	to,
 	transition = libraryConfig.defaultTransition,
 	openInNewTab = false,
@@ -93,7 +107,7 @@ export default function UniversalLink({
 		)
 	}
 
-	const internal = /^\/(?!\/)/.test(to)
+	const internal = /^\/(?!\/)/.test(href ?? to)
 
 	const handleClick: React.MouseEventHandler = (e) => {
 		e.preventDefault()
@@ -101,7 +115,7 @@ export default function UniversalLink({
 		if (openInNewTab || !internal) {
 			window.open(to, "_blank")
 		} else {
-			loadPage(to, transition).catch((error: string) => {
+			loadPage(href ?? to, transition).catch((error: string) => {
 				throw new Error(error)
 			})
 		}
@@ -109,7 +123,7 @@ export default function UniversalLink({
 
 	return internal ? (
 		<Link
-			to={to}
+			to={href ?? to}
 			onClick={handleClick}
 			ref={forwardRef}
 			aria-label={ariaLabel}
