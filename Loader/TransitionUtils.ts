@@ -11,7 +11,6 @@ import loader, { promisesToAwait, recursiveAllSettled } from "."
 import { getLoaderIsDone } from "./LoaderUtils"
 
 const pushPage = (to: string) => {
-  console.log("pushPage", to)
   // the type of the gatsby navigate function is incorrect
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
   gatsbyNavigate(to)
