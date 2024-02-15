@@ -48,8 +48,7 @@ const useAnimation = <F, T>(
 	const extraDeps = options?.extraDeps ?? []
 
 	type ReturnType =
-		// need Function to get the correct type
-		// eslint-disable-next-line @typescript-eslint/ban-types
+		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
 		T extends Function
 			? undefined
 			: T extends object
@@ -94,7 +93,9 @@ const useAnimation = <F, T>(
 			const result = createAnimations()
 			if (typeof result === "function") {
 				return result
-			} else if (typeof result === "object" && result) {
+			}
+
+			if (typeof result === "object" && result) {
 				setReturnValue(result as ReturnType)
 			} else {
 				setReturnValue(undefined)

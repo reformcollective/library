@@ -47,6 +47,7 @@ export default function AutoAnimate({
 
 	const firstRender = useRef(true)
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: we very specifically control when this effect runs
 	useEffect(() => {
 		if (firstRender.current && skipFirstAnimation) {
 			firstRender.current = false
@@ -86,7 +87,6 @@ export default function AutoAnimate({
 			...parameters,
 			...fromParameters,
 		})
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [duration, extractKey(nextValue), skipFirstAnimation])
 
 	return (

@@ -4,10 +4,7 @@ import { isBrowser } from "./functions"
 
 const MAX_FRAME_TIME_MS = 0.5
 
-// eslint-disable-next-line ssr-friendly/no-dom-globals-in-module-scope
 const canTrackFrames = isBrowser() && window.location.href.includes("localhost")
-
-// eslint-disable-next-line ssr-friendly/no-dom-globals-in-module-scope
 const systemRequestFrame = canTrackFrames ? requestAnimationFrame : undefined
 
 const requests: FrameRequestCallback[] = []
