@@ -91,13 +91,16 @@ export default function ImageSequence({
 	latestRender.current = render
 
 	/**
-	 * Given an image source, create an image and add it to the sequenceData.images array
-	 * at the given index.
-	 * @param src The image source
-	 * @param index The index to add the image to
+	 * Preload the images
 	 */
-	const createImage = useCallback(
-		(src: string, index: number) => {
+	useEffect(() => {
+		/**
+		 * Given an image source, create an image and add it to the sequenceData.images array
+		 * at the given index.
+		 * @param src The image source
+		 * @param index The index to add the image to
+		 */
+		const createImage = (src: string, index: number) => {
 			// if the image already exists, don't load it again
 			if (sequenceData.images[index]) return
 			const img = new Image()
@@ -114,14 +117,8 @@ export default function ImageSequence({
 
 			img.addEventListener("load", onImageLoad)
 			return () => img.removeEventListener("load", onImageLoad)
-		},
-		[sequenceData],
-	)
+		}
 
-	/**
-	 * Preload the images
-	 */
-	useEffect(() => {
 		for (let i = 0; i < length; i += 1) {
 			const maxLen = length.toString().length
 			const imageNumber = i.toString().padStart(maxLen, "0")
@@ -135,7 +132,7 @@ export default function ImageSequence({
 			// if this is an auto sequence, the loader should wait for all images to settle (max 5s)
 			if (type === "auto") transitionAwaitPromise(prom)
 		}
-	}, [createImage, folder, length, type])
+	}, [sequenceData.images, folder, length, type])
 
 	/**
 	 * Update the drawing context when the canvas element is created
