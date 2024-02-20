@@ -1,5 +1,5 @@
-import { sleep } from "library/functions"
 import TypedEventEmitter from "library/TypedEventEmitter"
+import { sleep } from "library/functions"
 import type { TransitionNames } from "libraryConfig"
 
 /**
@@ -38,14 +38,14 @@ export type InternalTransitions = "initial" | "any" | "none"
  * - fires when the page is scrolled to the top via a link click
  */
 const loader = new TypedEventEmitter<{
-  anyStart: [Transitions | InternalTransitions]
-  anyEnd: [Transitions | InternalTransitions]
-  initialStart: []
-  initialEnd: []
-  progressUpdated: [number]
-  transitionStart: [Transitions | InternalTransitions]
-  transitionEnd: [Transitions | InternalTransitions]
-  scrollTo: []
+	anyStart: [Transitions | InternalTransitions]
+	anyEnd: [Transitions | InternalTransitions]
+	initialStart: []
+	initialEnd: []
+	progressUpdated: [number]
+	transitionStart: [Transitions | InternalTransitions]
+	transitionEnd: [Transitions | InternalTransitions]
+	scrollTo: []
 }>()
 
 export default loader
@@ -58,19 +58,19 @@ export const promisesToAwait: Promise<unknown>[] = []
  * @param promise promise to await
  */
 export function transitionAwaitPromise(promise: Promise<unknown>) {
-  promisesToAwait.push(Promise.race([promise, sleep(10_000)]))
+	promisesToAwait.push(Promise.race([promise, sleep(10_000)]))
 }
 
 export const recursiveAllSettled = async (
-  promises: Promise<unknown>[],
-  promisesToExclude: Promise<unknown>[] = [],
+	promises: Promise<unknown>[],
+	promisesToExclude: Promise<unknown>[] = [],
 ): Promise<void> => {
-  const promisesCopy = [...promises].filter(
-    (promise) => !promisesToExclude.includes(promise),
-  )
-  if (promisesCopy.length === 0) return
+	const promisesCopy = [...promises].filter(
+		(promise) => !promisesToExclude.includes(promise),
+	)
+	if (promisesCopy.length === 0) return
 
-  await Promise.allSettled(promisesCopy)
-  await recursiveAllSettled(promises, [...promisesToExclude, ...promisesCopy])
-  promisesToAwait.length = 0
+	await Promise.allSettled(promisesCopy)
+	await recursiveAllSettled(promises, [...promisesToExclude, ...promisesCopy])
+	promisesToAwait.length = 0
 }

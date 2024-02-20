@@ -2,9 +2,9 @@ import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import libraryConfig from "libraryConfig"
 
+import loader, { promisesToAwait, recursiveAllSettled } from "."
 import { isBrowser, sleep } from "../functions"
 import { pageReady } from "../pageReady"
-import loader, { promisesToAwait, recursiveAllSettled } from "."
 
 /**
  * we get a percentage by simply guessing how long the page will take to load based on
@@ -24,8 +24,8 @@ const GET_TIME_NEEDED = libraryConfig.getTimeNeeded
 const EXTRA_DELAY = 5000
 
 interface Animation {
-  callback: VoidFunction
-  duration: number
+	callback: VoidFunction
+	duration: number
 }
 
 type ProgressCallback = (percent: number) => void
@@ -41,42 +41,44 @@ export const getLoaderIsDone = () => loaderIsDone
  * call all callbacks and set done to true
  */
 async function onComplete() {
-  await recursiveAllSettled(promisesToAwait)
+	await recursiveAllSettled(promisesToAwait)
 
-  if (completionStatus !== "loading") return
-  completionStatus = "canStillAnimate"
+	if (completionStatus !== "loading") return
+	completionStatus = "canStillAnimate"
 
-  loader.dispatchEvent("anyStart", "initial")
-  loader.dispatchEvent("initialStart")
-  progressCallbacks.forEach((cb) => cb(100))
-  loader.dispatchEvent("progressUpdated", 100)
+	loader.dispatchEvent("anyStart", "initial")
+	loader.dispatchEvent("initialStart")
+	for (const cb of progressCallbacks) {
+		cb(100)
+	}
+	loader.dispatchEvent("progressUpdated", 100)
 
-  await sleep(250)
+	await sleep(250)
 
-  completionStatus = "complete"
+	completionStatus = "complete"
 
-  let longestAnimation = 0
-  for (const animation of animations) {
-    animation.callback()
-    longestAnimation = Math.max(longestAnimation, animation.duration)
-  }
+	let longestAnimation = 0
+	for (const animation of animations) {
+		animation.callback()
+		longestAnimation = Math.max(longestAnimation, animation.duration)
+	}
 
-  await sleep(longestAnimation * 1000 + 10)
-  loaderIsDone = true
+	await sleep(longestAnimation * 1000 + 10)
+	loaderIsDone = true
 
-  // refreshing immediately can cause ScrollSmoother to jump to top
-  // doing a safe refresh doesn't math correctly
-  // so we do a standard refresh after a short delay
-  requestAnimationFrame(() => {
-    ScrollTrigger.refresh()
-  })
-  ScrollSmoother.get()?.paused(false)
+	// refreshing immediately can cause ScrollSmoother to jump to top
+	// doing a safe refresh doesn't math correctly
+	// so we do a standard refresh after a short delay
+	requestAnimationFrame(() => {
+		ScrollTrigger.refresh()
+	})
+	ScrollSmoother.get()?.paused(false)
 
-  // give refresh time to finish
-  await sleep(50)
+	// give refresh time to finish
+	await sleep(50)
 
-  loader.dispatchEvent("anyEnd", "initial")
-  loader.dispatchEvent("initialEnd")
+	loader.dispatchEvent("anyEnd", "initial")
+	loader.dispatchEvent("initialEnd")
 }
 
 /**
@@ -86,35 +88,37 @@ async function onComplete() {
  * and calls all the progress callbacks with the new percentage every frame
  */
 const updatePercent = () => {
-  pageReady()
-    .then(async () => {
-      // short circuit if there are no callbacks or animations
-      await recursiveAllSettled(promisesToAwait) // but not before promises are settled
-      return progressCallbacks.length === 0 && animations.length === 0 ?
-          onComplete()
-        : null
-    })
-    .catch(async () => {
-      return onComplete()
-    })
+	pageReady()
+		.then(async () => {
+			// short circuit if there are no callbacks or animations
+			await recursiveAllSettled(promisesToAwait) // but not before promises are settled
+			return progressCallbacks.length === 0 && animations.length === 0
+				? onComplete()
+				: null
+		})
+		.catch(async () => {
+			return onComplete()
+		})
 
-  if (completionStatus !== "loading") return
+	if (completionStatus !== "loading") return
 
-  const currentTime = performance.now()
-  const progress = ((currentTime - startTime) / timeNeeded) * 100
-  if (progress >= 99) {
-    pageReady()
-      .then(async () => {
-        return onComplete()
-      })
-      .catch(async () => {
-        return onComplete()
-      })
-  } else {
-    progressCallbacks.forEach((cb) => cb(progress))
-    loader.dispatchEvent("progressUpdated", progress)
-    if (isBrowser()) requestAnimationFrame(updatePercent)
-  }
+	const currentTime = performance.now()
+	const progress = ((currentTime - startTime) / timeNeeded) * 100
+	if (progress >= 99) {
+		pageReady()
+			.then(async () => {
+				return onComplete()
+			})
+			.catch(async () => {
+				return onComplete()
+			})
+	} else {
+		for (const cb of progressCallbacks) {
+			cb(progress)
+		}
+		loader.dispatchEvent("progressUpdated", progress)
+		if (isBrowser()) requestAnimationFrame(updatePercent)
+	}
 }
 if (isBrowser()) updatePercent()
 
@@ -125,15 +129,15 @@ if (isBrowser()) updatePercent()
  * all the animations and all the progress callbacks with 100%
  */
 if (isBrowser())
-  pageReady()
-    .then(async () => {
-      await sleep(EXTRA_DELAY)
-      return onComplete()
-    })
-    .catch(async () => {
-      await sleep(EXTRA_DELAY)
-      return onComplete()
-    })
+	pageReady()
+		.then(async () => {
+			await sleep(EXTRA_DELAY)
+			return onComplete()
+		})
+		.catch(async () => {
+			await sleep(EXTRA_DELAY)
+			return onComplete()
+		})
 
 /**
  * register a callback (such as an animation) to be called when the page is loaded
@@ -141,8 +145,8 @@ if (isBrowser())
  * @param animation function to call when the page is loaded
  */
 export const registerLoaderCallback = (animation: Animation) => {
-  if (completionStatus === "complete") animation.callback()
-  else animations.push(animation)
+	if (completionStatus === "complete") animation.callback()
+	else animations.push(animation)
 }
 
 /**
@@ -150,8 +154,8 @@ export const registerLoaderCallback = (animation: Animation) => {
  * @param callback function to call with the percentage of the page loaded
  */
 export const registerProgress = (callback: ProgressCallback) => {
-  if (completionStatus === "complete") callback(100)
-  else progressCallbacks.push(callback)
+	if (completionStatus === "complete") callback(100)
+	else progressCallbacks.push(callback)
 }
 
 /**
@@ -159,9 +163,9 @@ export const registerProgress = (callback: ProgressCallback) => {
  * @param callback function to remove from the list of callbacks
  */
 export const unregisterLoaderCallback = (completionFunction: VoidFunction) => {
-  animations = animations.filter(
-    (animation) => animation.callback !== completionFunction,
-  )
+	animations = animations.filter(
+		(animation) => animation.callback !== completionFunction,
+	)
 }
 
 /**
@@ -169,6 +173,6 @@ export const unregisterLoaderCallback = (completionFunction: VoidFunction) => {
  * @param callback function to remove from the list of callbacks
  */
 export const unregisterProgress = (callback: ProgressCallback) => {
-  const index = progressCallbacks.indexOf(callback)
-  if (index > -1) progressCallbacks.splice(index, 1)
+	const index = progressCallbacks.indexOf(callback)
+	if (index > -1) progressCallbacks.splice(index, 1)
 }
