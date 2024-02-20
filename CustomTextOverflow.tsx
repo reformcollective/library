@@ -36,11 +36,13 @@ export default function CustomTextOverflow({
 	truncatePosition = -1,
 }: CustomTextOverflowProps) {
 	const wrapperRef = useRef<HTMLDivElement>(null)
+	const [refreshSignal, setRefreshSignal] = useState(0)
 
 	/**
 	 * measure the number of lines taken up by the text, and recursively
 	 * shorten the text until it fits within the given number of lines
 	 */
+	// biome-ignore lint/correctness/useExhaustiveDependencies: refreshSignal is required to trigger a re-measurement in specific cases
 	useEffect(() => {
 		const wrapper = wrapperRef.current
 		if (!wrapper) return
@@ -84,7 +86,32 @@ export default function CustomTextOverflow({
 		return () => {
 			wrapper.textContent = `${children}${ellipsis}`
 		}
-	}, [children, ellipsis, maxLines, truncatePosition])
+	}, [children, ellipsis, maxLines, truncatePosition, refreshSignal])
+
+	/**
+	 * invalidate the text measurement when the window is resized
+	 */
+	useEffect(() => {
+		let timeout: NodeJS.Timeout | undefined
+		const handleResize = () => {
+			clearTimeout(timeout)
+			timeout = setTimeout(() => {
+				setRefreshSignal((p) => p + 1)
+			})
+		}
+
+		const observer = new ResizeObserver(handleResize)
+		if (wrapperRef.current instanceof HTMLElement) {
+			for (const parent of getAllParents(wrapperRef.current, 10)) {
+				observer.observe(parent)
+			}
+		}
+
+		return () => {
+			observer.disconnect()
+			clearTimeout(timeout)
+		}
+	}, [])
 
 	// prompt a CSS solution if possible
 	if (ellipsis === "..." && truncatePosition === 0)
