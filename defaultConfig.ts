@@ -1,11 +1,8 @@
-// *make sure to uncomment this after copying the default config*
-// import defaultConfig from "library/defaultConfig"
-
 import type { TransitionNames } from "libraryConfig"
 
 /**
- * config for the reform util library
- * see src/library/defaultConfig.ts for the default config
+ * config schema and config defaults for the reform util library
+ * see src/libraryConfig.ts for the actual config
  */
 
 export type Config = {
