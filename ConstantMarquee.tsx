@@ -98,6 +98,7 @@ export default function ConstantMarquee({
 		},
 	)
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies:  Because we nned the dependency
 	useEffect(() => {
 		/**
 		 * calculate how many children we need to fill the screen
@@ -131,13 +132,13 @@ export default function ConstantMarquee({
 			remove()
 			observer.disconnect()
 		}
-	})
+	}, [buffer, children])
 
 	return (
 		<StyledMarquee ref={marquee} $number={array.length} className={className}>
 			{/* repeat children NUMBER times */}
 			{array.map((_, index) => {
-				// biome-ignore lint/suspicious/noArrayIndexKey: index is the only unique identifier here, since all children are identical
+				// biome-ignore lint/suspicious/noArrayIndexKey: We don't have a unique key
 				return <div key={index}>{children}</div>
 			})}
 		</StyledMarquee>
