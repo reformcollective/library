@@ -2,21 +2,21 @@ import config from "libraryConfig"
 import type { RuleSet } from "styled-components"
 import { css } from "styled-components"
 import media, {
-	desktopDesignSize,
-	mobileDesignSize,
-	tabletDesignSize,
+  desktopDesignSize,
+  mobileDesignSize,
+  tabletDesignSize,
 } from "styles/media"
 
 const PRECISION = 3
 
 const replacer = (match: string, breakpoint: number) => {
-	return ((parseFloat(match) / breakpoint) * 100).toFixed(PRECISION)
+  return ((parseFloat(match) / breakpoint) * 100).toFixed(PRECISION)
 }
 
 const designSizes = {
-	desktop: desktopDesignSize,
-	tablet: tabletDesignSize,
-	mobile: mobileDesignSize,
+  desktop: desktopDesignSize,
+  tablet: tabletDesignSize,
+  mobile: mobileDesignSize,
 }
 
 /**
@@ -25,69 +25,69 @@ const designSizes = {
  * @returns
  */
 export default function fullyResponsive(
-	cssIn: RuleSet<object> | string,
-	only?: "mobile" | "tablet" | "desktop",
+  cssIn: RuleSet<object> | string,
+  only?: "mobile" | "tablet" | "desktop",
 ) {
-	// if not a string, convert to string
-	const cssAsString = typeof cssIn === "string" ? cssIn : cssIn.join("")
-	const onlyPxValues = cssAsString
-		.replaceAll("{", "{\n")
-		.replaceAll("}", "\n}")
-		.replaceAll(";", ";\n")
-		.split("\n")
-		.filter((x) => x.match(/px|{|}/g))
-		.join("\n")
+  // if not a string, convert to string
+  const cssAsString = typeof cssIn === "string" ? cssIn : cssIn.join("")
+  const onlyPxValues = cssAsString
+    .replaceAll("{", "{\n")
+    .replaceAll("}", "\n}")
+    .replaceAll(";", ";\n")
+    .split("\n")
+    .filter((x) => x.match(/px|{|}/g))
+    .join("\n")
 
-	const regex = /(?=[\S ]*;)([\d.]+)px/g
+  const regex = /(?=[\S ]*;)([\d.]+)px/g
 
-	/**
-	 * generate media query for a single breakpoint
-	 */
-	if (only) {
-		return css`
+  /**
+   * generate media query for a single breakpoint
+   */
+  if (only) {
+    return css`
       ${media[only]} {
         ${cssAsString.replaceAll(
-					regex,
-					(_, px: string) => `${replacer(px, designSizes[only])}vw`,
-				)}
+          regex,
+          (_, px: string) => `${replacer(px, designSizes[only])}vw`,
+        )}
       }
     `
-	}
+  }
 
-	// generate media queries for each breakpoint
-	return css`
+  // generate media queries for each breakpoint
+  return css`
     ${cssAsString}
     ${
-			config.scaleFully &&
-			css`
+      config.scaleFully &&
+      css`
       ${media.fullWidth} {
         ${onlyPxValues.replaceAll(
-					regex,
-					(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
-				)}
+          regex,
+          (_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
+        )}
       }
     `
-		};
+    };
 
     ${media.desktop} {
       ${onlyPxValues.replaceAll(
-				regex,
-				(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
-			)}
+        regex,
+        (_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
+      )}
     }
 
     ${media.tablet} {
       ${onlyPxValues.replaceAll(
-				regex,
-				(_, px: string) => `${replacer(px, tabletDesignSize)}vw`,
-			)}
+        regex,
+        (_, px: string) => `${replacer(px, tabletDesignSize)}vw`,
+      )}
     }
 
     ${media.mobile} {
       ${onlyPxValues.replaceAll(
-				regex,
-				(_, px: string) => `${replacer(px, mobileDesignSize)}vw`,
-			)}
+        regex,
+        (_, px: string) => `${replacer(px, mobileDesignSize)}vw`,
+      )}
     }
   `
 }
@@ -95,10 +95,10 @@ export default function fullyResponsive(
 const fresponsive = fullyResponsive
 
 const fdesktop = (cssIn: RuleSet<object> | string) =>
-	fullyResponsive(cssIn, "desktop")
+  fullyResponsive(cssIn, "desktop")
 const ftablet = (cssIn: RuleSet<object> | string) =>
-	fullyResponsive(cssIn, "tablet")
+  fullyResponsive(cssIn, "tablet")
 const fmobile = (cssIn: RuleSet<object> | string) =>
-	fullyResponsive(cssIn, "mobile")
+  fullyResponsive(cssIn, "mobile")
 
 export { fdesktop, fmobile, fresponsive, ftablet }

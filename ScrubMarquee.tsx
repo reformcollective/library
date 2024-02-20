@@ -5,52 +5,52 @@ import styled from "styled-components"
 import media from "styles/media"
 
 interface MarqueeProps {
-	children: React.ReactNode
-	className?: string
-	triggerEnd?: string
-	right?: boolean
-	scrub?: boolean | number
+  children: React.ReactNode
+  className?: string
+  triggerEnd?: string
+  right?: boolean
+  scrub?: boolean | number
 }
 
 export default function ScrubMarquee({
-	children,
-	className = "",
-	right = false,
-	triggerEnd = "bottom top",
-	scrub = true,
+  children,
+  className = "",
+  right = false,
+  triggerEnd = "bottom top",
+  scrub = true,
 }: MarqueeProps) {
-	const marquee = useRef<HTMLDivElement>(null)
+  const marquee = useRef<HTMLDivElement>(null)
 
-	useAnimation(
-		() => {
-			if (marquee.current && triggerEnd) {
-				gsap.fromTo(
-					marquee.current,
-					{
-						x: right ? "-100vw" : 0,
-					},
-					{
-						x: right ? 0 : "-100vw",
-						ease: "linear",
-						scrollTrigger: {
-							trigger: marquee.current,
-							start: "top bottom",
-							end: triggerEnd,
-							scrub,
-						},
-					},
-				)
-			}
-		},
-		[right, scrub, triggerEnd],
-		{ recreateOnResize: true },
-	)
+  useAnimation(
+    () => {
+      if (marquee.current && triggerEnd) {
+        gsap.fromTo(
+          marquee.current,
+          {
+            x: right ? "-100vw" : 0,
+          },
+          {
+            x: right ? 0 : "-100vw",
+            ease: "linear",
+            scrollTrigger: {
+              trigger: marquee.current,
+              start: "top bottom",
+              end: triggerEnd,
+              scrub,
+            },
+          },
+        )
+      }
+    },
+    [right, scrub, triggerEnd],
+    { recreateOnResize: true },
+  )
 
-	return (
-		<MarqueeWrapper ref={marquee} className={className}>
-			{children}
-		</MarqueeWrapper>
-	)
+  return (
+    <MarqueeWrapper ref={marquee} className={className}>
+      {children}
+    </MarqueeWrapper>
+  )
 }
 
 const MarqueeWrapper = styled.div`
