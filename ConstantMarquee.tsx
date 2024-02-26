@@ -91,7 +91,7 @@ export default function ConstantMarquee({
 					offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
 			}
 		},
-		[array.length, timing, reversed],
+		[array, timing, reversed],
 		{
 			kill: true,
 			recreateOnResize: true,
