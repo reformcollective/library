@@ -202,6 +202,7 @@ export const loadPage = async (
 
 	// wait for entrance animation to finish
 	await sleep(entranceDuration * 1000)
+	loader.dispatchEvent("transitionCenter", transition)
 
 	// actually navigate to the page
 	navigate(navigateTo, () => {

@@ -25,6 +25,9 @@ export type InternalTransitions = "initial" | "any" | "none"
  * transitionStart
  * - fires when any page transition starts
  * - event.detail is the transition name
+ * 
+ * transitionCenter
+ * - fires when the start of the transition finishes, before the end starts
  *
  * transitionEnd
  * - fires when any page transition ends
@@ -45,6 +48,7 @@ const loader = new TypedEventEmitter<{
 	progressUpdated: [number]
 	transitionStart: [Transitions | InternalTransitions]
 	transitionEnd: [Transitions | InternalTransitions]
+	transitionCenter: [Transitions | InternalTransitions]
 	scrollTo: []
 }>()
 
