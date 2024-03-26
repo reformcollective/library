@@ -14,15 +14,15 @@ jobs:
           ref: main
           token: ${{ secrets.FORMATTER_TOKEN }}
           submodules: recursive
-      # if the main branch hasn't been updated in a while, exit the workflow with a failure
+      # if the main branch hasn't been updated in a while, set REPO_STALE to true
       - name: Check for updates
         run: |
           if [ $(git log --since="3 days ago" | wc -l) -eq 0 ]; then
-            echo "Repository is stale"
-            exit 1
+            echo "REPO_STALE=true" >> $GITHUB_ENV
           fi
       # run npm-check-updates to update package.json and save the output
       - name: Update package.json
+        if: env.REPO_STALE != 'true'
         run: |
           echo "Updating package.json"
           echo "UPDATES<<EOF" >> $GITHUB_ENV
@@ -31,6 +31,7 @@ jobs:
       # diff the current package.json against the one in the package-updates branch
       # if there aren't any differences, exit the workflow
       - name: Diff package.json
+        if: env.REPO_STALE != 'true'
         run: |
           if git diff --exit-code main origin/package-updates -- package.json; then
             echo "No changes to package.json"
@@ -38,7 +39,7 @@ jobs:
           fi
       # Create a PR from the package-updates branch to the main branch if it doesn't exist
       - name: Create PR
-        if: ${{ !env.NO_CHANGES }}
+        if: env.REPO_STALE != 'true' && !env.NO_CHANGES
         uses: peter-evans/create-pull-request@v4
         id: cpr
         with:
@@ -51,7 +52,7 @@ jobs:
             The following packages have been updated:
             ${{ env.UPDATES }}
       - name: Enable PR auto-merge
-        if: ${{ !env.NO_CHANGES }}
+        if: env.REPO_STALE != 'true' && !env.NO_CHANGES
         continue-on-error: true
         uses: peter-evans/enable-pull-request-automerge@v2
         with:
