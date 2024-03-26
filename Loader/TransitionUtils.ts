@@ -36,7 +36,7 @@ const allTransitions: Record<
 
 /**
  * register a transition that can be run with a UniversalLink or by using loadPage.
- * @deprecated prefer useCreateTransition, which automatically un-registers the transition
+ * @deprecated prefer useRegisterTransition, which automatically un-registers the transition
  */
 export const registerTransition = (
   name: Exclude<Transitions, InternalTransitions | undefined>,
@@ -71,7 +71,7 @@ export const registerTransition = (
 
 /**
  * unregister a previously registered transition, such as when a transition component unmounts
- * @deprecated prefer useCreateTransition, which automatically un-registers the transition
+ * @deprecated prefer useRegisterTransition, which automatically un-registers the transition
  */
 export const unregisterTransition = (
   name: string,
@@ -325,7 +325,7 @@ export function useBackButton() {
  * @param details.inDuration the duration of the in animation in seconds
  * @param details.outDuration the duration of the out animation in seconds
  */
-export const useCreateTransition = (
+export const useRegisterTransition = (
   name: Exclude<Transitions, InternalTransitions | undefined>,
   details: {
     in: VoidFunction;
