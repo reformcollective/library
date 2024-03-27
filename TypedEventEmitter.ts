@@ -1,3 +1,5 @@
+import { useEffect } from "react"
+
 type Listener<T extends unknown[]> = (...args: T) => void
 
 export default class TypedEventEmitter<
@@ -33,5 +35,17 @@ export default class TypedEventEmitter<
 		for (const listener of listeners) {
 			listener(...args)
 		}
+	}
+
+	public useEventListener<K extends keyof EventMap>(
+		eventName: K,
+		listener: Listener<EventMap[K]>,
+	) {
+		useEffect(() => {
+			this.addEventListener(eventName, listener)
+			return () => {
+				this.removeEventListener(eventName, listener)
+			}
+		}, [eventName, listener])
 	}
 }
