@@ -23,10 +23,10 @@ export const isMobileOS = () => {
 }
 
 export const isDesktopSafari = () => {
-  const isMobile = isMobileOS()
-  const isSafari = Boolean(window.safari)
+	const isMobile = isMobileOS()
+	const isSafari = Boolean(window.safari)
 
-  return !isMobile && isSafari
+	return !isMobile && isSafari
 }
 
 /**
@@ -53,5 +53,5 @@ export const useIsMobileOS = () => {
 }
 
 export const useIsDesktopSafari = () => {
-  return useHookify(isDesktopSafari)
+	return useHookify(isDesktopSafari)
 }
