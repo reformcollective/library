@@ -143,6 +143,9 @@ export const loadPage = async (
 
 	// if no transition is specified, instantly transition pages
 	if (!transition || !allTransitions[transition]) {
+		loader.dispatchEvent("anyStart", "none")
+		loader.dispatchEvent("transitionCenter", "none")
+
 		navigate(navigateTo)
 		await pageUnmounted()
 		await pageReady()
@@ -302,6 +305,7 @@ export function useBackButton() {
 			;(async () => {
 				loader.dispatchEvent("initialStart")
 				loader.dispatchEvent("anyStart", "none")
+				loader.dispatchEvent("transitionCenter", "none")
 				await pageUnmounted()
 				await pageReady()
 				window.scrollTo(0, 1)
