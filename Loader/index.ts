@@ -25,7 +25,7 @@ export type InternalTransitions = "initial" | "any" | "none"
  * transitionStart
  * - fires when any page transition starts
  * - event.detail is the transition name
- * 
+ *
  * transitionCenter
  * - fires when the start of the transition finishes, before the end starts
  *
