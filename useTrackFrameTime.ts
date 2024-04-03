@@ -60,8 +60,8 @@ export default function useTrackFrameTime() {
 		const logFrameTimes = () => {
 			if (lastThirtySeconds.length === 0) return
 			let average = 0
-			let max = -Infinity
-			let min = Infinity
+			let max = Number.NEGATIVE_INFINITY
+			let min = Number.POSITIVE_INFINITY
 			for (const time of lastThirtySeconds) {
 				average += time
 				max = Math.max(max, time)

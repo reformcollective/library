@@ -10,7 +10,7 @@ import media, {
 const PRECISION = 3
 
 const replacer = (match: string, breakpoint: number) => {
-	return ((parseFloat(match) / breakpoint) * 100).toFixed(PRECISION)
+	return ((Number.parseFloat(match) / breakpoint) * 100).toFixed(PRECISION)
 }
 
 const designSizes = {

@@ -2,10 +2,10 @@ import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import libraryConfig from "libraryConfig"
 
-import loader, { promisesToAwait, recursiveAllSettled } from "."
-import {  sleep } from "../functions"
-import { pageReady } from "../pageReady"
 import { isBrowser } from "library/deviceDetection"
+import loader, { promisesToAwait, recursiveAllSettled } from "."
+import { sleep } from "../functions"
+import { pageReady } from "../pageReady"
 
 /**
  * we get a percentage by simply guessing how long the page will take to load based on

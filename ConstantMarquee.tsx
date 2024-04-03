@@ -88,7 +88,10 @@ export default function ConstantMarquee({
 			return () => {
 				// when we refresh, keep the position constant to minimize jumps
 				if (first instanceof HTMLElement)
-					offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
+					offset.current = Number.parseInt(
+						gsap.getProperty(first, "x").toString(),
+						10,
+					)
 			}
 		},
 		[array, timing, reversed],
