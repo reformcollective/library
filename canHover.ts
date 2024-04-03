@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react"
 
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 
 const useCanHover = () => {
 	const [canHover, setCanHover] = useState(true)
 
 	useEffect(() => {
-		if (!isBrowser()) return
+		if (!isBrowser) return
 		// query should match if the device is incapable of hovering
 		const mediaQuery = window.matchMedia("(hover: none)")
 		const updateCanHover = () => setCanHover(!mediaQuery.matches)

@@ -1,5 +1,3 @@
-export const isBrowser = () => typeof window !== "undefined"
-
 export const addDebouncedEventListener = (
 	element: Window | HTMLElement,
 	event: string,

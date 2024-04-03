@@ -9,7 +9,7 @@ import {
 	tabletDesignSize,
 } from "styles/media"
 
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 import getMedia from "./getMedia"
 
 /**
@@ -35,7 +35,7 @@ function useHookify<P, T extends (input: P) => ReturnType<T>>(
  * since VH can't be calculated without it
  */
 const createMeasuringElement = () => {
-	if (!isBrowser()) return
+	if (!isBrowser) return
 	const div = document.createElement("div")
 	div.style.position = "absolute"
 	div.style.top = "0"
@@ -115,7 +115,7 @@ export function getPxToVw(px: number) {
 		conversionValue = tabletDesignSize
 	}
 
-	if (isBrowser()) {
+	if (isBrowser) {
 		return px / (conversionValue / 100)
 	}
 	return 0
@@ -142,7 +142,7 @@ export function usePxToVw(px: number) {
  * @returns the calculated pixel value
  */
 export function getVwToPx(vw: number) {
-	if (isBrowser()) {
+	if (isBrowser) {
 		return vw * (window.innerWidth / 100)
 	}
 	return 0

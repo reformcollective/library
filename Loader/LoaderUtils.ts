@@ -3,8 +3,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 import libraryConfig from "libraryConfig"
 
 import loader, { promisesToAwait, recursiveAllSettled } from "."
-import { isBrowser, sleep } from "../functions"
+import {  sleep } from "../functions"
 import { pageReady } from "../pageReady"
+import { isBrowser } from "library/deviceDetection"
 
 /**
  * we get a percentage by simply guessing how long the page will take to load based on
@@ -117,10 +118,10 @@ const updatePercent = () => {
 			cb(progress)
 		}
 		loader.dispatchEvent("progressUpdated", progress)
-		if (isBrowser()) requestAnimationFrame(updatePercent)
+		if (isBrowser) requestAnimationFrame(updatePercent)
 	}
 }
-if (isBrowser()) updatePercent()
+if (isBrowser) updatePercent()
 
 /**
  * document based loader
@@ -128,7 +129,7 @@ if (isBrowser()) updatePercent()
  * waits EXTRA_DELAY milliseconds after the document is ready before calling
  * all the animations and all the progress callbacks with 100%
  */
-if (isBrowser())
+if (isBrowser)
 	pageReady()
 		.then(async () => {
 			await sleep(EXTRA_DELAY)

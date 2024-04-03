@@ -1,10 +1,10 @@
 import { useEffect } from "react"
 
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 
 const MAX_FRAME_TIME_MS = 0.5
 
-const canTrackFrames = isBrowser() && window.location.href.includes("localhost")
+const canTrackFrames = isBrowser && window.location.href.includes("localhost")
 const systemRequestFrame = canTrackFrames ? requestAnimationFrame : undefined
 
 const requests: FrameRequestCallback[] = []

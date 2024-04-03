@@ -1,6 +1,6 @@
 import { startTransition, useEffect, useState } from "react"
 
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 
 export default function ClientOnly({
 	children,
@@ -11,7 +11,7 @@ export default function ClientOnly({
 
 	useEffect(() => {
 		startTransition(() => {
-			setMounted(isBrowser())
+			setMounted(isBrowser)
 		})
 	}, [])
 
@@ -28,7 +28,7 @@ export const useClientOnly = <T, F = undefined>(
 
 	useEffect(() => {
 		startTransition(() => {
-			setMounted(isBrowser())
+			setMounted(isBrowser)
 		})
 	}, [])
 

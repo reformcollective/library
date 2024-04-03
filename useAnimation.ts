@@ -4,7 +4,7 @@ import type { DependencyList } from "react"
 import { startTransition, useEffect, useState } from "react"
 
 import { checkGSAP } from "./checkGSAP"
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 
 let globalRefresh: NodeJS.Timeout | undefined
 
@@ -42,7 +42,7 @@ const useAnimation = <F, T>(
 ) => {
 	const useEffectToUse = options?.effect ?? useEffect
 	const [resizeSignal, setResizeSignal] = useState(
-		isBrowser() && window.innerWidth,
+		isBrowser && window.innerWidth,
 	)
 	const [firstRender, setFirstRender] = useState(true)
 	const extraDeps = options?.extraDeps ?? []
@@ -85,7 +85,7 @@ const useAnimation = <F, T>(
 	}, [options?.recreateOnResize])
 
 	useEffectToUse(() => {
-		if (isBrowser()) startTransition(() => setFirstRender(false))
+		if (isBrowser) startTransition(() => setFirstRender(false))
 		if (firstRender) return
 
 		// create animations using a gsap context so they can be reverted easily
