@@ -161,7 +161,7 @@ export function AnimatedPaths({
 }
 
 const Wrapper = styled.div<{ $selector: string }>`
-	${(props) => props.$selector} {
-		visibility: hidden;
-	}
+  ${(props) => props.$selector} {
+    visibility: hidden;
+  }
 `
