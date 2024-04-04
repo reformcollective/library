@@ -1,10 +1,10 @@
 import { useEffect } from "react"
 
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 
 const MAX_FRAME_TIME_MS = 0.5
 
-const canTrackFrames = isBrowser() && window.location.href.includes("localhost")
+const canTrackFrames = isBrowser && window.location.href.includes("localhost")
 const systemRequestFrame = canTrackFrames ? requestAnimationFrame : undefined
 
 const requests: FrameRequestCallback[] = []
@@ -60,8 +60,8 @@ export default function useTrackFrameTime() {
 		const logFrameTimes = () => {
 			if (lastThirtySeconds.length === 0) return
 			let average = 0
-			let max = -Infinity
-			let min = Infinity
+			let max = Number.NEGATIVE_INFINITY
+			let min = Number.POSITIVE_INFINITY
 			for (const time of lastThirtySeconds) {
 				average += time
 				max = Math.max(max, time)

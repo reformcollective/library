@@ -118,7 +118,6 @@ export default function UniversalLink({
 			{children}
 		</Link>
 	) : (
-		// biome-ignore lint/a11y/useValidAnchor: anchor tag is required for SEO purposes
 		<a
 			href={to}
 			onClick={handleClick}

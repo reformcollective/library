@@ -4,7 +4,7 @@ import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { checkGSAP } from "./checkGSAP"
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 
 interface ScrollProps {
 	children: React.ReactNode
@@ -64,8 +64,8 @@ export const useIsSmooth = () => {
 	}, [])
 
 	// check for url flags
-	if (isBrowser() && window.location.search.includes("noSmooth")) return false
-	if (isBrowser() && window.location.search.includes("forceSmooth")) return true
+	if (isBrowser && window.location.search.includes("noSmooth")) return false
+	if (isBrowser && window.location.search.includes("forceSmooth")) return true
 
 	return smooth
 }

@@ -6,7 +6,7 @@ import {
 } from "styles/media"
 
 import type { UniversalImageData } from "./UniversalImage"
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 
 export default function useMedia<
 	// anything that doesn't change by reference
@@ -22,7 +22,7 @@ export default function useMedia<
 		| UniversalImageData,
 >(fw: InputType, d: InputType, t: InputType, m: InputType) {
 	const handleUpdate = useCallback(() => {
-		if (isBrowser()) {
+		if (isBrowser) {
 			startTransition(() => {
 				if (window.innerWidth > desktop) {
 					setCurrent(fw)
@@ -42,7 +42,7 @@ export default function useMedia<
 	}, [handleUpdate])
 
 	useEffect(() => {
-		if (isBrowser()) {
+		if (isBrowser) {
 			window.addEventListener("resize", handleUpdate)
 			return () => window.removeEventListener("resize", handleUpdate)
 		}

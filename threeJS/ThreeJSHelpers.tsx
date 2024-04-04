@@ -1,11 +1,11 @@
 import type { PerformanceMonitorApi } from "@react-three/drei"
 import { PerformanceMonitor } from "@react-three/drei"
 import { useThree } from "@react-three/fiber"
-import { isBrowser } from "library/functions"
+import { isBrowser } from "library/deviceDetection"
 import { useEffect, useState } from "react"
 
 const getDevicePixelRatio = () => {
-	if (!isBrowser()) return 1
+	if (!isBrowser) return 1
 
 	return window.devicePixelRatio
 }

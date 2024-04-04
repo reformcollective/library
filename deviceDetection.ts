@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react"
-
-import { isBrowser } from "./functions"
+export const isBrowser = typeof window !== "undefined"
 
 export const isIOS = () => {
-	if (!isBrowser()) return false
+	if (!isBrowser) return false
 	const userAgent = window.navigator.userAgent.toLowerCase()
 	const userAgentMatch = /iphone|ipad|ipod/.test(userAgent)
 	const isMacWithTouch =
@@ -13,7 +12,7 @@ export const isIOS = () => {
 }
 
 export const isAndroid = () => {
-	if (!isBrowser()) return false
+	if (!isBrowser) return false
 	const userAgent = window.navigator.userAgent.toLowerCase()
 	return userAgent.includes("android")
 }
@@ -35,7 +34,7 @@ export const isDesktopSafari = () => {
 export const useHookify = (fn: () => boolean) => {
 	const [value, setValue] = useState<boolean>()
 	useEffect(() => {
-		if (isBrowser()) setValue(fn())
+		if (isBrowser) setValue(fn())
 	}, [fn])
 	return value
 }

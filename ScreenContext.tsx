@@ -1,4 +1,4 @@
-import { addDebouncedEventListener, isBrowser } from "library/functions"
+import { addDebouncedEventListener } from "library/functions"
 import {
 	createContext,
 	startTransition,
@@ -11,6 +11,7 @@ import {
 	mobileBreakpoint as mobile,
 	tabletBreakpoint as tablet,
 } from "styles/media"
+import { isBrowser } from "./deviceDetection"
 
 /**
  * Gives easy access to media queries
@@ -26,7 +27,6 @@ interface Props {
 	children: React.ReactNode
 }
 
-// TODO setup providers properly in starter
 export function ScreenProvider({ children }: Props) {
 	const [fw, setFw] = useState<boolean>(false)
 	const [d, setD] = useState<boolean>(false)
@@ -34,7 +34,7 @@ export function ScreenProvider({ children }: Props) {
 	const [m, setM] = useState<boolean>(false)
 
 	useEffect(() => {
-		if (isBrowser()) {
+		if (isBrowser) {
 			const setScreenContext = () => {
 				startTransition(() => {
 					setM(window.innerWidth <= mobile)
