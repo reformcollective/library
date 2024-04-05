@@ -10,6 +10,7 @@ import useAnimation from "./useAnimation"
 
 import Flip from "gsap/Flip"
 import gsap from "gsap"
+import { usePinType } from "./Scroll"
 
 gsap.registerPlugin(Flip)
 
@@ -54,31 +55,50 @@ export const ZoomPinProvider = ({ children }: { children: ReactNode }) => {
 	const [toEl, setToEl] = useState<HTMLDivElement | null>(null)
 	const fromSize = useSize(fromEl)
 	const toSize = useSize(toEl)
+	const pinType = usePinType()
+	const [refreshSignal, setRefreshSignal] = useState(0)
 
 	useAnimation(
 		() => {
 			if (!fromEl || !toEl) return
+			gsap.set([fromEl, toEl], {
+				clearProps: "transform",
+				willChange: "transform",
+			})
 
-			const state = Flip.getState(toEl)
-			Flip.fit(toEl, fromEl, { scale: true })
+			const topDiff =
+				fromEl.getBoundingClientRect().top - toEl.getBoundingClientRect().top
+			const heightDiff = (fromSize.height ?? 0) - (toSize.height ?? 0)
+			gsap.set(toEl, {
+				y: topDiff + heightDiff / 2,
+			})
 
-			Flip.to(state, {
-				duration: 4,
-				scale: true,
-				ease: "none",
-				scrollTrigger: {
-					trigger: fromEl,
-					start: "center center",
-					endTrigger: toEl.parentElement,
-					end: "center center",
-					scrub: true,
-				},
+			gsap.delayedCall(0.1, () => {
+				const state = Flip.getState(toEl)
+				Flip.fit(toEl, fromEl, {
+					scale: true,
+				})
+				Flip.fit(toEl, state, {
+					scale: true,
+					duration: 5,
+					ease: "none",
+					scrollTrigger: {
+						trigger: fromEl,
+						start: "center center",
+						endTrigger: toEl.parentElement,
+						end: "center center",
+						scrub: true,
+						pinType,
+						pin: toEl,
+						pinSpacing: false,
+					},
+				})
 			})
 		},
-		[fromEl, toEl],
+		[fromEl, toEl, pinType, fromSize.height, toSize.height],
 		{
 			recreateOnResize: true,
-			extraDeps: [fromSize.width, fromSize.height, toSize.width, toSize.height],
+			extraDeps: [fromSize.width, toSize.width, refreshSignal],
 		},
 	)
 
