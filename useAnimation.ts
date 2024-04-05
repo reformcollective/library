@@ -52,8 +52,8 @@ const useAnimation = <F, T>(
 		T extends Function
 			? undefined
 			: T extends object
-			  ? T | undefined
-			  : undefined
+				? T | undefined
+				: undefined
 
 	const [returnValue, setReturnValue] = useState<ReturnType>()
 
