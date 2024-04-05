@@ -66,12 +66,12 @@ export default function CustomTextOverflow({
 				: children.slice(
 						0,
 						truncatePosition - (shrinkBefore ? numberOfCharsToRemove : 0),
-					)
+				  )
 			const textAfterEllipsis = ellipsisAtEnd
 				? ""
 				: children.slice(
 						truncatePosition + (shrinkBefore ? 0 : numberOfCharsToRemove),
-					)
+				  )
 
 			const newText = `${textBeforeEllipsis}${ellipsis}${textAfterEllipsis}`
 
