@@ -146,6 +146,7 @@ export function AnimatedPaths({
 		],
 		{
 			recreateOnResize: true,
+			kill: true,
 		},
 	)
 
