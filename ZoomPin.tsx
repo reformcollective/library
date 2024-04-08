@@ -53,7 +53,10 @@ const useSize = (el?: HTMLDivElement | null) => {
 export const ZoomPinProvider = ({
 	children,
 	ease = "none",
-}: { ease?: gsap.EaseString | gsap.EaseFunction; children: ReactNode }) => {
+}: {
+	ease?: gsap.EaseString | gsap.EaseFunction
+	children: ReactNode
+}) => {
 	const [fromEl, setFromEl] = useState<HTMLDivElement | null>(null)
 	const [toEl, setToEl] = useState<HTMLDivElement | null>(null)
 	const fromSize = useSize(fromEl)
