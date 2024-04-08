@@ -3,13 +3,13 @@ import {
 	type ReactNode,
 	createContext,
 	useContext,
-	useState,
 	useEffect,
+	useState,
 } from "react"
 import useAnimation from "./useAnimation"
 
-import Flip from "gsap/Flip"
 import gsap from "gsap"
+import Flip from "gsap/Flip"
 import { usePinType } from "./Scroll"
 
 gsap.registerPlugin(Flip)
