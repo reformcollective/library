@@ -50,7 +50,10 @@ const useSize = (el?: HTMLDivElement | null) => {
 	return { width, height }
 }
 
-export const ZoomPinProvider = ({ children }: { children: ReactNode }) => {
+export const ZoomPinProvider = ({
+	children,
+	ease = "none",
+}: { ease?: gsap.EaseString | gsap.EaseFunction; children: ReactNode }) => {
 	const [fromEl, setFromEl] = useState<HTMLDivElement | null>(null)
 	const [toEl, setToEl] = useState<HTMLDivElement | null>(null)
 	const fromSize = useSize(fromEl)
@@ -81,7 +84,7 @@ export const ZoomPinProvider = ({ children }: { children: ReactNode }) => {
 				Flip.fit(toEl, state, {
 					scale: true,
 					duration: 5,
-					ease: "none",
+					ease,
 					scrollTrigger: {
 						trigger: fromEl,
 						start: "center center",
@@ -95,7 +98,7 @@ export const ZoomPinProvider = ({ children }: { children: ReactNode }) => {
 				})
 			})
 		},
-		[fromEl, toEl, pinType, fromSize.height, toSize.height],
+		[fromEl, toEl, pinType, fromSize.height, toSize.height, ease],
 		{
 			recreateOnResize: true,
 			extraDeps: [fromSize.width, toSize.width, refreshSignal],
