@@ -68,7 +68,6 @@ export const ZoomPinProvider = ({
 	const fromSize = useSize(fromEl)
 	const toSize = useSize(toEl)
 	const pinType = usePinType()
-	const [refreshSignal, setRefreshSignal] = useState(0)
 
 	useAnimation(
 		() => {
@@ -110,7 +109,7 @@ export const ZoomPinProvider = ({
 		[fromEl, toEl, pinType, fromSize.height, toSize.height, ease],
 		{
 			recreateOnResize: true,
-			extraDeps: [fromSize.width, toSize.width, refreshSignal, ...dependencies],
+			extraDeps: [fromSize.width, toSize.width, ...dependencies],
 		},
 	)
 
