@@ -120,8 +120,8 @@ const Wrapper = styled.div`
     grid-area: 1 / 1 / 2 / 2;
     display: grid;
     align-items: center;
-	width: fit-content;
-	height: fit-content;
+    width: fit-content;
+    height: fit-content;
 
     /* text very commonly overflows its bounds on the bottom in letters like g */
     padding-bottom: 0.1em;
