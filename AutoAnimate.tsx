@@ -1,8 +1,8 @@
-import { useThrottle } from "ahooks"
 import { gsap } from "gsap"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
 import styled from "styled-components"
+import { useBetterThrottle } from "./useBetterThrottle"
 
 const extractKey = (item: unknown): string => {
 	if (
@@ -33,9 +33,7 @@ export default function AutoAnimate({
 	fromParameters?: GSAPTweenVars
 	toParameters?: GSAPTweenVars
 }) {
-	const nextValue = useThrottle(children, {
-		wait: duration * 1100,
-	})
+	const nextValue = useBetterThrottle(children, 1100)
 	const lastUsedSlot = useRef<"A" | "B">("A")
 
 	const wrapperA = useRef<HTMLDivElement | null>(null)
@@ -87,6 +85,21 @@ export default function AutoAnimate({
 			...parameters,
 			...fromParameters,
 		})
+
+		const parent = wrapperA.current?.parentElement
+		if (parent) {
+			const onResize = () => {
+				gsap.to(parent, {
+					width: animateSlotIn.current?.offsetWidth,
+					height: animateSlotIn.current?.offsetHeight,
+					ease: "power3.inOut",
+					duration,
+				})
+			}
+			gsap.delayedCall(0, onResize)
+			window.addEventListener("resize", onResize)
+			return () => window.removeEventListener("resize", onResize)
+		}
 	}, [duration, extractKey(nextValue), skipFirstAnimation])
 
 	return (
@@ -107,6 +120,8 @@ const Wrapper = styled.div`
     grid-area: 1 / 1 / 2 / 2;
     display: grid;
     align-items: center;
+    width: fit-content;
+    height: fit-content;
 
     /* text very commonly overflows its bounds on the bottom in letters like g */
     padding-bottom: 0.1em;
