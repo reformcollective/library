@@ -53,9 +53,15 @@ const useSize = (el?: HTMLDivElement | null) => {
 export const ZoomPinProvider = ({
 	children,
 	ease = "none",
+	dependencies = [],
 }: {
 	ease?: gsap.EaseString | gsap.EaseFunction
 	children: ReactNode
+	/**
+	 * if you need to recreate the animation
+	 * these work like useEffect dependencies
+	 */
+	dependencies?: unknown[]
 }) => {
 	const [fromEl, setFromEl] = useState<HTMLDivElement | null>(null)
 	const [toEl, setToEl] = useState<HTMLDivElement | null>(null)
@@ -104,7 +110,7 @@ export const ZoomPinProvider = ({
 		[fromEl, toEl, pinType, fromSize.height, toSize.height, ease],
 		{
 			recreateOnResize: true,
-			extraDeps: [fromSize.width, toSize.width, refreshSignal],
+			extraDeps: [fromSize.width, toSize.width, refreshSignal, ...dependencies],
 		},
 	)
 
