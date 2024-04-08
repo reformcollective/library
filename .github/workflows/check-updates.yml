@@ -27,6 +27,7 @@ jobs:
           echo "Updating package.json"
           echo "UPDATES<<EOF" >> $GITHUB_ENV
           npx npm-check-updates -u >> $GITHUB_ENV
+          npx @antfu/ni --no-frozen-lockfile
           echo "EOF" >> $GITHUB_ENV
       # diff the current package.json against the one in the package-updates branch
       # if there aren't any differences, exit the workflow
