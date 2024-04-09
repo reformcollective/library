@@ -38,8 +38,24 @@ const useSize = (el?: HTMLDivElement | null) => {
 		if (!el) return
 
 		const observer = new ResizeObserver(() => {
-			setWidth(el.offsetWidth)
-			setHeight(el.offsetHeight)
+			// sometimes applying a pin can change the size by a very small amount
+			// usually that's fine, but in some very specific cases it can cause a loop because of rounding
+			setWidth((p) =>
+				// apply if undefined
+				p === undefined ||
+				// or if the difference is more than 1
+				Math.abs((p ?? 0) - el.clientWidth) > 1
+					? el.clientWidth
+					: p,
+			)
+			setHeight((p) =>
+				// apply if undefined
+				p === undefined ||
+				// or if the difference is more than 1
+				Math.abs((p ?? 0) - el.clientHeight) > 1
+					? el.clientHeight
+					: p,
+			)
 		})
 
 		observer.observe(el)
