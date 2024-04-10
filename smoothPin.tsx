@@ -10,24 +10,22 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
  * @returns the ScrollTrigger instance
  */
 export default function createGoopPin({
-	goopType = "both",
-	goopLevel = 200,
+	smoothType: goopType = "both",
+	smoothLevel: goopLevel = 200,
 	...options
 }: Omit<ScrollTrigger.StaticVars, "pin"> & {
 	pinType: "fixed" | "transform"
 	trigger: Element | null | undefined
-	goopType?: "in" | "out" | "both"
-	goopLevel?: number
+	smoothType?: "in" | "out" | "both"
+	smoothLevel?: number
 }) {
 	const trigger = ScrollTrigger.create({
 		pin: true,
 		...options,
 	})
 
-	const goop =
-		(options.pinType === "fixed"
-			? options.trigger
-			: options.trigger?.parentElement) ?? null
+	const goop = options.trigger?.parentElement ?? null
+	if (options.pinType === "fixed") return
 
 	/**
 	 * goop at start
