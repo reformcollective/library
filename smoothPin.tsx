@@ -3,7 +3,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 /**
  * creates a ScrollTrigger with a smoothly animated pin effect
- * NOTE! this should be used in combo with useAnimation and recreateOnResize: true
  *
  * @param options options for the pinned ScrollTrigger
  * @param goopLevel the duration, in scroll distance, of the goop ease
@@ -41,8 +40,8 @@ export default function createGoopPin({
 				y: goopLevel / 4,
 				ease: "power1.in",
 				scrollTrigger: {
-					start: trigger.start - goopLevel,
-					end: trigger.start,
+					start: () => trigger.start - goopLevel,
+					end: () => trigger.start,
 					scrub: true,
 				},
 			},
@@ -57,8 +56,8 @@ export default function createGoopPin({
 				y: 0,
 				ease: "power1.out",
 				scrollTrigger: {
-					start: trigger.start,
-					end: trigger.start + goopLevel,
+					start: () => trigger.start,
+					end: () => trigger.start + goopLevel,
 					scrub: true,
 				},
 			},
@@ -79,8 +78,8 @@ export default function createGoopPin({
 				y: -goopLevel / 4,
 				ease: "power1.in",
 				scrollTrigger: {
-					start: trigger.end - goopLevel,
-					end: trigger.end,
+					start: () => trigger.end - goopLevel,
+					end: () => trigger.end,
 					scrub: true,
 				},
 			},
@@ -95,8 +94,8 @@ export default function createGoopPin({
 				y: 0,
 				ease: "power1.out",
 				scrollTrigger: {
-					start: trigger.end,
-					end: trigger.end + goopLevel,
+					start: () => trigger.end,
+					end: () => trigger.end + goopLevel,
 					scrub: true,
 				},
 			},
