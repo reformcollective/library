@@ -8,7 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
  * @param goopLevel the duration, in scroll distance, of the goop ease
  * @returns the ScrollTrigger instance
  */
-export default function createGoopPin({
+export default function createSmoothPin({
 	smoothType: goopType = "both",
 	smoothLevel: goopLevel = 200,
 	...options
