@@ -100,26 +100,24 @@ export const ZoomPinProvider = ({
 				y: topDiff + heightDiff / 2,
 			})
 
-			gsap.delayedCall(0.1, () => {
-				const state = Flip.getState(toEl)
-				Flip.fit(toEl, fromEl, {
-					scale: true,
-				})
-				Flip.fit(toEl, state, {
-					scale: true,
-					duration: 5,
-					ease,
-					scrollTrigger: {
-						trigger: fromEl,
-						start: "center center",
-						endTrigger: toEl.parentElement,
-						end: "center center",
-						scrub: true,
-						pinType,
-						pin: toEl,
-						pinSpacing: false,
-					},
-				})
+			const state = Flip.getState(toEl)
+			Flip.fit(toEl, fromEl, {
+				scale: true,
+			})
+			Flip.fit(toEl, state, {
+				scale: true,
+				duration: 5,
+				ease,
+				scrollTrigger: {
+					trigger: fromEl,
+					start: "center center",
+					endTrigger: toEl.parentElement,
+					end: "center center",
+					scrub: true,
+					pinType,
+					pin: toEl,
+					pinSpacing: false,
+				},
 			})
 		},
 		[fromEl, toEl, pinType, fromSize.height, toSize.height, ease],
