@@ -33,7 +33,7 @@ const useAnimation = <F, T>(
 	createAnimations: F extends VoidFunction ? F : () => T,
 	deps: DependencyList,
 	options?: {
-		scope?: string | Element | null
+		scope?: React.RefObject<HTMLElement | null>
 		kill?: boolean
 		recreateOnResize?: boolean
 		extraDeps?: DependencyList
@@ -100,7 +100,7 @@ const useAnimation = <F, T>(
 			} else {
 				setReturnValue(undefined)
 			}
-		}, options?.scope ?? undefined)
+		}, options?.scope?.current ?? undefined)
 		return () => {
 			if (options?.kill) {
 				ctx.kill()
