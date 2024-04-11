@@ -88,15 +88,31 @@ export default function AutoAnimate({
 
 		const parent = wrapperA.current?.parentElement
 		if (parent) {
-			const onResize = () => {
+			setTimeout(() => {
 				gsap.to(parent, {
 					width: animateSlotIn.current?.offsetWidth,
 					height: animateSlotIn.current?.offsetHeight,
 					ease: "power3.inOut",
 					duration,
 				})
+			})
+
+			const onResize = () => {
+				gsap.killTweensOf([wrapperA.current, wrapperB.current, parent])
+				gsap.set([wrapperA.current, wrapperB.current, parent], {
+					clearProps: "all",
+				})
+				gsap.set(animateSlotOut.current, {
+					yPercent: -100,
+					...parameters,
+					...toParameters,
+				})
+				gsap.set(parent, {
+					width: animateSlotIn.current?.offsetWidth,
+					height: animateSlotIn.current?.offsetHeight,
+				})
 			}
-			gsap.delayedCall(0, onResize)
+
 			window.addEventListener("resize", onResize)
 			return () => window.removeEventListener("resize", onResize)
 		}
