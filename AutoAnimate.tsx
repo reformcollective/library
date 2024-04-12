@@ -141,10 +141,10 @@ const Wrapper = styled.div`
     align-items: center;
     width: fit-content;
     height: fit-content;
-	
-	&:empty {
-		pointer-events: none;
-	}
+
+    &:empty {
+      pointer-events: none;
+    }
 
     /* text very commonly overflows its bounds on the bottom in letters like g */
     padding-bottom: 0.1em;
