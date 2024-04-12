@@ -97,7 +97,10 @@ export default function AutoAnimate({
 				})
 			})
 
+			let previousWith = window.innerWidth
 			const onResize = () => {
+				if (window.innerWidth === previousWith) return
+				previousWith = window.innerWidth
 				gsap.killTweensOf([wrapperA.current, wrapperB.current, parent])
 				gsap.set([wrapperA.current, wrapperB.current, parent], {
 					clearProps: "all",
