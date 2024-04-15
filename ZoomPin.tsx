@@ -11,6 +11,8 @@ import useAnimation from "./useAnimation"
 import gsap from "gsap"
 import Flip from "gsap/Flip"
 import { usePinType } from "./Scroll"
+import { useDeepCompareEffect } from "ahooks"
+import createSmoothPin from "./smoothPin"
 
 gsap.registerPlugin(Flip)
 
@@ -68,16 +70,19 @@ const useSize = (el?: HTMLDivElement | null) => {
 
 export const ZoomPinProvider = ({
 	children,
-	ease = "none",
 	dependencies = [],
+	options,
 }: {
-	ease?: gsap.EaseString | gsap.EaseFunction
 	children: ReactNode
 	/**
 	 * if you need to recreate the animation
 	 * these work like useEffect dependencies
 	 */
 	dependencies?: unknown[]
+	/**
+	 * options for the flip animation and its scrolltrigger
+	 */
+	options?: Flip.FitVars
 }) => {
 	const [fromEl, setFromEl] = useState<HTMLDivElement | null>(null)
 	const [toEl, setToEl] = useState<HTMLDivElement | null>(null)
@@ -93,35 +98,55 @@ export const ZoomPinProvider = ({
 				willChange: "transform",
 			})
 
+			/**
+			 * capture the end state of the animation (where we want fromEl to end at)
+			 */
 			const topDiff =
 				fromEl.getBoundingClientRect().top - toEl.getBoundingClientRect().top
 			const heightDiff = (fromSize.height ?? 0) - (toSize.height ?? 0)
 			gsap.set(toEl, {
 				y: topDiff + heightDiff / 2,
 			})
-
 			const state = Flip.getState(toEl)
+
+			/**
+			 * fit fromEl onto toEl and animate to the end state
+			 */
 			Flip.fit(toEl, fromEl, {
 				scale: true,
 			})
 			Flip.fit(toEl, state, {
 				scale: true,
-				duration: 5,
-				ease,
+				duration: 1,
+				...options,
 				scrollTrigger: {
 					trigger: fromEl,
 					start: "center center",
 					endTrigger: toEl.parentElement,
 					end: "center center",
 					scrub: true,
-					pinType,
-					pin: toEl,
-					pinSpacing: false,
+					...(options?.scrollTrigger ?? {}),
 				},
 			})
+
+			/**
+			 * and pin toEl for the needed duration
+			 * this is separate so that we can customize the start and end of the animation without affecting the pin
+			 */
+			createSmoothPin({
+				trigger: fromEl,
+				start: "center center",
+				endTrigger: toEl.parentElement,
+				end: "center center",
+				pinType,
+				pin: toEl.parentElement,
+				pinSpacing: false,
+				smoothLevel: Math.min(200, Math.abs(heightDiff) / 4),
+			})
 		},
-		[fromEl, toEl, pinType, fromSize.height, toSize.height, ease],
+		[fromEl, toEl, pinType, fromSize.height, toSize.height, options],
 		{
+			effect: useDeepCompareEffect,
 			recreateOnResize: true,
 			extraDeps: [fromSize.width, toSize.width, ...dependencies],
 		},
@@ -163,10 +188,8 @@ export const ZoomPinTo = ({
 	const { setToEl } = useContext(Context)
 
 	return (
-		<div>
-			<div {...props} ref={setToEl}>
-				{children}
-			</div>
+		<div {...props}>
+			<div ref={setToEl}>{children}</div>
 		</div>
 	)
 }
