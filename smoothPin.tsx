@@ -13,18 +13,36 @@ export default function createSmoothPin({
 	smoothLevel: goopLevel = 200,
 	...options
 }: Omit<ScrollTrigger.StaticVars, "pin"> & {
+	/**
+	 * you must specify a pin type! usePinType is a good way to do this
+	 */
 	pinType: "fixed" | "transform"
+	/**
+	 * trigger must be an element, and may not be a selector
+	 */
 	trigger: Element | null | undefined
+	/**
+	 * where should the smooth effect be applied?
+	 * at the start of the pin, the end, or both?
+	 */
 	smoothType?: "in" | "out" | "both"
+	/**
+	 * how long, in pixels scrolled, should the smooth effect last?
+	 */
 	smoothLevel?: number
+	/**
+	 * pin: true is implied, although if you want to pin something other than the trigger, you can specify it here
+	 */
+	pin?: Element | null | undefined
 }) {
 	const trigger = ScrollTrigger.create({
 		pin: true,
 		...options,
 	})
 
-	const goop = options.trigger?.parentElement ?? null
-	if (options.pinType === "fixed") return
+	const goop =
+		options.pin?.parentElement ?? options.trigger?.parentElement ?? null
+	if (options.pinType === "fixed") return trigger
 
 	/**
 	 * goop at start
