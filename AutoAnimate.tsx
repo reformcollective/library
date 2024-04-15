@@ -1,7 +1,7 @@
 import { gsap } from "gsap"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
-import styled from "styled-components"
+import styled, { css } from "styled-components"
 import { useBetterThrottle } from "./useBetterThrottle"
 
 const extractKey = (item: unknown): string => {
@@ -25,13 +25,46 @@ export default function AutoAnimate({
 	parameters,
 	fromParameters,
 	toParameters,
+	alignment = "left",
 }: {
+	/**
+	 * A react element to display. We'll smoothly animate this into view when its key changes
+	 */
 	children: ReactNode
+	/**
+	 * How long should this animation take? in seconds
+	 * @default 1
+	 */
 	duration?: number
+	/**
+	 * when the component first mounts, should we immediately animate in, or should we wait for the first key change?
+	 * if true, we'll wait for the first key change
+	 * @default true
+	 */
 	skipFirstAnimation?: boolean
-	parameters?: GSAPTweenVars
+	/**
+	 * Any additional parameters to pass to both GSAP tweens
+	 */
+	parameters?: Omit<GSAPTweenVars, "duration">
+	/**
+	 * Any additional parameters to pass to the tween that animates new content in
+	 */
 	fromParameters?: GSAPTweenVars
+	/**
+	 * Any additional parameters to pass to the tween that animates old content out
+	 */
 	toParameters?: GSAPTweenVars
+	/**
+	 * if the size changes, how should we align the content?
+	 *
+	 * if centered, content will overflow on the left and right during the animation.
+	 * this is ideal when the container itself is centered
+	 *
+	 * if left, content will only overflow on the right during the animation.
+	 * this is ideal when the container itself is left-aligned
+	 * @default left
+	 */
+	alignment?: "centered" | "left"
 }) {
 	const nextValue = useBetterThrottle(children, 1100)
 	const lastUsedSlot = useRef<"A" | "B">("A")
@@ -97,7 +130,10 @@ export default function AutoAnimate({
 				})
 			})
 
+			let previousWith = window.innerWidth
 			const onResize = () => {
+				if (window.innerWidth === previousWith) return
+				previousWith = window.innerWidth
 				gsap.killTweensOf([wrapperA.current, wrapperB.current, parent])
 				gsap.set([wrapperA.current, wrapperB.current, parent], {
 					clearProps: "all",
@@ -119,18 +155,26 @@ export default function AutoAnimate({
 	}, [duration, extractKey(nextValue), skipFirstAnimation])
 
 	return (
-		<Wrapper>
+		<Wrapper alignment={alignment}>
 			<div ref={wrapperA}>{slotA}</div>
 			<div ref={wrapperB}>{slotB}</div>
 		</Wrapper>
 	)
 }
 
-const Wrapper = styled.div`
+const Wrapper = styled.div<{
+	alignment: "centered" | "left"
+}>`
   overflow: hidden;
   position: relative;
   display: grid;
   grid-template: 1fr / 1fr;
+  ${({ alignment }) =>
+		alignment === "centered" &&
+		css`
+      justify-content: center;
+      place-items: center;
+    `}
 
   > * {
     grid-area: 1 / 1 / 2 / 2;
@@ -138,6 +182,10 @@ const Wrapper = styled.div`
     align-items: center;
     width: fit-content;
     height: fit-content;
+
+    &:empty {
+      pointer-events: none;
+    }
 
     /* text very commonly overflows its bounds on the bottom in letters like g */
     padding-bottom: 0.1em;
