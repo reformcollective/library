@@ -8,10 +8,10 @@ import {
 } from "react"
 import useAnimation from "./useAnimation"
 
+import { useDeepCompareEffect } from "ahooks"
 import gsap from "gsap"
 import Flip from "gsap/Flip"
 import { usePinType } from "./Scroll"
-import { useDeepCompareEffect } from "ahooks"
 import createSmoothPin from "./smoothPin"
 
 gsap.registerPlugin(Flip)
