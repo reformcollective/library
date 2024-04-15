@@ -43,6 +43,7 @@ export default function createSmoothPin({
 	const goop =
 		options.pin?.parentElement ?? options.trigger?.parentElement ?? null
 	if (options.pinType === "fixed") return trigger
+	if (goopLevel === 0) return trigger
 
 	/**
 	 * goop at start
