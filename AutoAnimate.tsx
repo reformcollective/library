@@ -5,6 +5,10 @@ import styled from "styled-components"
 import { useBetterThrottle } from "./useBetterThrottle"
 
 const extractKey = (item: unknown): string => {
+	if (Array.isArray(item) && item.every((i) => typeof i === "string")) {
+		return item.join("")
+	}
+
 	if (
 		typeof item === "object" &&
 		item !== null &&
