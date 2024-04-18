@@ -35,9 +35,16 @@ export default function createSmoothPin({
 	 */
 	pin?: Element | null | undefined
 }) {
+	const tweens: gsap.core.Tween[] = []
 	const trigger = ScrollTrigger.create({
 		pin: true,
 		...options,
+		onRefresh: (...props) => {
+			for (const trigger of tweens) {
+				trigger.scrollTrigger?.refresh()
+			}
+			options.onRefresh?.(...props)
+		},
 	})
 
 	const goop =
@@ -49,37 +56,39 @@ export default function createSmoothPin({
 	 * goop at start
 	 */
 	if (goopType === "in" || goopType === "both") {
-		gsap.fromTo(
-			goop,
-			{
-				y: 0,
-			},
-			{
-				immediateRender: false,
-				y: goopLevel / 4,
-				ease: "power1.in",
-				scrollTrigger: {
-					start: () => trigger.start - goopLevel,
-					end: () => trigger.start,
-					scrub: true,
+		tweens.push(
+			gsap.fromTo(
+				goop,
+				{
+					y: 0,
 				},
-			},
-		)
-		gsap.fromTo(
-			goop,
-			{
-				y: goopLevel / 4,
-			},
-			{
-				immediateRender: false,
-				y: 0,
-				ease: "power1.out",
-				scrollTrigger: {
-					start: () => trigger.start,
-					end: () => trigger.start + goopLevel,
-					scrub: true,
+				{
+					immediateRender: false,
+					y: goopLevel / 4,
+					ease: "power1.in",
+					scrollTrigger: {
+						start: () => trigger.start - goopLevel,
+						end: () => trigger.start,
+						scrub: true,
+					},
 				},
-			},
+			),
+			gsap.fromTo(
+				goop,
+				{
+					y: goopLevel / 4,
+				},
+				{
+					immediateRender: false,
+					y: 0,
+					ease: "power1.out",
+					scrollTrigger: {
+						start: () => trigger.start,
+						end: () => trigger.start + goopLevel,
+						scrub: true,
+					},
+				},
+			),
 		)
 	}
 
@@ -87,37 +96,39 @@ export default function createSmoothPin({
 	 * goop at end
 	 */
 	if (goopType === "out" || goopType === "both") {
-		gsap.fromTo(
-			goop,
-			{
-				y: 0,
-			},
-			{
-				immediateRender: false,
-				y: -goopLevel / 4,
-				ease: "power1.in",
-				scrollTrigger: {
-					start: () => trigger.end - goopLevel,
-					end: () => trigger.end,
-					scrub: true,
+		tweens.push(
+			gsap.fromTo(
+				goop,
+				{
+					y: 0,
 				},
-			},
-		)
-		gsap.fromTo(
-			goop,
-			{
-				y: -goopLevel / 4,
-			},
-			{
-				immediateRender: false,
-				y: 0,
-				ease: "power1.out",
-				scrollTrigger: {
-					start: () => trigger.end,
-					end: () => trigger.end + goopLevel,
-					scrub: true,
+				{
+					immediateRender: false,
+					y: -goopLevel / 4,
+					ease: "power1.in",
+					scrollTrigger: {
+						start: () => trigger.end - goopLevel,
+						end: () => trigger.end,
+						scrub: true,
+					},
 				},
-			},
+			),
+			gsap.fromTo(
+				goop,
+				{
+					y: -goopLevel / 4,
+				},
+				{
+					immediateRender: false,
+					y: 0,
+					ease: "power1.out",
+					scrollTrigger: {
+						start: () => trigger.end,
+						end: () => trigger.end + goopLevel,
+						scrub: true,
+					},
+				},
+			),
 		)
 	}
 
