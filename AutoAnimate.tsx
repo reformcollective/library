@@ -25,7 +25,7 @@ export default function AutoAnimate({
 	parameters,
 	fromParameters,
 	toParameters,
-	alignment = "left",
+	alignment = "start",
 }: {
 	/**
 	 * A react element to display. We'll smoothly animate this into view when its key changes
@@ -62,32 +62,60 @@ export default function AutoAnimate({
 	 *
 	 * if left, content will only overflow on the right during the animation.
 	 * this is ideal when the container itself is left-aligned
-	 * @default left
+	 * @default start
 	 */
-	alignment?: "centered" | "left"
+	alignment?: "start" | "center" | "end"
 }) {
-	const nextValue = useBetterThrottle(children, 1100)
-	const lastUsedSlot = useRef<"A" | "B">("A")
+	const nextValue = useBetterThrottle(children, duration * 1000 + 100)
 
 	const wrapperA = useRef<HTMLDivElement | null>(null)
 	const wrapperB = useRef<HTMLDivElement | null>(null)
+	const sizer = useRef<HTMLDivElement | null>(null)
+	const wrapper = useRef<HTMLDivElement | null>(null)
+
+	const lastUsedSlot = useRef<"A" | "B">("A")
 	const [slotA, setSlotA] = useState<ReactNode>(
 		skipFirstAnimation ? children : undefined,
 	)
 	const [slotB, setSlotB] = useState<ReactNode>()
 
-	const firstRender = useRef(true)
+	const isFirstRender = useRef(true)
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we very specifically control when this effect runs
 	useEffect(() => {
-		if (firstRender.current && skipFirstAnimation) {
-			firstRender.current = false
-			return
+		if (!sizer.current || !wrapper.current) return
+
+		/**
+		 * calculate the size of the new content
+		 * animate the container to that size
+		 */
+		sizer.current.style.display = "block"
+		wrapper.current.style.display = "none"
+		const size = sizer.current.getBoundingClientRect()
+		sizer.current.style.display = "none"
+		wrapper.current.style.display = "grid"
+
+		gsap.to(wrapper.current, {
+			width: size.width,
+			height: size.height,
+			ease: "power3.inOut",
+			duration: isFirstRender.current ? 0 : duration,
+		})
+
+		/**
+		 * skip the next animation if applicable
+		 */
+		if (isFirstRender.current) {
+			isFirstRender.current = false
+			if (skipFirstAnimation) return
 		}
 
 		let animateSlotIn: RefObject<HTMLDivElement> | undefined
 		let animateSlotOut: RefObject<HTMLDivElement> | undefined
 
+		/**
+		 * animate each slot to it's next position
+		 */
 		if (lastUsedSlot.current === "A") {
 			lastUsedSlot.current = "B"
 			setSlotB(nextValue)
@@ -118,70 +146,32 @@ export default function AutoAnimate({
 			...parameters,
 			...fromParameters,
 		})
-
-		const parent = wrapperA.current?.parentElement
-		if (parent) {
-			setTimeout(() => {
-				gsap.to(parent, {
-					width: animateSlotIn.current?.offsetWidth,
-					height: animateSlotIn.current?.offsetHeight,
-					ease: "power3.inOut",
-					duration,
-				})
-			})
-
-			let previousWith = window.innerWidth
-			const onResize = () => {
-				if (window.innerWidth === previousWith) return
-				previousWith = window.innerWidth
-				gsap.killTweensOf([wrapperA.current, wrapperB.current, parent])
-				gsap.set([wrapperA.current, wrapperB.current, parent], {
-					clearProps: "all",
-				})
-				gsap.set(animateSlotOut.current, {
-					yPercent: -100,
-					...parameters,
-					...toParameters,
-				})
-				gsap.set(parent, {
-					width: animateSlotIn.current?.offsetWidth,
-					height: animateSlotIn.current?.offsetHeight,
-				})
-			}
-
-			window.addEventListener("resize", onResize)
-			return () => window.removeEventListener("resize", onResize)
-		}
-	}, [duration, extractKey(nextValue), skipFirstAnimation])
+	}, [extractKey(nextValue)])
 
 	return (
-		<Wrapper alignment={alignment}>
-			<div ref={wrapperA}>{slotA}</div>
-			<div ref={wrapperB}>{slotB}</div>
-		</Wrapper>
+		<>
+			<div ref={sizer}>{nextValue}</div>
+			<Wrapper ref={wrapper} alignment={alignment}>
+				<div ref={wrapperA}>{slotA}</div>
+				<div ref={wrapperB}>{slotB}</div>
+			</Wrapper>
+		</>
 	)
 }
 
 const Wrapper = styled.div<{
-	alignment: "centered" | "left"
+	alignment: "start" | "center" | "end"
 }>`
-  overflow: hidden;
+  overflow: clip;
   position: relative;
   display: grid;
-  grid-template: 1fr / 1fr;
-  ${({ alignment }) =>
-		alignment === "centered" &&
-		css`
-      justify-content: center;
-      place-items: center;
-    `}
+  place-items: ${({ alignment }) => `${alignment} ${alignment}`};
+  justify-content: ${({ alignment }) => alignment};
 
   > * {
     grid-area: 1 / 1 / 2 / 2;
-    display: grid;
-    align-items: center;
-    width: fit-content;
-    height: fit-content;
+	width: 100%;
+	height: 100%;
 
     &:empty {
       pointer-events: none;
