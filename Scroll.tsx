@@ -1,7 +1,7 @@
 import { gsap } from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { pageReady, pageUnmounted } from "library/pageReady"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./deviceDetection"

@@ -1,7 +1,7 @@
 import { gsap } from "gsap"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
-import styled, { css } from "styled-components"
+import styled from "styled-components"
 import { useBetterThrottle } from "./useBetterThrottle"
 
 const extractKey = (item: unknown): string => {
