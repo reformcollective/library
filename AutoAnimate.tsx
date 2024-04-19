@@ -141,6 +141,16 @@ export default function AutoAnimate({
 			yPercent: -100,
 			ease: "power3.inOut",
 			duration,
+			onComplete: () => {
+				/**
+				 * clear the unused slot to prevent it from being focusable
+				 */
+				if (lastUsedSlot.current === "A") {
+					setSlotB(undefined)
+				} else {
+					setSlotA(undefined)
+				}
+			},
 			...parameters,
 			...toParameters,
 		})
