@@ -3,6 +3,7 @@ import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 import { useBetterThrottle } from "./useBetterThrottle"
+import { useEventListener } from "ahooks"
 
 const extractKey = (item: unknown): string => {
 	if (Array.isArray(item) && item.every((i) => typeof i === "string")) {
@@ -151,6 +152,32 @@ export default function AutoAnimate({
 			...fromParameters,
 		})
 	}, [extractKey(nextValue)])
+
+	/**
+	 * handle resize instantly
+	 */
+	useEventListener("resize", () => {
+		if (!sizer.current || !wrapper.current) return
+
+		for (const tween of gsap.getTweensOf([
+			wrapper.current,
+			wrapperA.current,
+			wrapperB.current,
+		])) {
+			tween.revert()
+		}
+
+		sizer.current.style.display = "block"
+		wrapper.current.style.display = "none"
+		const size = sizer.current.getBoundingClientRect()
+		sizer.current.style.display = "none"
+		wrapper.current.style.display = "grid"
+
+		gsap.set(wrapper.current, {
+			width: size.width,
+			height: size.height,
+		})
+	})
 
 	return (
 		<>
