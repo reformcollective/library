@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN}}
+          token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
       - uses: pnpm/action-setup@v2
         with:
@@ -41,8 +41,10 @@ jobs:
         if: steps.package-manager.outputs.PNPM != 'true'
         with:
           node-version-file: .nvmrc
+      - name: Enable corepack
+        run: corepack enable
       - name: Install dependencies
-        run: npx @antfu/ni --no-frozen-lockfile
+        run: npx @antfu/ni
       # END INSTALLATION
 
       - name: format
@@ -99,6 +101,8 @@ jobs:
         if: steps.package-manager.outputs.PNPM != 'true'
         with:
           node-version-file: .nvmrc
+      - name: Enable corepack
+        run: corepack enable
       - name: Install dependencies
         run: npx @antfu/ni
       # END INSTALLATION
@@ -149,6 +153,8 @@ jobs:
         if: steps.package-manager.outputs.PNPM != 'true'
         with:
           node-version-file: .nvmrc
+      - name: Enable corepack
+        run: corepack enable
       - name: Install dependencies
         run: npx @antfu/ni
       # END INSTALLATION
@@ -196,6 +202,8 @@ jobs:
         if: steps.package-manager.outputs.PNPM != 'true'
         with:
           node-version-file: .nvmrc
+      - name: Enable corepack
+        run: corepack enable
       - name: Install dependencies
         run: npx @antfu/ni
       # END INSTALLATION
