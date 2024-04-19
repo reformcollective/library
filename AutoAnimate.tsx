@@ -169,11 +169,7 @@ export default function AutoAnimate({
 	useEventListener("resize", () => {
 		if (!sizer.current || !wrapper.current) return
 
-		for (const tween of gsap.getTweensOf([
-			wrapper.current,
-			wrapperA.current,
-			wrapperB.current,
-		])) {
+		for (const tween of gsap.getTweensOf(wrapper.current)) {
 			tween.revert()
 		}
 
