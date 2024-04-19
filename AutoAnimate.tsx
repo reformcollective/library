@@ -105,14 +105,37 @@ export default function AutoAnimate({
 			height: size.height,
 			ease: "power3.inOut",
 			duration: isFirstRender.current ? 0 : duration,
+
+			/**
+			 * we only want to set the size during a transition
+			 * at any other time, we want the size to be auto
+			 */
+			onComplete: () => {
+				gsap.set(wrapper.current, {
+					height: "auto",
+					width: "auto",
+					// this needs to happen on the *next* frame, otherwise the height will briefly be wrong
+					delay: 0.0001,
+				})
+			},
 		})
+
+		/**
+		 * ensure that we have a static size to animate from during the next transition
+		 */
+		const cleanup = () => {
+			gsap.set(wrapper.current, {
+				height: wrapper.current?.clientHeight ?? "auto",
+				width: wrapper.current?.clientWidth ?? "auto",
+			})
+		}
 
 		/**
 		 * skip the next animation if applicable
 		 */
 		if (isFirstRender.current) {
 			isFirstRender.current = false
-			if (skipFirstAnimation) return
+			if (skipFirstAnimation) return cleanup
 		}
 
 		let animateSlotIn: RefObject<HTMLDivElement> | undefined
@@ -161,6 +184,8 @@ export default function AutoAnimate({
 			...parameters,
 			...fromParameters,
 		})
+
+		return cleanup
 	}, [extractKey(nextValue)])
 
 	/**
@@ -216,5 +241,6 @@ const Wrapper = styled.div<{
 
     /* text very commonly overflows its bounds on the bottom in letters like g */
     padding-bottom: 0.1em;
+	margin-bottom: -0.1em;
   }
 `
