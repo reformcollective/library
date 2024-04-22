@@ -198,15 +198,9 @@ export default function AutoAnimate({
 			tween.revert()
 		}
 
-		sizer.current.style.display = "block"
-		wrapper.current.style.display = "none"
-		const size = sizer.current.getBoundingClientRect()
-		sizer.current.style.display = "none"
-		wrapper.current.style.display = "grid"
-
 		gsap.set(wrapper.current, {
-			width: size.width,
-			height: size.height,
+			width: "auto",
+			height: "auto",
 		})
 	})
 
