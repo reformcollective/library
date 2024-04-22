@@ -244,7 +244,7 @@ const Wrapper = styled.div<{
   display: grid;
   align-items: ${(props) => props.alignment};
   justify-content: ${(props) => props.alignment};
-  
+
   > * {
     grid-area: 1 / 1 / 2 / 2;
     min-width: 100%;
