@@ -222,6 +222,8 @@ const Wrapper = styled.div<{
   display: grid;
   align-items: ${(props) => props.alignment};
   justify-content: ${(props) => props.alignment};
+  margin: -0.1em;
+  padding: 0.1em;
 
   > * {
     grid-area: 1 / 1 / 2 / 2;
