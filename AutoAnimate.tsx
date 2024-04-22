@@ -103,7 +103,7 @@ export default function AutoAnimate({
 		gsap.to(wrapper.current, {
 			width: size.width,
 			height: size.height,
-			ease: "power3.inOut",
+			ease: parameters?.ease ?? "power3.inOut",
 			duration: isFirstRender.current ? 0 : duration,
 
 			/**
@@ -219,22 +219,20 @@ const Wrapper = styled.div<{
 	alignment: "start" | "center" | "end"
 }>`
   overflow: clip;
-  position: relative;
   display: grid;
-  place-items: ${({ alignment }) => `${alignment} ${alignment}`};
-  justify-content: ${({ alignment }) => alignment};
+  align-items: ${(props) => props.alignment};
+  justify-content: ${(props) => props.alignment};
 
   > * {
     grid-area: 1 / 1 / 2 / 2;
-    width: 100%;
-    height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+    display: grid;
+    align-items: ${(props) => props.alignment};
+    justify-content: ${(props) => props.alignment};
 
     &:empty {
       pointer-events: none;
     }
-
-    /* text very commonly overflows its bounds on the bottom in letters like g */
-    padding-bottom: 0.1em;
-    margin-bottom: -0.1em;
   }
 `
