@@ -6,6 +6,7 @@ import { isBrowser } from "library/deviceDetection"
 import loader, { promisesToAwait, recursiveAllSettled } from "."
 import { sleep } from "../functions"
 import { pageReady } from "../pageReady"
+import { useDeepCompareEffect } from "ahooks"
 
 /**
  * we get a percentage by simply guessing how long the page will take to load based on
@@ -143,6 +144,7 @@ if (isBrowser)
 /**
  * register a callback (such as an animation) to be called when the page is loaded
  *
+ * @deprecated useRegisterLoaderCallback instead
  * @param animation function to call when the page is loaded
  */
 export const registerLoaderCallback = (animation: Animation) => {
@@ -152,6 +154,8 @@ export const registerLoaderCallback = (animation: Animation) => {
 
 /**
  * register a callback (such as a progress bar or percentage) to be called while the page is loading
+ *
+ * @deprecated loader.useEventListener("progressUpdated", () => { ... }) instead
  * @param callback function to call with the percentage of the page loaded
  */
 export const registerProgress = (callback: ProgressCallback) => {
@@ -161,6 +165,8 @@ export const registerProgress = (callback: ProgressCallback) => {
 
 /**
  * remove a callback from the list of callbacks
+ *
+ * @deprecated useRegisterLoaderCallback handles this for you
  * @param callback function to remove from the list of callbacks
  */
 export const unregisterLoaderCallback = (completionFunction: VoidFunction) => {
@@ -171,9 +177,27 @@ export const unregisterLoaderCallback = (completionFunction: VoidFunction) => {
 
 /**
  * remove a progress callback from the list
+ *
+ * @deprecated loader.useEventListener("progressUpdated", () => { ... }) will handle this for you
  * @param callback function to remove from the list of callbacks
  */
 export const unregisterProgress = (callback: ProgressCallback) => {
 	const index = progressCallbacks.indexOf(callback)
 	if (index > -1) progressCallbacks.splice(index, 1)
+}
+
+/**
+ * register a callback (such as an animation) to be called when the page is loaded
+ *
+ * @param animation function to call when the page is loaded
+ */
+export const useRegisterLoaderCallback = (animation: Animation) => {
+	useDeepCompareEffect(() => {
+		if (completionStatus === "complete") animation.callback()
+		else animations.push(animation)
+
+		return () => {
+			animations = animations.filter((a) => a.callback !== animation.callback)
+		}
+	}, [animation])
 }
