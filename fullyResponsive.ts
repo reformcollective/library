@@ -2,10 +2,12 @@ import config from "libraryConfig"
 import type { RuleSet } from "styled-components"
 import { css } from "styled-components"
 import media, {
+	desktopBreakpoint,
 	desktopDesignSize,
 	mobileDesignSize,
 	tabletDesignSize,
 } from "styles/media"
+import { getVwToPx } from "./viewportUtils"
 
 const PRECISION = 3
 
@@ -56,7 +58,14 @@ export default function fullyResponsive(
 
 	// generate media queries for each breakpoint
 	return css`
-    ${cssAsString}
+    ${cssAsString.replaceAll(
+			regex,
+			(_, px: string) =>
+				`${
+					(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
+					desktopBreakpoint
+				}px`,
+		)}
     ${
 			config.scaleFully &&
 			css`
