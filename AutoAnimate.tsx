@@ -116,13 +116,26 @@ export default function AutoAnimate({
 		 */
 		sizer.current.style.display = "block"
 		wrapper.current.style.display = "none"
-		const size = sizer.current.getBoundingClientRect()
+		const size = {
+			width: sizer.current.clientWidth,
+			height: sizer.current.clientHeight,
+		}
 		sizer.current.style.display = "none"
 		wrapper.current.style.display = "grid"
 
+		/**
+		 * if the height hasn't changed, don't touch it!
+		 * changing the height to or from 'auto' can cause the smoother to refresh, even if the size hasn't changed
+		 * this is a) bad for performance and b) can cause the smoother to jump visually (at least in gsap 3.12.5)
+		 */
+		const heightChanged = size.height !== wrapper.current.clientHeight
+		gsap.set(wrapper.current, {
+			height: heightChanged ? undefined : "auto",
+		})
+
 		gsap.to(wrapper.current, {
 			width: size.width,
-			height: size.height,
+			height: heightChanged ? size.height : undefined,
 			ease: parameters?.ease ?? "power3.inOut",
 			duration: isFirstRender.current ? 0 : duration,
 
