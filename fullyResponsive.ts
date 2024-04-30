@@ -91,7 +91,7 @@ export default function fullyResponsive(
 			)}
 		}
 
-		/* convert desktop values */
+		/* convert tablet values */
 		${media.tablet} {
 			${onlyPxValues.replaceAll(
 				regex,
