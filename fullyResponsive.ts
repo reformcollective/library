@@ -63,6 +63,7 @@ export default function fullyResponsive(
 		/* static pixel values (as a baseline) */
 		${cssAsString}
 		
+		/* convert full width values (not including smaller desktops that would always scale) */
 		${media.fullWidth} {
 			${
 				config.scaleFully
