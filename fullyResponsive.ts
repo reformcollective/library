@@ -63,13 +63,12 @@ export default function fullyResponsive(
 		/* static pixel values (as a baseline) */
 		${cssAsString}
 		
-
-		/* scaling full width values */
 		${css`
 			${media.fullWidth} {
 				${
 					config.scaleFully
 						? onlyPxValues.replaceAll(
+								/* scaling full width values */
 								regex,
 								(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
 							)
@@ -88,26 +87,26 @@ export default function fullyResponsive(
 		
 		/* convert desktop values (not including full width) */
 		${media.desktop} {
-		${onlyPxValues.replaceAll(
-			regex,
-			(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
-		)}
+			${onlyPxValues.replaceAll(
+				regex,
+				(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
+			)}
 		}
 
 		/* convert desktop values */
 		${media.tablet} {
-		${onlyPxValues.replaceAll(
-			regex,
-			(_, px: string) => `${replacer(px, tabletDesignSize)}vw`,
-		)}
+			${onlyPxValues.replaceAll(
+				regex,
+				(_, px: string) => `${replacer(px, tabletDesignSize)}vw`,
+			)}
 		}
 
 		/* convert mobile values */
 		${media.mobile} {
-		${onlyPxValues.replaceAll(
-			regex,
-			(_, px: string) => `${replacer(px, mobileDesignSize)}vw`,
-		)}
+			${onlyPxValues.replaceAll(
+				regex,
+				(_, px: string) => `${replacer(px, mobileDesignSize)}vw`,
+			)}
 		}
 	`
 }
