@@ -63,27 +63,25 @@ export default function fullyResponsive(
 		/* static pixel values (as a baseline) */
 		${cssAsString}
 		
-		${css`
-			${media.fullWidth} {
-				${
-					config.scaleFully
-						? onlyPxValues.replaceAll(
-								/* scaling full width values */
-								regex,
-								(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
-							)
-						: onlyPxValues.replaceAll(
-								// convert to px values at the fw breakpoint (this may be different than the raw px value, depending on the config)
-								regex,
-								(_, px: string) =>
-									`${
-										(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
-										desktopBreakpoint
-									}px`,
-							)
-				}
+		${media.fullWidth} {
+			${
+				config.scaleFully
+					? onlyPxValues.replaceAll(
+							/* scaling full width values */
+							regex,
+							(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
+						)
+					: onlyPxValues.replaceAll(
+							// convert to px values at the fw breakpoint (this may be different than the raw px value, depending on the config)
+							regex,
+							(_, px: string) =>
+								`${
+									(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
+									desktopBreakpoint
+								}px`,
+						)
 			}
-		`}
+		}
 		
 		/* convert desktop values (not including full width) */
 		${media.desktop} {
