@@ -7,6 +7,7 @@ import media, {
 	mobileDesignSize,
 	tabletDesignSize,
 } from "styles/media"
+import { getPxToVw, getResponsivePixels, getVwToPx } from "./viewportUtils"
 
 const PRECISION = 3
 
@@ -46,37 +47,46 @@ export default function fullyResponsive(
 	 */
 	if (only) {
 		return css`
-      ${media[only]} {
-        ${cssAsString.replaceAll(
+			${media[only]} {
+				${cssAsString.replaceAll(
 					regex,
 					(_, px: string) => `${replacer(px, designSizes[only])}vw`,
 				)}
-      }
-    `
+			}
+    	`
 	}
 
-	// generate media queries for each breakpoint
+	/**
+	 * generate media queries for each breakpoint
+	 */
 	return css`
-    ${cssAsString.replaceAll(
-			regex,
-			(_, px: string) =>
-				`${
-					(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
-					desktopBreakpoint
-				}px`,
-		)}
-    ${
-			config.scaleFully &&
-			css`
-      ${media.fullWidth} {
-        ${onlyPxValues.replaceAll(
-					regex,
-					(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
-				)}
-      }
-    `
-		};
+		/* static pixel values (as a baseline) */
+		${cssAsString}
+		
 
+	/* scaling full width values */
+    ${css`
+		${media.fullWidth} {
+			${
+				config.scaleFully
+					? onlyPxValues.replaceAll(
+							regex,
+							(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
+						)
+					: onlyPxValues.replaceAll(
+							// convert to px values at the fw breakpoint (this may be different than the raw px value, depending on the config)
+							regex,
+							(_, px: string) =>
+								`${
+									(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
+									desktopBreakpoint
+								}px`,
+						)
+			}
+		}
+	`}
+    
+	/* convert desktop values (not including full width) */
     ${media.desktop} {
       ${onlyPxValues.replaceAll(
 				regex,
@@ -84,6 +94,7 @@ export default function fullyResponsive(
 			)}
     }
 
+	/* convert desktop values */
     ${media.tablet} {
       ${onlyPxValues.replaceAll(
 				regex,
@@ -91,6 +102,7 @@ export default function fullyResponsive(
 			)}
     }
 
+	/* convert mobile values */
     ${media.mobile} {
       ${onlyPxValues.replaceAll(
 				regex,
