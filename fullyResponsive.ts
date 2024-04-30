@@ -64,52 +64,52 @@ export default function fullyResponsive(
 		${cssAsString}
 		
 
-	/* scaling full width values */
-    ${css`
-		${media.fullWidth} {
-			${
-				config.scaleFully
-					? onlyPxValues.replaceAll(
-							regex,
-							(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
-						)
-					: onlyPxValues.replaceAll(
-							// convert to px values at the fw breakpoint (this may be different than the raw px value, depending on the config)
-							regex,
-							(_, px: string) =>
-								`${
-									(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
-									desktopBreakpoint
-								}px`,
-						)
+		/* scaling full width values */
+		${css`
+			${media.fullWidth} {
+				${
+					config.scaleFully
+						? onlyPxValues.replaceAll(
+								regex,
+								(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
+							)
+						: onlyPxValues.replaceAll(
+								// convert to px values at the fw breakpoint (this may be different than the raw px value, depending on the config)
+								regex,
+								(_, px: string) =>
+									`${
+										(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
+										desktopBreakpoint
+									}px`,
+							)
+				}
 			}
+		`}
+		
+		/* convert desktop values (not including full width) */
+		${media.desktop} {
+		${onlyPxValues.replaceAll(
+			regex,
+			(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
+		)}
 		}
-	`}
-    
-	/* convert desktop values (not including full width) */
-    ${media.desktop} {
-      ${onlyPxValues.replaceAll(
-				regex,
-				(_, px: string) => `${replacer(px, desktopDesignSize)}vw`,
-			)}
-    }
 
-	/* convert desktop values */
-    ${media.tablet} {
-      ${onlyPxValues.replaceAll(
-				regex,
-				(_, px: string) => `${replacer(px, tabletDesignSize)}vw`,
-			)}
-    }
+		/* convert desktop values */
+		${media.tablet} {
+		${onlyPxValues.replaceAll(
+			regex,
+			(_, px: string) => `${replacer(px, tabletDesignSize)}vw`,
+		)}
+		}
 
-	/* convert mobile values */
-    ${media.mobile} {
-      ${onlyPxValues.replaceAll(
-				regex,
-				(_, px: string) => `${replacer(px, mobileDesignSize)}vw`,
-			)}
-    }
-  `
+		/* convert mobile values */
+		${media.mobile} {
+		${onlyPxValues.replaceAll(
+			regex,
+			(_, px: string) => `${replacer(px, mobileDesignSize)}vw`,
+		)}
+		}
+	`
 }
 
 const fresponsive = fullyResponsive
