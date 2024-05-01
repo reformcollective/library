@@ -112,6 +112,10 @@ export const loadPage = async (
 ) => {
 	// extract the anchor from the pathname if applicable
 	const anchor = new URL(navigateTo, window.location.origin).hash
+	const anchorEl = document.querySelector(anchor)
+	// Check if data-anchor-offset exists on the anchor element to allow fine-tuning of scroll position
+	const anchorOffset = anchorEl?.getAttribute("data-anchor-offset")
+	const scrollOffset = 100 + Number.parseFloat(anchorOffset ?? "0")
 	const pathname = new URL(navigateTo, window.location.origin).pathname
 
 	// if a transition is already in progress, wait for it to finish before loading the next page
@@ -128,7 +132,10 @@ export const loadPage = async (
 		// scroll to anchor if applicable, otherwise scroll to top
 		if (anchor) {
 			// ScrollSmoother.get()?.scrollTo(anchor, true, "top 100px")
-			gsap.to(window, { scrollTo: { y: anchor, offsetY: 100 }, duration: 0.4 })
+			gsap.to(window, {
+				scrollTo: { y: anchor, offsetY: scrollOffset },
+				duration: 0.4,
+			})
 			loader.dispatchEvent("scrollTo")
 		} else {
 			window.scrollTo({
@@ -156,7 +163,7 @@ export const loadPage = async (
 		ScrollSmoother.get()?.paused(false)
 		if (anchor) {
 			setTimeout(() => {
-				ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+				ScrollSmoother.get()?.scrollTo(anchor, false, `top: ${scrollOffset}px`)
 			})
 		} else {
 			// an anchor is not specified, scroll to the top of the page
