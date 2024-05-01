@@ -33,6 +33,7 @@ export default function ConstantMarquee({
 	reversed = false,
 }: MarqueeProps) {
 	const marquee = useRef<HTMLDivElement>(null)
+	const currWidth = useRef(0)
 	const [array, setArray] = useState<null[]>([null])
 	const offset = useRef(0)
 
@@ -112,10 +113,14 @@ export default function ConstantMarquee({
 					...[...marquee.current.children].map((child) => child.clientWidth),
 				)
 
-				// number needed to fill width plus some buffer
-				const newNumber = Math.ceil((window.innerWidth + buffer) / width) + 1
-				if (Number.isFinite(newNumber) && newNumber > 0)
-					setArray(Array.from({ length: newNumber }, () => null))
+				if (width !== currWidth.current) {
+					// number needed to fill width plus some buffer
+					const newNumber = Math.ceil((window.innerWidth + buffer) / width) + 1
+					if (Number.isFinite(newNumber) && newNumber > 0)
+						setArray(Array.from({ length: newNumber }, () => null))
+
+					currWidth.current = width
+				}
 			}
 		}
 
