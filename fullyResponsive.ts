@@ -7,7 +7,6 @@ import media, {
 	mobileDesignSize,
 	tabletDesignSize,
 } from "styles/media"
-import { getPxToVw, getResponsivePixels, getVwToPx } from "./viewportUtils"
 
 const PRECISION = 3
 
