@@ -174,7 +174,11 @@ export function getResponsivePixels(px: number) {
 	const value = getVwToPx(getPxToVw(px))
 
 	// short circuit if we're not using responsive pixels
-	if (!config.scaleFully) return getMedia(px, value, value, value)
+	const adjustedPx =
+		(Number.parseFloat(((px / desktopDesignSize) * 100).toFixed(3)) / 100) *
+		desktopBreakpoint
+
+	if (!config.scaleFully) return getMedia(adjustedPx, value, value, value)
 
 	return value
 }
