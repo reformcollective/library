@@ -112,10 +112,13 @@ export const loadPage = async (
 ) => {
 	// extract the anchor from the pathname if applicable
 	const anchor = new URL(navigateTo, window.location.origin).hash
-	const anchorEl = document.querySelector(anchor ?? "")
-	// Check if data-anchor-offset exists on the anchor element to allow fine-tuning of scroll position
-	const anchorOffset = anchorEl?.getAttribute("data-anchor-offset")
-	const scrollOffset = 100 + Number.parseFloat(anchorOffset ?? "0")
+	let scrollOffset = 100
+	if (anchor) {
+		const anchorEl = document.querySelector(anchor)
+		// Check if data-anchor-offset exists on the anchor element to allow fine-tuning of scroll position
+		const anchorOffset = anchorEl?.getAttribute("data-anchor-offset")
+		scrollOffset += Number.parseFloat(anchorOffset ?? "0")
+	}
 	const pathname = new URL(navigateTo, window.location.origin).pathname
 
 	// if a transition is already in progress, wait for it to finish before loading the next page
