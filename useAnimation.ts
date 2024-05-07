@@ -2,7 +2,6 @@ import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import type { DependencyList } from "react"
 import { startTransition, useEffect, useState } from "react"
-
 import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./deviceDetection"
 
@@ -37,7 +36,7 @@ const useAnimation = <F, T>(
 		kill?: boolean
 		recreateOnResize?: boolean
 		extraDeps?: DependencyList
-		effect?: typeof useEffect
+		effect?: (effect: () => void, deps: DependencyList) => void
 	},
 ) => {
 	const useEffectToUse = options?.effect ?? useEffect
