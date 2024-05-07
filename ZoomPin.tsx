@@ -1,3 +1,6 @@
+import { useDeepCompareEffect } from "ahooks"
+import gsap from "gsap"
+import Flip from "gsap/Flip"
 import {
 	type ComponentProps,
 	type ReactNode,
@@ -6,13 +9,9 @@ import {
 	useEffect,
 	useState,
 } from "react"
-import useAnimation from "./useAnimation"
-
-import { useDeepCompareEffect } from "ahooks"
-import gsap from "gsap"
-import Flip from "gsap/Flip"
 import { usePinType } from "./Scroll"
 import createSmoothPin from "./smoothPin"
+import useAnimation from "./useAnimation"
 
 gsap.registerPlugin(Flip)
 
