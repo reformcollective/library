@@ -70,6 +70,15 @@ export const useIsSmooth = () => {
 	return smooth
 }
 
+/**
+ * searches for and initializes smoother effects any time the component is rendered
+ */
+export const useSmootherEffects = () => {
+	useEffect(() => {
+		ScrollSmoother.get()?.effects("[data-speed], [data-lag]", {})
+	})
+}
+
 export default function Scroll({
 	children,
 	mobileResize = false,
