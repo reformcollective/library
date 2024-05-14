@@ -2,10 +2,9 @@ import { gsap } from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect, useRef, useState } from "react"
-
+import { useDeepCompareMemo } from "use-deep-compare"
 import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./deviceDetection"
-import { useDeepCompareMemo } from "use-deep-compare"
 
 type IgnoredOptions = "smoothTouch" | "ignoreMobileResize" | "effects"
 

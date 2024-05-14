@@ -8,11 +8,11 @@ import {
 	useEffect,
 	useState,
 } from "react"
+import { useDeepCompareMemo } from "use-deep-compare"
 import { usePinType } from "./Scroll"
 import createSmoothPin from "./smoothPin"
 import useAnimation from "./useAnimation"
 import { useBreakpoint } from "./viewportUtils"
-import { useDeepCompareMemo } from "use-deep-compare"
 
 gsap.registerPlugin(Flip)
 
