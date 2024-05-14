@@ -5,6 +5,9 @@ import { useEffect, useRef, useState } from "react"
 
 import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./deviceDetection"
+import { useDeepCompareMemo } from "use-deep-compare"
+
+type IgnoredOptions = "smoothTouch" | "ignoreMobileResize" | "effects"
 
 interface ScrollProps {
 	children: React.ReactNode
@@ -17,6 +20,7 @@ interface ScrollProps {
 	 */
 	mobileResize?: boolean
 	className?: string
+	options?: Omit<ScrollSmoother.Vars, IgnoredOptions>
 }
 
 /**
@@ -83,10 +87,12 @@ export default function Scroll({
 	children,
 	mobileResize = false,
 	className = "",
+	options,
 }: ScrollProps) {
 	const isSmooth = useIsSmooth()
 	const isPaused = useRef(true)
 	const [refreshSignal, setRefreshSignal] = useState(0)
+	const stableOptions = useDeepCompareMemo(() => options, [options])
 
 	// sometimes the smoother gets paused during HMR, so its helpful to unpause it
 	useEffect(() => {
@@ -105,8 +111,10 @@ export default function Scroll({
 	// biome-ignore lint/correctness/useExhaustiveDependencies: refreshSignal is required to handle specific navigation cases
 	useEffect(() => {
 		const smoother = ScrollSmoother.create({
-			smooth: isSmooth ? 1 : 0,
-			smoothTouch: isSmooth ? 1 : 0,
+			...stableOptions,
+			// initially use a low smooth level to mitigate scroll flash
+			smooth: isSmooth ? 0.01 : 0,
+			smoothTouch: isSmooth ? 0.01 : 0,
 			ignoreMobileResize: !mobileResize,
 			effects: true,
 			onUpdate: (e) => {
@@ -122,6 +130,8 @@ export default function Scroll({
 				// always allow sideways overscroll (forward/back usually)
 				document.body.style.overscrollBehaviorX = "auto"
 				document.documentElement.style.overscrollBehaviorX = "auto"
+
+				stableOptions?.onUpdate?.(e)
 			},
 		})
 
@@ -129,6 +139,16 @@ export default function Scroll({
 			// persist paused state across re-renders
 			smoother.paused(isPaused.current)
 		}, 0)
+
+		// to avoid flashing when smoother across re-renders, set the smooth level after a short delay
+		const smoothLevel =
+			typeof stableOptions?.smooth === "number" ? stableOptions.smooth : 1
+		setTimeout(
+			() => {
+				smoother.smooth(isSmooth ? smoothLevel : 0)
+			},
+			(smoothLevel * 1000) / 2,
+		)
 
 		return () => {
 			isPaused.current = smoother.paused()
