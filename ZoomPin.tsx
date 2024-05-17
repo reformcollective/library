@@ -1,4 +1,3 @@
-import { useDeepCompareEffect } from "ahooks"
 import gsap from "gsap"
 import Flip from "gsap/Flip"
 import {
@@ -9,9 +8,11 @@ import {
 	useEffect,
 	useState,
 } from "react"
+import { useDeepCompareMemo } from "use-deep-compare"
 import { usePinType } from "./Scroll"
 import createSmoothPin from "./smoothPin"
 import useAnimation from "./useAnimation"
+import { useBreakpoint } from "./viewportUtils"
 
 gsap.registerPlugin(Flip)
 
@@ -88,6 +89,9 @@ export const ZoomPinProvider = ({
 	const fromSize = useSize(fromEl)
 	const toSize = useSize(toEl)
 	const pinType = usePinType()
+	// to prevent pin errors, recreate the pin on breakpoint changes
+	const breakpoint = useBreakpoint()
+	const stableOptions = useDeepCompareMemo(() => options, [options])
 
 	useAnimation(
 		() => {
@@ -117,14 +121,14 @@ export const ZoomPinProvider = ({
 			Flip.fit(toEl, state, {
 				scale: true,
 				duration: 1,
-				...options,
+				...stableOptions,
 				scrollTrigger: {
 					trigger: fromEl,
 					start: "center center",
 					endTrigger: toEl.parentElement,
 					end: "center center",
 					scrub: true,
-					...(options?.scrollTrigger ?? {}),
+					...(stableOptions?.scrollTrigger ?? {}),
 				},
 			})
 
@@ -143,11 +147,10 @@ export const ZoomPinProvider = ({
 				smoothLevel: Math.min(200, Math.abs(heightDiff) / 4),
 			})
 		},
-		[fromEl, toEl, pinType, fromSize.height, toSize.height, options],
+		[fromEl, toEl, pinType, fromSize.height, toSize.height, stableOptions],
 		{
-			effect: useDeepCompareEffect,
 			recreateOnResize: true,
-			extraDeps: [fromSize.width, toSize.width, ...dependencies],
+			extraDeps: [breakpoint, fromSize.width, toSize.width, ...dependencies],
 		},
 	)
 
@@ -187,8 +190,11 @@ export const ZoomPinTo = ({
 	const { setToEl } = useContext(Context)
 
 	return (
-		<div {...props}>
-			<div ref={setToEl}>{children}</div>
+		// extra wrapper to shield against unmount errors
+		<div>
+			<div {...props}>
+				<div ref={setToEl}>{children}</div>
+			</div>
 		</div>
 	)
 }

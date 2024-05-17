@@ -1,6 +1,6 @@
 import { Link } from "gatsby"
 import libraryConfig from "libraryConfig"
-import type { MouseEventHandler } from "react"
+import type { CSSProperties, MouseEventHandler } from "react"
 
 import type { Transitions } from "."
 import { loadPage } from "./TransitionUtils"
@@ -19,6 +19,7 @@ interface BaseLinkProps {
 	onMouseLeave?: MouseEventHandler
 	ariaLabel?: string
 	anchor?: string
+	style?: CSSProperties
 }
 
 interface ButtonProps extends BaseLinkProps {

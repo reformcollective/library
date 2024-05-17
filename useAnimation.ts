@@ -1,11 +1,13 @@
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import type { DependencyList } from "react"
-import { startTransition, useEffect, useState } from "react"
+import { startTransition, useEffect, useLayoutEffect, useState } from "react"
 import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./deviceDetection"
 
 let globalRefresh: NodeJS.Timeout | undefined
+
+const defaultHook = isBrowser ? useLayoutEffect : useEffect
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
@@ -26,7 +28,8 @@ let globalRefresh: NodeJS.Timeout | undefined
  * @param options.kill - whether to kill the animation when the component is unmounted, rather than reverting it
  * @param options.recreateOnResize - whether to re-create the animations when the window is resized
  * @param options.extraDeps - any extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
- * @param options.effect - the effect to use (defaults to useEffect)
+ * @param options.dangerouslyOverrideEffect - override the effect to use - changing this may cause issues with unmounting pins! use with caution!
+ * if you're trying to deep compare, a safer solution is to stabilize each of your dependencies with useDeepCompareMemo
  */
 const useAnimation = <F, T>(
 	createAnimations: F extends VoidFunction ? F : () => T,
@@ -36,10 +39,13 @@ const useAnimation = <F, T>(
 		kill?: boolean
 		recreateOnResize?: boolean
 		extraDeps?: DependencyList
-		effect?: (effect: () => void, deps: DependencyList) => void
+		dangerouslyOverrideEffect?: (
+			effect: () => void,
+			deps: DependencyList,
+		) => void
 	},
 ) => {
-	const useEffectToUse = options?.effect ?? useEffect
+	const useEffectToUse = options?.dangerouslyOverrideEffect ?? defaultHook
 	const [resizeSignal, setResizeSignal] = useState(
 		isBrowser && window.innerWidth,
 	)
