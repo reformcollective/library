@@ -235,6 +235,6 @@ export default function ImageSequence({
 }
 
 const Canvas = styled.canvas`
-  width: 100%;
-  height: 100%;
+	width: 100%;
+	height: 100%;
 `

@@ -154,22 +154,22 @@ export default function ConstantMarquee({
 }
 
 const StyledMarquee = styled.div<{ $number: number }>`
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(${({ $number }) => $number}, max-content);
+	position: relative;
+	display: grid;
+	grid-template-columns: repeat(${({ $number }) => $number}, max-content);
 
-  /* always have a width of 100vw by default */
-  width: 100%;
-  left: 50%;
-  translate: -50% 0;
+	/* always have a width of 100vw by default */
+	width: 100%;
+	left: 50%;
+	translate: -50% 0;
 
-  & > div {
-    white-space: pre;
-    will-change: transform;
-    position: absolute;
-  }
+	& > div {
+		white-space: pre;
+		will-change: transform;
+		position: absolute;
+	}
 
-  & > div:first-child {
-    position: relative;
-  }
+	& > div:first-child {
+		position: relative;
+	}
 `

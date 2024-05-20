@@ -47,16 +47,16 @@ export default function PositionFixed({ children }: { children: ReactNode }) {
 }
 
 const Wrapper = styled.div`
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
+	position: fixed;
+	width: 100vw;
+	height: 100vh;
+	pointer-events: none;
 
-  .pin-spacer {
-    pointer-events: none;
-  }
+	.pin-spacer {
+		pointer-events: none;
+	}
 
-  > *:not(.pin-spacer) {
-    pointer-events: auto;
-  }
+	> *:not(.pin-spacer) {
+		pointer-events: auto;
+	}
 `

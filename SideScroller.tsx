@@ -122,35 +122,35 @@ export default function SideScroller({
 }
 
 const Wrapper = styled.section<{ $height: number; $touchscreenMode: boolean }>`
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  height: ${(props) => props.$height}px;
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+	height: ${(props) => props.$height}px;
 
-  ${({ $touchscreenMode }) =>
+	${({ $touchscreenMode }) =>
 		$touchscreenMode &&
 		css`
-      height: fit-content;
-      overflow-x: auto;
-    `}
+			height: fit-content;
+			overflow-x: auto;
+		`}
 `
 
 const Inner = styled.div<{
 	$touchscreenMode: boolean
 }>`
-  position: absolute;
-  width: fit-content;
-  top: 0;
-  left: 0;
+	position: absolute;
+	width: fit-content;
+	top: 0;
+	left: 0;
 
-  > div {
-    width: fit-content;
-  }
+	> div {
+		width: fit-content;
+	}
 
-  ${({ $touchscreenMode }) =>
+	${({ $touchscreenMode }) =>
 		$touchscreenMode &&
 		css`
-      width: fit-content;
-      height: fit-content;
-    `}
+			width: fit-content;
+			height: fit-content;
+		`}
 `

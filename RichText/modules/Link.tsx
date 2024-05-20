@@ -18,5 +18,5 @@ export default function RichLink({ data }: Props) {
 }
 
 const StyledLink = styled(UniversalLink)`
-  text-decoration: underline;
+	text-decoration: underline;
 `
