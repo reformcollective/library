@@ -193,11 +193,25 @@ export default function AutoAnimate({
 			clearProps: "all",
 		})
 
+		// set the width of the slots to prevent text wrap from changing during the animation
+		gsap.set(animateSlotOut.current, {
+			width: animateSlotOut.current?.clientWidth,
+		})
+		gsap.set(animateSlotIn.current, {
+			width: size.width,
+		})
+
 		gsap.to(animateSlotOut.current, {
 			yPercent: -100,
 			ease: "power3.inOut",
 			duration,
 			onComplete: () => {
+				gsap.set(animateSlotOut.current, {
+					width: "auto",
+					// this needs to happen on the *next* frame, otherwise the height will briefly be wrong
+					delay: 0.0001,
+				})
+
 				/**
 				 * clear the unused slot to prevent it from being focusable
 				 */
@@ -216,6 +230,13 @@ export default function AutoAnimate({
 			duration,
 			...parameters,
 			...fromParameters,
+			onComplete: () => {
+				gsap.set(animateSlotIn.current, {
+					width: "auto",
+					// this needs to happen on the *next* frame, otherwise the height will briefly be wrong
+					delay: 0.0001,
+				})
+			},
 		})
 
 		return cleanup
