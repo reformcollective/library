@@ -53,11 +53,11 @@ export default function ScaledContent({
 }
 
 const Outer = styled.div`
-  display: grid;
-  place-items: start;
+	display: grid;
+	place-items: start;
 `
 
 const Inner = styled.div<{ scale: number }>`
-  transform-origin: top left;
-  scale: ${({ scale }) => scale};
+	transform-origin: top left;
+	scale: ${({ scale }) => scale};
 `

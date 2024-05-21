@@ -253,21 +253,21 @@ export default function AutoAnimate({
 const Wrapper = styled.div<{
 	alignment: "start" | "center" | "end"
 }>`
-  overflow: clip;
-  display: grid;
-  align-items: ${(props) => props.alignment};
-  justify-content: ${(props) => props.alignment};
+	overflow: clip;
+	display: grid;
+	align-items: ${(props) => props.alignment};
+	justify-content: ${(props) => props.alignment};
 
-  > * {
-    grid-area: 1 / 1 / 2 / 2;
-    min-width: 100%;
-    min-height: 100%;
-    display: grid;
-    align-items: ${(props) => props.alignment};
-    justify-content: ${(props) => props.alignment};
+	> * {
+		grid-area: 1 / 1 / 2 / 2;
+		min-width: 100%;
+		min-height: 100%;
+		display: grid;
+		align-items: ${(props) => props.alignment};
+		justify-content: ${(props) => props.alignment};
 
-    &:empty {
-      pointer-events: none;
-    }
-  }
+		&:empty {
+			pointer-events: none;
+		}
+	}
 `

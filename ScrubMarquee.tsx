@@ -54,29 +54,29 @@ export default function ScrubMarquee({
 }
 
 const MarqueeWrapper = styled.div`
-  position: relative;
-  display: grid;
-  will-change: transform;
-  width: 200vw;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: pre;
+	position: relative;
+	display: grid;
+	will-change: transform;
+	width: 200vw;
+	left: 50%;
+	transform: translateX(-50%);
+	white-space: pre;
 
-  & > div {
-    white-space: pre;
-    will-change: transform;
-    position: absolute;
-  }
+	& > div {
+		white-space: pre;
+		will-change: transform;
+		position: absolute;
+	}
 
-  & > div:first-child {
-    position: relative;
-  }
+	& > div:first-child {
+		position: relative;
+	}
 
-  ${media.tablet} {
-    left: 20%;
-  }
+	${media.tablet} {
+		left: 20%;
+	}
 
-  ${media.mobile} {
-    left: 0;
-  }
+	${media.mobile} {
+		left: 0;
+	}
 `
