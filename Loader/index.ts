@@ -32,4 +32,7 @@ export const loader = new TypedEventEmitter<{
 	 * @param progress the progress value from 0 to 100
 	 */
 	progressUpdated: [number]
-}>(["end"])
+}>({
+	triggerHappyEvents: ["end"],
+	resetHappyEvents: ["start", "routeChange"],
+})
