@@ -241,6 +241,8 @@ export function useBackButton() {
 	useEventListener("popstate", async () => {
 		loader.dispatchEvent("start", "instant")
 		loader.dispatchEvent("routeChange", "instant")
+		document.body.style.minHeight = "9999vh"
+
 		await pageUnmounted()
 		await pageReady()
 
@@ -251,6 +253,7 @@ export function useBackButton() {
 		window.scrollBy(0, 1)
 		await sleep(500)
 		loader.dispatchEvent("end", "instant")
+		document.body.style.removeProperty("min-height")
 	})
 }
 

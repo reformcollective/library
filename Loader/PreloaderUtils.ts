@@ -46,6 +46,9 @@ const timeNeeded = GET_TIME_NEEDED(startTime)
 let loaderIsDone = false
 export const getLoaderIsDone = () => loaderIsDone
 
+// preserve the scroll position throughout the initial render (page height may change because of pins etc)
+if (isBrowser) document.body.style.minHeight = "9999vh"
+
 /**
  * call all callbacks and set done to true
  */
@@ -108,6 +111,7 @@ async function onComplete() {
 		ScrollTrigger.refresh()
 	})
 	ScrollSmoother.get()?.paused(false)
+	document.body.style.removeProperty("min-height")
 
 	// give refresh time to finish
 	await sleep(50)
