@@ -4,6 +4,7 @@ import type { CSSProperties, MouseEventHandler } from "react"
 
 import type { Transitions } from "."
 import { loadPage } from "./TransitionUtils"
+import { linkIsInternal } from "library/functions"
 
 export type UniversalLinkRef = HTMLButtonElement &
 	(HTMLAnchorElement & Link<unknown>)
@@ -94,7 +95,7 @@ export default function UniversalLink({
 		)
 	}
 
-	const internal = /^\/(?!\/)/.test(to)
+	const internal = linkIsInternal(to)
 
 	const handleClick: React.MouseEventHandler = (e) => {
 		e.preventDefault()

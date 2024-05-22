@@ -3,11 +3,11 @@
 	"version": "1.0.0",
 	"description": "collection of utilities and helpers for reform collective",
 	"dependencies": {
-		"@contentful/rich-text-react-renderer": "^15.19.6",
-		"@contentful/rich-text-types": "^16.3.5",
+		"@contentful/rich-text-react-renderer": "^15.20.0",
+		"@contentful/rich-text-types": "^16.4.0",
 		"@react-three/drei": "^9.105.6",
-		"@react-three/fiber": "^8.16.3",
-		"@types/three": "^0.164.0",
+		"@react-three/fiber": "^8.16.6",
+		"@types/three": "^0.164.1",
 		"ahooks": "^3.7.11",
 		"use-deep-compare": "1.2.1"
 	}

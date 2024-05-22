@@ -1,4 +1,4 @@
-import type { TransitionNames } from "libraryConfig"
+import type { Transitions } from "./Loader"
 
 /**
  * config schema and config defaults for the reform util library
@@ -18,10 +18,16 @@ export type Config = {
 	/**
 	 * the default transition to use if none is specified
 	 */
-	defaultTransition: TransitionNames
+	defaultTransition: Transitions
+	/**
+	 * should the page preserve the scroll position when reloading or when clicking back/forward
+	 */
+	scrollRestoration: boolean
 }
 
 export const defaultConfig = {
+	defaultTransition: "instant",
 	scaleFully: false,
 	getTimeNeeded: (startTime: number) => startTime * 2 + 1000,
+	scrollRestoration: true,
 } as const satisfies Partial<Config>
