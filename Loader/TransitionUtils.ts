@@ -1,18 +1,18 @@
-import gsap from "gsap"
+import { useDeepCompareEffect, useEventListener } from "ahooks"
 import { navigate as gatsbyNavigate } from "gatsby"
+import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
+import ScrollToPlugin from "gsap/ScrollToPlugin"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { linkIsInternal, pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
-import { useDeepCompareEffect, useEventListener } from "ahooks"
 import type { TransitionNames } from "libraryConfig"
 import libraryConfig from "libraryConfig"
+import { startTransition } from "react"
 import { loader } from "."
 import { getLoaderIsDone } from "./PreloaderUtils"
-import ScrollToPlugin from "gsap/ScrollToPlugin"
-import { startTransition } from "react"
-import { getScrollOffset, scrollToAnchor } from "./scrollToAnchor"
 import { allLoaderPromisesSettled } from "./promises"
+import { getScrollOffset, scrollToAnchor } from "./scrollToAnchor"
 
 gsap.registerPlugin(ScrollToPlugin)
 

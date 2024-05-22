@@ -7,8 +7,8 @@ import { isBrowser } from "library/deviceDetection"
 import { loader } from "."
 import { sleep } from "../functions"
 import { pageReady } from "../pageReady"
-import { scrollToAnchor } from "./scrollToAnchor"
 import { allLoaderPromisesSettled } from "./promises"
+import { scrollToAnchor } from "./scrollToAnchor"
 
 /**
  * we get a percentage by simply guessing how long the page will take to load based on
