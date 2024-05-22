@@ -47,9 +47,9 @@ let loaderIsDone = false
 export const getLoaderIsDone = () => loaderIsDone
 
 // preserve the scroll position throughout the initial render (page height may change because of pins etc)
-document.body.style.minHeight = "9999vh"
+if (isBrowser) document.body.style.minHeight = "9999vh"
 const initialScroll = isBrowser ? window.scrollY : 0
-document.body.style.removeProperty("min-height")
+if (isBrowser) document.body.style.removeProperty("min-height")
 
 /**
  * call all callbacks and set done to true
