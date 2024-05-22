@@ -24,6 +24,10 @@ export function pathnameMatches(pathA: string, pathB: string) {
 	return pathA === pathB || pathA === `${pathB}/` || pathB === `${pathA}/`
 }
 
+export function linkIsInternal(to: string) {
+	return /^\/(?!\/)/.test(to) || to.startsWith("#")
+}
+
 export const getRandomInt = (min: number, max: number) => {
 	return Math.floor(Math.random() * (max - min + 1) + min)
 }

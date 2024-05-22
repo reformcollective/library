@@ -1,8 +1,9 @@
 import { useEventListener } from "ahooks"
 import gsap from "gsap"
-import loader, { transitionAwaitPromise } from "library/Loader"
 import { useCallback, useEffect, useRef, useState } from "react"
 import styled from "styled-components"
+import { loader } from "./Loader"
+import { loaderAwaitPromise } from "./Loader/promises"
 
 interface SequenceProps {
 	className?: string
@@ -136,7 +137,7 @@ export default function ImageSequence({
 				.catch(console.error)
 
 			// if this is an auto sequence, the loader should wait for all images to settle (max 5s)
-			if (type === "auto") transitionAwaitPromise(prom)
+			if (type === "auto") loaderAwaitPromise(prom)
 		}
 	}, [createImage, folder, length, type])
 
@@ -197,9 +198,9 @@ export default function ImageSequence({
 						.catch(console.error)
 			}
 
-			loader.addEventListener("anyEnd", onReady)
+			loader.addEventListener("end", onReady)
 			return () => {
-				loader.removeEventListener("anyEnd", onReady)
+				loader.removeEventListener("end", onReady)
 				tween.kill()
 			}
 		}

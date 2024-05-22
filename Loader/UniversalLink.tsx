@@ -1,7 +1,7 @@
 import { Link } from "gatsby"
+import { linkIsInternal } from "library/functions"
 import libraryConfig from "libraryConfig"
 import type { CSSProperties, MouseEventHandler } from "react"
-
 import type { Transitions } from "."
 import { loadPage } from "./TransitionUtils"
 
@@ -94,7 +94,7 @@ export default function UniversalLink({
 		)
 	}
 
-	const internal = /^\/(?!\/)/.test(to)
+	const internal = linkIsInternal(to)
 
 	const handleClick: React.MouseEventHandler = (e) => {
 		e.preventDefault()
