@@ -47,7 +47,9 @@ let loaderIsDone = false
 export const getLoaderIsDone = () => loaderIsDone
 
 // preserve the scroll position throughout the initial render (page height may change because of pins etc)
-if (isBrowser) document.body.style.minHeight = "9999vh"
+document.body.style.minHeight = "9999vh"
+const initialScroll = isBrowser ? window.scrollY : 0
+document.body.style.removeProperty("min-height")
 
 /**
  * call all callbacks and set done to true
@@ -78,6 +80,10 @@ async function onComplete() {
 		ScrollSmoother.get()?.scrollTop(0)
 		ScrollTrigger.refresh()
 		ScrollSmoother.get()?.scrollTop(0)
+	} else {
+		ScrollSmoother.get()?.scrollTop(initialScroll)
+		ScrollTrigger.refresh()
+		ScrollSmoother.get()?.scrollTop(initialScroll)
 	}
 
 	/**
@@ -111,7 +117,7 @@ async function onComplete() {
 		ScrollTrigger.refresh()
 	})
 	ScrollSmoother.get()?.paused(false)
-	document.body.style.removeProperty("min-height")
+	if (!anchor && !isAtTop) ScrollSmoother.get()?.scrollTop(initialScroll)
 
 	// give refresh time to finish
 	await sleep(50)
