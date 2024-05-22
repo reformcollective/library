@@ -1,13 +1,8 @@
 import Primary from "components/Buttons/Primary"
-import { useNavConfig } from "components/Providers/Nav"
+import { useNavConfig } from "./components/Providers/Nav"
 import Seo from "components/Seo"
-import BlogLayout from "components/blog/BlogLayout"
-import Categories from "components/blog/Categories"
-import EmailInput from "components/blog/EmailInput"
-import LargeCard from "components/blog/LargeCard"
-import SmallCard from "components/blog/SmallCard"
-import type { PageProps } from "gatsby"
-import { graphql } from "gatsby"
+import BlogLayout from "./components/BlogLayout"
+import SmallCard from "./components/SmallCard"
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { MobileOnly } from "library/breakpointUtils"
 import { fmobile, fresponsive, ftablet } from "library/fullyResponsive"
@@ -15,10 +10,10 @@ import { useParamState } from "library/useParamState"
 import { useEffect } from "react"
 import styled, { css } from "styled-components"
 import colors from "./styles/template-colors"
-import textStyles from "./styles/template-text"
+import textStyles, { trim } from "./styles/template-text"
 import { useSearchResults } from "./utils/useSearchResults"
 
-export default function BlogPage({ data }: PageProps<Queries.BlogPageQuery>) {
+export default function BlogPage({ data }: { data: typeof dummyQueryResult }) {
 	useNavConfig({ menuDark: true })
 
 	const unfilteredCards = data.allContentfulPageBlogPost.nodes
@@ -89,7 +84,8 @@ export default function BlogPage({ data }: PageProps<Queries.BlogPageQuery>) {
 
 	return (
 		<BlogLayout>
-			{featuredCard && <LargeCard data={featuredCard} />}
+			hello
+			{/* {featuredCard && <LargeCard data={featuredCard} />}
 			<MobileOnly>
 				<Categories />
 			</MobileOnly>
@@ -111,7 +107,7 @@ export default function BlogPage({ data }: PageProps<Queries.BlogPageQuery>) {
 			)}
 			<MobileEmail>
 				<EmailInput />
-			</MobileEmail>
+			</MobileEmail> */}
 		</BlogLayout>
 	)
 }
@@ -184,57 +180,111 @@ const MobileEmail = styled(MobileOnly)`
   `)}
 `
 
-export const query = graphql`
-  query BlogPage {
-    allContentfulPageBlogPost(filter: {id: {ne: "e1d582e5-f8d2-52c5-a1eb-a758ee4a4f72"}} sort: { createdAt: DESC }) {
-      nodes {
-        slug
-        id
-        createdAt(formatString: "MMMM Do, YYYY")
-        author {
-          id
-          photo {
-            gatsbyImageData
-            createdAt
-          }
-          fullName
-          roleAndCompany
-        }
-        title
-        mainImage {
-          gatsbyImageData
-          description
-        }
-        categories
-        articleTextPreview
-        overridePublishedDate(formatString: "MMMM Do, YYYY")
-      }
-    }
-	contentfulBlogHubPage(id: {eq: "915c0af9-dce8-5739-b87b-61d25efdc438"}) {
-		id
-		featuredCaseStudy {
-		slug
-		id
-		createdAt(formatString: "MMMM Do, YYYY")
-		author {
-			id
-			photo {
-			gatsbyImageData
-			createdAt
-			}
-			fullName
-			roleAndCompany
-		}
-		title
-		mainImage {
-			gatsbyImageData
-			description
-		}
-		categories
-		articleTextPreview
-		overridePublishedDate(formatString: "MMMM Do, YYYY")
-		}
-  	}
+// export const query = graphql`
+//   query BlogPage {
+//     allContentfulPageBlogPost(filter: {id: {ne: "e1d582e5-f8d2-52c5-a1eb-a758ee4a4f72"}} sort: { createdAt: DESC }) {
+//       nodes {
+//         slug
+//         id
+//         createdAt(formatString: "MMMM Do, YYYY")
+//         author {
+//           id
+//           photo {
+//             gatsbyImageData
+//             createdAt
+//           }
+//           fullName
+//           roleAndCompany
+//         }
+//         title
+//         mainImage {
+//           gatsbyImageData
+//           description
+//         }
+//         categories
+//         articleTextPreview
+//         overridePublishedDate(formatString: "MMMM Do, YYYY")
+//       }
+//     }
+// 	contentfulBlogHubPage(id: {eq: "915c0af9-dce8-5739-b87b-61d25efdc438"}) {
+// 		id
+// 		featuredCaseStudy {
+// 		slug
+// 		id
+// 		createdAt(formatString: "MMMM Do, YYYY")
+// 		author {
+// 			id
+// 			photo {
+// 			gatsbyImageData
+// 			createdAt
+// 			}
+// 			fullName
+// 			roleAndCompany
+// 		}
+// 		title
+// 		mainImage {
+// 			gatsbyImageData
+// 			description
+// 		}
+// 		categories
+// 		articleTextPreview
+// 		overridePublishedDate(formatString: "MMMM Do, YYYY")
+// 		}
+//   	}
 
-  }
-`
+//   }
+// `
+
+const dummyQueryResult = {
+	allContentfulPageBlogPost: {
+		nodes: [
+			{
+				slug: "example-slug",
+				id: "example-id",
+				createdAt: "January 1st, 2022",
+				author: {
+					id: "author-id",
+					photo: {
+						gatsbyImageData: "example-gatsby-image-data",
+						createdAt: "January 1st, 2022",
+					},
+					fullName: "John Doe",
+					roleAndCompany: "Software Engineer at Example Company",
+				},
+				title: "Example Title",
+				mainImage: {
+					gatsbyImageData: "example-gatsby-image-data",
+					description: "Example Description",
+				},
+				categories: ["Category 1", "Category 2"],
+				articleTextPreview: "This is a preview of the article text.",
+				overridePublishedDate: "January 1st, 2022",
+			},
+		],
+	},
+	contentfulBlogHubPage: {
+		id: "hub-page-id",
+		featuredCaseStudy: {
+			slug: "featured-case-study-slug",
+			id: "featured-case-study-id",
+			createdAt: "January 1st, 2022",
+			author: {
+				id: "author-id",
+				photo: {
+					gatsbyImageData: "example-gatsby-image-data",
+					createdAt: "January 1st, 2022",
+				},
+				fullName: "John Doe",
+				roleAndCompany: "Software Engineer at Example Company",
+			},
+			title: "Featured Case Study Title",
+			mainImage: {
+				gatsbyImageData: "example-gatsby-image-data",
+				description: "Example Description",
+			},
+			categories: ["Category 1", "Category 2"],
+			articleTextPreview: "This is a preview of the featured case study text.",
+			overridePublishedDate: "January 1st, 2022",
+		},
+	},
+}

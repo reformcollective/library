@@ -1,5 +1,5 @@
 // import { graphql, useStaticQuery } from "gatsby"
-import { ReactComponent as CategoryIconSVG } from "images/blog/categoryIcon.svg"
+// import { ReactComponent as CategoryIconSVG } from "images/blog/categoryIcon.svg"
 import UniversalLink from "library/Loader/UniversalLink"
 import { fmobile, fresponsive, ftablet } from "library/fullyResponsive"
 import { useParamState } from "library/useParamState"
@@ -43,7 +43,7 @@ export default function Categories() {
 	return (
 		<Wrapper>
 			<CategoryHeader>
-				<CategoryIcon />
+				{/* <CategoryIcon /> */}
 				Categories
 			</CategoryHeader>
 			{categoriesEls}
@@ -93,12 +93,12 @@ const CategoryHeader = styled.div`
   `)}
 `
 
-const CategoryIcon = styled(CategoryIconSVG)`
-  ${fresponsive(css`
-    width: 18px;
-    height: 18px;
-  `)}
-`
+// const CategoryIcon = styled(CategoryIconSVG)`
+//   ${fresponsive(css`
+//     width: 18px;
+//     height: 18px;
+//   `)}
+// `
 
 const Category = styled(UniversalLink)`
   ${textStyles.bodyS}

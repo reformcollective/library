@@ -1,10 +1,9 @@
-import { useNavConfig } from "components/Providers/Nav"
-import Seo from "components/Seo"
-import PostContent from "components/blog/PostContent"
-import Share from "components/blog/Share"
-import SmallCard from "components/blog/SmallCard"
+import { useNavConfig } from "./components/Providers/Nav"
+// import Seo from "components/Seo"
+import PostContent from "./components/PostContent"
+import Share from "./components/Share"
+import SmallCard from "./components/SmallCard"
 import type { PageProps } from "gatsby"
-import { graphql } from "gatsby"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { ReactComponent as ArrowIconSVG } from "images/blog/blogArrow.svg"
 import UniversalLink from "library/Loader/UniversalLink"
@@ -15,15 +14,15 @@ import useAnimation from "library/useAnimation"
 import { getResponsivePixels } from "library/viewportUtils"
 import { useRef } from "react"
 import styled, { css } from "styled-components"
-import colors from "styles/colors"
-import textStyles from "styles/text"
+import colors from "./styles/template-colors"
+import textStyles from "./styles/template-text"
 
 export default function BlogPostPage({
 	data: {
 		contentfulPageBlogPost: post,
 		allContentfulPageBlogPost: { nodes: recentArticles },
 	},
-}: PageProps<Queries.BlogPostQuery>) {
+}: PageProps<typeof dummyQueryResult>) {
 	useNavConfig({ menuDark: true })
 
 	const pin = useRef<HTMLDivElement>(null)
@@ -75,16 +74,16 @@ export default function BlogPostPage({
 	)
 }
 
-export function Head({ data }: PageProps<Queries.BlogPostQuery>) {
-	return (
-		<Seo
-			title={data.contentfulPageBlogPost?.title}
-			description={data.contentfulPageBlogPost?.articleTextPreview}
-			image={data.contentfulPageBlogPost?.mainImage?.file?.url ?? ""}
-			pathname={`blog/${data.contentfulPageBlogPost?.slug ?? ""}`}
-		/>
-	)
-}
+// export function Head({ data }: PageProps<typeof dummyQueryResult>) {
+// 	return (
+// 		<Seo
+// 			title={data.contentfulPageBlogPost?.title}
+// 			description={data.contentfulPageBlogPost?.articleTextPreview}
+// 			image={data.contentfulPageBlogPost?.mainImage?.file?.url ?? ""}
+// 			pathname={`blog/${data.contentfulPageBlogPost?.slug ?? ""}`}
+// 		/>
+// 	)
+// }
 
 const Wrapper = styled.div`
   ${fresponsive(css`
@@ -183,92 +182,177 @@ const RelatedHeading = styled.div`
   `)}
 `
 
-export const query = graphql`
-  query BlogPost($id: String) {
-    contentfulPageBlogPost(id: { eq: $id }) {
-      title
-      slug
-      articleTextPreview
-      createdAt(formatString: "MMMM Do, YYYY")
-      overridePublishedDate(formatString: "MMMM Do, YYYY")
-      author {
-        id
-        photo {
-          gatsbyImageData
-          createdAt
-        }
-        fullName
-        roleAndCompany
-      }
-      mainImage {
-        file {
-          url
-        }
-        gatsbyImageData
-        description
-      }
-      categories
-      articleText {
-        raw
-        references {
-          ... on ContentfulAsset {
-            contentful_id
-            title
-            description
-            gatsbyImageData(width: 1000)
-            __typename
-          }
-        }
-      }
-      relatedArticles {
-        title
-        slug
-        mainImage {
-          gatsbyImageData
-          description
-        }
-        articleTextPreview
-        overridePublishedDate(formatString: "MMMM Do, YYYY")
-        createdAt(formatString: "MMMM Do, YYYY")
-        author {
-          id
-          photo {
-            gatsbyImageData
-            createdAt
-          }
-          fullName
-          roleAndCompany
-        }
-      }
-    }
-    # get the three most recent blog posts that are not the current post
-    allContentfulPageBlogPost(
-      filter: { id: { nin: [$id, "e1d582e5-f8d2-52c5-a1eb-a758ee4a4f72"] } }
-      sort: { createdAt: DESC }
-      limit: 3
-    ) {
-      nodes {
-        slug
-        id
-        createdAt(formatString: "MMMM Do, YYYY")
-        author {
-          id
-          photo {
-            gatsbyImageData
-            createdAt
-          }
-          fullName
-          roleAndCompany
-        }
-        title
-        mainImage {
-          gatsbyImageData
-          description
-        }
-        categories
-        articleTextPreview
-        overridePublishedDate(formatString: "MMMM Do, YYYY")
-      }
-    }
-  }
-`
+// export const query = graphql`
+//   query BlogPost($id: String) {
+//     contentfulPageBlogPost(id: { eq: $id }) {
+//       title
+//       slug
+//       articleTextPreview
+//       createdAt(formatString: "MMMM Do, YYYY")
+//       overridePublishedDate(formatString: "MMMM Do, YYYY")
+//       author {
+//         id
+//         photo {
+//           gatsbyImageData
+//           createdAt
+//         }
+//         fullName
+//         roleAndCompany
+//       }
+//       mainImage {
+//         file {
+//           url
+//         }
+//         gatsbyImageData
+//         description
+//       }
+//       categories
+//       articleText {
+//         raw
+//         references {
+//           ... on ContentfulAsset {
+//             contentful_id
+//             title
+//             description
+//             gatsbyImageData(width: 1000)
+//             __typename
+//           }
+//         }
+//       }
+//       relatedArticles {
+//         title
+//         slug
+//         mainImage {
+//           gatsbyImageData
+//           description
+//         }
+//         articleTextPreview
+//         overridePublishedDate(formatString: "MMMM Do, YYYY")
+//         createdAt(formatString: "MMMM Do, YYYY")
+//         author {
+//           id
+//           photo {
+//             gatsbyImageData
+//             createdAt
+//           }
+//           fullName
+//           roleAndCompany
+//         }
+//       }
+//     }
+//     # get the three most recent blog posts that are not the current post
+//     allContentfulPageBlogPost(
+//       filter: { id: { nin: [$id, "e1d582e5-f8d2-52c5-a1eb-a758ee4a4f72"] } }
+//       sort: { createdAt: DESC }
+//       limit: 3
+//     ) {
+//       nodes {
+//         slug
+//         id
+//         createdAt(formatString: "MMMM Do, YYYY")
+//         author {
+//           id
+//           photo {
+//             gatsbyImageData
+//             createdAt
+//           }
+//           fullName
+//           roleAndCompany
+//         }
+//         title
+//         mainImage {
+//           gatsbyImageData
+//           description
+//         }
+//         categories
+//         articleTextPreview
+//         overridePublishedDate(formatString: "MMMM Do, YYYY")
+//       }
+//     }
+//   }
+// `
+
+const dummyQueryResult = {
+	contentfulPageBlogPost: {
+		title: "Example Title",
+		slug: "example-slug",
+		articleTextPreview: "This is a preview of the article text.",
+		createdAt: "January 1, 2022",
+		overridePublishedDate: "January 1, 2022",
+		author: {
+			id: "author-id",
+			photo: {
+				gatsbyImageData: "example-gatsby-image-data",
+				createdAt: "January 1, 2022",
+			},
+			fullName: "John Doe",
+			roleAndCompany: "Software Engineer at Example Company",
+		},
+		mainImage: {
+			file: {
+				url: "example-url",
+			},
+			gatsbyImageData: "example-gatsby-image-data",
+			description: "Example Description",
+		},
+		categories: ["Category 1", "Category 2"],
+		articleText: {
+			raw: "This is the raw article text.",
+			references: [
+				{
+					contentful_id: "contentful-id",
+					title: "Example Title",
+					description: "Example Description",
+					gatsbyImageData: "example-gatsby-image-data",
+					__typename: "ContentfulAsset",
+				},
+			],
+		},
+		relatedArticles: [
+			{
+				title: "Related Article Title",
+				slug: "related-article-slug",
+				mainImage: {
+					gatsbyImageData: "example-gatsby-image-data",
+					description: "Example Description",
+				},
+				articleTextPreview: "This is a preview of the related article text.",
+				overridePublishedDate: "January 1, 2022",
+				createdAt: "January 1, 2022",
+				author: {
+					id: "author-id",
+					photo: {
+						gatsbyImageData: "example-gatsby-image-data",
+						createdAt: "January 1, 2022",
+					},
+					fullName: "John Doe",
+					roleAndCompany: "Software Engineer at Example Company",
+				},
+			},
+		],
+	},
+	allContentfulPageBlogPost: {
+		nodes: [
+			{
+				title: "Recent Article Title",
+				slug: "recent-article-slug",
+				mainImage: {
+					gatsbyImageData: "example-gatsby-image-data",
+					description: "Example Description",
+				},
+				articleTextPreview: "This is a preview of the recent article text.",
+				overridePublishedDate: "January 1, 2022",
+				createdAt: "January 1, 2022",
+				author: {
+					id: "author-id",
+					photo: {
+						gatsbyImageData: "example-gatsby-image-data",
+						createdAt: "January 1, 2022",
+					},
+					fullName: "John Doe",
+					roleAndCompany: "Software Engineer at Example Company",
+				},
+			},
+		],
+	},
+}

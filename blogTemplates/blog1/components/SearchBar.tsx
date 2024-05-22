@@ -1,5 +1,5 @@
-import { ReactComponent as ClearIconSVG } from "images/blog/clearFilterIcon.svg"
-import { ReactComponent as SearchIconSVG } from "images/blog/search.svg"
+// import { ReactComponent as ClearIconSVG } from "images/blog/clearFilterIcon.svg"
+// import { ReactComponent as SearchIconSVG } from "images/blog/search.svg"
 import UniversalLink from "library/Loader/UniversalLink"
 import { fmobile, fresponsive } from "library/fullyResponsive"
 import { useParamState } from "library/useParamState"

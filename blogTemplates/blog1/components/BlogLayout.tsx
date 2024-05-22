@@ -11,7 +11,7 @@ import colors from "../styles/template-colors"
 import textStyles from "../styles/template-text"
 
 import Categories from "./Categories"
-import EmailInput from "./EmailInput"
+// import EmailInput from "./EmailInput"
 import SearchBar from "./SearchBar"
 
 export default function BlogLayout({ children }: { children: ReactNode }) {
@@ -57,7 +57,7 @@ export default function BlogLayout({ children }: { children: ReactNode }) {
 				<Left>
 					<div ref={pin}>
 						<Categories />
-						<EmailInput />
+						{/* <EmailInput /> */}
 					</div>
 				</Left>
 				<Right>{children}</Right>
