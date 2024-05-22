@@ -77,6 +77,9 @@ export const loadPage = async (
 	) {
 		ScrollSmoother.get()?.paused(false)
 
+		// save the anchor to the URL
+		window.history.replaceState({}, "", navigateTo)
+
 		// scroll to anchor if applicable, otherwise scroll to top
 		if (anchorName) {
 			const scrollOffset = getScrollOffset(anchorName)
