@@ -26,6 +26,8 @@ export const scrollToAnchor = async (anchor: string) => {
 	let missingAnchorCount = 0
 
 	const attemptsNeeded = 20
+	const scrollForAtLeastMs = 400
+	const scrollUntil = Date.now() + scrollForAtLeastMs
 
 	return new Promise<void>((resolve) => {
 		const check = () => {
@@ -53,7 +55,7 @@ export const scrollToAnchor = async (anchor: string) => {
 				goodAttemptCount = 0
 			}
 
-			if (goodAttemptCount > attemptsNeeded) {
+			if (goodAttemptCount > attemptsNeeded && Date.now() < scrollUntil) {
 				requestAnimationFrame(() => resolve())
 			} else {
 				requestAnimationFrame(check)
