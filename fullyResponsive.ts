@@ -52,7 +52,7 @@ export default function fullyResponsive(
 					(_, px: string) => `${replacer(px, designSizes[only])}vw`,
 				)}
 			}
-    	`
+		`
 	}
 
 	/**
@@ -61,7 +61,7 @@ export default function fullyResponsive(
 	return css`
 		/* static pixel values (as a baseline) */
 		${cssAsString}
-		
+
 		/* convert full width values (not including smaller desktops that would always scale) */
 		${media.fullWidth} {
 			${
@@ -82,7 +82,7 @@ export default function fullyResponsive(
 						)
 			}
 		}
-		
+
 		/* convert desktop values (not including full width) */
 		${media.desktop} {
 			${onlyPxValues.replaceAll(
