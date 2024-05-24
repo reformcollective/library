@@ -34,7 +34,7 @@ export const refreshScrollLocks = () => {
  * lock and unlock the scroller, without interfering with other tools that also lock the scroller
  *
  * you can can either lock the scrolling
- * or override to unlock scrolling (even if locks exist)
+ * or force to unlock scrolling (even if locks exist)
  */
 export const createScrollLock = (type: "lock" | "unlock" = "lock") => {
 	const lockId = Symbol(`scroll-${type}`)
@@ -63,18 +63,21 @@ export const createScrollLock = (type: "lock" | "unlock" = "lock") => {
  * locks are also automatically released on unmount
  *
  * you can can either lock the scrolling
- * or override to unlock scrolling (even if locks exist)
+ * or force to unlock scrolling (even if locks exist)
+ *
+ * you can also set the value via the second argument if you have external state
  */
-export const useScrollLock = (type: "lock" | "unlock") => {
+export const useScrollLock = (type: "lock" | "unlock", value?: boolean) => {
 	const [locked, setLocked] = useState(false)
+	const shouldLock = value ?? locked
 
 	useEffect(() => {
-		if (locked) {
+		if (shouldLock) {
 			const lock = createScrollLock(type)
 
 			return () => lock.release()
 		}
-	}, [type, locked])
+	}, [type, shouldLock])
 
 	return [locked, setLocked] as const
 }
