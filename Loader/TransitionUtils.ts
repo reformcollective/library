@@ -4,6 +4,7 @@ import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import ScrollToPlugin from "gsap/ScrollToPlugin"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { createScrollLock } from "library/Scroll"
 import { linkIsInternal, pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import type { TransitionNames } from "libraryConfig"
@@ -75,26 +76,38 @@ export const loadPage = async (
 		navigateTo.startsWith("#") ||
 		pathnameMatches(pathname, window.location.pathname)
 	) {
-		ScrollSmoother.get()?.paused(false)
+		const scrollLock = createScrollLock("unlock")
 
 		// save the anchor to the URL
 		window.history.replaceState({}, "", navigateTo)
 
 		// scroll to anchor if applicable, otherwise scroll to top
-		if (anchorName) {
-			const scrollOffset = getScrollOffset(anchorName)
-			gsap.to(window, {
-				scrollTo: { y: anchorName, offsetY: scrollOffset },
-				duration: 0.4,
-			})
-			loader.dispatchEvent("scroll", anchorName)
-		} else {
-			window.scrollTo({
-				top: 0,
-				behavior: "smooth",
-			})
-			loader.dispatchEvent("scroll", null)
+		const scrollTo = (smooth: boolean) => {
+			if (anchorName) {
+				const scrollOffset = getScrollOffset(anchorName)
+				ScrollSmoother.get()?.scrollTo(
+					anchorName,
+					smooth,
+					`top top+=${scrollOffset}`,
+				)
+				loader.dispatchEvent("scroll", anchorName)
+			} else {
+				ScrollSmoother.get()?.scrollTo(0, smooth)
+				loader.dispatchEvent("scroll", null)
+			}
 		}
+
+		scrollTo(true)
+		const smooth = ScrollSmoother.get()?.smooth() ?? 0
+		gsap.delayedCall(smooth, () => {
+			scrollLock.release()
+
+			if (ScrollSmoother.get()?.paused()) {
+				ScrollSmoother.get()?.paused(false)
+				scrollTo(false)
+				ScrollSmoother.get()?.paused(true)
+			}
+		})
 
 		return
 	}
@@ -111,7 +124,8 @@ export const loadPage = async (
 		navigate(navigateTo)
 		await pageUnmounted()
 		await pageReady()
-		ScrollSmoother.get()?.paused(false)
+
+		const scrollLock = createScrollLock("unlock")
 
 		// scroll to anchor if applicable, otherwise scroll to top
 		if (anchorName) {
@@ -120,6 +134,8 @@ export const loadPage = async (
 			ScrollSmoother.get()?.scrollTo(0, false)
 			window.scrollTo(0, 1)
 		}
+
+		scrollLock.release()
 
 		loader.dispatchEvent("end", "instant")
 		return
@@ -148,11 +164,11 @@ export const loadPage = async (
 
 	// dispatch events
 	loader.dispatchEvent("start", transition)
-	ScrollSmoother.get()?.paused(true)
 
 	// wait for entrance animation to finish
 	await sleep(entranceDuration * 1000)
 	loader.dispatchEvent("routeChange", transition)
+	const scrollLock = createScrollLock()
 
 	// actually navigate to the page
 	navigate(navigateTo, () => {
@@ -190,7 +206,7 @@ export const loadPage = async (
 
 	// dispatch finished events
 	loader.dispatchEvent("end", transition)
-	ScrollSmoother.get()?.paused(false)
+	scrollLock.release()
 	ScrollTrigger.refresh()
 
 	// cleanup and reset

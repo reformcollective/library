@@ -3,6 +3,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 import libraryConfig from "libraryConfig"
 
 import { useDeepCompareEffect } from "ahooks"
+import { createScrollLock } from "library/Scroll"
 import { isBrowser } from "library/deviceDetection"
 import { loader } from "."
 import { sleep } from "../functions"
@@ -50,6 +51,8 @@ export const getLoaderIsDone = () => loaderIsDone
 if (isBrowser) document.body.style.minHeight = "9999vh"
 const initialScroll = isBrowser ? window.scrollY : 0
 if (isBrowser) document.body.style.removeProperty("min-height")
+
+const initialScrollLock = createScrollLock()
 
 /**
  * call all callbacks and set done to true
@@ -116,7 +119,7 @@ async function onComplete() {
 	requestAnimationFrame(() => {
 		ScrollTrigger.refresh()
 	})
-	ScrollSmoother.get()?.paused(false)
+	initialScrollLock.release()
 	if (!anchor && !isAtTop) ScrollSmoother.get()?.scrollTop(initialScroll)
 
 	// give refresh time to finish

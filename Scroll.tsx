@@ -1,8 +1,9 @@
 import { gsap } from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { pageReady, pageUnmounted } from "library/pageReady"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
+import TypedEventEmitter from "./TypedEventEmitter"
 import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./deviceDetection"
 
@@ -20,6 +21,65 @@ interface ScrollProps {
 	mobileResize?: boolean
 	className?: string
 	options?: Omit<ScrollSmoother.Vars, IgnoredOptions>
+}
+
+const locks: symbol[] = []
+const locksChange = new TypedEventEmitter<{ change: [] }>()
+
+export const refreshScrollLocks = () => {
+	locksChange.dispatchEvent("change")
+}
+
+/**
+ * lock and unlock the scroller, without interfering with other tools that also lock the scroller
+ *
+ * you can can either lock the scrolling
+ * or force to unlock scrolling (even if locks exist)
+ */
+export const createScrollLock = (type: "lock" | "unlock" = "lock") => {
+	const lockId = Symbol(`scroll-${type}`)
+
+	locks.push(lockId)
+	locksChange.dispatchEvent("change")
+
+	return {
+		/**
+		 * you can call this multiple times without issue if it's more convenient
+		 */
+		release: () => {
+			const index = locks.indexOf(lockId)
+
+			if (index >= 0) {
+				locks.splice(index, 1)
+				locksChange.dispatchEvent("change")
+			}
+		},
+	}
+}
+
+/**
+ * lock and unlock the scroller, without interfering with other tools that also lock the scroller
+ * plus some react state sugar for scroll locking to make it easier to use
+ * locks are also automatically released on unmount
+ *
+ * you can can either lock the scrolling
+ * or force to unlock scrolling (even if locks exist)
+ *
+ * you can also set the value via the second argument if you have external state
+ */
+export const useScrollLock = (type: "lock" | "unlock", value?: boolean) => {
+	const [locked, setLocked] = useState(false)
+	const shouldLock = value ?? locked
+
+	useEffect(() => {
+		if (shouldLock) {
+			const lock = createScrollLock(type)
+
+			return () => lock.release()
+		}
+	}, [type, shouldLock])
+
+	return [locked, setLocked] as const
 }
 
 /**
@@ -89,20 +149,8 @@ export default function Scroll({
 	options,
 }: ScrollProps) {
 	const isSmooth = useIsSmooth()
-	const isPaused = useRef(true)
 	const [refreshSignal, setRefreshSignal] = useState(0)
 	const stableOptions = useDeepCompareMemo(() => options, [options])
-
-	// sometimes the smoother gets paused during HMR, so its helpful to unpause it
-	useEffect(() => {
-		if (
-			window.location.hostname === "localhost" &&
-			performance.now() > 10_000
-		) {
-			isPaused.current = false
-			ScrollSmoother.get()?.paused(false)
-		}
-	})
 
 	/**
 	 * create the smoother
@@ -134,11 +182,6 @@ export default function Scroll({
 			},
 		})
 
-		setTimeout(() => {
-			// persist paused state across re-renders
-			smoother.paused(isPaused.current)
-		}, 0)
-
 		// to avoid flashing when smoother across re-renders, set the smooth level after a short delay
 		const smoothLevel =
 			typeof stableOptions?.smooth === "number" ? stableOptions.smooth : 1
@@ -150,7 +193,6 @@ export default function Scroll({
 		)
 
 		return () => {
-			isPaused.current = smoother.paused()
 			smoother.kill()
 		}
 	}, [isSmooth, mobileResize, refreshSignal])
@@ -174,6 +216,29 @@ export default function Scroll({
 			window.removeEventListener("popstate", killSmoother)
 		}
 	}, [])
+
+	/**
+	 * pull state from the scroll locks
+	 */
+	useEffect(() => {
+		const onChange = () => {
+			const smoother = ScrollSmoother.get()
+			const unlockers = locks.find(
+				(lock) => lock.description === "scroll-unlock",
+			)
+			const lockers = locks.find((lock) => lock.description === "scroll-lock")
+
+			if (unlockers) smoother?.paused(false)
+			else if (lockers) smoother?.paused(true)
+			else smoother?.paused(false)
+		}
+		onChange()
+
+		locksChange.addEventListener("change", onChange)
+		return () => {
+			locksChange.removeEventListener("change", onChange)
+		}
+	})
 
 	return (
 		<div className={className} id="smooth-wrapper">
