@@ -1,10 +1,13 @@
-import Icon from "components/Icon"
-import UniversalLink from "library/Loader/UniversalLink"
+import { ReactComponent as Icon } from "../images/icons/x.svg"
 import { fmobile, fresponsive } from "library/fullyResponsive"
+import UniversalLink from "library/Loader/UniversalLink"
 import { useParamState } from "library/useParamState"
 import styled, { css } from "styled-components"
-import colors from "styles/colors"
-import textStyles from "styles/text"
+
+import { projectTextStyles as textStyles } from "../blogConfig/templateText"
+import { blogConfig as data } from "../blogConfig/data"
+
+const colors = data.projectColors
 
 export default function ClearButton() {
 	const [category, setCategory] = useParamState("category")
@@ -21,7 +24,7 @@ export default function ClearButton() {
 						setShowAll(null)
 					}}
 				>
-					<ClearIcon name="x" />
+					<ClearIcon />
 					Clear Filters / Search
 				</Wrapper>
 			) : null}
@@ -31,7 +34,7 @@ export default function ClearButton() {
 
 const Wrapper = styled(UniversalLink)`
   ${textStyles.sh4}
-  color: ${colors.gray800};
+  color: ${colors.neutral800};
 
   ${fresponsive(css`
     display: flex;
@@ -48,7 +51,7 @@ const Wrapper = styled(UniversalLink)`
 
 const ClearIcon = styled(Icon)`
   path {
-    stroke: ${colors.black};
+    stroke: ${colors.neutralBlack};
   }
 
   ${fresponsive(css`
@@ -56,59 +59,3 @@ const ClearIcon = styled(Icon)`
     height: 16px;
   `)}
 `
-
-// TODO:
-// remove icon
-// remove colors
-// remove textStyles
-
-// Colors used:
-// Author: gray800
-// BlogLayout: green400, white, gray100, gray700, gray300
-// Categories: gray300, black, gray800
-// ClearButton: black and gray800
-// EmailInput: gray100, white, gray600
-// LargeCard: gray300 and gray700
-// PostContent: gray300, gray200, gray700
-// RichComponents: gray900, gray700, gray500, gray200, gray800
-// SearchBar: gray100, gray800
-// Share and SmallCard: none
-// index: gray700, gray900, gray300
-// contentfulPageBlogPost: white, gray800, green400, gray300, gray600, gray700
-
-// Plan:
-// 1. Hub
-//   a. Large card
-//   b. Small card
-//   c. Categories
-//   d. Search bar
-//   e. email input
-//   f. header
-// 2. Articles
-//   a. postContent
-//   b. share
-// 3. add placeholder button
-
-// {
-//   fakeQueryData: {
-//     a blog post
-//   },
-//   blogcolors: {
-//     primary:
-//   }
-//   textStyles: {
-//     1: "",
-//     2: ""
-//   }
-// }
-
-// project
-// - copied blog hub tamplate page
-// - copied article template page
-// - copied data object / config file
-
-// library
-// - components (shouldnt change)
-// - blog hub tamplate page
-// - article template page
-// - data object / config file
