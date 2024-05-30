@@ -18,6 +18,13 @@ interface MarqueeProps {
 	 */
 	reversed?: boolean
 	/**
+	 * Does the element need to be paused before starting?
+	 *
+	 * Useful to control in cases where transforms are happening that could impact scrollTriggers
+	 *
+	 */
+	paused?: boolean
+	/**
 	 * How much extra buffer (in pixels) should be maintained offscreen?
 	 *
 	 * useful for when you need a marquee wider than the screen (eg an animated one)
@@ -31,6 +38,7 @@ export default function ConstantMarquee({
 	timing = 20,
 	buffer = 0,
 	reversed = false,
+	paused = false,
 }: MarqueeProps) {
 	const marquee = useRef<HTMLDivElement>(null)
 	const currWidth = useRef(0)
@@ -39,7 +47,7 @@ export default function ConstantMarquee({
 
 	useAnimation(
 		() => {
-			if (!marquee.current) return
+			if (!marquee.current || paused) return
 
 			/**
 			 * give each child an initial x position
@@ -95,7 +103,7 @@ export default function ConstantMarquee({
 					)
 			}
 		},
-		[array, timing, reversed],
+		[array, timing, reversed, paused],
 		{
 			kill: true,
 			recreateOnResize: true,
@@ -104,6 +112,7 @@ export default function ConstantMarquee({
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we want specific control of when this refreshes
 	useEffect(() => {
+		if (paused) return
 		/**
 		 * calculate how many children we need to fill the screen
 		 */
@@ -140,7 +149,7 @@ export default function ConstantMarquee({
 			remove()
 			observer.disconnect()
 		}
-	}, [buffer, children])
+	}, [buffer, children, paused])
 
 	return (
 		<StyledMarquee ref={marquee} $number={array.length} className={className}>
