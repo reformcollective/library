@@ -1,5 +1,6 @@
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { refreshScrollLocks } from "library/Scroll"
 
 /**
  * returns the scroll offset of a given anchor by extracting it from the anchor element
@@ -55,6 +56,7 @@ export const scrollToAnchor = async (anchor: string) => {
 
 			if (goodAttemptCount > attemptsNeeded) {
 				requestAnimationFrame(() => resolve())
+				requestAnimationFrame(refreshScrollLocks)
 			} else {
 				requestAnimationFrame(check)
 			}
