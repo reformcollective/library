@@ -99,7 +99,7 @@ export default function ConstantMarquee({
 				if (first instanceof HTMLElement)
 					offset.current = Number.parseInt(
 						gsap.getProperty(first, "x").toString(),
-						10
+						10,
 					)
 			}
 		},
@@ -107,7 +107,7 @@ export default function ConstantMarquee({
 		{
 			kill: true,
 			recreateOnResize: true,
-		}
+		},
 	)
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we want specific control of when this refreshes
@@ -119,7 +119,7 @@ export default function ConstantMarquee({
 		const update = () => {
 			if (marquee.current) {
 				const width = Math.max(
-					...[...marquee.current.children].map((child) => child.clientWidth)
+					...[...marquee.current.children].map((child) => child.clientWidth),
 				)
 
 				if (width !== currWidth.current) {
