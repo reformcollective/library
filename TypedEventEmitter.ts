@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 type Listener<T extends unknown[]> = (...args: T) => void
 
@@ -80,11 +80,18 @@ export default class TypedEventEmitter<
 		eventName: K,
 		listener: Listener<EventMap[K]>,
 	) {
+		const latestListener = useRef(listener)
+		latestListener.current = listener
+
 		useEffect(() => {
-			this.addEventListener(eventName, listener)
-			return () => {
-				this.removeEventListener(eventName, listener)
+			const onFire = (...params: EventMap[K]) => {
+				latestListener.current(...params)
 			}
-		}, [eventName, listener])
+
+			this.addEventListener(eventName, onFire)
+			return () => {
+				this.removeEventListener(eventName, onFire)
+			}
+		}, [eventName])
 	}
 }
