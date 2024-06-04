@@ -25,5 +25,7 @@ export default function UniversalImage({
 
 	const imageToUse =
 		"childImageSharp" in image ? image.childImageSharp?.gatsbyImageData : image
-	return imageToUse ? <GatsbyImage image={imageToUse} {...props} /> : null
+	return imageToUse ? (
+		<GatsbyImage loading="lazy" image={imageToUse} {...props} />
+	) : null
 }
