@@ -94,7 +94,6 @@ async function onComplete() {
 	 */
 	const anchor = window.location.hash
 	if (anchor) {
-		console.log(anchor)
 		await scrollToAnchor(anchor)
 	}
 
