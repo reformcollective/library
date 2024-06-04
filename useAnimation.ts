@@ -1,7 +1,7 @@
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import type { DependencyList } from "react"
-import { startTransition, useEffect, useLayoutEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useState } from "react"
 import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./deviceDetection"
 
@@ -49,7 +49,6 @@ const useAnimation = <F, T>(
 	const [resizeSignal, setResizeSignal] = useState(
 		isBrowser && window.innerWidth,
 	)
-	const [firstRender, setFirstRender] = useState(true)
 	const extraDeps = options?.extraDeps ?? []
 
 	type ReturnType =
@@ -90,9 +89,6 @@ const useAnimation = <F, T>(
 	}, [options?.recreateOnResize])
 
 	useEffectToUse(() => {
-		if (isBrowser) startTransition(() => setFirstRender(false))
-		if (firstRender) return
-
 		// create animations using a gsap context so they can be reverted easily
 		const ctx = gsap.context(() => {
 			const result = createAnimations()
@@ -111,14 +107,7 @@ const useAnimation = <F, T>(
 				ctx.kill()
 			} else ctx.revert()
 		}
-	}, [
-		options?.kill,
-		options?.scope,
-		firstRender,
-		resizeSignal,
-		...deps,
-		...extraDeps,
-	])
+	}, [options?.kill, options?.scope, resizeSignal, ...deps, ...extraDeps])
 
 	return returnValue
 }
