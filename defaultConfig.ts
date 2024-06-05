@@ -23,6 +23,10 @@ export type Config = {
 	 * should the page preserve the scroll position when reloading or when clicking back/forward
 	 */
 	scrollRestoration: boolean
+	/**
+	 * should anchor names be saved to the URL? when e.g. scrolling to a section
+	 */
+	saveAnchorNames: boolean
 }
 
 export const defaultConfig = {
@@ -30,4 +34,5 @@ export const defaultConfig = {
 	scaleFully: false,
 	getTimeNeeded: (startTime: number) => startTime * 2 + 1000,
 	scrollRestoration: true,
-} as const satisfies Partial<Config>
+	saveAnchorNames: true,
+} as const satisfies Exclude<Config, "defaultTransition">

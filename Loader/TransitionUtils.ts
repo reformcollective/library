@@ -79,7 +79,8 @@ export const loadPage = async (
 		const scrollLock = createScrollLock("unlock")
 
 		// save the anchor to the URL
-		window.history.replaceState({}, "", navigateTo)
+		if (libraryConfig.saveAnchorNames)
+			window.history.replaceState({}, "", navigateTo)
 
 		// scroll to anchor if applicable, otherwise scroll to top
 		const scrollTo = (smooth: boolean) => {
