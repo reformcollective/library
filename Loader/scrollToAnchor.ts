@@ -1,7 +1,6 @@
 import ScrollSmoother from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { refreshScrollLocks } from "library/Scroll"
-import libraryConfig from "libraryConfig"
 
 /**
  * returns the scroll offset of a given anchor by extracting it from the anchor element
@@ -64,12 +63,5 @@ export const scrollToAnchor = async (anchor: string) => {
 		}
 
 		check()
-	}).then(() => {
-		// scrub the anchor from the URL if needed
-		if (!libraryConfig.saveAnchorNames) {
-			const newURL = new URL(window.location.href)
-			newURL.hash = ""
-			window.history.replaceState({}, "", newURL.toString())
-		}
 	})
 }

@@ -240,6 +240,15 @@ const navigate = (to: string, cleanupFunction?: VoidFunction) => {
 		startTransition(() => {
 			gatsbyNavigate(to)
 		})
+
+		pageUnmounted().then(() => {
+			// scrub the anchor from the URL if needed
+			if (!libraryConfig.saveAnchorNames) {
+				const newURL = new URL(window.location.href)
+				newURL.hash = ""
+				window.history.replaceState({}, "", newURL.toString())
+			}
+		})
 	}
 }
 
