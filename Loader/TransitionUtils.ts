@@ -237,17 +237,15 @@ const navigate = (to: string, cleanupFunction?: VoidFunction) => {
 			cleanupFunction?.()
 		}, 1000)
 	} else {
-		startTransition(() => {
-			gatsbyNavigate(to)
-		})
+		const destination = new URL(to, window.location.origin)
 
-		pageUnmounted().then(() => {
-			// scrub the anchor from the URL if needed
-			if (!libraryConfig.saveAnchorNames) {
-				const newURL = new URL(window.location.href)
-				newURL.hash = ""
-				window.history.replaceState({}, "", newURL.toString())
-			}
+		// scrub the hash from the URL if needed
+		if (!libraryConfig.saveAnchorNames) {
+			destination.hash = ""
+		}
+
+		startTransition(() => {
+			gatsbyNavigate(destination.toString())
 		})
 	}
 }
