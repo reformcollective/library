@@ -5,7 +5,7 @@ import ScrollSmoother from "gsap/ScrollSmoother"
 import ScrollToPlugin from "gsap/ScrollToPlugin"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { createScrollLock } from "library/Scroll"
-import { linkIsInternal, pathnameMatches, sleep } from "library/functions"
+import { linkIsExternal, pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import type { TransitionNames } from "libraryConfig"
 import libraryConfig from "libraryConfig"
@@ -79,7 +79,8 @@ export const loadPage = async (
 		const scrollLock = createScrollLock("unlock")
 
 		// save the anchor to the URL
-		window.history.replaceState({}, "", navigateTo)
+		if (libraryConfig.saveAnchorNames)
+			window.history.replaceState({}, "", navigateTo)
 
 		// scroll to anchor if applicable, otherwise scroll to top
 		const scrollTo = (smooth: boolean) => {
@@ -226,7 +227,7 @@ export const loadPage = async (
  * @param cleanupFunction a function to reset the page to its original state (if back button is pressed after external link)
  */
 const navigate = (to: string, cleanupFunction?: VoidFunction) => {
-	const isExternal = !linkIsInternal(to)
+	const isExternal = linkIsExternal(to)
 
 	if (isExternal) {
 		window.open(to)
@@ -236,8 +237,15 @@ const navigate = (to: string, cleanupFunction?: VoidFunction) => {
 			cleanupFunction?.()
 		}, 1000)
 	} else {
+		const destination = new URL(to, window.location.origin)
+
+		// scrub the hash from the URL if needed
+		if (!libraryConfig.saveAnchorNames) {
+			destination.hash = ""
+		}
+
 		startTransition(() => {
-			gatsbyNavigate(to)
+			gatsbyNavigate(destination.toString())
 		})
 	}
 }
