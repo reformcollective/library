@@ -1,4 +1,3 @@
-import { addDebouncedEventListener } from "library/functions"
 import {
 	createContext,
 	startTransition,
@@ -12,6 +11,7 @@ import {
 	tabletBreakpoint as tablet,
 } from "styles/media"
 import { isBrowser } from "./deviceDetection"
+import { useEventListener } from "ahooks"
 
 /**
  * Gives easy access to media queries
@@ -31,24 +31,20 @@ export function ScreenProvider({ children }: Props) {
 	const [fw, setFw] = useState<boolean>(false)
 	const [d, setD] = useState<boolean>(false)
 	const [t, setT] = useState<boolean>(false)
-	const [m, setM] = useState<boolean>(false)
+	const [m, setM] = useState<boolean>(true)
 
-	useEffect(() => {
-		if (isBrowser) {
-			const setScreenContext = () => {
-				startTransition(() => {
-					setM(window.innerWidth <= mobile)
-					setT(window.innerWidth > mobile && window.innerWidth <= tablet)
-					setD(window.innerWidth > tablet && window.innerWidth <= desktop)
-					setFw(window.innerWidth > desktop)
-				})
-			}
+	const setScreenContext = () => {
+		if (isBrowser)
+			startTransition(() => {
+				setM(window.innerWidth <= mobile)
+				setT(window.innerWidth > mobile && window.innerWidth <= tablet)
+				setD(window.innerWidth > tablet && window.innerWidth <= desktop)
+				setFw(window.innerWidth > desktop)
+			})
+	}
 
-			setScreenContext()
-
-			return addDebouncedEventListener(window, "resize", setScreenContext, 100)
-		}
-	}, [])
+	useEffect(setScreenContext)
+	useEventListener("resize", setScreenContext)
 
 	const screenValue = useMemo(() => {
 		return { fullWidth: fw, desktop: d, tablet: t, mobile: m }
