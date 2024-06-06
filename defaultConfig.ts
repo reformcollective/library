@@ -35,4 +35,4 @@ export const defaultConfig = {
 	getTimeNeeded: (startTime: number) => startTime * 2 + 1000,
 	scrollRestoration: true,
 	saveAnchorNames: true,
-} as const satisfies Exclude<Config, "defaultTransition">
+} as const satisfies Partial<Config>
