@@ -1,281 +1,224 @@
+import { useDeepCompareEffect, useEventListener } from "ahooks"
 import { navigate as gatsbyNavigate } from "gatsby"
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
+import ScrollToPlugin from "gsap/ScrollToPlugin"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { pathnameMatches, sleep } from "library/functions"
+import { createScrollLock } from "library/Scroll"
+import { linkIsExternal, pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
-import { useEffect } from "react"
+import type { TransitionNames } from "libraryConfig"
+import libraryConfig from "libraryConfig"
+import { startTransition } from "react"
+import { loader } from "."
+import { getLoaderIsDone } from "./PreloaderUtils"
+import { allLoaderPromisesSettled } from "./promises"
+import { getScrollOffset, scrollToAnchor } from "./scrollToAnchor"
 
-import type { InternalTransitions, Transitions } from "."
-import loader, { promisesToAwait, recursiveAllSettled } from "."
-import { getLoaderIsDone } from "./LoaderUtils"
+gsap.registerPlugin(ScrollToPlugin)
 
-const pushPage = (to: string) => {
-  // the type of the gatsby navigate function is incorrect
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
-  gatsbyNavigate(to)
-}
-
-/**
- * A function that runs an animation and returns the duration of that animation in seconds
- */
+type LoaderTransitions = TransitionNames | "instant"
 interface Animation {
-  callback: VoidFunction
-  duration: number
+	callback: VoidFunction
+	duration: number
 }
 
 /**
- * Object tracking all the registered transitions
+ * all registered transitions
  */
 const allTransitions: Record<
-  string,
-  {
-    inAnimation: Animation[]
-    outAnimation: Animation[]
-  }
+	string,
+	{
+		inAnimation: Animation[]
+		outAnimation: Animation[]
+	}
 > = {}
 
 /**
- * register a transition that can be run with a UniversalLink or by using loadPage.
- * note that the animation functions must return the duration of the animation in seconds
- *
- * @param name the name of the transition
- * @param inAnimation the animation to run before navigating
- * @param outAnimation the animation to run after navigating
+ * if we click a link during a transition, delay it until the transition is done
  */
-export const registerTransition = (
-  name: Exclude<Transitions, InternalTransitions | undefined>,
-  details: {
-    in: VoidFunction
-    out: VoidFunction
-    inDuration: number
-    outDuration: number
-  },
-) => {
-  const {
-    in: inAnimation,
-    out: outAnimation,
-    inDuration,
-    outDuration,
-  } = details
-  const previous = allTransitions[name] ?? { inAnimation: [], outAnimation: [] }
-  allTransitions[name] = {
-    inAnimation: [
-      ...previous.inAnimation,
-      { callback: inAnimation, duration: inDuration },
-    ],
-    outAnimation: [
-      ...previous.outAnimation,
-      { callback: outAnimation, duration: outDuration },
-    ],
-  }
-}
+let pendingNavigation: {
+	to: string
+	transition?: LoaderTransitions
+} | null = null
 
 /**
- * unregister a previously registered transition, such as when a transition component unmounts
- *
- * if inAnimation and outAnimation are not provided, all registered transitions with the given name will be unregistered
- *
- * @param name the name of the transition to unmount
- * @param inAnimation if provided, only unregister this specific animation
- * @param outAnimation if provided, only unregister this specific animation
+ * and likewise, the currently running navigation
  */
-export const unregisterTransition = (
-  name: string,
-  callbacksToRemove?: VoidFunction[],
-) => {
-  if (callbacksToRemove) {
-    const previous = allTransitions[name] ?? {
-      inAnimation: [],
-      outAnimation: [],
-    }
-    allTransitions[name] = {
-      inAnimation: previous.inAnimation.filter(
-        ({ callback }) => !callbacksToRemove.includes(callback),
-      ),
-      outAnimation: previous.outAnimation.filter(
-        ({ callback }) => !callbacksToRemove.includes(callback),
-      ),
-    }
-  } else {
-    allTransitions[name] = { inAnimation: [], outAnimation: [] }
-  }
-}
-
-let pendingTransition: {
-  to: string
-  transition?: Transitions | InternalTransitions
-} | null = null
-let currentAnimation: string | null = null
+let currentNavigation: string | null = null
 
 /**
  * load a page, making use of the specified transition
- * @param to page to load
+ * @param navigateTo page to load
  * @param transition the transition to use
  */
 export const loadPage = async (
-  navigateTo: string,
-  transition?: Transitions | InternalTransitions,
+	navigateTo: string,
+	transition: LoaderTransitions,
 ) => {
-  // extract the anchor from the pathname if applicable
-  const anchor = new URL(navigateTo, window.location.origin).hash
-  const to = new URL(navigateTo, window.location.origin).pathname
+	const anchorName = new URL(navigateTo, window.location.origin).hash
+	const pathname = new URL(navigateTo, window.location.origin).pathname
 
-  // if a transition is already in progress, wait for it to finish before loading the next page
-  if (currentAnimation !== null) {
-    if (!pathnameMatches(to, currentAnimation))
-      pendingTransition = { to, transition }
-    return
-  }
+	// if a transition is already in progress, wait for it to finish before loading the next page
+	if (currentNavigation !== null) {
+		// ignore double clicks
+		if (!pathnameMatches(pathname, currentNavigation))
+			pendingNavigation = { to: navigateTo, transition }
+		return
+	}
 
-  // if we're already on the page we're trying to load, just scroll to the top
-  if (pathnameMatches(to, window.location.pathname)) {
-    ScrollSmoother.get()?.paused(false)
+	/**
+	 * ONLY SCROLLING
+	 *
+	 * if we're already on the page we're trying to load, just scroll to the top ( or to anchor )
+	 */
+	if (
+		navigateTo.startsWith("#") ||
+		pathnameMatches(pathname, window.location.pathname)
+	) {
+		const scrollLock = createScrollLock("unlock")
 
-    // scroll to anchor if applicable, otherwise scroll to top
-    if (anchor) {
-      // ScrollSmoother.get()?.scrollTo(anchor, true, "top 100px")
-      gsap.to(window, { scrollTo: { y: anchor, offsetY: 100 }, duration: 0.4 })
-      loader.dispatchEvent("scrollTo")
-    } else {
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      })
-      loader.dispatchEvent("scrollTo")
-    }
+		// save the anchor to the URL
+		if (libraryConfig.saveAnchorNames)
+			window.history.replaceState({}, "", navigateTo)
 
-    return
-  }
+		// scroll to anchor if applicable, otherwise scroll to top
+		const scrollTo = (smooth: boolean) => {
+			if (anchorName) {
+				const scrollOffset = getScrollOffset(anchorName)
+				ScrollSmoother.get()?.scrollTo(
+					anchorName,
+					smooth,
+					`top top+=${scrollOffset}`,
+				)
+				loader.dispatchEvent("scroll", anchorName)
+			} else {
+				ScrollSmoother.get()?.scrollTo(0, smooth)
+				loader.dispatchEvent("scroll", null)
+			}
+		}
 
-  // if no transition is specified, instantly transition pages
-  if (!transition || !allTransitions[transition]) {
-    navigate(to)
-    await pageUnmounted()
-    await pageReady()
+		scrollTo(true)
+		const smooth = ScrollSmoother.get()?.smooth() ?? 0
+		gsap.delayedCall(smooth, () => {
+			scrollLock.release()
 
-    // if the desired behavior is to scroll to a certain point on the page after the transition, do so.
-    // This is not currently supported for transitions without animations
-    ScrollSmoother.get()?.paused(false)
-    if (anchor) {
-      setTimeout(() => {
-        ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
-      })
-    } else {
-      // an anchor is not specified, scroll to the top of the page
-      ScrollSmoother.get()?.scrollTo(0, false)
-      window.scrollTo(0, 1)
-    }
+			if (ScrollSmoother.get()?.paused()) {
+				ScrollSmoother.get()?.paused(false)
+				scrollTo(false)
+				ScrollSmoother.get()?.paused(true)
+			}
+		})
 
-    // refresh smoother effects
-    ScrollSmoother.get()?.effects("[data-speed], [data-lag]", {})
+		return
+	}
 
-    // fire events with detail "none"
-    loader.dispatchEvent("transitionEnd", "none")
-    loader.dispatchEvent("anyEnd", "none")
+	/**
+	 * INSTANT TRANSITION
+	 *
+	 * if no transition is specified, instantly transition pages
+	 */
+	if (transition === "instant" || !transition || !allTransitions[transition]) {
+		loader.dispatchEvent("start", "instant")
+		loader.dispatchEvent("routeChange", "instant")
 
-    return
-  }
+		navigate(navigateTo)
+		await pageUnmounted()
+		await pageReady()
 
-  // start this animation
-  currentAnimation = to
+		const scrollLock = createScrollLock("unlock")
 
-  // wait for the initial loader to finish animation before starting the transition
-  while (!getLoaderIsDone()) await sleep(100)
+		// scroll to anchor if applicable, otherwise scroll to top
+		if (anchorName) {
+			await scrollToAnchor(anchorName)
+		} else {
+			ScrollSmoother.get()?.scrollTo(0, false)
+			window.scrollTo(0, 1)
+		}
 
-  const animationContext = gsap.context(() => {
-    // we need to pass a function in order to create a new context
-  })
-  const enterAnimations = allTransitions[transition]?.inAnimation ?? []
+		scrollLock.release()
 
-  // run each animation, add it to the context, and get the duration of the longest one
-  let entranceDuration = 0
-  for (const animation of enterAnimations) {
-    const { callback, duration: animationDuration } = animation
-    animationContext.add(callback)
-    entranceDuration = Math.max(entranceDuration, animationDuration)
-  }
+		loader.dispatchEvent("end", "instant")
+		return
+	}
 
-  // dispatch events
-  loader.dispatchEvent("anyStart", transition)
-  loader.dispatchEvent("transitionStart", transition)
-  ScrollSmoother.get()?.paused(true)
+	/**
+	 * NORMAL TRANSITION
+	 */
+	currentNavigation = navigateTo
 
-  // wait for entrance animation to finish
-  await sleep(entranceDuration * 1000)
+	// wait for the preloader to finish animation before starting the transition
+	while (!getLoaderIsDone()) await sleep(100)
 
-  // actually navigate to the page
-  navigate(to, () => {
-    animationContext.revert()
-  })
-  await pageReady()
+	const animationContext = gsap.context(() => {
+		// we need to pass a function in order to create a new context
+	})
+	const enterAnimations = allTransitions[transition]?.inAnimation ?? []
 
-  // wait for any promises to settle
-  promisesToAwait.push(sleep(0))
-  await recursiveAllSettled(promisesToAwait)
+	// run each animation, add it to the context, and get the duration of the longest one
+	let entranceDuration = 0
+	for (const animation of enterAnimations) {
+		const { callback, duration: animationDuration } = animation
+		animationContext.add(callback)
+		entranceDuration = Math.max(entranceDuration, animationDuration)
+	}
 
-  // if the desired behavior is to scroll to a certain point on the page
-  // after the transition, do so. This is done after the exit animation
-  // to prevent the page from jumping around, it also recalls the scrollTo
-  // function multiple times to ensure the scroll is maintained
-  if (anchor) {
-    // scroll to the anchor multiple times to ensure we're at the right place
-    let goodAttemptCount = 0
-    let scrollPosition = 0
-    while (goodAttemptCount < 5) {
-      if (document.querySelector(anchor)) {
-        ScrollTrigger.refresh()
-        ScrollSmoother.get()?.scrollTo(anchor, false, "top 100px")
+	// dispatch events
+	loader.dispatchEvent("start", transition)
 
-        // if we moved less than 10 pixels, count it as a good attempt
-        const newPosition = ScrollSmoother.get()?.scrollTop() ?? 0
-        if (Math.abs(newPosition - scrollPosition) < 10) goodAttemptCount += 1
-        scrollPosition = newPosition
-      }
+	// wait for entrance animation to finish
+	await sleep(entranceDuration * 1000)
+	loader.dispatchEvent("routeChange", transition)
+	const scrollLock = createScrollLock()
 
-      await sleep(50)
-    }
-  } else {
-    // if no anchor, scroll to the top of the page
-    window.scrollTo(0, 0)
-    ScrollSmoother.get()?.scrollTo(0, false)
-  }
+	// actually navigate to the page
+	navigate(navigateTo, () => {
+		animationContext.revert()
+	})
+	await pageReady()
 
-  // refresh smoother effects
-  ScrollSmoother.get()?.effects("[data-speed], [data-lag]", {})
+	// wait for any promises to settle
+	await sleep(0)
+	await allLoaderPromisesSettled()
 
-  const exitAnimations = allTransitions[transition]?.outAnimation ?? []
+	// if the desired behavior is to scroll to a certain point on the page
+	// after the transition, do so. This is done after the exit animation
+	// to prevent the page from jumping around
+	if (anchorName) {
+		await scrollToAnchor(anchorName)
+	} else {
+		// if no anchor, scroll to the top of the page
+		window.scrollTo(0, 0)
+		ScrollSmoother.get()?.scrollTo(0, false)
+	}
 
-  // run each animation, add it to the context, and get the duration of the longest one
-  let exitDuration = 0
-  for (const animation of exitAnimations) {
-    const { callback, duration: animationDuration } = animation
-    animationContext.add(callback)
-    exitDuration = Math.max(exitDuration, animationDuration)
-  }
+	const exitAnimations = allTransitions[transition]?.outAnimation ?? []
 
-  // wait for exit animation to finish
-  await sleep(exitDuration * 1000 + 10)
+	// run each animation, add it to the context, and get the duration of the longest one
+	let exitDuration = 0
+	for (const animation of exitAnimations) {
+		const { callback, duration: animationDuration } = animation
+		animationContext.add(callback)
+		exitDuration = Math.max(exitDuration, animationDuration)
+	}
 
-  // dispatch finished events
-  loader.dispatchEvent("anyEnd", transition)
-  loader.dispatchEvent("transitionEnd", transition)
-  ScrollSmoother.get()?.paused(false)
-  ScrollTrigger.refresh()
+	// wait for exit animation to finish
+	await sleep(exitDuration * 1000 + 10)
 
-  // cleanup and reset
-  animationContext.revert()
-  currentAnimation = null
+	// dispatch finished events
+	loader.dispatchEvent("end", transition)
+	scrollLock.release()
+	ScrollTrigger.refresh()
 
-  // start the next transition if applicable
-  if (pendingTransition?.transition) {
-    loadPage(pendingTransition.to, pendingTransition.transition).catch(
-      (error: string) => {
-        throw new Error(error)
-      },
-    )
-    pendingTransition = null
-  }
+	// cleanup and reset
+	animationContext.revert()
+	currentNavigation = null
+
+	// start the next transition if applicable
+	if (pendingNavigation?.transition) {
+		loadPage(pendingNavigation.to, pendingNavigation.transition)
+		pendingNavigation = null
+	}
 }
 
 /**
@@ -283,40 +226,124 @@ export const loadPage = async (
  * @param to the link to navigate to
  * @param cleanupFunction a function to reset the page to its original state (if back button is pressed after external link)
  */
-export const navigate = (to: string, cleanupFunction?: VoidFunction) => {
-  const isExternal = to.slice(0, 8).includes("//")
+const navigate = (to: string, cleanupFunction?: VoidFunction) => {
+	const isExternal = linkIsExternal(to)
 
-  if (isExternal) {
-    window.open(to)
+	if (isExternal) {
+		window.open(to)
 
-    // if the user presses the back button after navigation, we'll need to cleanup any animations
-    setTimeout(() => {
-      cleanupFunction?.()
-    }, 1000)
-  } else {
-    pushPage(to)
-  }
+		// if the user presses the back button after navigation, we'll need to cleanup any animations
+		setTimeout(() => {
+			cleanupFunction?.()
+		}, 1000)
+	} else {
+		const destination = new URL(to, window.location.origin)
+
+		// scrub the hash from the URL if needed
+		if (!libraryConfig.saveAnchorNames) {
+			destination.hash = ""
+		}
+
+		startTransition(() => {
+			gatsbyNavigate(destination.toString())
+		})
+	}
 }
 
 /**
- * tracks when a page is done loading, for use in layout
- * also handles bugs with back/forward buttons
+ * manually track the scroll position so we can restore it when clicking back
+ * gatsby can't restore scroll position if we have a transition animation
+ */
+const scrollPositions = new Map<string, number>()
+
+/**
+ * handles scroll restoration for forward/back buttons
+ * will also dispatch events to make sure nothing gets stuck in an illegal state
  */
 export function useBackButton() {
-  useEffect(() => {
-    const handleBackButton = () => {
-      ;(async () => {
-        loader.dispatchEvent("initialStart")
-        loader.dispatchEvent("anyStart", "none")
-        await pageUnmounted()
-        await pageReady()
-        window.scrollTo(0, 1)
-        await sleep(500)
-        loader.dispatchEvent("transitionEnd", "none")
-        loader.dispatchEvent("anyEnd", "none")
-      })().catch(console.error)
-    }
-    window.addEventListener("popstate", handleBackButton)
-    return () => window.removeEventListener("popstate", handleBackButton)
-  })
+	useEventListener("scroll", () => {
+		scrollPositions.set(window.location.href, window.scrollY)
+	})
+
+	useEventListener("popstate", async () => {
+		loader.dispatchEvent("start", "instant")
+		loader.dispatchEvent("routeChange", "instant")
+		document.body.style.minHeight = "9999vh"
+
+		await pageUnmounted()
+		await pageReady()
+
+		if (libraryConfig.scrollRestoration === false) window.scrollTo(0, 1)
+		else window.scrollTo(0, scrollPositions.get(window.location.href) ?? 0)
+
+		// using back then forward can cause page to disappear until we scroll, so we'll do that manually
+		window.scrollBy(0, 1)
+		await sleep(500)
+		loader.dispatchEvent("end", "instant")
+		document.body.style.removeProperty("min-height")
+	})
+}
+
+/**
+ * registers a transition that can be run with a UniversalLink or by using loadPage.
+ *
+ * @param name the name of the transition
+ * @param details
+ * @param details.in the animation to run before navigating
+ * @param details.out the animation to run after navigating
+ * @param details.inDuration the duration of the in animation in seconds
+ * @param details.outDuration the duration of the out animation in seconds
+ */
+export const usePageTransition = (
+	name: Exclude<LoaderTransitions, "instant">,
+	details: {
+		in: VoidFunction
+		out: VoidFunction
+		inDuration: number
+		outDuration: number
+	},
+) => {
+	useDeepCompareEffect(() => {
+		const {
+			in: inAnimation,
+			out: outAnimation,
+			inDuration,
+			outDuration,
+		} = details
+
+		// merge the new details into the existing animation of this name
+		const previous = allTransitions[name] ?? {
+			inAnimation: [],
+			outAnimation: [],
+		}
+
+		allTransitions[name] = {
+			inAnimation: [
+				...previous.inAnimation,
+				{ callback: inAnimation, duration: inDuration },
+			],
+			outAnimation: [
+				...previous.outAnimation,
+				{ callback: outAnimation, duration: outDuration },
+			],
+		}
+
+		return () => {
+			const callbacksToRemove = [inAnimation, outAnimation]
+
+			const previous = allTransitions[name] ?? {
+				inAnimation: [],
+				outAnimation: [],
+			}
+
+			allTransitions[name] = {
+				inAnimation: previous.inAnimation.filter(
+					({ callback }) => !callbacksToRemove.includes(callback),
+				),
+				outAnimation: previous.outAnimation.filter(
+					({ callback }) => !callbacksToRemove.includes(callback),
+				),
+			}
+		}
+	}, [name, details])
 }

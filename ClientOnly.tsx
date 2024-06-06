@@ -1,38 +1,38 @@
 import { startTransition, useEffect, useState } from "react"
 
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 
 export default function ClientOnly({
-  children,
+	children,
 }: {
-  children: React.ReactNode
+	children: React.ReactNode
 }) {
-  const [mounted, setMounted] = useState(false)
+	const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    startTransition(() => {
-      setMounted(isBrowser())
-    })
-  }, [])
+	useEffect(() => {
+		startTransition(() => {
+			setMounted(isBrowser)
+		})
+	}, [])
 
-  if (!mounted) return null
+	if (!mounted) return null
 
-  return <>{children}</>
+	return <>{children}</>
 }
 
 export const useClientOnly = <T, F = undefined>(
-  value: T,
-  fallbackValue?: F,
+	value: T,
+	fallbackValue?: F,
 ) => {
-  const [mounted, setMounted] = useState(false)
+	const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    startTransition(() => {
-      setMounted(isBrowser())
-    })
-  }, [])
+	useEffect(() => {
+		startTransition(() => {
+			setMounted(isBrowser)
+		})
+	}, [])
 
-  if (!mounted) return fallbackValue
+	if (!mounted) return fallbackValue
 
-  return value
+	return value
 }

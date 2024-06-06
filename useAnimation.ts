@@ -1,12 +1,13 @@
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import type { DependencyList } from "react"
-import { startTransition, useEffect, useState } from "react"
-
+import { useEffect, useLayoutEffect, useState } from "react"
 import { checkGSAP } from "./checkGSAP"
-import { isBrowser } from "./functions"
+import { isBrowser } from "./deviceDetection"
 
 let globalRefresh: NodeJS.Timeout | undefined
+
+const defaultHook = isBrowser ? useLayoutEffect : useEffect
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
@@ -27,95 +28,88 @@ let globalRefresh: NodeJS.Timeout | undefined
  * @param options.kill - whether to kill the animation when the component is unmounted, rather than reverting it
  * @param options.recreateOnResize - whether to re-create the animations when the window is resized
  * @param options.extraDeps - any extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
- * @param options.effect - the effect to use (defaults to useEffect)
+ * @param options.dangerouslyOverrideEffect - override the effect to use - changing this may cause issues with unmounting pins! use with caution!
+ * if you're trying to deep compare, a safer solution is to stabilize each of your dependencies with useDeepCompareMemo
  */
 const useAnimation = <F, T>(
-  createAnimations: F extends VoidFunction ? F : () => T,
-  deps: DependencyList,
-  options?: {
-    scope?: string | Element | null
-    kill?: boolean
-    recreateOnResize?: boolean
-    extraDeps?: DependencyList
-    effect?: typeof useEffect
-  },
+	createAnimations: F extends VoidFunction ? F : () => T,
+	deps: DependencyList,
+	options?: {
+		scope?: React.RefObject<HTMLElement | null>
+		kill?: boolean
+		recreateOnResize?: boolean
+		extraDeps?: DependencyList
+		dangerouslyOverrideEffect?: (
+			effect: () => void,
+			deps: DependencyList,
+		) => void
+	},
 ) => {
-  const useEffectToUse = options?.effect ?? useEffect
-  const [resizeSignal, setResizeSignal] = useState(
-    isBrowser() && window.innerWidth,
-  )
-  const [firstRender, setFirstRender] = useState(true)
-  const extraDeps = options?.extraDeps ?? []
+	const useEffectToUse = options?.dangerouslyOverrideEffect ?? defaultHook
+	const [resizeSignal, setResizeSignal] = useState(
+		isBrowser && window.innerWidth,
+	)
+	const extraDeps = options?.extraDeps ?? []
 
-  type ReturnType =
-    // need Function to get the correct type
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    T extends Function ? undefined
-    : T extends object ? T | undefined
-    : undefined
+	type ReturnType =
+		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
+		T extends Function
+			? undefined
+			: T extends object
+				? T | undefined
+				: undefined
 
-  const [returnValue, setReturnValue] = useState<ReturnType>()
+	const [returnValue, setReturnValue] = useState<ReturnType>()
 
-  /**
-   * when the window is resized, we need to re-create animations
-   * if the width of the window changes by more than 10px
-   */
-  useEffect(() => {
-    if (options?.recreateOnResize) {
-      const onResize = () => {
-        setResizeSignal((previous) => {
-          const newValue = window.innerWidth
+	/**
+	 * when the window is resized, we need to re-create animations
+	 * if the width of the window changes by more than 10px
+	 */
+	useEffect(() => {
+		if (options?.recreateOnResize) {
+			const onResize = () => {
+				setResizeSignal((previous) => {
+					const newValue = window.innerWidth
 
-          // if the value has changed
-          // make sure scrolltrigger gets refreshed
-          if (newValue !== previous) {
-            clearTimeout(globalRefresh)
-            globalRefresh = setTimeout(() => {
-              ScrollTrigger.refresh()
-            }, 1)
-          }
+					// if the value has changed
+					// make sure scrolltrigger gets refreshed
+					if (newValue !== previous) {
+						clearTimeout(globalRefresh)
+						globalRefresh = setTimeout(() => {
+							ScrollTrigger.refresh()
+						}, 1)
+					}
 
-          return newValue
-        })
-      }
-      window.addEventListener("resize", onResize)
-      return () => window.removeEventListener("resize", onResize)
-    }
-  }, [options?.recreateOnResize])
+					return newValue
+				})
+			}
+			window.addEventListener("resize", onResize)
+			return () => window.removeEventListener("resize", onResize)
+		}
+	}, [options?.recreateOnResize])
 
-  useEffectToUse(() => {
-    if (isBrowser()) startTransition(() => setFirstRender(false))
-    if (firstRender) return
+	useEffectToUse(() => {
+		// create animations using a gsap context so they can be reverted easily
+		const ctx = gsap.context(() => {
+			const result = createAnimations()
+			if (typeof result === "function") {
+				return result
+			}
 
-    // create animations using a gsap context so they can be reverted easily
-    const ctx = gsap.context(
-      () => {
-        const result = createAnimations()
-        if (typeof result === "function") {
-          return result
-        } else if (typeof result === "object" && result) {
-          setReturnValue(result as ReturnType)
-        } else {
-          setReturnValue(undefined)
-        }
-      },
-      options?.scope ?? undefined,
-    )
-    return () => {
-      if (options?.kill) {
-        ctx.kill()
-      } else ctx.revert()
-    }
-  }, [
-    options?.kill,
-    options?.scope,
-    firstRender,
-    resizeSignal,
-    ...deps,
-    ...extraDeps,
-  ])
+			if (typeof result === "object" && result) {
+				setReturnValue(result as ReturnType)
+			} else {
+				setReturnValue(undefined)
+			}
+		}, options?.scope?.current ?? undefined)
+		return () => {
+			if (options?.kill) {
+				ctx.kill()
+			} else ctx.revert()
+		}
+	}, [options?.kill, options?.scope, resizeSignal, ...deps, ...extraDeps])
 
-  return returnValue
+	return returnValue
 }
 
 export default useAnimation
