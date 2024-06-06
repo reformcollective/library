@@ -1,3 +1,5 @@
+import { isBrowser } from "./deviceDetection"
+
 export const addDebouncedEventListener = (
 	element: Window | HTMLElement,
 	event: string,
@@ -33,6 +35,9 @@ const parseURL = (url: string, base?: string) => {
 }
 
 export function linkIsInternal(to: string) {
+	// if we're not in the browser, we can't parse URLs accurately
+	if (!isBrowser) return false
+
 	// attempt to parse this as standalone, else try to parse it as relative
 	const parsed = parseURL(to) || parseURL(to, window.location.origin)
 
