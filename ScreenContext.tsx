@@ -1,3 +1,4 @@
+import { useEventListener } from "ahooks"
 import {
 	createContext,
 	startTransition,
@@ -11,7 +12,6 @@ import {
 	tabletBreakpoint as tablet,
 } from "styles/media"
 import { isBrowser } from "./deviceDetection"
-import { useEventListener } from "ahooks"
 
 /**
  * Gives easy access to media queries
