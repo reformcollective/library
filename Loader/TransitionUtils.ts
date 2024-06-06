@@ -5,7 +5,7 @@ import ScrollSmoother from "gsap/ScrollSmoother"
 import ScrollToPlugin from "gsap/ScrollToPlugin"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { createScrollLock } from "library/Scroll"
-import { linkIsInternal, pathnameMatches, sleep } from "library/functions"
+import { linkIsExternal, pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import type { TransitionNames } from "libraryConfig"
 import libraryConfig from "libraryConfig"
@@ -227,7 +227,7 @@ export const loadPage = async (
  * @param cleanupFunction a function to reset the page to its original state (if back button is pressed after external link)
  */
 const navigate = (to: string, cleanupFunction?: VoidFunction) => {
-	const isExternal = !linkIsInternal(to)
+	const isExternal = linkIsExternal(to)
 
 	if (isExternal) {
 		window.open(to)
