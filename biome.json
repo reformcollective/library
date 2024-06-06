@@ -1,0 +1,46 @@
+{
+	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"style": {
+				"useSelfClosingElements": {
+					"level": "warn",
+					"fix": "safe"
+				}
+			},
+			"correctness": {
+				"useExhaustiveDependencies": {
+					"level": "error",
+					"options": {
+						"hooks": [
+							{
+								"name": "useAnimation",
+								"closureIndex": 0,
+								"dependenciesIndex": 1
+							}
+						]
+					}
+				},
+				"noUnusedImports": "warn"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"semicolons": "asNeeded"
+		}
+	},
+	"files": {
+		"ignore": ["pnpm-lock.yaml", ".vscode"]
+	},
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	}
+}
