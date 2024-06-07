@@ -1,6 +1,11 @@
 name: Code Checks
 on:
   workflow_call:
+    secrets:
+      accesToken:
+        required: true
+      spaceId:
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
