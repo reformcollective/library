@@ -2,12 +2,6 @@ name: Package Updater
 on:
   workflow_dispatch:
   workflow_call:
-    secrets:
-      CONTENTFUL_ACCESS_TOKEN:
-        required: true
-      CONTENTFUL_SPACE_ID:
-        required: true
-
 jobs:
   Update_Packages:
     runs-on: ubuntu-latest
