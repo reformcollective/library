@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
   workflow_call:
     secrets:
-      accesToken:
+      CONTENTFUL_ACCESS_TOKEN:
         required: true
-      spaceId:
+      CONTENTFUL_SPACE_ID:
         required: true
 
 jobs:
