@@ -19,6 +19,7 @@ interface BaseLinkProps {
 	onMouseLeave?: MouseEventHandler
 	ariaLabel?: string
 	anchor?: string
+	"aria-disabled"?: boolean
 	style?: CSSProperties
 }
 

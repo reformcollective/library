@@ -2,7 +2,6 @@ name: Package Updater
 on:
   workflow_dispatch:
   workflow_call:
-
 jobs:
   Update_Packages:
     runs-on: ubuntu-latest
