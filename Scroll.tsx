@@ -67,7 +67,10 @@ export const createScrollLock = (type: "lock" | "unlock" = "lock") => {
  *
  * you can also set the value via the second argument if you have external state
  */
-export const useScrollLock = (type: "lock" | "unlock", value?: boolean) => {
+export const useScrollLock = (
+	type: "lock" | "unlock" = "lock",
+	value?: boolean,
+) => {
 	const [locked, setLocked] = useState(false)
 	const shouldLock = value ?? locked
 

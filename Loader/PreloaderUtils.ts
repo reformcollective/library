@@ -2,9 +2,9 @@ import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import libraryConfig from "libraryConfig"
 
-import { useDeepCompareEffect } from "ahooks"
 import { createScrollLock } from "library/Scroll"
 import { isBrowser } from "library/deviceDetection"
+import { useEffect, useRef } from "react"
 import { loader } from "."
 import { sleep } from "../functions"
 import { pageReady } from "../pageReady"
@@ -94,7 +94,6 @@ async function onComplete() {
 	 */
 	const anchor = window.location.hash
 	if (anchor) {
-		console.log(anchor)
 		await scrollToAnchor(anchor)
 	}
 
@@ -103,11 +102,15 @@ async function onComplete() {
 	 */
 	let longestAnimation = 0
 	for (const animation of animations) {
+		const callAnimation = () => {
+			animation.callback()
+			longestAnimation = Math.max(longestAnimation, animation.duration)
+		}
+
 		if (animation.only) {
-			if (animation.only === "whenAtTop" && isAtTop) animation.callback()
-			if (animation.only === "whenScrolled" && !isAtTop) animation.callback()
-		} else animation.callback()
-		longestAnimation = Math.max(longestAnimation, animation.duration)
+			if (animation.only === "whenAtTop" && isAtTop) callAnimation()
+			if (animation.only === "whenScrolled" && !isAtTop) callAnimation()
+		} else callAnimation()
 	}
 
 	await sleep(longestAnimation * 1000 + 10)
@@ -187,12 +190,22 @@ if (isBrowser)
  * @param animation function to call when the page is loaded
  */
 export const usePreloader = (animation: Animation) => {
-	useDeepCompareEffect(() => {
-		if (completionStatus === "complete") animation.callback()
-		else animations.push(animation)
+	const latestCallback = useRef(animation.callback)
+	latestCallback.current = animation.callback
+
+	useEffect(() => {
+		const onCall = () => latestCallback.current()
+
+		if (completionStatus === "complete") onCall()
+		else
+			animations.push({
+				duration: animation.duration,
+				callback: onCall,
+				only: animation.only,
+			})
 
 		return () => {
-			animations = animations.filter((a) => a.callback !== animation.callback)
+			animations = animations.filter((a) => a.callback !== onCall)
 		}
-	}, [animation])
+	}, [animation.duration, animation.only])
 }
