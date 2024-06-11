@@ -24,7 +24,16 @@ export function useTrackedLoad(artificialDelayMs = 0) {
 		})
 		return [promise, resolve ?? (() => {})]
 	}, [])
-	loaderAwaitPromise(promise)
+
+	// send the promise to the loader
+	useEffect(() => {
+		loaderAwaitPromise(promise)
+
+		// and don't let the promise hang around after the component is unmounted
+		return () => {
+			resolve()
+		}
+	}, [promise, resolve])
 
 	// when the UI is ready, resolve the promise
 	useEffect(() => {
