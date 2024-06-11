@@ -175,6 +175,7 @@ export const loadPage = async (
 	navigate(navigateTo, () => {
 		animationContext.revert()
 	})
+	await pageUnmounted()
 	await pageReady()
 
 	// wait for any promises to settle
