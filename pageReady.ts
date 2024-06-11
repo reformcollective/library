@@ -44,11 +44,13 @@ export function useTrackedLoad(artificialDelayMs = 0) {
 
 	// kick off the transition after an artificial delay (if specified)
 	useEffect(() => {
-		setTimeout(() => {
-			startTransition(() => {
-				setShowInterface(true)
-			})
-		}, artificialDelayMs)
+		if (artificialDelayMs === 0) startTransition(() => setShowInterface(true))
+		else
+			setTimeout(() => {
+				startTransition(() => {
+					setShowInterface(true)
+				})
+			}, artificialDelayMs)
 	}, [artificialDelayMs])
 
 	return {
