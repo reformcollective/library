@@ -246,7 +246,9 @@ const navigate = (to: string, cleanupFunction?: VoidFunction) => {
 		}
 
 		startTransition(() => {
-			gatsbyNavigate(destination.toString())
+			gatsbyNavigate(
+				destination.pathname + destination.search + destination.hash,
+			)
 		})
 	}
 }
