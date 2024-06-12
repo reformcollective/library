@@ -37,12 +37,28 @@ const EXTRA_DELAY = 5000
 let preloaderState: "loading" | "waitingForAnimate" | "animating" | "allDone" =
 	"loading"
 
-interface Animation {
+interface PreloaderAnimation {
+	/**
+	 * for some animations, it's critical the animation plays (even if the page was loaded a long time ago)
+	 * for example, a preloader that covers the entire screen is critical, since if the animation doesn't play
+	 * the screen will be stuck on the preloader
+	 */
+	critical?: boolean
+	/**
+	 * if you'd like different animations when the page is scrolled down (i.e. reloaded when scrolled) you can specify this here
+	 */
 	only?: "whenScrolled" | "whenAtTop"
-	callback: VoidFunction
+	/**
+	 * how long the animation takes to finish (when scrolling can 'unlock')
+	 */
 	duration: number
+	/**
+	 * a function to run the animation
+	 */
+	callback: VoidFunction
 }
-let animations: Animation[] = []
+
+let animations: PreloaderAnimation[] = []
 const startTime = performance.now()
 const timeNeeded = GET_TIME_NEEDED(startTime)
 let loaderIsDone = false
@@ -191,7 +207,7 @@ if (isBrowser)
  *
  * @param animation function to call when the page is loaded
  */
-export const usePreloader = (animation: Animation) => {
+export const usePreloader = (animation: PreloaderAnimation) => {
 	const latestCallback = useRef(animation.callback)
 	latestCallback.current = animation.callback
 
@@ -199,6 +215,7 @@ export const usePreloader = (animation: Animation) => {
 		const onCall = () => latestCallback.current()
 
 		if (preloaderState === "animating") onCall()
+		else if (preloaderState === "allDone" && animation.critical) onCall()
 		else if (preloaderState !== "allDone")
 			animations.push({
 				duration: animation.duration,
@@ -209,5 +226,5 @@ export const usePreloader = (animation: Animation) => {
 		return () => {
 			animations = animations.filter((a) => a.callback !== onCall)
 		}
-	}, [animation.duration, animation.only])
+	}, [animation.duration, animation.only, animation.critical])
 }
