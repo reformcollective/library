@@ -34,7 +34,8 @@ const EXTRA_DELAY = 5000
  * canStillAnimate: we're at 100% loaded, but haven't started the animation yet
  * complete: we've started the out animation
  */
-let completionStatus: "loading" | "canStillAnimate" | "complete" = "loading"
+let preloaderState: "loading" | "waitingForAnimate" | "animating" | "allDone" =
+	"loading"
 
 interface Animation {
 	only?: "whenScrolled" | "whenAtTop"
@@ -61,16 +62,14 @@ async function onComplete() {
 	await allLoaderPromisesSettled()
 
 	// only call onComplete one time
-	if (completionStatus !== "loading") return
+	if (preloaderState !== "loading") return
 
-	completionStatus = "canStillAnimate"
+	preloaderState = "waitingForAnimate"
 	loader.dispatchEvent("start", "initial")
 	loader.dispatchEvent("progressUpdated", 100)
 
 	// hold at 100 for a beat
 	await sleep(250)
-
-	completionStatus = "complete"
 
 	const isAtTop =
 		window.scrollY < window.innerHeight ||
@@ -96,6 +95,8 @@ async function onComplete() {
 	if (anchor) {
 		await scrollToAnchor(anchor)
 	}
+
+	preloaderState = "animating"
 
 	/**
 	 * run all the animations
@@ -129,6 +130,7 @@ async function onComplete() {
 	await sleep(50)
 
 	loader.dispatchEvent("end", "initial")
+	preloaderState = "allDone"
 }
 
 /**
@@ -148,7 +150,7 @@ const updatePercent = () => {
 			return onComplete()
 		})
 
-	if (completionStatus !== "loading") return
+	if (preloaderState !== "loading") return
 
 	const currentTime = performance.now()
 	const progress = ((currentTime - startTime) / timeNeeded) * 100
@@ -196,8 +198,8 @@ export const usePreloader = (animation: Animation) => {
 	useEffect(() => {
 		const onCall = () => latestCallback.current()
 
-		if (completionStatus === "complete") onCall()
-		else
+		if (preloaderState === "animating") onCall()
+		else if (preloaderState !== "allDone")
 			animations.push({
 				duration: animation.duration,
 				callback: onCall,

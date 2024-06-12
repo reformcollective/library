@@ -175,6 +175,7 @@ export const loadPage = async (
 	navigate(navigateTo, () => {
 		animationContext.revert()
 	})
+	await pageUnmounted()
 	await pageReady()
 
 	// wait for any promises to settle
@@ -245,7 +246,9 @@ const navigate = (to: string, cleanupFunction?: VoidFunction) => {
 		}
 
 		startTransition(() => {
-			gatsbyNavigate(destination.toString())
+			gatsbyNavigate(
+				destination.pathname + destination.search + destination.hash,
+			)
 		})
 	}
 }
