@@ -44,8 +44,13 @@ export function linkIsInternal(to: string) {
 	// if we can't parse it, assume it's external
 	if (!parsed) return false
 
-	// if the origin matches, it's internal
-	return parsed.origin === window.location.origin
+	// if the host matches, it's internal
+	return (
+		parsed.host === window.location.host ||
+		// www.origin.com and origin.com are both considered internal
+		`www.${parsed.host}` === window.location.host ||
+		parsed.host === `www.${window.location.host}`
+	)
 }
 
 export function linkIsExternal(to: string) {
