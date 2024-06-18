@@ -3,9 +3,9 @@ on:
   workflow_call:
     secrets:
       CONTENTFUL_ACCESS_TOKEN:
-        required: true
+        required: false
       CONTENTFUL_SPACE_ID:
-        required: true
+        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
