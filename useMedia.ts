@@ -1,12 +1,7 @@
 import { useContext } from "react"
 import { ScreenContext } from "./ScreenContext"
 
-export default function useMedia<InputType>(
-	fw: InputType,
-	d: InputType,
-	t: InputType,
-	m: InputType,
-) {
+export default function useMedia<A, B, C, D>(fw: A, d: B, t: C, m: D) {
 	const { desktop, fullWidth, mobile, tablet } = useContext(ScreenContext)
 
 	if (fullWidth) return fw
