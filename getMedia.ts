@@ -4,7 +4,7 @@ import {
 	tabletBreakpoint as tablet,
 } from "styles/media"
 
-export default function getMedia<Type>(fw: Type, d: Type, t: Type, m: Type) {
+export default function getMedia<A, B, C, D>(fw: A, d: B, t: C, m: D) {
 	if (typeof window !== "undefined") {
 		if (window.innerWidth > desktop) {
 			return fw
