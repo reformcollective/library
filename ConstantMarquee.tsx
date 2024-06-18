@@ -18,10 +18,9 @@ interface MarqueeProps {
 	 */
 	reversed?: boolean
 	/**
-	 * Does the element need to be paused before starting?
+	 * Manually pause the marquee
 	 *
 	 * Useful to control in cases where transforms are happening that could impact scrollTriggers
-	 *
 	 */
 	paused?: boolean
 	/**
@@ -66,13 +65,6 @@ export default function ConstantMarquee({
 				duration: timing,
 				ease: "none",
 				x: reversed ? `+=${width}` : `-=${width}`,
-				// pause when the marquee is offscreen (for performance)
-				scrollTrigger: {
-					trigger: marquee.current,
-					start: "top bottom",
-					end: "bottom top",
-					toggleActions: "play pause resume pause",
-				},
 				// when each child goes offscreen, move it to the other side
 				modifiers: {
 					x: gsap.utils.unitize((x: number) => {
@@ -113,6 +105,7 @@ export default function ConstantMarquee({
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we want specific control of when this refreshes
 	useEffect(() => {
 		if (paused) return
+
 		/**
 		 * calculate how many children we need to fill the screen
 		 */
