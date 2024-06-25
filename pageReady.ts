@@ -38,6 +38,7 @@ export function useTrackedLoad(artificialDelayMs = 0) {
 	// when the UI is ready, resolve the promise
 	useEffect(() => {
 		if (allDone) {
+			alert("alldone")
 			resolve()
 		}
 	}, [allDone, resolve])
