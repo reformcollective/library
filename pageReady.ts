@@ -93,6 +93,7 @@ export async function pageReady() {
 		if (waitingForPage) {
 			console.log(promisesToResolveOnReady)
 			promisesToResolveOnReady.push(() => resolve())
+			console.log(promisesToResolveOnReady, "after push")
 		} else {
 			console.log("resolved page ready")
 			resolve()
