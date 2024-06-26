@@ -21,7 +21,6 @@ const recursiveAllSettled = async (
 	promises: Promise<unknown>[],
 	promisesToExclude: Promise<unknown>[] = [],
 ): Promise<void> => {
-	console.log(promises, "onEntering")
 	const promisesCopy = [...promises].filter(
 		(promise) => !promisesToExclude.includes(promise),
 	)
@@ -30,6 +29,7 @@ const recursiveAllSettled = async (
 	const results = await Promise.allSettled(promisesCopy)
 	const rejected = results.filter((result) => result.status === "rejected")
 	if (rejected.length > 0) {
+		console.error(rejected)
 		throw new Error("One or more promises were rejected")
 	}
 
