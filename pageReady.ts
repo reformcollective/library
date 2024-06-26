@@ -71,6 +71,7 @@ export function useTrackedLoad(artificialDelayMs = 0) {
  * not sure that these others are actually useful, will maybe deprecate at some point
  */
 export function useTrackPageReady() {
+	console.log("useTrackPageReady")
 	useEffect(() => {
 		waitingForPage = false
 		for (const fn of promisesToResolveOnReady) {
@@ -80,6 +81,7 @@ export function useTrackPageReady() {
 
 		return () => {
 			waitingForPage = true
+			console.log("resetting waiting for Page")
 			for (const fn of promisesToResolveOnUnmount) {
 				fn()
 			}
@@ -92,9 +94,8 @@ export async function pageReady() {
 	console.log(waitingForPage)
 	return new Promise<void>((resolve) => {
 		if (waitingForPage) {
-			console.log(promisesToResolveOnReady)
+			console.log("inside waiting for page")
 			promisesToResolveOnReady.push(() => resolve())
-			console.log(promisesToResolveOnReady, "after push")
 		} else {
 			console.log("resolved page ready")
 			resolve()
