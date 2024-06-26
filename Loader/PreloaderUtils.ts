@@ -120,6 +120,8 @@ async function onComplete() {
 	let longestAnimation = 0
 	for (const animation of animations) {
 		const callAnimation = () => {
+			console.log(animation.only || "no only")
+
 			animation.callback()
 			longestAnimation = Math.max(longestAnimation, animation.duration)
 		}
@@ -195,10 +197,12 @@ if (isBrowser)
 	pageReady()
 		.then(async () => {
 			await sleep(EXTRA_DELAY)
+			console.log("document ready")
 			return onComplete()
 		})
 		.catch(async () => {
 			await sleep(EXTRA_DELAY)
+			console.log("document ready Error")
 			return onComplete()
 		})
 
