@@ -89,6 +89,7 @@ export function useTrackPageReady() {
 }
 
 export async function pageReady() {
+	console.log(waitingForPage)
 	return new Promise<void>((resolve) => {
 		if (waitingForPage) {
 			console.log(promisesToResolveOnReady)
