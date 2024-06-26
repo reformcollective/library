@@ -33,7 +33,12 @@ const recursiveAllSettled = async (
 		throw new Error("One or more promises were rejected")
 	}
 
-	await recursiveAllSettled(promises, [...promisesToExclude, ...promisesCopy])
+	recursiveAllSettled(promises, [...promisesToExclude, ...promisesCopy]).catch(
+		(error) => {
+			console.error(error)
+		},
+	)
+
 	promisesToAwait.length = 0
 }
 
