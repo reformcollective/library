@@ -193,7 +193,10 @@ if (isBrowser) updatePercent()
  * waits EXTRA_DELAY milliseconds after the document is ready before calling
  * all the animations and all the progress callbacks with 100%
  */
-if (isBrowser)
+
+console.log("before isBrowser Page Ready")
+if (isBrowser) {
+	console.log("checking page ready")
 	pageReady()
 		.then(async () => {
 			await sleep(EXTRA_DELAY)
@@ -205,7 +208,7 @@ if (isBrowser)
 			console.log("document ready Error")
 			return onComplete()
 		})
-
+}
 /**
  * register a callback (such as an animation) to be called when the page is loaded
  *
