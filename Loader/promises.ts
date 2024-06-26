@@ -2,16 +2,37 @@ import { sleep } from "library/functions"
 
 const promisesToAwait: Promise<unknown>[] = []
 
+// const recursiveAllSettled = async (
+// 	promises: Promise<unknown>[],
+// 	promisesToExclude: Promise<unknown>[] = [],
+// ): Promise<void> => {
+// 	console.log(promises, "onEntering")
+// 	const promisesCopy = [...promises].filter(
+// 		(promise) => !promisesToExclude.includes(promise),
+// 	)
+// 	if (promisesCopy.length === 0) return
+
+// 	await Promise.allSettled(promisesCopy)
+// 	await recursiveAllSettled(promises, [...promisesToExclude, ...promisesCopy])
+// 	promisesToAwait.length = 0
+// }
+
 const recursiveAllSettled = async (
 	promises: Promise<unknown>[],
 	promisesToExclude: Promise<unknown>[] = [],
 ): Promise<void> => {
+	console.log(promises, "onEntering")
 	const promisesCopy = [...promises].filter(
 		(promise) => !promisesToExclude.includes(promise),
 	)
 	if (promisesCopy.length === 0) return
 
-	await Promise.allSettled(promisesCopy)
+	const results = await Promise.allSettled(promisesCopy)
+	const rejected = results.filter((result) => result.status === "rejected")
+	if (rejected.length > 0) {
+		throw new Error("One or more promises were rejected")
+	}
+
 	await recursiveAllSettled(promises, [...promisesToExclude, ...promisesCopy])
 	promisesToAwait.length = 0
 }

@@ -3,12 +3,7 @@ import { loaderAwaitPromise } from "./Loader/promises"
 
 let waitingForPage = true
 
-type PromiseResolver = {
-	resolve: () => void
-	reject: (reason?: unknown) => void
-}
-
-const promisesToResolveOnReady: PromiseResolver[] = []
+const promisesToResolveOnReady: VoidFunction[] = []
 const promisesToResolveOnUnmount: VoidFunction[] = []
 
 /**
@@ -78,8 +73,8 @@ export function useTrackedLoad(artificialDelayMs = 0) {
 export function useTrackPageReady() {
 	useEffect(() => {
 		waitingForPage = false
-		for (const promiseResolver of promisesToResolveOnReady) {
-			promiseResolver.resolve()
+		for (const fn of promisesToResolveOnReady) {
+			fn()
 		}
 		promisesToResolveOnReady.length = 0
 
@@ -93,30 +88,10 @@ export function useTrackPageReady() {
 	})
 }
 
-// export async function pageReady() {
-// 	return new Promise<void>((resolve) => {
-// 		if (waitingForPage) {
-// 			promisesToResolveOnReady.push(() => resolve())
-// 		} else {
-// 			resolve()
-// 		}
-// 	})
-// }
-
-export function pageReady() {
-	return new Promise<void>((resolve, reject) => {
+export async function pageReady() {
+	return new Promise<void>((resolve) => {
 		if (waitingForPage) {
-			// Add both resolve and reject to promisesToResolveOnReady
-			promisesToResolveOnReady.push({ resolve, reject })
-
-			// Listen for changes to waitingForPage
-			const intervalId = setInterval(() => {
-				if (!waitingForPage) {
-					// If waitingForPage is false, resolve the promise and clear the interval
-					resolve()
-					clearInterval(intervalId)
-				}
-			}, 100) // Check every 100ms
+			promisesToResolveOnReady.push(() => resolve())
 		} else {
 			resolve()
 		}
