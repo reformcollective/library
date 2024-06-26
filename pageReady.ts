@@ -73,8 +73,10 @@ export function useTrackedLoad(artificialDelayMs = 0) {
 export function useTrackPageReady() {
 	console.log("useTrackPageReady")
 	useEffect(() => {
+		console.log("uTPR useEffect")
 		waitingForPage = false
 		for (const fn of promisesToResolveOnReady) {
+			console.log(fn, fn(), "fn")
 			fn()
 		}
 		console.log("waitingForPage line 80")
