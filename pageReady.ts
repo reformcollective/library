@@ -77,6 +77,7 @@ export function useTrackPageReady() {
 		for (const fn of promisesToResolveOnReady) {
 			fn()
 		}
+		console.log("waitingForPage line 80")
 		promisesToResolveOnReady.length = 0
 
 		return () => {
