@@ -90,7 +90,7 @@ export function useTrackPageReady() {
 			}
 			promisesToResolveOnUnmount.length = 0
 		}
-	})
+	}, [])
 }
 
 export async function pageReady() {
