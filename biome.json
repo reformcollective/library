@@ -37,6 +37,11 @@
 			"semicolons": "asNeeded"
 		}
 	},
+	"css": {
+		"formatter": {
+			"enabled": true
+		}
+	},
 	"files": {
 		"ignore": ["pnpm-lock.yaml", ".vscode"]
 	},
