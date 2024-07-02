@@ -21,11 +21,13 @@ export const isMobileOS = () => {
 	return isIOS() || isAndroid()
 }
 
+export const isSafari = () =>
+	/^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+
 export const isDesktopSafari = () => {
 	const isMobile = isMobileOS()
-	const isSafari = /safari/.test(navigator.userAgent.toLowerCase())
 
-	return !isMobile && isSafari
+	return !isMobile && isSafari()
 }
 
 /**
