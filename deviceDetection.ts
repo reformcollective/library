@@ -23,7 +23,7 @@ export const isMobileOS = () => {
 
 export const isDesktopSafari = () => {
 	const isMobile = isMobileOS()
-	const isSafari = Boolean(window.safari)
+	const isSafari = /safari/.test(navigator.userAgent.toLowerCase())
 
 	return !isMobile && isSafari
 }
