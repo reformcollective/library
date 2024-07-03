@@ -1,105 +1,73 @@
 import { Link } from "gatsby"
 import { linkIsInternal } from "library/functions"
 import libraryConfig from "libraryConfig"
-import type { CSSProperties, MouseEventHandler } from "react"
+import type { ComponentProps, LegacyRef } from "react"
 import type { Transitions } from "."
 import { loadPage } from "./TransitionUtils"
 
+/**
+ * utility for referencing a universal link if you don't know the type
+ */
 export type UniversalLinkRef = HTMLButtonElement &
 	(HTMLAnchorElement & Link<unknown>)
 
-interface BaseLinkProps {
-	/**
-	 * should the link open in a new tab?
-	 */
-	openInNewTab?: boolean
-	children: React.ReactNode
-	className?: string
-	onMouseEnter?: MouseEventHandler
-	onMouseLeave?: MouseEventHandler
-	ariaLabel?: string
-	anchor?: string
-	"aria-disabled"?: boolean
-	style?: CSSProperties
+/**
+ * get the base props of a button, remapping the prop ref => forwardRef
+ */
+type GetProps<T extends React.ElementType> = Omit<ComponentProps<T>, "ref">
+
+/**
+ * props for a button element
+ */
+type StandardButtonProps = GetProps<"button"> & {
+	/** type is required, else we don't know its a button! */
+	type: "button" | "submit" | "reset"
+	forwardRef?: LegacyRef<HTMLButtonElement>
 }
 
-interface ButtonProps extends BaseLinkProps {
-	/**
-	 * what should happen when the button is clicked?
-	 */
-	onClick?: MouseEventHandler
-	/**
-	 * what type of button is this?
-	 */
-	type: "submit" | "button" | "reset"
-	/**
-	 * forward a ref to the button
-	 */
-	forwardRef?: React.RefObject<HTMLButtonElement>
-	/**
-	 * Do you want to scroll to a specific location after the transition?
-	 */
-	anchor?: string
-
-	to?: undefined
-	transition?: undefined
-}
-
-interface AnchorProps extends BaseLinkProps {
-	/**
-	 * where should the link navigate to?
-	 */
-	to: string
-	/**
-	 * which transition should be used when navigating to this link?
-	 */
-	transition?: Transitions
-	/**
-	 * forward a ref to the link or anchor tag
-	 */
-	forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
-
-	onClick?: undefined
+type StandardAnchorProps = Omit<GetProps<"a">, "href" | "onClick"> & {
+	/** type here is important for discriminating the union */
 	type?: undefined
+	/** where the link goes */
+	to: string
+	/** the transition to use when navigating */
+	transition?: Transitions
+	/**  should this open in a new tab? */
+	openInNewTab?: boolean
+	forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
 }
 
-export type UniversalLinkProps = ButtonProps | AnchorProps
+export type UniversalLinkProps = StandardAnchorProps | StandardButtonProps
 
 /**
  * a link that navigates when clicked, using the specified transition
  * @returns
  */
-export default function UniversalLink({
-	to,
-	transition = libraryConfig.defaultTransition,
-	openInNewTab = false,
-	forwardRef,
-	type,
-	children,
-	ariaLabel,
-	...props
-}: UniversalLinkProps) {
-	if (type) {
+export default function UniversalLink(props: UniversalLinkProps) {
+	if (props.type) {
 		return (
 			<button
-				type={type}
-				ref={forwardRef}
-				aria-label={ariaLabel}
+				ref={props.forwardRef}
 				{...props}
 				style={{
 					cursor: "pointer",
+					...props.style,
 				}}
-			>
-				{children}
-			</button>
+			/>
 		)
 	}
 
-	const internal = linkIsInternal(to)
+	const {
+		to,
+		transition = libraryConfig.defaultTransition,
+		openInNewTab,
+		children,
+		forwardRef,
+	} = props
 
+	const internal = linkIsInternal(to)
 	const handleClick: React.MouseEventHandler = (e) => {
 		e.preventDefault()
-
 		if (openInNewTab || !internal) {
 			window.open(to, "_blank")
 		} else {
@@ -110,23 +78,11 @@ export default function UniversalLink({
 	}
 
 	return internal ? (
-		<Link
-			to={to}
-			onClick={handleClick}
-			ref={forwardRef}
-			aria-label={ariaLabel}
-			{...props}
-		>
+		<Link onClick={handleClick} ref={forwardRef} {...props}>
 			{children}
 		</Link>
 	) : (
-		<a
-			href={to}
-			onClick={handleClick}
-			ref={forwardRef}
-			aria-label={ariaLabel}
-			{...props}
-		>
+		<a href={to} onClick={handleClick} ref={forwardRef} {...props}>
 			{children}
 		</a>
 	)
