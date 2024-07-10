@@ -1,14 +1,35 @@
 {
-	"name": "reform-collective-library",
-	"version": "1.0.0",
-	"description": "collection of utilities and helpers for reform collective",
-	"dependencies": {
-		"@contentful/rich-text-react-renderer": "^15.22.1",
-		"@contentful/rich-text-types": "^16.6.1",
-		"@react-three/drei": "^9.108.1",
-		"@react-three/fiber": "^8.16.8",
-		"@types/three": "^0.166.0",
-		"ahooks": "^3.8.0",
-		"use-deep-compare": "1.2.1"
-	}
+  "name": "reform-collective-library",
+  "version": "1.0.0",
+  "description": "collection of utilities and helpers for reform collective",
+  "dependencies": {
+    "@contentful/rich-text-react-renderer": "^15.22.1",
+    "@contentful/rich-text-types": "^16.6.1",
+    "@react-three/drei": "^9.108.1",
+    "@react-three/fiber": "^8.16.8",
+    "@types/three": "^0.166.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "ahooks": "^3.8.0",
+    "gsap": "file:gsap-bonus.tgz",
+    "react": "^18.3.1",
+    "styled-components": "^6.1.11",
+    "use-deep-compare": "1.2.1"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^1.6.1",
+    "@storybook/addon-essentials": "^8.2.1",
+    "@storybook/addon-interactions": "^8.2.1",
+    "@storybook/addon-links": "^8.2.1",
+    "@storybook/addon-onboarding": "^8.2.1",
+    "@storybook/blocks": "^8.2.1",
+    "@storybook/react": "^8.2.1",
+    "@storybook/react-vite": "^8.2.1",
+    "@storybook/test": "^8.2.1",
+    "prop-types": "^15.8.1",
+    "storybook": "^8.2.1"
+  },
+  "scripts": {
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  }
 }
