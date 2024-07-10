@@ -53,9 +53,53 @@ InfiniteSideScroll has a className prop to allow you to add custom styling if ne
     }
   `
 ```
-
 Button styles are only applied on the styled component that you are passing in as a prop.
 
-<Canvas/>
 
+## Example Usage
+
+```js
+  <InfiniteSideScroll 
+    trackGap={50}
+    Gradient={Gradient}
+    Button={StyledButton}
+  >
+    <Card $color="purple"/>,
+    <Card $color="indigo"/>,
+    <Card $color="blue"/>,
+    <Card $color="green"/>,
+    <Card $color="lightGreen"/>,
+    <Card $color="yellow"/>,
+    <Card $color="gold"/>,
+    <Card $color="orange"/>,
+    <Card $color="orangered"/>,
+    <Card $color="red"/>,
+  </InfiniteSideScroll>
+
+
+  const Card = styled.div<{ $color: string }>`
+    width: 300px;
+    height: 300px;
+    background: ${({ $color }) => $color};
+  `
+
+  const Gradient = styled.div`
+    width: 100px;
+    height: 300px;
+    background: linear-gradient(
+      to right,
+      white 20%,
+      transparent 100%
+    );
+  `
+
+  const StyledButton = styled.button`
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    cursor: pointer;
+  `
+```
+
+<Canvas/>
 <ArgTypes/>

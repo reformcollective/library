@@ -1,0 +1,40 @@
+import { Canvas, Meta, ArgTypes } from '@storybook/blocks';
+import * as Stories from './ConstantMarquee.stories'
+
+<Meta of={Stories} />
+
+# Constant Marquee
+
+## Example Usage
+
+```js
+  <ContsantMarquee>
+    <Wrapper>
+      <Block $color="purple"/>
+      <Block $color="indigo"/>
+      <Block $color="blue"/>
+      <Block $color="green"/>
+      <Block $color="lightGreen"/>
+      <Block $color="yellow"/>
+      <Block $color="gold"/>
+      <Block $color="orange"/>
+      <Block $color="orangered"/>
+      <Block $color="red"/>
+    </Wrapper>
+  </ConstantMarquee>
+
+  const Wrapper = styled.div`
+    display: flex;
+    align-items: center;
+  `
+
+  const Block = styled.div<{ $color: string }>`
+    margin-right: 20px;
+    height: 200px;
+    width: 200px;
+    background-color: ${({$color}) => $color};
+  `
+```
+
+<Canvas/>
+<ArgTypes/>

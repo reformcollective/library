@@ -30,7 +30,7 @@ const StyledButton = styled.button`
   cursor: pointer;
 `
 
-export const Playground = {
+export const infiniteSideScroll = {
   args: {
     trackGap: 50,
     children: [
