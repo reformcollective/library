@@ -1,5 +1,5 @@
 import { Link } from "gatsby"
-import { linkIsInternal } from "library/functions"
+import { linkIsInternal } from "../functions"
 import libraryConfig from "libraryConfig"
 import type { CSSProperties, MouseEventHandler } from "react"
 import type { Transitions } from "."

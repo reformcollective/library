@@ -1,0 +1,61 @@
+import { Canvas, Meta, ArgTypes } from '@storybook/blocks';
+import * as Stories from './InfiniteSideScroll.stories'
+
+<Meta of={Stories} />
+
+# Infinite Side Scroll
+
+Using the native horizontal scrolling, allows you scroll, or use the buttons, to progress through the content FOREVER.
+
+Pass in Gradient as a styled div with a gradient background and desired size.  InfiniteSideScroll will position and place it correctly.
+
+Pass in Button as a styled button or UniversalLink as if it were the increment button.  InfiniteSideScroll will create the deprecate button with scaleX(-1)
+
+## Custom Styling
+
+InfiniteSideScroll has a className prop to allow you to add custom styling if needed.  You can style the inner elements like so:
+
+```js
+  import { Inner, Track, GradientRight, GradientLeft } from 'library/InfiniteSideScroll'
+
+  const StyledSideScroll = styled(InfiniteSideScroll)`
+    // custom styling for Wrapper
+
+    ${Inner} {
+      // custom styling for Inner
+    }
+
+    ${Track} {
+      // custom styling for Track
+    }
+
+    ${GradientRight} {
+      // custom styling for GradientRight
+      // should only use to override default styles:
+      /*
+        position: fixed;
+        z-index: 2;
+        top: 0;
+        right: 0;
+        transform: scaleX(-1);
+      /*
+    }
+
+    ${GradientLeft} {
+      // custom styling for GradientLeft
+      // should only use to override default styles:
+      /*
+        position: fixed;
+        z-index: 2;
+        left: 0;
+        top: 0;
+      /*
+    }
+  `
+```
+
+Button styles are only applied on the styled component that you are passing in as a prop.
+
+<Canvas/>
+
+<ArgTypes/>
