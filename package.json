@@ -15,8 +15,6 @@
 		"use-deep-compare": "^1"
 	},
 	"devDependencies": {
-		"@vitejs/plugin-react": "^4.3.1",
-		"@types/three": "^0.166",
 		"@biomejs/biome": "^1",
 		"@chromatic-com/storybook": "^1.6.1",
 		"@storybook/addon-essentials": "^8.2.1",
@@ -27,8 +25,11 @@
 		"@storybook/react": "^8.2.1",
 		"@storybook/react-vite": "^8.2.1",
 		"@storybook/test": "^8.2.1",
+		"@types/three": "^0.166",
+		"@vitejs/plugin-react": "^4.3.1",
 		"prop-types": "^15.8.1",
-		"storybook": "^8.2.1"
+		"storybook": "^8.2.1",
+		"typescript": "^5.5.3"
 	},
 	"scripts": {
 		"storybook": "storybook dev -p 6006",
