@@ -18,7 +18,6 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          cache: "pnpm"
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
