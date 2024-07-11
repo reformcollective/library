@@ -1,10 +1,9 @@
-import InfiniteSideScroll from "../InifiniteSideScroll";
-import styled from 'styled-components'
-import React from 'react'
+import styled from "styled-components"
+import InfiniteSideScroll from "../InifiniteSideScroll"
 
 export default {
-  title: 'Components/InfiniteSideScroll',
-  component: InfiniteSideScroll
+	title: "Components/InfiniteSideScroll",
+	component: InfiniteSideScroll,
 }
 
 const Card = styled.div<{ $color: string }>`
@@ -31,22 +30,23 @@ const StyledButton = styled.button`
 `
 
 export const Playground = {
-  args: {
-    trackGap: 50,
-    children: [
-      <Card $color="purple"/>,
-      <Card $color="indigo"/>,
-      <Card $color="blue"/>,
-      <Card $color="green"/>,
-      <Card $color="lightGreen"/>,
-      <Card $color="yellow"/>,
-      <Card $color="gold"/>,
-      <Card $color="orange"/>,
-      <Card $color="orangered"/>,
-      <Card $color="red"/>,
-    ],
-    Gradient,
-    Button: <StyledButton>{">"}</StyledButton>
-  }
+	args: {
+		trackGap: 50,
+		children: (
+			<>
+				<Card $color="purple" />,
+				<Card $color="indigo" />,
+				<Card $color="blue" />,
+				<Card $color="green" />,
+				<Card $color="lightGreen" />,
+				<Card $color="yellow" />,
+				<Card $color="gold" />,
+				<Card $color="orange" />,
+				<Card $color="orangered" />,
+				<Card $color="red" />,
+			</>
+		),
+		Gradient,
+		Button: <StyledButton>{">"}</StyledButton>,
+	},
 }
-
