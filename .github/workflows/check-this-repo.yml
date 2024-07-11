@@ -1,5 +1,5 @@
 
-name: Check Linting
+name: Code Checks
 on:
   pull_request:
   merge_group:
