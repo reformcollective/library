@@ -5,7 +5,7 @@ on:
   merge_group:
 
 jobs:
-  Check_Lines:
+  Check_Linting:
     # only run if not authored by dependabot
     if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
