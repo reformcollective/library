@@ -1,6 +1,6 @@
 // see https://www.totaltypescript.com/tsconfig-cheat-sheet
 {
-	"include": ["./src/**/*", "./*.tsx", "./*.ts"],
+	"include": ["./stories/**/*"],
 	"compilerOptions": {
 		// Base Options
 		"esModuleInterop": true,
