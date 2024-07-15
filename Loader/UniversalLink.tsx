@@ -1,8 +1,8 @@
 import { Link } from "gatsby"
-import { linkIsInternal } from "../functions"
 import libraryConfig from "libraryConfig"
 import type { CSSProperties, MouseEventHandler } from "react"
 import type { Transitions } from "."
+import { linkIsInternal } from "../functions"
 import { loadPage } from "./TransitionUtils"
 
 export type UniversalLinkRef = HTMLButtonElement &

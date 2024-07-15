@@ -1,12 +1,11 @@
-import ConstantMarquee from '../ConstantMarquee'
 import styled from "styled-components"
-import React from 'react'
+import ConstantMarquee from "../ConstantMarquee"
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 export default {
-  title: 'Components/ConstantMarquee',
-  component: ConstantMarquee,
-};
+	title: "Components/ConstantMarquee",
+	component: ConstantMarquee,
+}
 
 const Wrapper = styled.div`
   display: flex;
@@ -36,4 +35,3 @@ export const constantMarquee = {
     </Wrapper>
   }
 }
-
