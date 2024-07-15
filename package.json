@@ -26,9 +26,11 @@
 		"@storybook/react-vite": "^8.2.1",
 		"@storybook/test": "^8.2.1",
 		"@types/three": "^0.166",
+		"@types/react": "^18",
 		"@vitejs/plugin-react": "^4.3.1",
 		"prop-types": "^15.8.1",
-		"storybook": "^8.2.1"
+		"storybook": "^8.2.1",
+		"typescript": "^5.5.3"
 	},
 	"scripts": {
 		"storybook": "storybook dev -p 6006",
