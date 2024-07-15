@@ -32,20 +32,18 @@ const StyledButton = styled.button`
 export const Playground = {
 	args: {
 		trackGap: 50,
-		children: (
-			<>
-				<Card $color="purple" />,
-				<Card $color="indigo" />,
-				<Card $color="blue" />,
-				<Card $color="green" />,
-				<Card $color="lightGreen" />,
-				<Card $color="yellow" />,
-				<Card $color="gold" />,
-				<Card $color="orange" />,
-				<Card $color="orangered" />,
-				<Card $color="red" />,
-			</>
-		),
+		children: [
+			<Card $color="purple" key="purple" />,
+			<Card $color="indigo" key="indigo" />,
+			<Card $color="blue" key="blue" />,
+			<Card $color="green" key="green" />,
+			<Card $color="lightGreen" key="lightGreen" />,
+			<Card $color="yellow" key="yellow" />,
+			<Card $color="gold" key="gold" />,
+			<Card $color="orange" key="orange" />,
+			<Card $color="orangered" key="orangered" />,
+			<Card $color="red" key="red" />,
+		],
 		Gradient,
 		Button: <StyledButton>{">"}</StyledButton>,
 	},

@@ -1,6 +1,12 @@
 import gsap from "gsap"
 import { ScrollToPlugin } from "gsap/all"
-import React, { useRef, useState, useCallback, useEffect } from "react"
+import React, {
+	useRef,
+	useState,
+	useCallback,
+	useEffect,
+	type ReactElement,
+} from "react"
 import styled from "styled-components"
 
 gsap.registerPlugin(ScrollToPlugin)
@@ -12,10 +18,10 @@ export default function InfiniteSideScroll({
 	Button,
 	className = "",
 }: {
-	children: React.ReactNode
+	children: React.ReactNode[]
 	trackGap: number
-	Gradient: ({ className }) => React.ReactNode
-	Button: React.ReactNode
+	Gradient: ({ className }: { className?: string }) => ReactElement
+	Button: ReactElement
 	className?: string
 }) {
 	const activeIndex = useRef(0)
@@ -97,7 +103,7 @@ export default function InfiniteSideScroll({
 
 	return (
 		<Wrapper className={className}>
-			<GradientLeft as={Gradient} />
+			<Gradient className={GradientLeft} />
 			<Track ref={(ref) => setTrackEl(ref)} onScroll={handleScroll}>
 				<Inner ref={(ref) => setTrackInnerEl(ref)} $gap={trackGap}>
 					{children}
@@ -105,7 +111,7 @@ export default function InfiniteSideScroll({
 					{children}
 				</Inner>
 			</Track>
-			<GradientRight as={Gradient} />
+			<Gradient className={GradientRight} />
 			{ButtonDecrease}
 			{ButtonIncrease}
 		</Wrapper>
