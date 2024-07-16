@@ -144,8 +144,8 @@ export const Track = styled.div`
   overflow-x: scroll;
   position: relative;
   transform: scale(1);
-
   scrollbar-width: none;
+
   ::-webkit-scrollbar {
     display: none;
   }
