@@ -7,26 +7,22 @@ export default {
 }
 
 const Card = styled.div<{ $color: string }>`
-  width: 300px;
-  height: 300px;
-  background: ${({ $color }) => $color};
+	width: 300px;
+	height: 300px;
+	background: ${({ $color }) => $color};
 `
 
 const Gradient = styled.div`
-  width: 100px;
-  height: 300px;
-  background: linear-gradient(
-    to right,
-    white 20%,
-    transparent 100%
-  );
+	width: 100px;
+	height: 300px;
+	background: linear-gradient(to right, white 20%, transparent 100%);
 `
 
 const StyledButton = styled.button`
-  width: 50px;
-  height: 50px;
-  font-size: 20px;
-  cursor: pointer;
+	width: 50px;
+	height: 50px;
+	font-size: 20px;
+	cursor: pointer;
 `
 
 export const Playground = {

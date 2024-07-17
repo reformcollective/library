@@ -8,7 +8,7 @@ export default {
 }
 
 const Content = styled.div`
-  margin-right: 20px;
+	margin-right: 20px;
 `
 
 export const constantMarquee = {

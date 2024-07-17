@@ -119,41 +119,41 @@ export default function InfiniteSideScroll({
 }
 
 const Wrapper = styled.div`
-  width: 100%;
-  position: relative;
-  transform: scale(1);
+	width: 100%;
+	position: relative;
+	transform: scale(1);
 `
 
 export const GradientLeft = styled.div`
-  position: fixed;
-  z-index: 2;
-  left: 0;
-  top: 0;
+	position: fixed;
+	z-index: 2;
+	left: 0;
+	top: 0;
 `
 
 export const GradientRight = styled.div`
-  position: fixed;
-  z-index: 2;
-  top: 0;
-  right: 0;
-  transform: scaleX(-1);
+	position: fixed;
+	z-index: 2;
+	top: 0;
+	right: 0;
+	transform: scaleX(-1);
 `
 
 export const Track = styled.div`
-  width: 100%;
-  overflow-x: scroll;
-  position: relative;
-  transform: scale(1);
+	width: 100%;
+	overflow-x: scroll;
+	position: relative;
+	transform: scale(1);
+	scrollbar-width: none;
 
-  scrollbar-width: none;
-  ::-webkit-scrollbar {
-    display: none;
-  }
+	::-webkit-scrollbar {
+		display: none;
+	}
 `
 
 export const Inner = styled.div<{ $gap: number }>`
-  width: fit-content;
-  display: flex;
-  align-items: center;
-  gap: ${({ $gap }) => $gap}px;
+	width: fit-content;
+	display: flex;
+	align-items: center;
+	gap: ${({ $gap }) => $gap}px;
 `
