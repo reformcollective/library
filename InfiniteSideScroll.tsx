@@ -4,6 +4,7 @@ import styled from "styled-components"
 import { addDebouncedEventListener } from "./functions"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import useAnimation from "./useAnimation"
+import gsap from "gsap"
 
 export function InfiniteSideScroll({
 	children,
@@ -42,11 +43,15 @@ export function InfiniteSideScroll({
 				onChange: (self) => {
 					tween?.kill()
 
-					// seek the loop based on the wheel delta
-					loop.seek(loop.time() + self.deltaX * 0.01)
-
-					if (loop.progress() === 0) loop.progress(0.999)
-					if (loop.progress() === 1) loop.progress(0.001)
+					gsap.set(loop, {
+						time: loop.time() + self.deltaX * 0.01,
+						modifiers: {
+							time: (time) => {
+								const duration = loop.duration()
+								return ((time % duration) + duration) % duration
+							},
+						},
+					})
 
 					loop.closestIndex(true)
 				},

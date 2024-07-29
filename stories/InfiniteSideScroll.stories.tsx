@@ -1,9 +1,9 @@
 import styled from "styled-components"
-import InfiniteSideScroll from "../InifiniteSideScroll"
+import OldInfiniteSideScroll from "../OldInfiniteSideScroll"
 
 export default {
 	title: "Components/InfiniteSideScroll",
-	component: InfiniteSideScroll,
+	component: OldInfiniteSideScroll,
 }
 
 const Card = styled.div<{ $color: string }>`

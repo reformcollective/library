@@ -1,6 +1,7 @@
 // horizontalLoop.d.ts
 
 import type { gsap } from "gsap"
+import type { Draggable } from "gsap/Draggable"
 
 interface HorizontalLoopConfig {
 	speed?: number
@@ -11,7 +12,6 @@ interface HorizontalLoopConfig {
 	snap?: boolean | number | ((value: number) => number)
 	draggable?: boolean
 	center?: boolean
-	[key: string]: any // Allow any additional properties
 }
 
 interface HorizontalLoopTimeline extends gsap.core.Timeline {
@@ -20,6 +20,7 @@ interface HorizontalLoopTimeline extends gsap.core.Timeline {
 	toIndex(index: number, vars?: Record<string, any>): gsap.core.Tween
 	current(): number
 	times: number[]
+	draggable: Draggable
 }
 
 export function horizontalLoop(

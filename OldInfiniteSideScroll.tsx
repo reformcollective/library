@@ -11,7 +11,16 @@ import styled from "styled-components"
 
 gsap.registerPlugin(ScrollToPlugin)
 
-export default function InfiniteSideScroll({
+/**
+ * @deprecated - use infinite side scroll instead.
+ *
+ * here's how the props map:
+ * children -> children
+ * trackGap -> set margin or padding on your children OR style the component and use & .track to target the track
+ * Gradient -> style the component `styled(InfiniteSideScroll)` and use &::before and &::after to create gradient faders
+ * Button -> ArrowButton
+ */
+export default function OldInfiniteSideScroll({
 	children,
 	trackGap,
 	Gradient,
