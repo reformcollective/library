@@ -1,21 +1,16 @@
 import styled from "styled-components"
-import OldInfiniteSideScroll from "../OldInfiniteSideScroll"
+import { InfiniteSideScroll } from "../InfiniteSideScroll"
+import type { ComponentProps } from "react"
 
 export default {
 	title: "Components/InfiniteSideScroll",
-	component: OldInfiniteSideScroll,
+	component: InfiniteSideScroll,
 }
 
 const Card = styled.div<{ $color: string }>`
 	width: 300px;
 	height: 300px;
 	background: ${({ $color }) => $color};
-`
-
-const Gradient = styled.div`
-	width: 100px;
-	height: 300px;
-	background: linear-gradient(to right, white 20%, transparent 100%);
 `
 
 const StyledButton = styled.button`
@@ -27,7 +22,6 @@ const StyledButton = styled.button`
 
 export const Playground = {
 	args: {
-		trackGap: 50,
 		children: [
 			<Card $color="purple" key="purple" />,
 			<Card $color="indigo" key="indigo" />,
@@ -40,7 +34,6 @@ export const Playground = {
 			<Card $color="orangered" key="orangered" />,
 			<Card $color="red" key="red" />,
 		],
-		Gradient,
-		Button: <StyledButton>{">"}</StyledButton>,
-	},
+		ArrowButton: (props) => <StyledButton {...props}>{">"}</StyledButton>,
+	} satisfies ComponentProps<typeof InfiniteSideScroll>,
 }
