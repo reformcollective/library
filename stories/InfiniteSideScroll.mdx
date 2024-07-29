@@ -5,56 +5,30 @@ import * as Stories from './InfiniteSideScroll.stories'
 
 # Infinite Side Scroll
 
-Using the native horizontal scrolling, allows you scroll, or use the buttons, to progress through the content FOREVER.
+Uses gsap Observable & Draggable, allows you scroll, or use the buttons, to progress through the content FOREVER.
 
-Pass in Gradient as a styled div with a gradient background and desired size.  InfiniteSideScroll will position and place it correctly.
+If you want to add gradient faders, style the component and use &::before and &::after to create and position the faders. Don't forget to use position: relative for the parent element (probably this component)
 
-Pass in Button as a styled button or UniversalLink as if it were the increment button.  InfiniteSideScroll will create the deprecate button with scaleX(-1)
+Pass in ArrowButton as a styled button or UniversalLink as if it were the increment button. We'll flip it on the x axis to make it point the other way. to opt out of this, you can also pass in a second button as BackButton
 
 ## Custom Styling
 
 InfiniteSideScroll has a className prop to allow you to add custom styling if needed.  You can style the inner elements like so:
 
 ```js
-  import { Inner, Track, GradientRight, GradientLeft } from 'library/InfiniteSideScroll'
 
   const StyledSideScroll = styled(InfiniteSideScroll)`
     // custom styling for Wrapper
 
-    ${Inner} {
-      // custom styling for Inner
-    }
-
-    ${Track} {
+    & .track {
       // custom styling for Track
     }
 
-    ${GradientRight} {
-      // custom styling for GradientRight
-      // should only use to override default styles:
-      /*
-        position: fixed;
-        z-index: 2;
-        top: 0;
-        right: 0;
-        transform: scaleX(-1);
-      /*
-    }
-
-    ${GradientLeft} {
-      // custom styling for GradientLeft
-      // should only use to override default styles:
-      /*
-        position: fixed;
-        z-index: 2;
-        left: 0;
-        top: 0;
-      /*
+    * .buttons {
+      // custom styling for the wrapper around the buttons
     }
   `
 ```
-
-Button styles are only applied on the styled component that you are passing in as a prop.
 
 <Canvas/>
 

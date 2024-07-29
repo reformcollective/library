@@ -6,13 +6,17 @@ import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import useAnimation from "./useAnimation"
 import gsap from "gsap"
 
+gsap.registerPlugin(Observer)
+
 export function InfiniteSideScroll({
 	children,
 	ArrowButton,
+	BackArrowButton,
 	className,
 }: {
 	children: React.ReactNode
 	ArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
+	BackArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
 	className?: string
 }) {
 	const rowRef = useRef<HTMLDivElement>(null)
@@ -38,7 +42,7 @@ export function InfiniteSideScroll({
 
 			let tween: gsap.core.Tween | undefined
 			Observer.create({
-				target: ".cards",
+				target: rowRef.current,
 				type: "wheel",
 				onChange: (self) => {
 					tween?.kill()
@@ -113,6 +117,15 @@ export function InfiniteSideScroll({
 		}
 	}, [])
 
+	/**
+	 * some logic to determine which buttons to show, and if we need to flip the back button
+	 */
+	const hasButtons = Boolean(ArrowButton || BackArrowButton)
+	const hasTwoButtons = Boolean(ArrowButton && BackArrowButton)
+	const BackButton = BackArrowButton || ArrowButton
+	const ForwardButton = ArrowButton || BackArrowButton
+	const ButtonWrapper = hasTwoButtons ? TwoButtons : OneButton
+
 	return (
 		<div className={className}>
 			<Row ref={rowRef}>
@@ -121,25 +134,29 @@ export function InfiniteSideScroll({
 					<Fragment key={index}>{children}</Fragment>
 				))}
 			</Row>
-			{ArrowButton && (
-				<Buttons>
-					<ArrowButton
-						onClick={() =>
-							loop?.previous({
-								duration: 1,
-								ease: "power3.out",
-							})
-						}
-					/>
-					<ArrowButton
-						onClick={() =>
-							loop?.next({
-								duration: 1,
-								ease: "power3.out",
-							})
-						}
-					/>
-				</Buttons>
+			{hasButtons && (
+				<ButtonWrapper>
+					{BackButton && (
+						<BackButton
+							onClick={() =>
+								loop?.previous({
+									duration: 1,
+									ease: "power3.out",
+								})
+							}
+						/>
+					)}
+					{ForwardButton && (
+						<ForwardButton
+							onClick={() =>
+								loop?.next({
+									duration: 1,
+									ease: "power3.out",
+								})
+							}
+						/>
+					)}
+				</ButtonWrapper>
 			)}
 		</div>
 	)
@@ -148,16 +165,19 @@ export function InfiniteSideScroll({
 const Row = styled.div`
 	display: flex;
 	max-width: 100%;
+	overflow: clip;
 
 	> * {
 		flex-shrink: 0;
 	}
 `
 
-const Buttons = styled.div`
+const TwoButtons = styled.div`
 	display: flex;
+`
 
+const OneButton = styled(TwoButtons)`
 	> *:first-child {
-		rotate: 180deg;
+		scale: -1 1;
 	}
 `

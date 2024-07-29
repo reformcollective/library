@@ -38,7 +38,12 @@
 		}
 	},
 	"files": {
-		"ignore": ["pnpm-lock.yaml", ".vscode", "src/library/gsapHelpers"]
+		"ignore": [
+			"pnpm-lock.yaml",
+			".vscode",
+			"gsapHelpers",
+			"src/library/gsapHelpers"
+		]
 	},
 	"vcs": {
 		"enabled": true,

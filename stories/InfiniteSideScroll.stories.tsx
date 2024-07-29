@@ -14,7 +14,7 @@ const Card = styled.div<{ $color: string }>`
 `
 
 const StyledButton = styled.button`
-	width: 50px;
+	min-width: 50px;
 	height: 50px;
 	font-size: 20px;
 	cursor: pointer;
@@ -22,18 +22,23 @@ const StyledButton = styled.button`
 
 export const Playground = {
 	args: {
-		children: [
-			<Card $color="purple" key="purple" />,
-			<Card $color="indigo" key="indigo" />,
-			<Card $color="blue" key="blue" />,
-			<Card $color="green" key="green" />,
-			<Card $color="lightGreen" key="lightGreen" />,
-			<Card $color="yellow" key="yellow" />,
-			<Card $color="gold" key="gold" />,
-			<Card $color="orange" key="orange" />,
-			<Card $color="orangered" key="orangered" />,
-			<Card $color="red" key="red" />,
-		],
-		ArrowButton: (props) => <StyledButton {...props}>{">"}</StyledButton>,
+		children: (
+			<>
+				<Card $color="purple" />,
+				<Card $color="indigo" />,
+				<Card $color="blue" />,
+				<Card $color="green" />,
+				<Card $color="lightGreen" />,
+				<Card $color="yellow" />,
+				<Card $color="gold" />,
+				<Card $color="orange" />,
+				<Card $color="orangered" />,
+				<Card $color="red" />,
+			</>
+		),
+		ArrowButton: (props) => <StyledButton {...props}>{"next >"}</StyledButton>,
+		BackArrowButton: (props) => (
+			<StyledButton {...props}>{"< previous"}</StyledButton>
+		),
 	} satisfies ComponentProps<typeof InfiniteSideScroll>,
 }
