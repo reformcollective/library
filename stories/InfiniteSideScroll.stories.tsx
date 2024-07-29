@@ -1,6 +1,6 @@
+import type { ComponentProps } from "react"
 import styled from "styled-components"
 import { InfiniteSideScroll } from "../InfiniteSideScroll"
-import type { ComponentProps } from "react"
 
 export default {
 	title: "Components/InfiniteSideScroll",

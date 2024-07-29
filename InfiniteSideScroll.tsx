@@ -1,10 +1,10 @@
+import gsap from "gsap"
 import Observer from "gsap/Observer"
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 import { addDebouncedEventListener } from "./functions"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import useAnimation from "./useAnimation"
-import gsap from "gsap"
 
 gsap.registerPlugin(Observer)
 
