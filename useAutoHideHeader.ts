@@ -1,7 +1,7 @@
+import gsap from "gsap"
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { type RefObject, useEffect, useRef, useState } from "react"
-import gsap from "gsap"
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
 
