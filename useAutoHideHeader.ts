@@ -64,12 +64,17 @@ export default function useAutoHideHeader(wrapper: RefObject<HTMLDivElement>) {
 					if (scroll === 0) {
 						translateYRef.current = 0
 					} else if (delta > 0) {
-						translateYRef.current = Math.max(
-							-height,
-							translateYRef.current - delta,
-						)
+						/**
+						 * The commented lines below give the header movement more of a scrubbing effect.
+						 */
+						// translateYRef.current = Math.max(
+						// 	-height,
+						// 	translateYRef.current - delta,
+						// )
+						translateYRef.current = -height
 					} else {
-						translateYRef.current = Math.min(0, translateYRef.current - delta)
+						// translateYRef.current = Math.min(0, translateYRef.current - delta)
+						translateYRef.current = 0
 					}
 					setTranslateY(translateYRef.current)
 				}
