@@ -1,6 +1,6 @@
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { type RefObject, useState, useRef, useEffect } from "react"
+import { type RefObject, useEffect, useRef, useState } from "react"
 
 const isElementInViewport = (element: HTMLElement | null) => {
 	const rect = element?.getBoundingClientRect()
