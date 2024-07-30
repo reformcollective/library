@@ -52,7 +52,9 @@ export function InfiniteSideScroll({
 			Observer.create({
 				target: rowRef.current,
 				type: "wheel",
-				onChange: (self) => {
+				onChangeX: (self) => {
+					// ignore if x is not the primary axis
+					if (Math.abs(self.deltaX) < Math.abs(self.deltaY)) return
 					if (loop.draggable.isDragging || loop.draggable.isThrowing) return
 					tween?.kill()
 					loop.scrollBy(self.deltaX)
