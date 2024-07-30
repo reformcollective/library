@@ -14,14 +14,31 @@ export function InfiniteSideScroll({
 	BackArrowButton,
 	className,
 	marqueeSpeed = 0,
-	reversed,
+	reversed = false,
+	disableDrag = false,
 }: {
 	children: React.ReactNode
-	ArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
-	BackArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
 	className?: string
+	/**
+	 * if specified, a button will be shown to scroll forward and backward by an item
+	 */
+	ArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
+	/**
+	 * if specified, a different button may be used for scrolling backwards (if you'd rather not use an auto-flipped button)
+	 */
+	BackArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
+	/**
+	 * speed of the marquee. 1 is about 100 pixels per second. 0 or undefined will disable marqueeing
+	 */
 	marqueeSpeed?: number
+	/**
+	 * if true, the marquee will move to the right instead of to the left
+	 */
 	reversed?: boolean
+	/**
+	 * if true, the marquee will not be draggable or scrollable manually (you can still use the buttons, if specified)
+	 */
+	disableDrag?: boolean
 }) {
 	const rowRef = useRef<HTMLDivElement>(null)
 	const [numberNeeded, setNumberNeeded] = useState(1)
@@ -29,9 +46,10 @@ export function InfiniteSideScroll({
 	const loop = useAnimation(
 		() => {
 			if (!rowRef.current) return
+			const draggable = !disableDrag
 
 			const loop = horizontalLoop(rowRef.current.children, {
-				draggable: true,
+				draggable,
 				paused: marqueeSpeed === 0,
 				center: true,
 				speed: marqueeSpeed === 0 ? 2 : marqueeSpeed,
@@ -49,30 +67,31 @@ export function InfiniteSideScroll({
 			}
 
 			let tween: gsap.core.Tween | undefined
-			Observer.create({
-				target: rowRef.current,
-				type: "wheel",
-				onChangeX: (self) => {
-					// ignore if x is not the primary axis
-					if (Math.abs(self.deltaX) < Math.abs(self.deltaY)) return
-					if (loop.draggable.isDragging || loop.draggable.isThrowing) return
-					tween?.kill()
-					gsap.killTweensOf(loop)
-					loop.scrollBy(self.deltaX)
-				},
-				onStop: () => {
-					if (marqueeSpeed) loop.play()
-					else
-						tween = loop.toIndex(loop.current(), {
-							ease: "power3.inOut",
-							duration: 1,
-						})
-				},
-			})
+			if (draggable)
+				Observer.create({
+					target: rowRef.current,
+					type: "wheel",
+					onChangeX: (self) => {
+						// ignore if x is not the primary axis
+						if (Math.abs(self.deltaX) < Math.abs(self.deltaY)) return
+						if (loop.draggable.isDragging || loop.draggable.isThrowing) return
+						tween?.kill()
+						gsap.killTweensOf(loop)
+						loop.scrollBy(self.deltaX)
+					},
+					onStop: () => {
+						if (marqueeSpeed) loop.play()
+						else
+							tween = loop.toIndex(loop.current(), {
+								ease: "power3.inOut",
+								duration: 1,
+							})
+					},
+				})
 
 			return loop
 		},
-		[marqueeSpeed, reversed],
+		[marqueeSpeed, reversed, disableDrag],
 		{
 			recreateOnResize: true,
 			extraDeps: [numberNeeded],
