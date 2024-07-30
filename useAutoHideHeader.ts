@@ -1,9 +1,6 @@
-import gsap from "gsap"
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { type RefObject, useEffect, useRef, useState } from "react"
-
-gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
 
 const isElementInViewport = (element: HTMLElement) => {
 	const rect = element?.getBoundingClientRect()
