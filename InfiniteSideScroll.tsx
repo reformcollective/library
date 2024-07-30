@@ -66,28 +66,30 @@ export function InfiniteSideScroll({
 				})
 			}
 
+			// if we don't support dragging, we can stop here
+			if (!draggable) return loop
+
 			let tween: gsap.core.Tween | undefined
-			if (draggable)
-				Observer.create({
-					target: rowRef.current,
-					type: "wheel",
-					onChangeX: (self) => {
-						// ignore if x is not the primary axis
-						if (Math.abs(self.deltaX) < Math.abs(self.deltaY)) return
-						if (loop.draggable.isDragging || loop.draggable.isThrowing) return
-						tween?.kill()
-						gsap.killTweensOf(loop)
-						loop.scrollBy(self.deltaX)
-					},
-					onStop: () => {
-						if (marqueeSpeed) loop.play()
-						else
-							tween = loop.toIndex(loop.current(), {
-								ease: "power3.inOut",
-								duration: 1,
-							})
-					},
-				})
+			Observer.create({
+				target: rowRef.current,
+				type: "wheel",
+				onChangeX: (self) => {
+					// ignore if x is not the primary axis
+					if (Math.abs(self.deltaX) < Math.abs(self.deltaY)) return
+					if (loop.draggable.isDragging || loop.draggable.isThrowing) return
+					tween?.kill()
+					gsap.killTweensOf(loop)
+					loop.scrollBy(self.deltaX)
+				},
+				onStop: () => {
+					if (marqueeSpeed) loop.play()
+					else
+						tween = loop.toIndex(loop.current(), {
+							ease: "power3.inOut",
+							duration: 1,
+						})
+				},
+			})
 
 			return loop
 		},
