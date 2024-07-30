@@ -45,6 +45,7 @@ export function InfiniteSideScroll({
 				target: rowRef.current,
 				type: "wheel",
 				onChange: (self) => {
+					if (loop.draggable.isDragging || loop.draggable.isThrowing) return
 					tween?.kill()
 
 					gsap.set(loop, {
