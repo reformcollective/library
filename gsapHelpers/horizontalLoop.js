@@ -196,6 +196,12 @@ export function horizontalLoop(items, config) {
         }
       })[0];
       tl.draggable = draggable;
+      tl.scrollBy = (pixels) => {
+        let wrap = gsap.utils.wrap(0, 1),
+          progress = wrap(tl.progress() + pixels / totalWidth);
+        tl.progress(progress);
+        tl.closestIndex(true);
+      }
     }
     tl.closestIndex(true);
     lastIndex = curIndex;

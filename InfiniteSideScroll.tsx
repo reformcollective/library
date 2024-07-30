@@ -30,7 +30,6 @@ export function InfiniteSideScroll({
 				draggable: true,
 				paused: true,
 				center: true,
-				speed: 2,
 			})
 
 			// start centered
@@ -47,18 +46,7 @@ export function InfiniteSideScroll({
 				onChange: (self) => {
 					if (loop.draggable.isDragging || loop.draggable.isThrowing) return
 					tween?.kill()
-
-					gsap.set(loop, {
-						time: loop.time() + self.deltaX * 0.01,
-						modifiers: {
-							time: (time) => {
-								const duration = loop.duration()
-								return ((time % duration) + duration) % duration
-							},
-						},
-					})
-
-					loop.closestIndex(true)
+					loop.scrollBy(self.deltaX)
 				},
 				onStop: () => {
 					tween = loop.toIndex(loop.current(), {
@@ -129,14 +117,14 @@ export function InfiniteSideScroll({
 
 	return (
 		<div className={className}>
-			<Row ref={rowRef}>
+			<Row ref={rowRef} className="track">
 				{Array.from({ length: numberNeeded }, (_, index) => (
 					// biome-ignore lint/suspicious/noArrayIndexKey: only unique identifier is index
 					<Fragment key={index}>{children}</Fragment>
 				))}
 			</Row>
 			{hasButtons && (
-				<ButtonWrapper>
+				<ButtonWrapper className="buttons">
 					{BackButton && (
 						<BackButton
 							onClick={() =>
@@ -165,7 +153,8 @@ export function InfiniteSideScroll({
 
 const Row = styled.div`
 	display: flex;
-	max-width: 100%;
+	width: 100%;
+	max-width: 100vw;
 	overflow: clip;
 
 	> * {

@@ -19,6 +19,7 @@ interface HorizontalLoopTimeline extends gsap.core.Timeline {
 	previous(vars?: gsap.TweenVars): gsap.core.Tween
 	toIndex(index: number, vars?: gsap.TweenVars): gsap.core.Tween
 	current(): number
+	scrollBy(count: number): void
 	times: number[]
 	draggable: Draggable
 }

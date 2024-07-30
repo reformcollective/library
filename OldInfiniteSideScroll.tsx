@@ -16,7 +16,7 @@ gsap.registerPlugin(ScrollToPlugin)
  *
  * here's how the props map:
  * children -> children
- * trackGap -> set margin or padding on your children OR style the component and use & .track to target the track
+ * trackGap -> set left margin or padding on your children OR style the component and use & .track to target the track
  * Gradient -> style the component `styled(InfiniteSideScroll)` and use &::before and &::after to create gradient faders
  * Button -> ArrowButton
  */
