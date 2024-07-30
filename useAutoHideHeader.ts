@@ -1,8 +1,11 @@
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { type RefObject, useEffect, useRef, useState } from "react"
+import gsap from "gsap"
 
-const isElementInViewport = (element: HTMLElement | null) => {
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
+
+const isElementInViewport = (element: HTMLElement) => {
 	const rect = element?.getBoundingClientRect()
 	return (
 		rect &&
@@ -11,10 +14,10 @@ const isElementInViewport = (element: HTMLElement | null) => {
 	)
 }
 
-const checkElementsInViewport = (elementIds: string[]) => {
-	for (const elementId of elementIds) {
-		const element = document.getElementById(elementId)
-		if (element && isElementInViewport(element)) {
+const checkElementsInViewport = (id: string) => {
+	const elements = document.querySelectorAll(`[id^="${id}"]`)
+	for (const element of elements) {
+		if (isElementInViewport(element as HTMLElement)) {
 			return true
 		}
 	}
@@ -24,16 +27,13 @@ const checkElementsInViewport = (elementIds: string[]) => {
 /**
  * A custom hook that controls header visibility based on scroll position and specified elements.
  *
+ * Add the `hide-header` ID to an element to hide the header when it is in view.
+ * Add the `stick-header` ID to an element to stick the header when it is in view.
+ *
  * @param wrapper The ref object of the header element.
- * @param hideHeaderElementIds An array of element IDs that will hide the header when in view.
- * @param stickyHeaderElementIds An array of element IDs that will make the header sticky when in view.
  * @returns The current translateY value for the header, which allows for vertical positioning.
  */
-export default function useAutoHideHeader(
-	wrapper: RefObject<HTMLDivElement>,
-	hideHeaderElementIds: string[] = [],
-	stickyHeaderElementIds: string[] = [],
-) {
+export default function useAutoHideHeader(wrapper: RefObject<HTMLDivElement>) {
 	const [translateY, setTranslateY] = useState(0)
 	const translateYRef = useRef(0)
 
@@ -52,11 +52,9 @@ export default function useAutoHideHeader(
 				lastScroll = scroll
 				const height = wrapper.current?.offsetHeight ?? 0
 
-				// Check for elements included in the hideHeaderElementIds and stickyHeaderElementIds arrays
-				const shouldHideHeader = checkElementsInViewport(hideHeaderElementIds)
-				const shouldStickyHeader = checkElementsInViewport(
-					stickyHeaderElementIds,
-				)
+				// Check for elements that have the specified IDs.
+				const shouldHideHeader = checkElementsInViewport("hide-header")
+				const shouldStickyHeader = checkElementsInViewport("stick-header")
 
 				if (shouldHideHeader) {
 					setTranslateY(-height)
@@ -77,7 +75,7 @@ export default function useAutoHideHeader(
 				}
 			},
 		})
-	}, [stickyHeaderElementIds, hideHeaderElementIds, wrapper])
+	}, [wrapper])
 
 	return translateY
 }
