@@ -129,7 +129,7 @@ export function InfiniteSideScroll({
 	const ButtonWrapper = hasTwoButtons ? TwoButtons : OneButton
 
 	return (
-		<div className={className}>
+		<Wrapper className={className}>
 			<Row ref={rowRef} className="track">
 				{Array.from({ length: numberNeeded }, (_, index) => (
 					// biome-ignore lint/suspicious/noArrayIndexKey: only unique identifier is index
@@ -160,15 +160,18 @@ export function InfiniteSideScroll({
 					)}
 				</ButtonWrapper>
 			)}
-		</div>
+		</Wrapper>
 	)
 }
+
+const Wrapper = styled.div`
+	display: grid;
+`
 
 const Row = styled.div`
 	display: flex;
 	width: 100%;
-	max-width: 100vw;
-	overflow: clip;
+	overflow: hidden;
 
 	> * {
 		flex-shrink: 0;
