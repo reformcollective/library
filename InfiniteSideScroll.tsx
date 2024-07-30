@@ -13,11 +13,15 @@ export function InfiniteSideScroll({
 	ArrowButton,
 	BackArrowButton,
 	className,
+	marqueeSpeed = 0,
+	reversed,
 }: {
 	children: React.ReactNode
 	ArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
 	BackArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
 	className?: string
+	marqueeSpeed?: number
+	reversed?: boolean
 }) {
 	const rowRef = useRef<HTMLDivElement>(null)
 	const [numberNeeded, setNumberNeeded] = useState(1)
@@ -28,16 +32,21 @@ export function InfiniteSideScroll({
 
 			const loop = horizontalLoop(rowRef.current.children, {
 				draggable: true,
-				paused: true,
+				paused: marqueeSpeed === 0,
 				center: true,
+				speed: marqueeSpeed === 0 ? 2 : marqueeSpeed,
+				reversed,
+				repeat: -1,
 			})
 
 			// start centered
-			loop.toIndex(0)
-			loop.timeScale(999)
-			requestAnimationFrame(() => {
-				loop.timeScale(1)
-			})
+			if (marqueeSpeed === 0) {
+				loop.toIndex(0)
+				loop.timeScale(999)
+				requestAnimationFrame(() => {
+					loop.timeScale(1)
+				})
+			}
 
 			let tween: gsap.core.Tween | undefined
 			Observer.create({
@@ -49,16 +58,18 @@ export function InfiniteSideScroll({
 					loop.scrollBy(self.deltaX)
 				},
 				onStop: () => {
-					tween = loop.toIndex(loop.current(), {
-						ease: "power3.inOut",
-						duration: 1,
-					})
+					if (marqueeSpeed) loop.play()
+					else
+						tween = loop.toIndex(loop.current(), {
+							ease: "power3.inOut",
+							duration: 1,
+						})
 				},
 			})
 
 			return loop
 		},
-		[],
+		[marqueeSpeed, reversed],
 		{
 			recreateOnResize: true,
 			extraDeps: [numberNeeded],
