@@ -57,6 +57,7 @@ export function InfiniteSideScroll({
 					if (Math.abs(self.deltaX) < Math.abs(self.deltaY)) return
 					if (loop.draggable.isDragging || loop.draggable.isThrowing) return
 					tween?.kill()
+					gsap.killTweensOf(loop)
 					loop.scrollBy(self.deltaX)
 				},
 				onStop: () => {
