@@ -44,8 +44,11 @@ export function InfiniteSideScroll({
 	/**
 	 * if specified, will scrub based on vertical scroll velocity
 	 * can also be negative to reverse the direction
+	 *
+	 * you can also pass a function, which will be called with the velocity and should return the scrub value
+	 * (this is useful if you want to e.g. always scrub forward regardless of scroll direction)
 	 */
-	scrollVelocity?: number
+	scrollVelocity?: number | ((velocity: number) => number)
 }) {
 	const rowRef = useRef<HTMLDivElement>(null)
 	const [numberNeeded, setNumberNeeded] = useState(1)
@@ -76,7 +79,10 @@ export function InfiniteSideScroll({
 			if (scrollVelocity)
 				ScrollTrigger.create({
 					onUpdate: (self) => {
-						const delta = self.getVelocity() * (scrollVelocity / 1000)
+						const delta =
+							typeof scrollVelocity === "function"
+								? scrollVelocity(self.getVelocity())
+								: self.getVelocity() * (scrollVelocity / 1000)
 						loop.scrollBy(delta)
 					},
 				})
