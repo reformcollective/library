@@ -5,6 +5,7 @@ import styled from "styled-components"
 import { addDebouncedEventListener } from "./functions"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import useAnimation from "./useAnimation"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 
 gsap.registerPlugin(Observer)
 
@@ -16,6 +17,7 @@ export function InfiniteSideScroll({
 	marqueeSpeed = 0,
 	reversed = false,
 	disableDrag = false,
+	scrollVelocity,
 }: {
 	children: React.ReactNode
 	className?: string
@@ -39,6 +41,11 @@ export function InfiniteSideScroll({
 	 * if true, the marquee will not be draggable or scrollable manually (you can still use the buttons, if specified)
 	 */
 	disableDrag?: boolean
+	/**
+	 * if specified, will scrub based on vertical scroll velocity
+	 * can also be negative to reverse the direction
+	 */
+	scrollVelocity?: number
 }) {
 	const rowRef = useRef<HTMLDivElement>(null)
 	const [numberNeeded, setNumberNeeded] = useState(1)
@@ -66,6 +73,14 @@ export function InfiniteSideScroll({
 				})
 			}
 
+			if (scrollVelocity)
+				ScrollTrigger.create({
+					onUpdate: (self) => {
+						const delta = self.getVelocity() * (scrollVelocity / 1000)
+						loop.scrollBy(delta)
+					},
+				})
+
 			// if we don't support dragging, we can stop here
 			if (!draggable) return loop
 
@@ -82,7 +97,8 @@ export function InfiniteSideScroll({
 					loop.scrollBy(self.deltaX)
 				},
 				onStop: () => {
-					if (marqueeSpeed) loop.play()
+					if (marqueeSpeed && !reversed) loop.play()
+					else if (marqueeSpeed && reversed) loop.reverse()
 					else
 						tween = loop.toIndex(loop.current(), {
 							ease: "power3.inOut",
@@ -93,7 +109,7 @@ export function InfiniteSideScroll({
 
 			return loop
 		},
-		[marqueeSpeed, reversed, disableDrag],
+		[marqueeSpeed, reversed, disableDrag, scrollVelocity],
 		{
 			recreateOnResize: true,
 			extraDeps: [numberNeeded],
