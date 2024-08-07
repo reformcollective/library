@@ -30,7 +30,13 @@ export default function fullyResponsive(
 	only?: "mobile" | "tablet" | "desktop",
 ) {
 	// if not a string, convert to string
-	const cssAsString = typeof cssIn === "string" ? cssIn : cssIn.join("")
+	const cssAsString =
+		typeof cssIn === "string"
+			? cssIn
+			: cssIn
+					.join("")
+					// and convert multiline declarations to single line (for detection purposes)
+					.replaceAll("\n", " ")
 	const onlyPxValues = cssAsString
 		.replaceAll("{", "{\n")
 		.replaceAll("}", "\n}")
@@ -39,7 +45,10 @@ export default function fullyResponsive(
 		.filter((x) => x.match(/px|{|}/g))
 		.join("\n")
 
-	const regex = /(?=[\S ]*;)([\d.]+)px/g
+	/**
+	 * detects pixel values, excluding those inside media queries
+	 */
+	const regex = /(?=[^{}@]*;)([\d.]+)px/g
 
 	/**
 	 * generate media query for a single breakpoint
@@ -75,10 +84,10 @@ export default function fullyResponsive(
 							// convert to px values at the fw breakpoint (this may be different than the raw px value, depending on the config)
 							regex,
 							(_, px: string) =>
-								`${
+								`${(
 									(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
 									desktopBreakpoint
-								}px`,
+								).toFixed(1)}px`.replace(".0px", "px"),
 						)
 			}
 		}
