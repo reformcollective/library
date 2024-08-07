@@ -3,9 +3,9 @@ on:
   workflow_call:
     secrets:
       CONTENTFUL_ACCESS_TOKEN:
-        required: true
+        required: false
       CONTENTFUL_SPACE_ID:
-        required: true
+        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -32,9 +32,6 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
       - name: Use Node
         uses: actions/setup-node@v3
         if: steps.package-manager.outputs.PNPM == 'true'
@@ -92,9 +89,6 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
       - name: Use Node
         uses: actions/setup-node@v3
         if: steps.package-manager.outputs.PNPM == 'true'
@@ -144,9 +138,6 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
       - name: Use Node
         uses: actions/setup-node@v3
         if: steps.package-manager.outputs.PNPM == 'true'
@@ -193,9 +184,6 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
       - name: Use Node
         uses: actions/setup-node@v3
         if: steps.package-manager.outputs.PNPM == 'true'

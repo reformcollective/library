@@ -1,7 +1,5 @@
 import { useEffect, useRef } from "react"
 import styled from "styled-components"
-import { useClientOnly } from "./ClientOnly"
-import { isBrowser } from "./deviceDetection"
 
 /**
  * scales it's content to a certain size while maintaining
@@ -18,11 +16,6 @@ export default function ScaledContent({
 }) {
 	const outer = useRef<HTMLDivElement | null>(null)
 	const inner = useRef<HTMLDivElement | null>(null)
-
-	const supportsCssZoom = useClientOnly(
-		isBrowser && window.CSS.supports("zoom", "1"),
-		true,
-	)
 
 	useEffect(() => {
 		if (!outer.current || !inner.current) return
@@ -49,10 +42,6 @@ export default function ScaledContent({
 			clearInterval(interval)
 		}
 	}, [])
-
-	if (supportsCssZoom) {
-		return <div style={{ zoom: scale ?? 1 }}>{children}</div>
-	}
 
 	return (
 		<Outer ref={outer}>

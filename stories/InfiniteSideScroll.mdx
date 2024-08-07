@@ -1,0 +1,37 @@
+import { Canvas, Meta, ArgTypes } from '@storybook/blocks';
+import * as Stories from './InfiniteSideScroll.stories'
+
+<Meta of={Stories} />
+
+# Infinite Side Scroll
+
+Uses gsap Observable & Draggable, allows you scroll, or use the buttons, to progress through the content FOREVER.
+
+If you want to add gradient faders, style the component and use &::before and &::after to create and position the faders. Don't forget to use position: relative for the parent element (probably this component)
+
+Pass in ArrowButton as a styled button or UniversalLink as if it were the increment button. We'll flip it on the x axis to make it point the other way. to opt out of this, you can also pass in a second button as BackButton
+
+If you want to add a gap between items, just add left margin to your items. alternatively, style the track and add a gap + left padding
+
+## Custom Styling
+
+InfiniteSideScroll has a className prop to allow you to add custom styling if needed.  You can style the inner elements like so:
+
+```js
+
+  const StyledSideScroll = styled(InfiniteSideScroll)`
+    // custom styling for Wrapper
+
+    & .track {
+      // custom styling for Track
+    }
+
+    * .buttons {
+      // custom styling for the wrapper around the buttons
+    }
+  `
+```
+
+<Canvas/>
+
+<ArgTypes/>
