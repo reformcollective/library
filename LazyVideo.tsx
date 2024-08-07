@@ -9,6 +9,7 @@ type Props = {
 	className?: string
 	style?: React.CSSProperties
 	forwardRef?: React.RefObject<HTMLVideoElement>
+	contextMenu?: boolean
 	loop?: boolean
 	autoPlay?: boolean
 } & (
@@ -21,6 +22,7 @@ export function LazyVideo({
 	sourceMP4,
 	sourceWEBM,
 	forwardRef,
+	contextMenu = true,
 	loop = true,
 	autoPlay = true,
 	...props
@@ -53,6 +55,9 @@ export function LazyVideo({
 			muted
 			loop={loop}
 			playsInline
+			onContextMenu={(e) => {
+				!contextMenu && e.preventDefault()
+			}}
 			ref={refToUse}
 		>
 			{showVideo && (
