@@ -91,17 +91,36 @@ export function InfiniteSideScroll({
 			if (!draggable) return loop
 
 			let tween: gsap.core.Tween | undefined
+
+			const onWheel = (e: WheelEvent) => {
+				if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return
+				if (loop.draggable.isDragging || loop.draggable.isThrowing) return
+
+				e.preventDefault()
+				tween?.kill()
+				gsap.killTweensOf(loop)
+				loop.scrollBy(e.deltaX)
+			}
+
+			/**
+			 * we have to use a regular event listener because the Observer
+			 * can't preventDefault on wheel events (which we need to prevent overscroll in safari)
+			 */
+			gsap.context(() => {
+				const row = rowRef.current
+				row?.addEventListener("wheel", onWheel)
+				return () => {
+					row?.removeEventListener("wheel", onWheel)
+				}
+			})
+
+			/**
+			 * stop detection is much easier on an Observer than a WheelEvent
+			 * so we'll still use it for stop detection
+			 */
 			Observer.create({
 				target: rowRef.current,
 				type: "wheel",
-				onChangeX: (self) => {
-					// ignore if x is not the primary axis
-					if (Math.abs(self.deltaX) < Math.abs(self.deltaY)) return
-					if (loop.draggable.isDragging || loop.draggable.isThrowing) return
-					tween?.kill()
-					gsap.killTweensOf(loop)
-					loop.scrollBy(self.deltaX)
-				},
 				onStop: () => {
 					if (marqueeSpeed && !reversed) loop.play()
 					else if (marqueeSpeed && reversed) loop.reverse()
