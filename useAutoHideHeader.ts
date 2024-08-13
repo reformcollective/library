@@ -30,7 +30,10 @@ const checkElementsInViewport = (id: string) => {
  * @param wrapper The ref object of the header element.
  * @returns The current translateY value for the header, which allows for vertical positioning.
  */
-export default function useAutoHideHeader(wrapper: RefObject<HTMLDivElement>) {
+export default function useAutoHideHeader(
+	wrapper: RefObject<HTMLDivElement>,
+	style: "scrub" | "snap" = "snap",
+) {
 	const [translateY, setTranslateY] = useState(0)
 	const translateYRef = useRef(0)
 
@@ -61,23 +64,26 @@ export default function useAutoHideHeader(wrapper: RefObject<HTMLDivElement>) {
 					if (scroll === 0) {
 						translateYRef.current = 0
 					} else if (delta > 0) {
-						/**
-						 * The commented lines below give the header movement more of a scrubbing effect.
-						 */
-						// translateYRef.current = Math.max(
-						// 	-height,
-						// 	translateYRef.current - delta,
-						// )
-						translateYRef.current = -height
+						if (style === "scrub") {
+							translateYRef.current = Math.max(
+								-height,
+								translateYRef.current - delta,
+							)
+						} else {
+							translateYRef.current = -height
+						}
 					} else {
-						// translateYRef.current = Math.min(0, translateYRef.current - delta)
-						translateYRef.current = 0
+						if (style === "scrub") {
+							translateYRef.current = Math.min(0, translateYRef.current - delta)
+						} else {
+							translateYRef.current = 0
+						}
 					}
 					setTranslateY(translateYRef.current)
 				}
 			},
 		})
-	}, [wrapper])
+	}, [wrapper, style])
 
 	return translateY
 }

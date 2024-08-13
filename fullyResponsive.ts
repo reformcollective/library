@@ -27,7 +27,10 @@ const designSizes = {
  */
 export default function fullyResponsive(
 	cssIn: RuleSet<object> | string,
-	only?: "mobile" | "tablet" | "desktop",
+	{
+		only,
+		scaleFully,
+	}: { only?: "mobile" | "tablet" | "desktop"; scaleFully?: boolean } = {},
 ) {
 	// if not a string, convert to string
 	const cssAsString =
@@ -74,7 +77,7 @@ export default function fullyResponsive(
 		/* convert full width values (not including smaller desktops that would always scale) */
 		${media.fullWidth} {
 			${
-				config.scaleFully
+				scaleFully ?? config.scaleFully
 					? onlyPxValues.replaceAll(
 							/* scaling full width values */
 							regex,
@@ -121,10 +124,10 @@ export default function fullyResponsive(
 const fresponsive = fullyResponsive
 
 const fdesktop = (cssIn: RuleSet<object> | string) =>
-	fullyResponsive(cssIn, "desktop")
+	fullyResponsive(cssIn, { only: "desktop" })
 const ftablet = (cssIn: RuleSet<object> | string) =>
-	fullyResponsive(cssIn, "tablet")
+	fullyResponsive(cssIn, { only: "tablet" })
 const fmobile = (cssIn: RuleSet<object> | string) =>
-	fullyResponsive(cssIn, "mobile")
+	fullyResponsive(cssIn, { only: "mobile" })
 
 export { fdesktop, fmobile, fresponsive, ftablet }
