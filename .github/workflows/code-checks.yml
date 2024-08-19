@@ -2,9 +2,7 @@ name: Code Checks
 on:
   workflow_call:
     secrets:
-      CONTENTFUL_ACCESS_TOKEN:
-        required: false
-      CONTENTFUL_SPACE_ID:
+      SECRETS_JSON:
         required: false
 
 concurrency:
@@ -74,7 +72,7 @@ jobs:
       - name: Load .env file
         uses: shine1594/secrets-to-env-action@master
         with:
-          secrets: ${{ toJSON(secrets) }}
+          secrets: ${{ env.SECRETS_JSON }}
           secrets_env: all
       # BEGIN INSTALLATION
       - name: Determine package manager
@@ -171,7 +169,7 @@ jobs:
       - name: Load .env file
         uses: shine1594/secrets-to-env-action@master
         with:
-          secrets: ${{ toJSON(secrets) }}
+          secrets: ${{ env.SECRETS_JSON }}
           secrets_env: all
       # BEGIN INSTALLATION
       - name: Determine package manager
