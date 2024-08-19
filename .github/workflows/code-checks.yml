@@ -1,3 +1,14 @@
+# EXAMPLE WORKFLOW FILE
+#
+# name: Code Checks
+# on: pull_request
+# jobs:
+#   library:
+#     uses: reformcollective/library/.github/workflows/code-checks.yml@main
+#     secrets:
+#       SECRETS_JSON: ${{ toJSON(secrets) }}
+
+
 name: Code Checks
 on:
   workflow_call:
@@ -20,7 +31,6 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          cache: "pnpm"
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
@@ -48,7 +58,6 @@ jobs:
   Generate_Types:
     # install modules, run a build, then cache and upload so we can use in other builds
     runs-on: ubuntu-latest
-    needs: Check_Formatting
     steps:
       - name: Load .env file
         uses: shine1594/secrets-to-env-action@master
@@ -62,7 +71,6 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          cache: "pnpm"
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
@@ -94,7 +102,6 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          cache: "pnpm"
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
@@ -120,7 +127,6 @@ jobs:
       - name: Use Node
         uses: actions/setup-node@v4
         with:
-          cache: "pnpm"
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
