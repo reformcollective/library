@@ -72,7 +72,10 @@ jobs:
     needs: Check_Formatting
     steps:
       - name: Load .env file
-        uses: xom9ikk/dotenv@v2.3.0
+        uses: shine1594/secrets-to-env-action@master
+        with:
+          secrets: ${{ toJSON(secrets) }}
+          secrets_env: all
       # BEGIN INSTALLATION
       - name: Determine package manager
         id: package-manager
@@ -166,7 +169,10 @@ jobs:
     needs: Generate_Types
     steps:
       - name: Load .env file
-        uses: xom9ikk/dotenv@v2.3.0
+        uses: shine1594/secrets-to-env-action@master
+        with:
+          secrets: ${{ toJSON(secrets) }}
+          secrets_env: all
       # BEGIN INSTALLATION
       - name: Determine package manager
         id: package-manager
