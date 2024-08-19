@@ -72,8 +72,6 @@ jobs:
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
-      - name: Install dependencies
-        run: pnpm install
       # END INSTALLATION
 
       - name: Caching Gatsby
@@ -86,8 +84,10 @@ jobs:
           key: ${{ runner.os }}-gatsby-build-${{ github.run_id }}
           restore-keys: |
             ${{ runner.os }}-gatsby-build-
+      - name: Install dependencies
+        run: pnpm install
       - name: Build
-        run: npm install --legacy-peer-deps && npm run build --log-pages
+        run: pnpm run build
         env:
           GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES: true
           CI: true
