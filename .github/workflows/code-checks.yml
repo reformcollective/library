@@ -76,8 +76,21 @@ jobs:
         run: pnpm install
       # END INSTALLATION
 
+      - name: Caching Gatsby
+        id: gatsby-cache-build
+        uses: actions/cache@v2
+        with:
+          path: |
+            public
+            .cache
+          key: ${{ runner.os }}-gatsby-build-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-gatsby-build-
       - name: Build
-        run: npm run build
+        run: npm install --legacy-peer-deps && npm run build --log-pages
+        env:
+          GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES: true
+          CI: true
       - name: Cache generated types
         uses: actions/cache@v2
         with:
