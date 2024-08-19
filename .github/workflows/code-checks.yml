@@ -78,12 +78,12 @@ jobs:
 
       - name: Build
         run: npm run build
-      - name: Cache generated-types
+      - name: Cache generated types
         uses: actions/cache@v2
         with:
           path: src/types/gatsby-types.d.ts
           key: ${{ runner.os }}-generated-types-${{ github.sha }}
-      - name: Upload Generated Types
+      - name: Upload generated types
         uses: actions/upload-artifact@v2
         with:
           name: generated-types
