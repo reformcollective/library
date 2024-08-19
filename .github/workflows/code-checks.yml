@@ -8,7 +8,6 @@
 #     secrets:
 #       SECRETS_JSON: ${{ toJSON(secrets) }}
 
-
 name: Code Checks
 on:
   workflow_call:
@@ -60,10 +59,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Load .env file
-        uses: shine1594/secrets-to-env-action@master
+        uses: oNaiPs/secrets-to-env-action@v1
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
-          secrets_env: all
       # BEGIN INSTALLATION
       - uses: actions/checkout@v4
         with:
