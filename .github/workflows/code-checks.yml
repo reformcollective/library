@@ -76,7 +76,7 @@ jobs:
 
       - name: Caching Gatsby
         id: gatsby-cache-build
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             public
@@ -89,13 +89,8 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Cache generated types
-        uses: actions/cache@v2
-        with:
-          path: src/types/gatsby-types.d.ts
-          key: ${{ runner.os }}-generated-types-${{ github.sha }}
       - name: Upload generated types
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: generated-types
           path: src/types/gatsby-types.d.ts
@@ -119,7 +114,7 @@ jobs:
       # END INSTALLATION
 
       - name: Fetch Generated Types
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: generated-types
       - name: Lint
@@ -144,7 +139,7 @@ jobs:
       # END INSTALLATION
 
       - name: Fetch Generated Types
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: generated-types
       - name: Check types
