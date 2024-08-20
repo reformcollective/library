@@ -1,5 +1,3 @@
-// gatsby.d.ts
-
 declare module "gatsby" {
 	export function useStaticQuery<TData = unknown>(
 		query: StaticQueryDocument,
