@@ -8,11 +8,17 @@ jobs:
     steps:
       # Checkout the main branch
       - name: Checkout main branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: main
           token: ${{ secrets.FORMATTER_TOKEN }}
           submodules: recursive
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Enable corepack
+        run: corepack enable
       # if the main branch hasn't been updated in a while, set REPO_STALE to true
       - name: Check for updates
         run: |
