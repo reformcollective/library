@@ -31,7 +31,7 @@ const checkElementsByAttribute = (attribute: string) => {
  * A custom hook that controls header visibility based on scroll position and specified elements.
  *
  * Add the `data-header-hide` attribute to an element to hide the header when it is in view.
- * Add the `data-header-stick` ID to an element to show the header when it is in view.
+ * Add the `data-header-stick` attribute to an element to show the header when it is in view.
  *
  * @param wrapper ref pointing to the element to the header
  * @param style the style to use for the header, either "scrub" which will sync with the scroller or "snap" which animates in either direction
