@@ -70,7 +70,8 @@ export default function useAutoHideHeader(
 				if (
 					shouldStickyHeader ||
 					(style === "snap" && delta < 0) ||
-					scroll === 0
+					scroll === 0 ||
+					window.scrollY === 0
 				) {
 					duration.current = 0.5
 					gsap.to(wrapper.current, {
