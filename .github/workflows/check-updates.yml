@@ -8,13 +8,13 @@ jobs:
     steps:
       # Checkout the main branch
       - name: Checkout main branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: main
           token: ${{ secrets.FORMATTER_TOKEN }}
           submodules: recursive
       - name: Set up Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
       - name: Enable corepack
