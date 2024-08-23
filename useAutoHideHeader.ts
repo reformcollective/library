@@ -1,9 +1,9 @@
 import gsap from "gsap"
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { type RefObject, useRef } from "react"
-import useAnimation from "./useAnimation"
+import type { RefObject } from "react"
 import { useIsSmooth } from "./Scroll"
+import useAnimation from "./useAnimation"
 
 const isElementInViewport = (element: Element) => {
 	const rect = element?.getBoundingClientRect()
