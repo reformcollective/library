@@ -19,7 +19,7 @@ const isElementInViewport = (element: Element) => {
  * @param attribute the attribute to check for
  */
 const checkElementsByAttribute = (attribute: string) => {
-	const elements = gsap.utils.toArray<Element>(`[${attribute}]`)
+	const elements = document.querySelectorAll(`[${attribute}]`)
 	for (const element of elements) {
 		if (isElementInViewport(element)) {
 			return true
@@ -63,20 +63,20 @@ export default function useAutoHideHeader(
 				lastScroll = scroll
 				const height = wrapper.current?.offsetHeight ?? 0
 
-				const shouldHideHeader = checkElementsByAttribute("data-header-hide")
-				const shouldStickyHeader = checkElementsByAttribute("data-header-stick")
-
-				// if forced sticky
-				if (
-					shouldStickyHeader ||
-					(style === "snap" && delta < 0) ||
+				const forceHideHeader = checkElementsByAttribute("data-header-hide")
+				const forceShowHeader =
+					checkElementsByAttribute("data-header-stick") ||
 					scroll === 0 ||
 					window.scrollY === 0
-				) {
+				const showHeader = style === "snap" && delta < 0
+				const hideHeader = style === "snap" && delta > 0
+
+				// if forced sticky
+				if (forceShowHeader || (showHeader && !forceHideHeader)) {
 					yTo(0)
 				}
 				// if forced not sticky
-				else if (shouldHideHeader || (style === "snap" && delta > 0)) {
+				else if (forceHideHeader || hideHeader) {
 					yTo(-height)
 				}
 				// scrub behavior, if needed
