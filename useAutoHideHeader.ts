@@ -4,7 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { type RefObject, useRef } from "react"
 import useAnimation from "./useAnimation"
 
-const isElementInViewport = (element: HTMLElement) => {
+const isElementInViewport = (element: Element) => {
 	const rect = element?.getBoundingClientRect()
 	return (
 		rect &&
@@ -18,9 +18,9 @@ const isElementInViewport = (element: HTMLElement) => {
  * @param attribute the attribute to check for
  */
 const checkElementsByAttribute = (attribute: string) => {
-	const elements = document.querySelectorAll(`[${attribute}]`)
+	const elements = gsap.utils.toArray<Element>(`[${attribute}]`)
 	for (const element of elements) {
-		if (isElementInViewport(element as HTMLElement)) {
+		if (isElementInViewport(element)) {
 			return true
 		}
 	}
@@ -40,21 +40,16 @@ export default function useAutoHideHeader(
 	wrapper: RefObject<HTMLDivElement> | null | undefined,
 	style: "scrub" | "snap" = "scrub",
 ) {
-	const translateY = useRef(0)
-
-	// if we're on scrub style, we want instant set, but this would cause a jump
-	// whenever we transition from a forced stick/hide to a normal scroll based value
-	// so tween the duration from 0.5 to 0 to avoid this
-	const duration = useRef(0.5)
-
 	useAnimation(() => {
 		let lastScroll = 0
 		if (!wrapper) return
 
 		const props = {
 			ease: "power3.out",
-			duration: 0.3,
+			duration: 0.5,
 		}
+
+		const yTo = gsap.quickTo(wrapper.current, "y", props)
 
 		ScrollTrigger.create({
 			onUpdate: () => {
@@ -73,32 +68,17 @@ export default function useAutoHideHeader(
 					scroll === 0 ||
 					window.scrollY === 0
 				) {
-					duration.current = 0.5
-					gsap.to(wrapper.current, {
-						y: 0,
-						...props,
-					})
+					yTo(0)
 				}
 				// if forced not sticky
 				else if (shouldHideHeader || (style === "snap" && delta > 0)) {
-					duration.current = 0.5
-					gsap.to(wrapper.current, {
-						y: -height,
-						...props,
-					})
+					yTo(-height)
 				}
 				// scrub behavior, if needed
 				else if (style === "scrub") {
-					translateY.current = Math.min(
-						0,
-						Math.max(-height, translateY.current - delta),
-					)
-					gsap.to(duration, { current: 0, ease: "linear" })
-					gsap.to(wrapper.current, {
-						y: translateY.current,
-						...props,
-						duration: duration.current,
-					})
+					const currentY = Number(gsap.getProperty(wrapper.current, "y"))
+					const newY = Math.min(0, Math.max(-height, currentY - delta))
+					yTo(newY, newY)
 				}
 			},
 		})
