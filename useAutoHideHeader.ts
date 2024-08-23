@@ -3,6 +3,7 @@ import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { type RefObject, useRef } from "react"
 import useAnimation from "./useAnimation"
+import { useIsSmooth } from "./Scroll"
 
 const isElementInViewport = (element: Element) => {
 	const rect = element?.getBoundingClientRect()
@@ -38,15 +39,19 @@ const checkElementsByAttribute = (attribute: string) => {
  */
 export default function useAutoHideHeader(
 	wrapper: RefObject<HTMLDivElement> | null | undefined,
-	style: "scrub" | "snap" = "scrub",
+	styleIn: "scrub" | "snap" = "scrub",
 ) {
+	// scrub style only really works if we're using a smoother
+	const isSmooth = useIsSmooth()
+	const style = isSmooth ? styleIn : "snap"
+
 	useAnimation(() => {
 		let lastScroll = 0
 		if (!wrapper) return
 
 		const props = {
-			ease: "power3.out",
-			duration: 0.5,
+			ease: "power2.out",
+			duration: style === "snap" ? 1 : 0.5,
 		}
 
 		const yTo = gsap.quickTo(wrapper.current, "y", props)
