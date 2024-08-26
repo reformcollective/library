@@ -1,10 +1,11 @@
 import gsap from "gsap"
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { type RefObject, useRef } from "react"
+import type { RefObject } from "react"
+import { useIsSmooth } from "./Scroll"
 import useAnimation from "./useAnimation"
 
-const isElementInViewport = (element: HTMLElement) => {
+const isElementInViewport = (element: Element) => {
 	const rect = element?.getBoundingClientRect()
 	return (
 		rect &&
@@ -20,7 +21,7 @@ const isElementInViewport = (element: HTMLElement) => {
 const checkElementsByAttribute = (attribute: string) => {
 	const elements = document.querySelectorAll(`[${attribute}]`)
 	for (const element of elements) {
-		if (isElementInViewport(element as HTMLElement)) {
+		if (isElementInViewport(element)) {
 			return true
 		}
 	}
@@ -38,23 +39,22 @@ const checkElementsByAttribute = (attribute: string) => {
  */
 export default function useAutoHideHeader(
 	wrapper: RefObject<HTMLDivElement> | null | undefined,
-	style: "scrub" | "snap" = "scrub",
+	styleIn: "scrub" | "snap" = "scrub",
 ) {
-	const translateY = useRef(0)
-
-	// if we're on scrub style, we want instant set, but this would cause a jump
-	// whenever we transition from a forced stick/hide to a normal scroll based value
-	// so tween the duration from 0.5 to 0 to avoid this
-	const duration = useRef(0.5)
+	// scrub style only really works if we're using a smoother
+	const isSmooth = useIsSmooth()
+	const style = isSmooth ? styleIn : "snap"
 
 	useAnimation(() => {
 		let lastScroll = 0
 		if (!wrapper) return
 
 		const props = {
-			ease: "power3.out",
-			duration: 0.3,
+			ease: "power2.out",
+			duration: style === "snap" ? 1 : 0.5,
 		}
+
+		const yTo = gsap.quickTo(wrapper.current, "y", props)
 
 		ScrollTrigger.create({
 			onUpdate: () => {
@@ -63,42 +63,27 @@ export default function useAutoHideHeader(
 				lastScroll = scroll
 				const height = wrapper.current?.offsetHeight ?? 0
 
-				const shouldHideHeader = checkElementsByAttribute("data-header-hide")
-				const shouldStickyHeader = checkElementsByAttribute("data-header-stick")
-
-				// if forced sticky
-				if (
-					shouldStickyHeader ||
-					(style === "snap" && delta < 0) ||
+				const forceHideHeader = checkElementsByAttribute("data-header-hide")
+				const forceShowHeader =
+					checkElementsByAttribute("data-header-stick") ||
 					scroll === 0 ||
 					window.scrollY === 0
-				) {
-					duration.current = 0.5
-					gsap.to(wrapper.current, {
-						y: 0,
-						...props,
-					})
+				const showHeader = style === "snap" && delta < 0
+				const hideHeader = style === "snap" && delta > 0
+
+				// if forced sticky
+				if (forceShowHeader || (showHeader && !forceHideHeader)) {
+					yTo(0)
 				}
 				// if forced not sticky
-				else if (shouldHideHeader || (style === "snap" && delta > 0)) {
-					duration.current = 0.5
-					gsap.to(wrapper.current, {
-						y: -height,
-						...props,
-					})
+				else if (forceHideHeader || hideHeader) {
+					yTo(-height)
 				}
 				// scrub behavior, if needed
 				else if (style === "scrub") {
-					translateY.current = Math.min(
-						0,
-						Math.max(-height, translateY.current - delta),
-					)
-					gsap.to(duration, { current: 0, ease: "linear" })
-					gsap.to(wrapper.current, {
-						y: translateY.current,
-						...props,
-						duration: duration.current,
-					})
+					const currentY = Number(gsap.getProperty(wrapper.current, "y"))
+					const newY = Math.min(0, Math.max(-height, currentY - delta))
+					yTo(newY, newY)
 				}
 			},
 		})
