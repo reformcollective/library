@@ -1,3 +1,4 @@
+import { useEventListener } from "ahooks"
 import config from "libraryConfig"
 import { startTransition, useEffect, useState } from "react"
 import {
@@ -8,10 +9,8 @@ import {
 	tabletBreakpoint,
 	tabletDesignSize,
 } from "styles/media"
-
 import { isBrowser } from "./deviceDetection"
 import getMedia from "./getMedia"
-import { useEventListener } from "ahooks"
 
 /**
  * hookify a get function to update on resize
