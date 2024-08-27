@@ -259,33 +259,34 @@ export default function AutoAnimate({
 	})
 
 	return (
-		<>
-			<div className={className} ref={sizer}>
-				{getNodeFromKey(currentKey)}
-			</div>
-			<Wrapper className={className} ref={wrapper} alignment={alignment}>
+		<Wrapper className={className}>
+			<div ref={sizer}>{getNodeFromKey(currentKey)}</div>
+			<AnimationWrapper ref={wrapper} alignment={alignment}>
 				<div ref={wrapperA}>{getNodeFromKey(slotA)}</div>
 				<div ref={wrapperB}>{getNodeFromKey(slotB)}</div>
-			</Wrapper>
-		</>
+			</AnimationWrapper>
+		</Wrapper>
 	)
 }
 
-const Wrapper = styled.div<{
+const Wrapper = styled.div`
+	overflow: clip;
+`
+
+const AnimationWrapper = styled.div<{
 	alignment: "start" | "center" | "end"
 }>`
-	overflow: clip;
 	display: grid;
-	align-items: ${(props) => props.alignment};
-	justify-content: ${(props) => props.alignment};
+	place-items: ${(props) => props.alignment};
+	place-content: ${(props) => props.alignment};
 
 	> * {
 		grid-area: 1 / 1 / 2 / 2;
 		min-width: 100%;
 		min-height: 100%;
 		display: grid;
-		align-items: ${(props) => props.alignment};
-		justify-content: ${(props) => props.alignment};
+		place-items: ${(props) => props.alignment};
+		place-content: ${(props) => props.alignment};
 
 		&:empty {
 			pointer-events: none;
