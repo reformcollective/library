@@ -29,3 +29,26 @@ export const generateGradientBorder = (
 	mask-composite: xor;
 	mask-composite: exclude;
 `
+
+/**
+ * generates a gradient border and puts it in a pseudo element before the element
+ */
+const gradientBorderPseudo =
+	(type: string) =>
+	(gradient: string, borderSize = 1) =>
+		css`
+		position: relative;
+		isolation: isolate;
+
+		&::${type} {
+			position: absolute;
+			content: "";
+			inset: 0;
+			z-index: 1;
+			border-radius: inherit;
+			${generateGradientBorder(gradient, borderSize)}
+		}
+	`
+
+export const gradientBorderBefore = gradientBorderPseudo("before")
+export const gradientBorderAfter = gradientBorderPseudo("after")
