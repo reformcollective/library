@@ -1,10 +1,18 @@
+# EXAMPLE WORKFLOW FILE
+#
+# name: Code Checks
+# on: pull_request
+# jobs:
+#   library:
+#     uses: reformcollective/library/.github/workflows/code-checks.yml@main
+#     secrets:
+#       SECRETS_JSON: ${{ toJSON(secrets) }}
+
 name: Code Checks
 on:
   workflow_call:
     secrets:
-      CONTENTFUL_ACCESS_TOKEN:
-        required: false
-      CONTENTFUL_SPACE_ID:
+      SECRETS_JSON:
         required: false
 
 concurrency:
@@ -13,40 +21,20 @@ concurrency:
 
 jobs:
   Check_Formatting:
-    # only run if not authored by dependabot
-    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       # BEGIN INSTALLATION
-      - name: Determine package manager
-        id: package-manager
-        run: |
-          if [ -f "pnpm-lock.yaml" ]; then
-            echo "PNPM=true" >> $GITHUB_OUTPUT
-          fi
-          if [ -f "package-lock.json" ]; then
-            echo "PNPM=false" >> $GITHUB_OUTPUT
-          fi
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
       - name: Use Node
-        uses: actions/setup-node@v3
-        if: steps.package-manager.outputs.PNPM == 'true'
-        with:
-          cache: "pnpm"
-          node-version-file: .nvmrc
-      - name: Use Node
-        uses: actions/setup-node@v3
-        if: steps.package-manager.outputs.PNPM != 'true'
+        uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
       - name: Install dependencies
-        run: npx @antfu/ni
+        run: pnpm install
       # END INSTALLATION
 
       - name: format
@@ -69,52 +57,40 @@ jobs:
   Generate_Types:
     # install modules, run a build, then cache and upload so we can use in other builds
     runs-on: ubuntu-latest
-    needs: Check_Formatting
-    env:
-      CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
-      CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
     steps:
-      # BEGIN INSTALLATION
-      - name: Determine package manager
-        id: package-manager
-        run: |
-          if [ -f "pnpm-lock.yaml" ]; then
-            echo "PNPM=true" >> $GITHUB_OUTPUT
-          fi
-          if [ -f "package-lock.json" ]; then
-            echo "PNPM=false" >> $GITHUB_OUTPUT
-          fi
-      - uses: actions/checkout@v3
+      - name: Load .env file
+        uses: oNaiPs/secrets-to-env-action@v1.5
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          secrets: ${{ secrets.SECRETS_JSON }}
+      # BEGIN INSTALLATION
+      - uses: actions/checkout@v4
+        with:
           submodules: recursive
       - name: Use Node
-        uses: actions/setup-node@v3
-        if: steps.package-manager.outputs.PNPM == 'true'
-        with:
-          cache: "pnpm"
-          node-version-file: .nvmrc
-      - name: Use Node
-        uses: actions/setup-node@v3
-        if: steps.package-manager.outputs.PNPM != 'true'
+        uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
-      - name: Install dependencies
-        run: npx @antfu/ni
       # END INSTALLATION
 
-      - name: Build
-        run: npm run build
-      - name: Cache generated-types
-        uses: actions/cache@v2
+      - name: Caching Gatsby
+        id: gatsby-cache-build
+        uses: actions/cache@v4
         with:
-          path: src/types/gatsby-types.d.ts
-          key: ${{ runner.os }}-generated-types-${{ github.sha }}
-      - name: Upload Generated Types
-        uses: actions/upload-artifact@v2
+          path: |
+            public
+            .cache
+          key: ${{ runner.os }}-gatsby-build-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-gatsby-build-
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build
+        run: pnpm run build
+
+      - name: Upload generated types
+        uses: actions/upload-artifact@v4
         with:
           name: generated-types
           path: src/types/gatsby-types.d.ts
@@ -124,39 +100,21 @@ jobs:
     needs: Generate_Types
     steps:
       # BEGIN INSTALLATION
-      - name: Determine package manager
-        id: package-manager
-        run: |
-          if [ -f "pnpm-lock.yaml" ]; then
-            echo "PNPM=true" >> $GITHUB_OUTPUT
-          fi
-          if [ -f "package-lock.json" ]; then
-            echo "PNPM=false" >> $GITHUB_OUTPUT
-          fi
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
       - name: Use Node
-        uses: actions/setup-node@v3
-        if: steps.package-manager.outputs.PNPM == 'true'
-        with:
-          cache: "pnpm"
-          node-version-file: .nvmrc
-      - name: Use Node
-        uses: actions/setup-node@v3
-        if: steps.package-manager.outputs.PNPM != 'true'
+        uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
       - name: Install dependencies
-        run: npx @antfu/ni
+        run: pnpm install
       # END INSTALLATION
 
       - name: Fetch Generated Types
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: generated-types
       - name: Lint
@@ -165,44 +123,23 @@ jobs:
   Type_Checking:
     runs-on: ubuntu-latest
     needs: Generate_Types
-    env:
-      CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
-      CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
     steps:
       # BEGIN INSTALLATION
-      - name: Determine package manager
-        id: package-manager
-        run: |
-          if [ -f "pnpm-lock.yaml" ]; then
-            echo "PNPM=true" >> $GITHUB_OUTPUT
-          fi
-          if [ -f "package-lock.json" ]; then
-            echo "PNPM=false" >> $GITHUB_OUTPUT
-          fi
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
       - name: Use Node
-        uses: actions/setup-node@v3
-        if: steps.package-manager.outputs.PNPM == 'true'
-        with:
-          cache: "pnpm"
-          node-version-file: .nvmrc
-      - name: Use Node
-        uses: actions/setup-node@v3
-        if: steps.package-manager.outputs.PNPM != 'true'
+        uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
       - name: Enable corepack
         run: corepack enable
       - name: Install dependencies
-        run: npx @antfu/ni
+        run: pnpm install
       # END INSTALLATION
 
       - name: Fetch Generated Types
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: generated-types
       - name: Check types

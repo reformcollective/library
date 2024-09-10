@@ -91,7 +91,10 @@ const useAnimation = <F, T>(
 	useEffectToUse(() => {
 		// create animations using a gsap context so they can be reverted easily
 		const ctx = gsap.context(() => {
+			const former = window.gsap
+			window.gsap = gsap
 			const result = createAnimations()
+			window.gsap = former
 			if (typeof result === "function") {
 				return result
 			}

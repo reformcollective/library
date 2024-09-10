@@ -1,8 +1,11 @@
+import gsap from "gsap"
 import { ScrollSmoother } from "gsap/ScrollSmoother"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
-import { type RefObject, useEffect, useRef, useState } from "react"
+import type { RefObject } from "react"
+import { useIsSmooth } from "./Scroll"
+import useAnimation from "./useAnimation"
 
-const isElementInViewport = (element: HTMLElement) => {
+const isElementInViewport = (element: Element) => {
 	const rect = element?.getBoundingClientRect()
 	return (
 		rect &&
@@ -11,10 +14,14 @@ const isElementInViewport = (element: HTMLElement) => {
 	)
 }
 
-const checkElementsInViewport = (id: string) => {
-	const elements = document.querySelectorAll(`[id^="${id}"]`)
+/**
+ * check if any elements with the given attribute are in the viewport
+ * @param attribute the attribute to check for
+ */
+const checkElementsByAttribute = (attribute: string) => {
+	const elements = document.querySelectorAll(`[${attribute}]`)
 	for (const element of elements) {
-		if (isElementInViewport(element as HTMLElement)) {
+		if (isElementInViewport(element)) {
 			return true
 		}
 	}
@@ -24,23 +31,30 @@ const checkElementsInViewport = (id: string) => {
 /**
  * A custom hook that controls header visibility based on scroll position and specified elements.
  *
- * Add the `hide-header` ID to an element to hide the header when it is in view.
- * Add the `stick-header` ID to an element to stick the header when it is in view.
+ * Add the `data-header-hide` attribute to an element to hide the header when it is in view.
+ * Add the `data-header-stick` attribute to an element to show the header when it is in view.
  *
- * @param wrapper The ref object of the header element.
- * @returns The current translateY value for the header, which allows for vertical positioning.
+ * @param wrapper ref pointing to the element to the header
+ * @param style the style to use for the header, either "scrub" which will sync with the scroller or "snap" which animates in either direction
  */
-export default function useAutoHideHeader(wrapper: RefObject<HTMLDivElement>) {
-	const [translateY, setTranslateY] = useState(0)
-	const translateYRef = useRef(0)
+export default function useAutoHideHeader(
+	wrapper: RefObject<HTMLDivElement> | null | undefined,
+	styleIn: "scrub" | "snap" = "scrub",
+) {
+	// scrub style only really works if we're using a smoother
+	const isSmooth = useIsSmooth()
+	const style = isSmooth ? styleIn : "snap"
 
-	// Update translateYRef whenever the state variables changes.
-	useEffect(() => {
-		translateYRef.current = translateY
-	}, [translateY])
-
-	useEffect(() => {
+	useAnimation(() => {
 		let lastScroll = 0
+		if (!wrapper) return
+
+		const props = {
+			ease: "power2.out",
+			duration: style === "snap" ? 1 : 0.5,
+		}
+
+		const yTo = gsap.quickTo(wrapper.current, "y", props)
 
 		ScrollTrigger.create({
 			onUpdate: () => {
@@ -49,35 +63,29 @@ export default function useAutoHideHeader(wrapper: RefObject<HTMLDivElement>) {
 				lastScroll = scroll
 				const height = wrapper.current?.offsetHeight ?? 0
 
-				// Check for elements that have the specified IDs.
-				const shouldHideHeader = checkElementsInViewport("hide-header")
-				const shouldStickyHeader = checkElementsInViewport("stick-header")
+				const forceHideHeader = checkElementsByAttribute("data-header-hide")
+				const forceShowHeader =
+					checkElementsByAttribute("data-header-stick") ||
+					scroll === 0 ||
+					window.scrollY === 0
+				const showHeader = style === "snap" && delta < 0
+				const hideHeader = style === "snap" && delta > 0
 
-				if (shouldHideHeader) {
-					setTranslateY(-height)
-				} else if (shouldStickyHeader) {
-					setTranslateY(0)
-				} else {
-					if (scroll === 0) {
-						translateYRef.current = 0
-					} else if (delta > 0) {
-						/**
-						 * The commented lines below give the header movement more of a scrubbing effect.
-						 */
-						// translateYRef.current = Math.max(
-						// 	-height,
-						// 	translateYRef.current - delta,
-						// )
-						translateYRef.current = -height
-					} else {
-						// translateYRef.current = Math.min(0, translateYRef.current - delta)
-						translateYRef.current = 0
-					}
-					setTranslateY(translateYRef.current)
+				// if forced sticky
+				if (forceShowHeader || (showHeader && !forceHideHeader)) {
+					yTo(0)
+				}
+				// if forced not sticky
+				else if (forceHideHeader || hideHeader) {
+					yTo(-height)
+				}
+				// scrub behavior, if needed
+				else if (style === "scrub") {
+					const currentY = Number(gsap.getProperty(wrapper.current, "y"))
+					const newY = Math.min(0, Math.max(-height, currentY - delta))
+					yTo(newY, newY)
 				}
 			},
 		})
-	}, [wrapper])
-
-	return translateY
+	}, [wrapper, style])
 }

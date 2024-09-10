@@ -1,5 +1,6 @@
+import { useEventListener } from "ahooks"
 import config from "libraryConfig"
-import { useEffect, useState } from "react"
+import { startTransition, useEffect, useState } from "react"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -8,7 +9,6 @@ import {
 	tabletBreakpoint,
 	tabletDesignSize,
 } from "styles/media"
-
 import { isBrowser } from "./deviceDetection"
 import getMedia from "./getMedia"
 
@@ -18,15 +18,14 @@ import getMedia from "./getMedia"
 function useHookify<P, T extends (input: P) => ReturnType<T>>(
 	fn: T,
 	arg: P,
-): ReturnType<T> {
-	const [value, setValue] = useState<ReturnType<T>>(fn(arg))
-	useEffect(() => {
-		const handleResize = () => setValue(fn(arg))
+): ReturnType<T> | undefined {
+	const [value, setValue] = useState<ReturnType<T>>()
 
-		handleResize()
-		window.addEventListener("resize", handleResize)
-		return () => window.removeEventListener("resize", handleResize)
+	useEventListener("resize", () => setValue(fn(arg)))
+	useEffect(() => {
+		startTransition(() => setValue(fn(arg)))
 	}, [fn, arg])
+
 	return value
 }
 
