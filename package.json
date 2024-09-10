@@ -12,7 +12,8 @@
 		"gsap": "file:gsap-bonus.tgz",
 		"react": "^18",
 		"styled-components": "^6",
-		"use-deep-compare": "^1"
+		"use-deep-compare": "^1",
+		"zod": "^3"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.8.3",
