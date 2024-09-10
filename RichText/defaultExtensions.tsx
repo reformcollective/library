@@ -10,7 +10,7 @@ const DefaultImage = styled(UniversalImage)`
 	display: block;
 
 	${fresponsive(css`
-		border-radius: 15px;
+		border-radius: 8px;
 	`)}
 
 	img {
