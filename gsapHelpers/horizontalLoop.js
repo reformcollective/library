@@ -7,6 +7,7 @@ gsap.registerPlugin(Draggable, InertiaPlugin);
 
 /*
 This helper function makes a group of elements animate along the x-axis in a seamless, responsive loop.
+@see https://gsap.com/docs/v3/HelperFunctions/helpers/seamlessLoop
 
 Features:
  - Uses xPercent so that even if the widths change (like if the window gets resized), it should still work in most cases.
