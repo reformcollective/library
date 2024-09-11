@@ -1,141 +1,172 @@
 import type { Options } from "@contentful/rich-text-react-renderer"
 import { BLOCKS, INLINES, MARKS } from "@contentful/rich-text-types"
-// import { PageProps } from "gatsby"
-import type { IGatsbyImageData } from "gatsby-plugin-image"
-
-import RichLink from "./modules/Link"
-import {
-	A,
-	Code,
-	Em,
-	H1,
-	H2,
-	H3,
-	H4,
-	H5,
-	H6,
-	Image,
-	Li,
-	Ol,
-	P,
-	Quote,
-	Strong,
-	U,
-	Ul,
-} from "./modules/StyledComponents"
+import type { Block } from "@contentful/rich-text-types"
+import type { Inline } from "@contentful/rich-text-types"
+import UniversalLink, {
+	type UniversalLinkProps,
+} from "library/Loader/UniversalLink"
+import type { ComponentProps } from "react"
+import type { ReactNode } from "react"
+import styled from "styled-components"
+import { defaultExtensions } from "./defaultExtensions"
 import renderContent from "./renderContent"
 
-// TODO: YOU BETTER UPDATE THIS
-interface RichTextProps {
-	content: null
+const Strong = styled.strong`
+	font-weight: bold;
+`
+
+const U = styled.u`
+	text-decoration: underline;
+`
+
+const Em = styled.em`
+	font-style: italic;
+`
+
+const Code = styled.code`
+	font-family: monospace;
+`
+
+const H1 = styled.h1`
+	font-size: 1.5rem;
+	font-weight: bold;
+`
+const H2 = styled.h2`
+	font-size: 1.25rem;
+	font-weight: bold;
+`
+const H3 = styled.h3``
+const H4 = styled.h4``
+const H5 = styled.h5``
+const H6 = styled.h6``
+const P = styled.p``
+const Ul = styled.ul`
+	list-style-type: disc;
+	padding-inline-start: 2.3ch;
+`
+
+const Ol = styled.ol`
+	list-style-type: numeric;
+	padding-inline-start: 2.3ch;
+`
+const Li = styled.li``
+const A = styled(UniversalLink)`
+	text-decoration: underline;
+`
+const Quote = styled.blockquote``
+const Sup = styled.sup`
+	vertical-align: super;
+`
+const Sub = styled.sub`
+	vertical-align: sub;
+`
+const Strike = styled.s`
+	text-decoration: line-through;
+`
+
+const Hr = styled.hr`
+	width: 100%;
+	height: 2px;
+	background: black;
+	border-bottom: 1px solid white;
+	opacity: 0.1;
+`
+
+const defaults = {
+	h1: H1,
+	h2: H2,
+	h3: H3,
+	h4: H4,
+	h5: H5,
+	h6: H6,
+	p: P,
+	ul: Ul,
+	ol: Ol,
+	li: Li,
+	a: A,
+	blockquote: Quote,
+	em: Em,
+	strong: Strong,
+	u: U,
+	code: Code,
+	sup: Sup,
+	sub: Sub,
+	s: Strike,
+	hr: Hr,
 }
 
 /**
- * Typescript over-narrows typeof object
+ * renders rich text from contentful
+ * provide your own components to override the default styling if desired
+ *
+ * you can provide extensions to render embedded assets or entries. the first matching extension will be used.
+ * see the defaultExtensions array for some examples
  */
-export const isObject = (
-	obj: unknown,
-): obj is Record<string | number | symbol, unknown> => {
-	return typeof obj === "object" && obj !== null && !Array.isArray(obj)
-}
+export default function RichText({
+	content,
+	components,
+	extensions = [],
+}: {
+	content?: {
+		raw?: string | null
+		references?: unknown
+	} | null
+	components?: {
+		[K in keyof typeof defaults]?: K extends "a"
+			? (props: UniversalLinkProps) => JSX.Element
+			: (props: ComponentProps<K>) => JSX.Element
+	}
+	extensions?: ((data: unknown) => ReactNode)[]
+}) {
+	const c = { ...defaults, ...components }
 
-export const isGatsbyImageData = (obj: unknown): obj is IGatsbyImageData => {
-	return isObject(obj) && "images" in obj
-}
+	const fullExtensions = [...extensions, ...defaultExtensions]
 
-const PROJECT_DOMAIN = "https://boostinsurance.com"
+	const renderExtensions = (node: Block | Inline) => {
+		const { data } = node
+		const target = data.target as unknown
 
-const options: Options = {
-	renderMark: {
-		[MARKS.BOLD]: (children) => <Strong>{children}</Strong>,
-		[MARKS.UNDERLINE]: (children) => <U>{children}</U>,
-		[MARKS.ITALIC]: (children) => <Em>{children}</Em>,
-		[MARKS.CODE]: (children) => <Code>{children}</Code>,
-	},
-	renderNode: {
-		[BLOCKS.HEADING_1]: (node, children) => <H1>{children}</H1>,
-		[BLOCKS.HEADING_2]: (node, children) => <H2>{children}</H2>,
-		[BLOCKS.HEADING_3]: (node, children) => <H3>{children}</H3>,
-		[BLOCKS.HEADING_4]: (node, children) => <H4>{children}</H4>,
-		[BLOCKS.HEADING_5]: (node, children) => <H5>{children}</H5>,
-		[BLOCKS.HEADING_6]: (node, children) => <H6>{children}</H6>,
-		[BLOCKS.PARAGRAPH]: (node, children) => <P>{children}</P>,
-		[BLOCKS.UL_LIST]: (node, children) => <Ul>{children}</Ul>,
-		[BLOCKS.OL_LIST]: (node, children) => <Ol>{children}</Ol>,
-		[BLOCKS.LIST_ITEM]: (node, children) => <Li>{children}</Li>,
-		[INLINES.HYPERLINK]: (node, children) => {
-			const { data } = node
-			const { uri } = data
-			// check if internal link
-			if (typeof uri === "string") {
-				const link = uri.includes(PROJECT_DOMAIN)
-					? uri.replace(PROJECT_DOMAIN, "")
-					: uri
-				return <A to={link}>{children}</A>
-			}
+		for (const extension of fullExtensions) {
+			const result = extension(target)
+			if (result) return result
+		}
+	}
+
+	const options: Options = {
+		renderMark: {
+			[MARKS.BOLD]: (children) => <c.strong>{children}</c.strong>,
+			[MARKS.UNDERLINE]: (children) => <c.u>{children}</c.u>,
+			[MARKS.ITALIC]: (children) => <c.em>{children}</c.em>,
+			[MARKS.CODE]: (children) => <c.code>{children}</c.code>,
+			[MARKS.SUPERSCRIPT]: (children) => <c.sup>{children}</c.sup>,
+			[MARKS.SUBSCRIPT]: (children) => <c.sub>{children}</c.sub>,
+			[MARKS.STRIKETHROUGH]: (children) => <c.s>{children}</c.s>,
 		},
-		[BLOCKS.QUOTE]: (node, children) => <Quote>{children}</Quote>,
-		[INLINES.EMBEDDED_ENTRY]: (node) => {
-			const { data } = node
-			const target = data.target as unknown
-
-			/**
-			 * check if we have all the properties for a link
-			 */
-			if (
-				isObject(target) &&
-				"displayText" in target &&
-				typeof target.displayText === "string" &&
-				"url" in target &&
-				typeof target.url === "string" &&
-				"newTab" in target &&
-				typeof target.newTab === "boolean"
-			) {
-				const link = target.url.includes(PROJECT_DOMAIN)
-					? target.url.replace(PROJECT_DOMAIN, "")
-					: target.url
-
-				return (
-					<RichLink
-						data={{
-							displayText: target.displayText,
-							url: link,
-							newTab: target.newTab,
-						}}
-					/>
-				)
-			}
-
-			return <span>Invalid Link</span>
+		renderNode: {
+			[BLOCKS.HEADING_1]: (_, children) => <c.h1>{children}</c.h1>,
+			[BLOCKS.HEADING_2]: (_, children) => <c.h2>{children}</c.h2>,
+			[BLOCKS.HEADING_3]: (_, children) => <c.h3>{children}</c.h3>,
+			[BLOCKS.HEADING_4]: (_, children) => <c.h4>{children}</c.h4>,
+			[BLOCKS.HEADING_5]: (_, children) => <c.h5>{children}</c.h5>,
+			[BLOCKS.HEADING_6]: (_, children) => <c.h6>{children}</c.h6>,
+			[BLOCKS.PARAGRAPH]: (_, children) => <c.p>{children}</c.p>,
+			[BLOCKS.UL_LIST]: (_, children) => <c.ul>{children}</c.ul>,
+			[BLOCKS.OL_LIST]: (_, children) => <c.ol>{children}</c.ol>,
+			[BLOCKS.LIST_ITEM]: (_, children) => <c.li>{children}</c.li>,
+			[BLOCKS.HR]: () => <c.hr />,
+			[INLINES.HYPERLINK]: (node, children) => {
+				const { data } = node
+				const { uri } = data
+				if (typeof uri === "string") {
+					return <A to={uri}>{children}</A>
+				}
+			},
+			[BLOCKS.QUOTE]: (node, children) => <Quote>{children}</Quote>,
+			[INLINES.EMBEDDED_ENTRY]: renderExtensions,
+			[BLOCKS.EMBEDDED_ASSET]: renderExtensions,
+			[BLOCKS.EMBEDDED_ENTRY]: renderExtensions,
 		},
-		// images
-		[BLOCKS.EMBEDDED_ASSET]: (node) => {
-			const { data } = node
-			const target = data.target as unknown
+	}
 
-			/**
-			 * check if we have all the properties for a gatsby image
-			 */
-			if (
-				isObject(target) &&
-				"gatsbyImageData" in target &&
-				isGatsbyImageData(target.gatsbyImageData) &&
-				"description" in target &&
-				typeof target.description === "string"
-			)
-				return (
-					<Image
-						image={target.gatsbyImageData}
-						alt={target.description}
-						imgStyle={{ width: "auto", margin: "0 auto" }}
-					/>
-				)
-
-			return <span>Invalid Image</span>
-		},
-	},
-}
-
-export default function RichText({ content }: RichTextProps) {
 	return <>{renderContent(content, options)}</>
 }
