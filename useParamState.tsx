@@ -37,7 +37,7 @@ export const useParamState = (key: string) => {
 			const queryParams = new URLSearchParams(window.location.search)
 
 			// Set or update the specified key with the provided value
-			if (newValue === null) queryParams.delete(key)
+			if (!newValue) queryParams.delete(key)
 			else queryParams.set(key, newValue)
 
 			// Replace the current URL with the updated parameters
