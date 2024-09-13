@@ -77,7 +77,7 @@ export default function fullyResponsive(
 		/* convert full width values (not including smaller desktops that would always scale) */
 		${media.fullWidth} {
 			${
-				scaleFully ?? config.scaleFully
+				(scaleFully ?? config.scaleFully)
 					? onlyPxValues.replaceAll(
 							/* scaling full width values */
 							regex,
@@ -89,7 +89,7 @@ export default function fullyResponsive(
 							(_, px: string) =>
 								`${(
 									(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
-									desktopBreakpoint
+										desktopBreakpoint
 								).toFixed(1)}px`.replace(".0px", "px"),
 						)
 			}
