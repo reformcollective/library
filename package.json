@@ -10,6 +10,7 @@
 		"@react-three/fiber": "^8",
 		"ahooks": "^3",
 		"gsap": "file:gsap-bonus.tgz",
+		"minisearch": "^7",
 		"react": "^18",
 		"styled-components": "^6",
 		"use-deep-compare": "^1",
