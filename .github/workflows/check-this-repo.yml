@@ -21,7 +21,7 @@ jobs:
         run: corepack enable
       - name: Install dependencies
         run: corepack pnpm install
-      - name:
+      - name: Lint
         run: pnpm run lint
   Check_Typings:
     runs-on: ubuntu-latest
@@ -39,5 +39,5 @@ jobs:
         run: corepack enable
       - name: Install dependencies
         run: corepack pnpm install
-      - name:
-        run: npx tsc --noEmit
+      - name: Typecheck
+        run: npx tsc --noEmit --project stories/tsconfig.json
