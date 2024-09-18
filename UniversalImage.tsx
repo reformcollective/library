@@ -39,8 +39,8 @@ export default function UniversalImage({
 	if ("gatsbyImageData" in image && image.gatsbyImageData)
 		return <GatsbyImage image={image.gatsbyImageData} {...props} />
 
-	if ("file" in image)
-		return image.file?.url ? <Image src={image.file.url} {...props} /> : null
+	if ("file" in image && image.file?.url)
+		return <Image src={image.file.url} {...props} />
 
 	if ("images" in image) return <GatsbyImage image={image} {...props} />
 
