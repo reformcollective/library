@@ -1,10 +1,12 @@
 import type { IGatsbyImageData } from "gatsby-plugin-image"
 import { GatsbyImage } from "gatsby-plugin-image"
-import type { ComponentProps } from "react"
+import type { ImgHTMLAttributes } from "react"
 import styled from "styled-components"
 
-type DefaultImageProps = ComponentProps<typeof GatsbyImage> &
-	ComponentProps<"img">
+type DefaultImageProps = Omit<
+	ImgHTMLAttributes<HTMLImageElement>,
+	"placeholder" | "onLoad" | "src" | "srcSet" | "width" | "height"
+>
 
 export type UniversalImageData =
 	| IGatsbyImageData
@@ -17,11 +19,16 @@ export type UniversalImageData =
 
 export type UniversalImageProps = Omit<DefaultImageProps, "image" | "src"> & {
 	image: UniversalImageData
+	alt: string
+	objectFit?: string
+	objectPosition?: string
 }
 
 export default function UniversalImage({
 	image,
 	loading = "lazy",
+	objectFit,
+	objectPosition,
 	...props
 }: UniversalImageProps) {
 	if (!image) {
@@ -29,20 +36,49 @@ export default function UniversalImage({
 		return null
 	}
 
-	if (typeof image === "string") return <Image src={image} {...props} />
+	if (typeof image === "string")
+		return (
+			<Image src={image} {...props} style={{ objectFit, objectPosition }} />
+		)
 
 	if ("childImageSharp" in image && image.childImageSharp?.gatsbyImageData)
 		return (
-			<GatsbyImage image={image.childImageSharp.gatsbyImageData} {...props} />
+			<GatsbyImage
+				image={image.childImageSharp.gatsbyImageData}
+				{...props}
+				objectFit={objectFit}
+				objectPosition={objectPosition}
+			/>
 		)
 
 	if ("gatsbyImageData" in image && image.gatsbyImageData)
-		return <GatsbyImage image={image.gatsbyImageData} {...props} />
+		return (
+			<GatsbyImage
+				image={image.gatsbyImageData}
+				{...props}
+				objectFit={objectFit}
+				objectPosition={objectPosition}
+			/>
+		)
 
 	if ("file" in image && image.file?.url)
-		return <Image src={image.file.url} {...props} />
+		return (
+			<Image
+				src={image.file.url}
+				{...props}
+				style={{ objectFit, objectPosition }}
+			/>
+		)
 
-	if ("images" in image) return <GatsbyImage image={image} {...props} />
+	if ("images" in image)
+		return (
+			<GatsbyImage
+				image={image}
+				{...props}
+				objectFit={objectFit}
+				objectPosition={objectPosition}
+			/>
+		)
 
 	console.warn("UniversalImage: image does not exist")
 	return null
