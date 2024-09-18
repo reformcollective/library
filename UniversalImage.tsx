@@ -31,20 +31,21 @@ export default function UniversalImage({
 
 	if (typeof image === "string") return <Image src={image} {...props} />
 
+	if ("childImageSharp" in image && image.childImageSharp?.gatsbyImageData)
+		return (
+			<GatsbyImage image={image.childImageSharp.gatsbyImageData} {...props} />
+		)
+
+	if ("gatsbyImageData" in image && image.gatsbyImageData)
+		return <GatsbyImage image={image.gatsbyImageData} {...props} />
+
 	if ("file" in image)
 		return image.file?.url ? <Image src={image.file.url} {...props} /> : null
 
-	if ("childImageSharp" in image)
-		return image.childImageSharp?.gatsbyImageData ? (
-			<GatsbyImage image={image.childImageSharp.gatsbyImageData} {...props} />
-		) : null
+	if ("images" in image) return <GatsbyImage image={image} {...props} />
 
-	if ("gatsbyImageData" in image)
-		return image.gatsbyImageData ? (
-			<GatsbyImage image={image.gatsbyImageData} {...props} />
-		) : null
-
-	return <GatsbyImage image={image} {...props} />
+	console.warn("UniversalImage: image does not exist")
+	return null
 }
 
 const Image = styled.img``
