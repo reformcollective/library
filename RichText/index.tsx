@@ -157,11 +157,12 @@ export default function RichText({
 			[INLINES.HYPERLINK]: (node, children) => {
 				const { data } = node
 				const { uri } = data
+				const Link = c.a
 				if (typeof uri === "string") {
-					return <A to={uri}>{children}</A>
+					return <Link to={uri}>{children}</Link>
 				}
 			},
-			[BLOCKS.QUOTE]: (node, children) => <Quote>{children}</Quote>,
+			[BLOCKS.QUOTE]: (_, children) => <c.blockquote>{children}</c.blockquote>,
 			[INLINES.EMBEDDED_ENTRY]: renderExtensions,
 			[BLOCKS.EMBEDDED_ASSET]: renderExtensions,
 			[BLOCKS.EMBEDDED_ENTRY]: renderExtensions,
