@@ -235,13 +235,15 @@ export default function Scroll({
 			else if (lockers) smoother?.paused(true)
 			else smoother?.paused(false)
 		}
-		onChange()
+
+		// we don't want to invoke onChange the first render, as that will
+		// interfere with the initial creation of the smoother
 
 		locksChange.addEventListener("change", onChange)
 		return () => {
 			locksChange.removeEventListener("change", onChange)
 		}
-	})
+	}, [])
 
 	return (
 		<div className={className} id="smooth-wrapper">
