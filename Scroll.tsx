@@ -238,6 +238,7 @@ export default function Scroll({
 
 		// we don't want to invoke onChange the first render, as that will
 		// interfere with the initial creation of the smoother
+		setTimeout(onChange, 1)
 
 		locksChange.addEventListener("change", onChange)
 		return () => {
