@@ -54,8 +54,8 @@ export default function useAutoHideHeader(
 		if (!wrapper) return
 
 		const props = {
-			ease: "power3.out",
-			duration: 0.7,
+			ease: "power1.out",
+			duration: 0.4,
 		}
 
 		const yTo = gsap.quickTo(wrapper.current, "y", props)
