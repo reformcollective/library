@@ -160,7 +160,10 @@ const updatePercent = () => {
 		.then(async () => {
 			// short circuit if there are no callbacks or animations
 			await allLoaderPromisesSettled() // but not before promises are settled
-			return animations.length === 0 ? onComplete() : null
+			return animations.length === 0 ||
+				animations.every((a) => a.duration === 0)
+				? onComplete()
+				: null
 		})
 		.catch(async () => {
 			return onComplete()
