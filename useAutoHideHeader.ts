@@ -5,6 +5,10 @@ import type { RefObject } from "react"
 import { useIsSmooth } from "./Scroll"
 import useAnimation from "./useAnimation"
 
+const clamp = (min: number, max: number, value: number) => {
+	return Math.min(Math.max(min, value), max)
+}
+
 const isElementInViewport = (element: Element) => {
 	const rect = element?.getBoundingClientRect()
 	return (
@@ -50,8 +54,8 @@ export default function useAutoHideHeader(
 		if (!wrapper) return
 
 		const props = {
-			ease: "power2.out",
-			duration: style === "snap" ? 1 : 0.5,
+			ease: "power1.out",
+			duration: 0.4,
 		}
 
 		const yTo = gsap.quickTo(wrapper.current, "y", props)
@@ -62,6 +66,7 @@ export default function useAutoHideHeader(
 				const delta = scroll - lastScroll
 				lastScroll = scroll
 				const height = wrapper.current?.offsetHeight ?? 0
+				if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
 
 				const forceHideHeader = checkElementsByAttribute("data-header-hide")
 				const forceShowHeader =
