@@ -35,7 +35,7 @@ const useAnimation = <F, T>(
 	createAnimations: F extends VoidFunction ? F : () => T,
 	deps: DependencyList,
 	options?: {
-		scope?: React.RefObject<HTMLElement | null>
+		scope?: React.RefObject<HTMLElement | SVGElement |null>
 		kill?: boolean
 		recreateOnResize?: boolean
 		extraDeps?: DependencyList
