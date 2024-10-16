@@ -92,17 +92,11 @@ async function onComplete() {
 		libraryConfig.scrollRestoration === false
 
 	/**
-	 * scroll to top if needed
+	 * scroll to top (if we need to restore, we'll do it later so that triggers work consistently)
 	 */
-	if (isAtTop) {
-		ScrollSmoother.get()?.scrollTop(0)
-		ScrollTrigger.refresh()
-		ScrollSmoother.get()?.scrollTop(0)
-	} else {
-		ScrollSmoother.get()?.scrollTop(initialScroll)
-		ScrollTrigger.refresh()
-		ScrollSmoother.get()?.scrollTop(initialScroll)
-	}
+	ScrollSmoother.get()?.scrollTop(0)
+	ScrollTrigger.refresh()
+	ScrollSmoother.get()?.scrollTop(0)
 
 	/**
 	 * scroll to anchor if needed
