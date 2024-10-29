@@ -58,6 +58,20 @@ export function InfiniteSideScroll({
 			if (!rowRef.current) return
 			const draggable = !disableDrag
 
+			// calculate the gap size between instances so that we can pad the marquee when it loops
+			// doing the math properly here is a bit tricky, but gives us lots of flexibility in how we pad our marquee
+			const childCount = rowRef.current.children.length / numberNeeded
+			const firstLastChild = rowRef.current.children[childCount - 1]
+			const secondFirstChild = rowRef.current.children[childCount]
+			const gap =
+				firstLastChild && secondFirstChild
+					? // distance from right edge of first to left edge of second
+						Math.abs(
+							firstLastChild.getBoundingClientRect().right -
+								secondFirstChild.getBoundingClientRect().left,
+						)
+					: 0
+
 			const loop = horizontalLoop(rowRef.current.children, {
 				draggable,
 				paused: marqueeSpeed === 0,
@@ -65,6 +79,8 @@ export function InfiniteSideScroll({
 				speed: marqueeSpeed === 0 ? 2 : marqueeSpeed,
 				reversed,
 				repeat: -1,
+				// padding right should match the calculated gap
+				paddingRight: gap,
 			})
 
 			// start centered
@@ -134,11 +150,8 @@ export function InfiniteSideScroll({
 
 			return loop
 		},
-		[marqueeSpeed, reversed, disableDrag, scrollVelocity],
-		{
-			recreateOnResize: true,
-			extraDeps: [numberNeeded],
-		},
+		[marqueeSpeed, reversed, disableDrag, scrollVelocity, numberNeeded],
+		{ recreateOnResize: true },
 	)
 
 	useEffect(() => {
