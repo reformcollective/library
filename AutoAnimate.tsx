@@ -23,6 +23,33 @@ const extractKey = (item: unknown): string => {
 	return String(item)
 }
 
+/**
+ * gets the size of an element, always rounding UP to the nearest pixel
+ * the default algorithm will round up or down but we want to always round up
+ * there is maybe a more elegant way to solve for this, but this works for now
+ */
+const getSize = (element: React.RefObject<HTMLElement>) => {
+	if (!element.current) return { width: 0, height: 0 }
+
+	// client size doesn't include borders, offset size and bounding rect do
+	const offsetWidth = element.current?.offsetWidth
+	const offsetHeight = element.current?.offsetHeight
+	const bounds = element.current.getBoundingClientRect()
+	const boundsWidth = bounds.width
+	const boundsHeight = bounds.height
+
+	// we prefer bounds because offset size is rounded which can cause text wrapping oddness
+	// but bounds is affected by transforms, so we'll only use it if it's very close to offset size
+	const canUseBounds =
+		Math.round(boundsWidth) === offsetWidth &&
+		Math.round(boundsHeight) === offsetHeight
+
+	if (canUseBounds)
+		return { width: Math.ceil(boundsWidth), height: Math.ceil(boundsHeight) }
+	// if we must use bounds, increase width by 1 to mitigate wrapping issues in exchange for very minor sizing issues
+	return { width: offsetWidth + 1, height: offsetHeight }
+}
+
 export default function AutoAnimate({
 	children,
 	duration = 1,
@@ -116,10 +143,7 @@ export default function AutoAnimate({
 		 */
 		sizer.current.style.display = "block"
 		wrapper.current.style.display = "none"
-		const size = {
-			width: sizer.current.clientWidth,
-			height: sizer.current.clientHeight,
-		}
+		const size = getSize(sizer)
 		sizer.current.style.display = "none"
 		wrapper.current.style.display = "grid"
 
@@ -128,7 +152,7 @@ export default function AutoAnimate({
 		 * changing the height to or from 'auto' can cause the smoother to refresh, even if the size hasn't changed
 		 * this is a) bad for performance and b) can cause the smoother to jump visually (at least in gsap 3.12.5)
 		 */
-		const heightChanged = size.height !== wrapper.current.clientHeight
+		const heightChanged = size.height !== getSize(wrapper).height
 		gsap.set(wrapper.current, {
 			height: heightChanged ? undefined : "auto",
 		})
@@ -157,10 +181,7 @@ export default function AutoAnimate({
 		 * ensure that we have a static size to animate from during the next transition
 		 */
 		const cleanup = () => {
-			gsap.set(wrapper.current, {
-				height: wrapper.current?.clientHeight ?? "auto",
-				width: wrapper.current?.clientWidth ?? "auto",
-			})
+			gsap.set(wrapper.current, getSize(wrapper))
 		}
 
 		/**
@@ -195,7 +216,7 @@ export default function AutoAnimate({
 
 		// set the width of the slots to prevent text wrap from changing during the animation
 		gsap.set(animateSlotOut.current, {
-			width: animateSlotOut.current?.clientWidth,
+			width: getSize(animateSlotOut).width,
 		})
 		gsap.set(animateSlotIn.current, {
 			width: size.width,
