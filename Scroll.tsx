@@ -4,7 +4,6 @@ import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect, useState } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
 import TypedEventEmitter from "./TypedEventEmitter"
-import { checkGSAP } from "./checkGSAP"
 import { isBrowser } from "./deviceDetection"
 
 type IgnoredOptions = "smoothTouch" | "ignoreMobileResize" | "effects"

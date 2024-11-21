@@ -52,3 +52,4 @@ export const useSearchResults = <T extends { id: string }>(
 
 	return query ? results : items
 }
+	
