@@ -1,11 +1,9 @@
-import gsap from "gsap"
-import Observer from "gsap/Observer"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { gsap, Observer, ScrollTrigger } from "gsap/all"
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react"
-import styled from "styled-components"
 import { addDebouncedEventListener } from "./functions"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
-import useAnimation from "./useAnimation"
+import { useAnimation } from "./useAnimation"
+import { styled, fresponsive, css } from "./styled"
 
 gsap.registerPlugin(Observer)
 
@@ -53,7 +51,7 @@ export function InfiniteSideScroll({
 	const rowRef = useRef<HTMLDivElement>(null)
 	const [numberNeeded, setNumberNeeded] = useState(1)
 
-	const loop = useAnimation(
+	const { result: loop } = useAnimation(
 		() => {
 			if (!rowRef.current) return
 			const draggable = !disableDrag
@@ -240,26 +238,38 @@ export function InfiniteSideScroll({
 	)
 }
 
-const Wrapper = styled.div`
-	display: grid;
-`
+const Wrapper = styled(
+	"div",
+	fresponsive(css`
+		display: grid;
+	`),
+)
 
-const Row = styled.div`
-	display: flex;
-	width: 100%;
-	overflow: hidden;
+const Row = styled(
+	"div",
+	fresponsive(css`
+		display: flex;
+		width: 100%;
+		overflow: hidden;
 
-	> * {
-		flex-shrink: 0;
-	}
-`
+		> * {
+			flex-shrink: 0;
+		}
+	`),
+)
 
-const TwoButtons = styled.div`
-	display: flex;
-`
+const TwoButtons = styled(
+	"div",
+	fresponsive(css`
+		display: flex;
+	`),
+)
 
-const OneButton = styled(TwoButtons)`
-	> *:first-child {
-		scale: -1 1;
-	}
-`
+const OneButton = styled(
+	TwoButtons,
+	fresponsive(css`
+		> *:first-child {
+			scale: -1 1;
+		}
+	`),
+)

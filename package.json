@@ -6,6 +6,7 @@
 	"dependencies": {
 		"@contentful/rich-text-react-renderer": "^15",
 		"@contentful/rich-text-types": "^16",
+		"@gsap/react": "2.1.1",
 		"@react-three/drei": "^9",
 		"@react-three/fiber": "^8",
 		"ahooks": "^3",

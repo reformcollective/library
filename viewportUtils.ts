@@ -10,7 +10,7 @@ import {
 	tabletDesignSize,
 } from "styles/media"
 import { isBrowser } from "./deviceDetection"
-import getMedia from "./getMedia"
+import useMedia from "./useMedia"
 
 /**
  * hookify a get function to update on resize
@@ -177,7 +177,7 @@ export function getResponsivePixels(px: number) {
 		(Number.parseFloat(((px / desktopDesignSize) * 100).toFixed(3)) / 100) *
 		desktopBreakpoint
 
-	if (!config.scaleFully) return getMedia(adjustedPx, value, value, value)
+	if (!config.scaleFully) return useMedia(adjustedPx, value, value, value)
 
 	return value
 }

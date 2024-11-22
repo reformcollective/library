@@ -92,7 +92,7 @@ export default function CustomTextOverflow({
 	 * invalidate the text measurement when the window is resized
 	 */
 	useEffect(() => {
-		let timeout: NodeJS.Timeout | undefined
+		let timeout: ReturnType<typeof setTimeout> | undefined
 		const handleResize = () => {
 			clearTimeout(timeout)
 			timeout = setTimeout(() => {

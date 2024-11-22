@@ -1,17 +1,16 @@
-import gsap from "gsap"
-import Flip from "gsap/Flip"
+import { gsap, Flip } from "gsap/all"
 import {
 	type ComponentProps,
 	type ReactNode,
 	createContext,
-	useContext,
+	use,
 	useEffect,
 	useState,
 } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
 import { usePinType } from "./Scroll"
 import createSmoothPin from "./smoothPin"
-import useAnimation from "./useAnimation"
+import { useAnimation } from "./useAnimation"
 import { useBreakpoint } from "./viewportUtils"
 
 gsap.registerPlugin(Flip)
@@ -169,7 +168,7 @@ export const ZoomPinProvider = ({
 }
 
 export const ZoomPinFrom = (props: ComponentProps<"div">) => {
-	const { toEl, setFromEl } = useContext(Context)
+	const { toEl, setFromEl } = use(Context)
 	const { width, height } = useSize(toEl)
 
 	return (
@@ -187,7 +186,7 @@ export const ZoomPinTo = ({
 	children,
 	...props
 }: ComponentProps<"div"> & { children: ReactNode }) => {
-	const { setToEl } = useContext(Context)
+	const { setToEl } = use(Context)
 
 	return (
 		// extra wrapper to shield against unmount errors

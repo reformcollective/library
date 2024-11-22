@@ -1,5 +1,4 @@
-import { fresponsive } from "library/fullyResponsive"
-import { css } from "styled-components"
+import { css } from "./styled"
 
 /**
  * generates CSS for a gradient border with a transparent background
@@ -14,13 +13,11 @@ export const generateGradientBorder = (
 	borderSize: number,
 ) => css`
 	/* make the background the gradient */
-	${fresponsive(css`
-		border: ${borderSize}px solid transparent;
-		background: ${gradient};
-		background-size: calc(100% + ${borderSize * 2}px)
-			calc(100% + ${borderSize * 2}px);
-		background-position: center;
-	`)}
+	border: ${borderSize}px solid transparent;
+	background: ${gradient};
+	background-size: calc(100% + ${borderSize * 2}px)
+		calc(100% + ${borderSize * 2}px);
+	background-position: center;
 
 	/* clip out the background so we get transparency */
 	mask:

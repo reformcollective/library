@@ -1,4 +1,4 @@
-import gsap from "gsap"
+import gsap from "gsap/all"
 
 /**
  * @see https://gsap.com/docs/v3/HelperFunctions/helpers/blendEases/

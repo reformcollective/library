@@ -1,5 +1,4 @@
-import { ScrollSmoother } from "gsap/ScrollSmoother"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { ScrollSmoother, ScrollTrigger } from "gsap/all"
 import libraryConfig from "libraryConfig"
 
 import { createScrollLock } from "library/Scroll"
@@ -65,9 +64,13 @@ let loaderIsDone = false
 export const getLoaderIsDone = () => loaderIsDone
 
 // preserve the scroll position throughout the initial render (page height may change because of pins etc)
-if (isBrowser) document.body.style.minHeight = "9999vh"
+// rather than directly modifying the body element, we'll use a div appended to the body
+// to prevent messing up the RSC process
+const spacer = isBrowser ? document.createElement("div") : null
+if (spacer) spacer.style.minHeight = "9999vh"
+if (spacer) document.body.append(spacer)
 const initialScroll = isBrowser ? window.scrollY : 0
-if (isBrowser) document.body.style.removeProperty("min-height")
+if (spacer) spacer.remove()
 
 const initialScrollLock = createScrollLock()
 

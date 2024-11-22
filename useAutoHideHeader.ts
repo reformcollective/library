@@ -1,13 +1,7 @@
-import gsap from "gsap"
-import { ScrollSmoother } from "gsap/ScrollSmoother"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { gsap, ScrollSmoother, ScrollTrigger } from "gsap/all"
 import type { RefObject } from "react"
 import { useIsSmooth } from "./Scroll"
-import useAnimation from "./useAnimation"
-
-const clamp = (min: number, max: number, value: number) => {
-	return Math.min(Math.max(min, value), max)
-}
+import { useAnimation } from "./useAnimation"
 
 const isElementInViewport = (element: Element) => {
 	const rect = element?.getBoundingClientRect()

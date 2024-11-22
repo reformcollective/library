@@ -1,11 +1,11 @@
 import gsap from "gsap/all"
 import { usePinType } from "library/Scroll"
 import useCanHover from "library/canHover"
-import useAnimation from "library/useAnimation"
+import { useAnimation } from "library/useAnimation"
 import { useEffect, useState } from "react"
-import styled, { css } from "styled-components"
 
 import { getVH } from "./viewportUtils"
+import { css, styled, unresponsive } from "./styled"
 
 interface SideScrollerProps {
 	children: React.ReactNode
@@ -111,46 +111,54 @@ export default function SideScroller({
 	return (
 		<Wrapper
 			ref={setWrapperEl}
-			$height={pinAmount}
-			$touchscreenMode={touchscreenMode}
+			height={pinAmount}
+			touchscreenMode={touchscreenMode}
 		>
-			<Inner ref={setInnerEl} $touchscreenMode={touchscreenMode}>
+			<Inner ref={setInnerEl} touchscreenMode={touchscreenMode}>
 				{children}
 			</Inner>
 		</Wrapper>
 	)
 }
 
-const Wrapper = styled.section<{ $height: number; $touchscreenMode: boolean }>`
-	position: relative;
-	overflow: hidden;
-	width: 100%;
-	height: ${(props) => props.$height}px;
+const Wrapper = styled(
+	"section",
+	({ height, touchscreenMode }: { height: number; touchscreenMode: boolean }) =>
+		unresponsive(css`
+			position: relative;
+			overflow: hidden;
+			width: 100%;
+			height: ${height}px;
 
-	${({ $touchscreenMode }) =>
-		$touchscreenMode &&
-		css`
-			height: fit-content;
-			overflow-x: auto;
-		`}
-`
+			${
+				touchscreenMode &&
+				css`
+				height: fit-content;
+				overflow-x: auto;
+			`
+			}
+		`),
+)
 
-const Inner = styled.div<{
-	$touchscreenMode: boolean
-}>`
-	position: absolute;
-	width: fit-content;
-	top: 0;
-	left: 0;
-
-	> div {
-		width: fit-content;
-	}
-
-	${({ $touchscreenMode }) =>
-		$touchscreenMode &&
-		css`
+const Inner = styled(
+	"div",
+	({ touchscreenMode }: { touchscreenMode: boolean }) =>
+		unresponsive(css`
+			position: absolute;
 			width: fit-content;
-			height: fit-content;
-		`}
-`
+			top: 0;
+			left: 0;
+
+			> div {
+				width: fit-content;
+			}
+
+			${
+				touchscreenMode &&
+				css`
+				width: fit-content;
+				height: fit-content;
+			`
+			}
+		`),
+)

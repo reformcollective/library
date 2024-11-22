@@ -1,9 +1,9 @@
 import { useEventListener } from "ahooks"
-import gsap from "gsap"
+import { gsap } from "gsap/all"
 import { useCallback, useEffect, useRef, useState } from "react"
-import styled from "styled-components"
 import { loader } from "./Loader"
 import { loaderAwaitPromise } from "./Loader/promises"
+import { styled } from "./styled"
 
 interface SequenceProps {
 	className?: string
@@ -235,7 +235,7 @@ export default function ImageSequence({
 	)
 }
 
-const Canvas = styled.canvas`
-	width: 100%;
-	height: 100%;
-`
+const Canvas = styled("canvas", {
+	width: "100%",
+	height: "100%",
+})

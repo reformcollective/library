@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import styled from "styled-components"
+import { css, fresponsive, styled } from "./styled"
 
 /**
  * scales it's content to a certain size while maintaining
@@ -52,12 +52,17 @@ export default function ScaledContent({
 	)
 }
 
-const Outer = styled.div`
-	display: grid;
-	place-items: start;
-`
+const Outer = styled(
+	"div",
+	fresponsive(css`
+		display: grid;
+		place-items: start;
+	`),
+)
 
-const Inner = styled.div<{ scale: number }>`
-	transform-origin: top left;
-	scale: ${({ scale }) => scale};
-`
+const Inner = styled("div", ({ scale }: { scale: number }) =>
+	fresponsive(css`
+		transform-origin: top left;
+		scale: ${scale};
+	`),
+)

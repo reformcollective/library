@@ -30,7 +30,7 @@ jobs:
       - name: Install Unlighthouse
         run: npm install -g @unlighthouse/cli puppeteer netlify-cli
       # END INSTALLATION
-      
+
       - name: Build
         run: bun run gatsby build
 
@@ -60,5 +60,5 @@ jobs:
       - name: Post comment
         uses: JoseThen/comment-pr@v1.2.0
         with:
-          comment: 'Report Link: https://deft-mochi-caac3e.netlify.app/'
+          comment: "Report Link: https://deft-mochi-caac3e.netlify.app/"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

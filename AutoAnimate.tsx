@@ -1,9 +1,9 @@
 import { useEventListener } from "ahooks"
-import { gsap } from "gsap"
+import { gsap } from "gsap/all"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
-import styled from "styled-components"
 import { useBetterThrottle } from "./useBetterThrottle"
+import { css, styled, unresponsive } from "./styled"
 
 const extractKey = (item: unknown): string => {
 	if (Array.isArray(item) && item.every((i) => typeof i === "string")) {
@@ -290,27 +290,32 @@ export default function AutoAnimate({
 	)
 }
 
-const Wrapper = styled.div`
-	overflow: clip;
-`
+const Wrapper = styled(
+	"div",
+	unresponsive(css`
+		overflow: clip;
+	`),
+)
 
-const AnimationWrapper = styled.div<{
-	alignment: "start" | "center" | "end"
-}>`
-	display: grid;
-	place-items: ${(props) => props.alignment};
-	place-content: ${(props) => props.alignment};
+const AnimationWrapper = styled(
+	"div",
+	({ alignment }: { alignment: "start" | "center" | "end" }) =>
+		unresponsive(css`
+			display: grid;
+			place-items: ${alignment};
+			place-content: ${alignment};
 
-	> * {
-		grid-area: 1 / 1 / 2 / 2;
-		min-width: 100%;
-		min-height: 100%;
-		display: grid;
-		place-items: ${(props) => props.alignment};
-		place-content: ${(props) => props.alignment};
+			> * {
+				grid-area: 1 / 1 / 2 / 2;
+				min-width: 100%;
+				min-height: 100%;
+				display: grid;
+				place-items: ${alignment};
+				place-content: ${alignment};
 
-		&:empty {
-			pointer-events: none;
-		}
-	}
-`
+				&:empty {
+					pointer-events: none;
+				}
+			}
+		`),
+)

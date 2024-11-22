@@ -1,14 +1,14 @@
 import { useRafInterval } from "ahooks"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { ScrollTrigger } from "gsap/all"
 import { useRef, useState } from "react"
 
-import useAnimation from "./useAnimation"
+import { useAnimation } from "./useAnimation"
 
 type Props = {
 	poster: string
 	className?: string
 	style?: React.CSSProperties
-	forwardRef?: React.RefObject<HTMLVideoElement>
+	ref?: React.RefObject<HTMLVideoElement>
 	contextMenu?: boolean
 	loop?: boolean
 	autoPlay?: boolean
@@ -21,7 +21,7 @@ export function LazyVideo({
 	poster,
 	sourceMP4,
 	sourceWEBM,
-	forwardRef,
+	ref,
 	contextMenu = true,
 	loop = true,
 	autoPlay = true,
@@ -29,9 +29,9 @@ export function LazyVideo({
 }: Props) {
 	const [showVideo, setShowVideo] = useState(false)
 	const alternateRef = useRef<HTMLVideoElement>(null)
-	const refToUse = forwardRef ?? alternateRef
+	const refToUse = ref ?? alternateRef
 
-	const trigger = useAnimation(() => {
+	const { result: trigger } = useAnimation(() => {
 		return ScrollTrigger.create({
 			trigger: refToUse.current,
 			start: "top bottom",
