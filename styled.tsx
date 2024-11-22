@@ -186,7 +186,13 @@ export function attrs<Props, usedKeys extends keyof Props>(
 }
 
 export const css = String.raw
-export { styled, media } from "restyle"
+export {
+	styled,
+	media,
+	GlobalStyles,
+	type CSSObject,
+	type CSSValue,
+} from "restyle"
 export const fresponsive = (style: string, options?: Options) =>
 	convertToResponsive(convertCssToObject(style), options)
 export const ftablet = (style: string) =>
