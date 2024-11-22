@@ -4,7 +4,7 @@ import {
 	type ComponentProps,
 	type ReactNode,
 	createContext,
-	useContext,
+	use,
 	useEffect,
 	useState,
 } from "react"
@@ -169,7 +169,7 @@ export const ZoomPinProvider = ({
 }
 
 export const ZoomPinFrom = (props: ComponentProps<"div">) => {
-	const { toEl, setFromEl } = useContext(Context)
+	const { toEl, setFromEl } = use(Context)
 	const { width, height } = useSize(toEl)
 
 	return (
@@ -187,7 +187,7 @@ export const ZoomPinTo = ({
 	children,
 	...props
 }: ComponentProps<"div"> & { children: ReactNode }) => {
-	const { setToEl } = useContext(Context)
+	const { setToEl } = use(Context)
 
 	return (
 		// extra wrapper to shield against unmount errors
