@@ -4,7 +4,7 @@ import { startTransition, useEffect, useState } from "react"
 import { isBrowser } from "./deviceDetection"
 import { useGSAP } from "@gsap/react"
 
-let globalRefresh: NodeJS.Timeout | undefined
+let globalRefresh: ReturnType<typeof setTimeout> | undefined
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.

@@ -6,7 +6,7 @@ export const addDebouncedEventListener = (
 	callback: () => void,
 	delay: number,
 ) => {
-	let timeout: NodeJS.Timeout
+	let timeout: ReturnType<typeof setTimeout> | undefined
 
 	const debouncedCallback = () => {
 		clearTimeout(timeout)
