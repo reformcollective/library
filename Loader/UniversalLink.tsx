@@ -1,12 +1,10 @@
-import { Link } from "gatsby"
 import libraryConfig from "libraryConfig"
 import type { CSSProperties, MouseEventHandler } from "react"
 import type { Transitions } from "."
 import { linkIsInternal } from "../functions"
 import { loadPage } from "./TransitionUtils"
-
-export type UniversalLinkRef = HTMLButtonElement &
-	(HTMLAnchorElement & Link<unknown>)
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 interface BaseLinkProps {
 	/**
@@ -35,13 +33,13 @@ interface ButtonProps extends BaseLinkProps {
 	/**
 	 * forward a ref to the button
 	 */
-	forwardRef?: React.RefObject<HTMLButtonElement>
+	ref?: React.RefObject<HTMLButtonElement>
 	/**
 	 * Do you want to scroll to a specific location after the transition?
 	 */
 	anchor?: string
 
-	to?: undefined
+	href?: undefined
 	transition?: undefined
 }
 
@@ -49,7 +47,7 @@ interface AnchorProps extends BaseLinkProps {
 	/**
 	 * where should the link navigate to?
 	 */
-	to: string
+	href: string
 	/**
 	 * which transition should be used when navigating to this link?
 	 */
@@ -57,7 +55,7 @@ interface AnchorProps extends BaseLinkProps {
 	/**
 	 * forward a ref to the link or anchor tag
 	 */
-	forwardRef?: React.RefObject<HTMLAnchorElement & Link<unknown>>
+	ref?: React.RefObject<HTMLAnchorElement>
 
 	onClick?: undefined
 	type?: undefined
@@ -70,10 +68,10 @@ export type UniversalLinkProps = ButtonProps | AnchorProps
  * @returns
  */
 export default function UniversalLink({
-	to,
+	href,
 	transition = libraryConfig.defaultTransition,
 	openInNewTab = false,
-	forwardRef,
+	ref,
 	type,
 	children,
 	ariaLabel,
@@ -83,7 +81,7 @@ export default function UniversalLink({
 		return (
 			<button
 				type={type}
-				ref={forwardRef}
+				ref={ref}
 				aria-label={ariaLabel}
 				{...props}
 				style={{
@@ -95,25 +93,24 @@ export default function UniversalLink({
 		)
 	}
 
-	const internal = linkIsInternal(to)
+	const internal = linkIsInternal(href)
+	const router = useRouter()
 
 	const handleClick: React.MouseEventHandler = (e) => {
 		e.preventDefault()
 
 		if (openInNewTab || !internal) {
-			window.open(to, "_blank")
+			window.open(href, "_blank")
 		} else {
-			loadPage(to, transition).catch((error: string) => {
-				throw new Error(error)
-			})
+			loadPage({ to: href, transition, routerNavigate: router.push })
 		}
 	}
 
 	return internal ? (
 		<Link
-			to={to}
+			href={href}
 			onClick={handleClick}
-			ref={forwardRef}
+			ref={ref}
 			aria-label={ariaLabel}
 			{...props}
 		>
@@ -121,9 +118,9 @@ export default function UniversalLink({
 		</Link>
 	) : (
 		<a
-			href={to}
+			href={href}
 			onClick={handleClick}
-			ref={forwardRef}
+			ref={ref}
 			aria-label={ariaLabel}
 			{...props}
 		>

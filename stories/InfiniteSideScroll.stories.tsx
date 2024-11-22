@@ -1,24 +1,24 @@
 import type { ComponentProps } from "react"
-import styled from "styled-components"
 import { InfiniteSideScroll } from "../InfiniteSideScroll"
+import { styled } from "../styled"
 
 export default {
 	title: "Components/InfiniteSideScroll",
 	component: InfiniteSideScroll,
 }
 
-const Card = styled.div<{ $color: string }>`
-	width: 300px;
-	height: 300px;
-	background: ${({ $color }) => $color};
-`
+const Card = styled("div", {
+	width: "300px",
+	height: "300px",
+	background: "red",
+})
 
-const StyledButton = styled.button`
-	min-width: 50px;
-	height: 50px;
-	font-size: 20px;
-	cursor: pointer;
-`
+const StyledButton = styled("button", {
+	minWidth: "50px",
+	height: "50px",
+	fontSize: "20px",
+	cursor: "pointer",
+})
 
 export const Playground = {
 	args: {

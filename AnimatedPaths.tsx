@@ -1,8 +1,8 @@
 import gsap from "gsap"
 import DrawSVGPlugin from "gsap/DrawSVGPlugin"
 import { useState } from "react"
-import styled from "styled-components"
-import useAnimation from "./useAnimation"
+import { useAnimation } from "./useAnimation"
+import { css, styled, unresponsive } from "./styled"
 
 gsap.registerPlugin(DrawSVGPlugin)
 
@@ -154,7 +154,6 @@ export function AnimatedPaths({
 		],
 		{
 			recreateOnResize: true,
-			kill: true,
 		},
 	)
 
@@ -162,15 +161,17 @@ export function AnimatedPaths({
 		<Wrapper
 			className={className}
 			ref={(ref) => setWrapper(ref)}
-			$selector={selector}
+			selector={selector}
 		>
 			{children}
 		</Wrapper>
 	)
 }
 
-const Wrapper = styled.div<{ $selector: string }>`
-	${(props) => props.$selector} {
-		visibility: hidden;
-	}
-`
+const Wrapper = styled("div", ({ selector }: { selector: string }) =>
+	unresponsive(css`
+		${selector} {
+			visibility: hidden;
+		}
+	`),
+)

@@ -1,13 +1,10 @@
-import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import type { DependencyList } from "react"
-import { useEffect, useLayoutEffect, useState } from "react"
-import { checkGSAP } from "./checkGSAP"
+import { useEffect, useState } from "react"
 import { isBrowser } from "./deviceDetection"
+import { useGSAP } from "@gsap/react"
 
 let globalRefresh: NodeJS.Timeout | undefined
-
-const defaultHook = isBrowser ? useLayoutEffect : useEffect
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
@@ -25,27 +22,20 @@ const defaultHook = isBrowser ? useLayoutEffect : useEffect
  * @param deps - any dependencies that should cause the animations to be re-created
  * @param options - options for the hook
  * @param options.scope - the scope of the animation for GSAP to use
- * @param options.kill - whether to kill the animation when the component is unmounted, rather than reverting it
+ * @param options.revertOnUpdate - whether to revert the animation when the component is unmounted, rather than killing it
  * @param options.recreateOnResize - whether to re-create the animations when the window is resized
- * @param options.extraDeps - any extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
- * @param options.dangerouslyOverrideEffect - override the effect to use - changing this may cause issues with unmounting pins! use with caution!
- * if you're trying to deep compare, a safer solution is to stabilize each of your dependencies with useDeepCompareMemo
+ * @param options.extraDeps - sany extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
  */
-const useAnimation = <F, T>(
+export const useAnimation = <F, T>(
 	createAnimations: F extends VoidFunction ? F : () => T,
 	deps: DependencyList,
 	options?: {
 		scope?: React.RefObject<Element | null>
-		kill?: boolean
 		recreateOnResize?: boolean
+		revertOnUpdate?: boolean
 		extraDeps?: DependencyList
-		dangerouslyOverrideEffect?: (
-			effect: () => void,
-			deps: DependencyList,
-		) => void
 	},
 ) => {
-	const useEffectToUse = options?.dangerouslyOverrideEffect ?? defaultHook
 	const [resizeSignal, setResizeSignal] = useState(
 		isBrowser && window.innerWidth,
 	)
@@ -88,13 +78,10 @@ const useAnimation = <F, T>(
 		}
 	}, [options?.recreateOnResize])
 
-	useEffectToUse(() => {
-		// create animations using a gsap context so they can be reverted easily
-		const ctx = gsap.context(() => {
-			const former = window.gsap
-			window.gsap = gsap
+	const { context, contextSafe } = useGSAP(
+		() => {
 			const result = createAnimations()
-			window.gsap = former
+
 			if (typeof result === "function") {
 				return result
 			}
@@ -104,17 +91,13 @@ const useAnimation = <F, T>(
 			} else {
 				setReturnValue(undefined)
 			}
-		}, options?.scope?.current ?? undefined)
-		return () => {
-			if (options?.kill) {
-				ctx.kill()
-			} else ctx.revert()
-		}
-	}, [options?.kill, options?.scope, resizeSignal, ...deps, ...extraDeps])
+		},
+		{
+			revertOnUpdate: options?.revertOnUpdate,
+			scope: options?.scope,
+			dependencies: [resizeSignal, ...deps, ...extraDeps],
+		},
+	)
 
-	return returnValue
+	return { context, contextSafe, result: returnValue }
 }
-
-export default useAnimation
-
-checkGSAP()

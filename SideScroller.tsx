@@ -1,11 +1,11 @@
 import gsap from "gsap/all"
 import { usePinType } from "library/Scroll"
 import useCanHover from "library/canHover"
-import useAnimation from "library/useAnimation"
+import { useAnimation } from "library/useAnimation"
 import { useEffect, useState } from "react"
-import styled, { css } from "styled-components"
 
 import { getVH } from "./viewportUtils"
+import { css, styled, unresponsive } from "./styled"
 
 interface SideScrollerProps {
 	children: React.ReactNode
@@ -111,33 +111,43 @@ export default function SideScroller({
 	return (
 		<Wrapper
 			ref={setWrapperEl}
-			$height={pinAmount}
-			$touchscreenMode={touchscreenMode}
+			height={pinAmount}
+			touchscreenMode={touchscreenMode}
 		>
-			<Inner ref={setInnerEl} $touchscreenMode={touchscreenMode}>
+			<Inner ref={setInnerEl} touchscreenMode={touchscreenMode}>
 				{children}
 			</Inner>
 		</Wrapper>
 	)
 }
 
-const Wrapper = styled.section<{ $height: number; $touchscreenMode: boolean }>`
+const Wrapper = styled(
+	"section",
+	({ height, touchscreenMode }: { height: number; touchscreenMode: boolean }) =>
+		unresponsive(css`
 	position: relative;
 	overflow: hidden;
 	width: 100%;
-	height: ${(props) => props.$height}px;
+	height: ${height}px;
 
-	${({ $touchscreenMode }) =>
-		$touchscreenMode &&
+	${
+		touchscreenMode &&
 		css`
 			height: fit-content;
 			overflow-x: auto;
-		`}
-`
+		`
+	}
+`),
+)
 
-const Inner = styled.div<{
-	$touchscreenMode: boolean
-}>`
+const Inner = styled(
+	"div",
+	({
+		touchscreenMode,
+	}: {
+		touchscreenMode: boolean
+	}) =>
+		unresponsive(css`
 	position: absolute;
 	width: fit-content;
 	top: 0;
@@ -147,10 +157,12 @@ const Inner = styled.div<{
 		width: fit-content;
 	}
 
-	${({ $touchscreenMode }) =>
-		$touchscreenMode &&
+	${
+		touchscreenMode &&
 		css`
 			width: fit-content;
 			height: fit-content;
-		`}
-`
+		`
+	}
+`),
+)

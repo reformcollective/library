@@ -1,5 +1,4 @@
 import { useDeepCompareEffect, useEventListener } from "ahooks"
-import { navigate as gatsbyNavigate } from "gatsby"
 import gsap from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
 import ScrollToPlugin from "gsap/ScrollToPlugin"
@@ -9,7 +8,6 @@ import { linkIsExternal, pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"
 import type { TransitionNames } from "libraryConfig"
 import libraryConfig from "libraryConfig"
-import { startTransition } from "react"
 import { loader } from "."
 import { getLoaderIsDone } from "./PreloaderUtils"
 import { allLoaderPromisesSettled } from "./promises"
@@ -52,10 +50,15 @@ let currentNavigation: string | null = null
  * @param navigateTo page to load
  * @param transition the transition to use
  */
-export const loadPage = async (
-	navigateTo: string,
-	transition: LoaderTransitions,
-) => {
+export const loadPage = async ({
+	to: navigateTo,
+	transition,
+	routerNavigate,
+}: {
+	to: string
+	transition: LoaderTransitions
+	routerNavigate: (to: string) => unknown
+}) => {
 	const anchorName = new URL(navigateTo, window.location.origin).hash
 	const pathname = new URL(navigateTo, window.location.origin).pathname
 
@@ -122,7 +125,7 @@ export const loadPage = async (
 		loader.dispatchEvent("start", "instant")
 		loader.dispatchEvent("routeChange", "instant")
 
-		navigate(navigateTo)
+		navigate({ to: navigateTo, routerNavigate })
 		await pageUnmounted()
 		await pageReady()
 
@@ -172,8 +175,12 @@ export const loadPage = async (
 	const scrollLock = createScrollLock()
 
 	// actually navigate to the page
-	navigate(navigateTo, () => {
-		animationContext.revert()
+	await navigate({
+		to: navigateTo,
+		routerNavigate,
+		cleanupFunction: () => {
+			animationContext.revert()
+		},
 	})
 	await pageUnmounted()
 	await pageReady()
@@ -217,7 +224,11 @@ export const loadPage = async (
 
 	// start the next transition if applicable
 	if (pendingNavigation?.transition) {
-		loadPage(pendingNavigation.to, pendingNavigation.transition)
+		loadPage({
+			to: pendingNavigation.to,
+			transition: pendingNavigation.transition,
+			routerNavigate,
+		})
 		pendingNavigation = null
 	}
 }
@@ -227,7 +238,15 @@ export const loadPage = async (
  * @param to the link to navigate to
  * @param cleanupFunction a function to reset the page to its original state (if back button is pressed after external link)
  */
-const navigate = (to: string, cleanupFunction?: VoidFunction) => {
+const navigate = async ({
+	to,
+	routerNavigate,
+	cleanupFunction,
+}: {
+	to: string
+	routerNavigate: (to: string) => unknown
+	cleanupFunction?: VoidFunction
+}) => {
 	const isExternal = linkIsExternal(to)
 
 	if (isExternal) {
@@ -245,11 +264,7 @@ const navigate = (to: string, cleanupFunction?: VoidFunction) => {
 			destination.hash = ""
 		}
 
-		startTransition(() => {
-			gatsbyNavigate(
-				destination.pathname + destination.search + destination.hash,
-			)
-		})
+		routerNavigate(destination.pathname + destination.search + destination.hash)
 	}
 }
 

@@ -1,6 +1,5 @@
 import { gsap } from "gsap"
 import ScrollSmoother from "gsap/ScrollSmoother"
-import { pageReady, pageUnmounted } from "library/pageReady"
 import { useEffect, useState } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
 import TypedEventEmitter from "./TypedEventEmitter"
@@ -207,8 +206,6 @@ export default function Scroll({
 			;(async () => {
 				const smoother = ScrollSmoother.get()
 				if (smoother) smoother.kill()
-				await pageUnmounted()
-				await pageReady()
 				setRefreshSignal((s) => s + 1)
 			})().catch(console.error)
 		}
@@ -251,5 +248,3 @@ export default function Scroll({
 		</div>
 	)
 }
-
-checkGSAP()

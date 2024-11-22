@@ -1,4 +1,4 @@
-import { css } from "styled-components"
+import { css } from "./styled"
 
 /**
  * a selector to use when applying styles to auto-filled inputs

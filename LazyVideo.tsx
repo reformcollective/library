@@ -2,7 +2,7 @@ import { useRafInterval } from "ahooks"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { useRef, useState } from "react"
 
-import useAnimation from "./useAnimation"
+import { useAnimation } from "./useAnimation"
 
 type Props = {
 	poster: string
@@ -31,7 +31,7 @@ export function LazyVideo({
 	const alternateRef = useRef<HTMLVideoElement>(null)
 	const refToUse = forwardRef ?? alternateRef
 
-	const trigger = useAnimation(() => {
+	const { result: trigger } = useAnimation(() => {
 		return ScrollTrigger.create({
 			trigger: refToUse.current,
 			start: "top bottom",
