@@ -2,7 +2,7 @@ import TypedEventEmitter from "library/TypedEventEmitter"
 import type { TransitionNames } from "libraryConfig"
 
 /**
- * transitionNames are configured in src/libraryConfig.ts
+ * transitionNames are configured in app/libraryConfig.ts
  * you should't need to edit this file
  */
 export type Transitions = TransitionNames | "instant"

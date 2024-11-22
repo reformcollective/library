@@ -125,44 +125,40 @@ const Wrapper = styled(
 	"section",
 	({ height, touchscreenMode }: { height: number; touchscreenMode: boolean }) =>
 		unresponsive(css`
-	position: relative;
-	overflow: hidden;
-	width: 100%;
-	height: ${height}px;
+			position: relative;
+			overflow: hidden;
+			width: 100%;
+			height: ${height}px;
 
-	${
-		touchscreenMode &&
-		css`
-			height: fit-content;
-			overflow-x: auto;
-		`
-	}
-`),
+			${
+				touchscreenMode &&
+				css`
+				height: fit-content;
+				overflow-x: auto;
+			`
+			}
+		`),
 )
 
 const Inner = styled(
 	"div",
-	({
-		touchscreenMode,
-	}: {
-		touchscreenMode: boolean
-	}) =>
+	({ touchscreenMode }: { touchscreenMode: boolean }) =>
 		unresponsive(css`
-	position: absolute;
-	width: fit-content;
-	top: 0;
-	left: 0;
-
-	> div {
-		width: fit-content;
-	}
-
-	${
-		touchscreenMode &&
-		css`
+			position: absolute;
 			width: fit-content;
-			height: fit-content;
-		`
-	}
-`),
+			top: 0;
+			left: 0;
+
+			> div {
+				width: fit-content;
+			}
+
+			${
+				touchscreenMode &&
+				css`
+				width: fit-content;
+				height: fit-content;
+			`
+			}
+		`),
 )

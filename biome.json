@@ -47,7 +47,7 @@
 			"pnpm-lock.yaml",
 			".vscode",
 			"gsapHelpers",
-			"src/library/gsapHelpers"
+			"app/library/gsapHelpers"
 		]
 	},
 	"vcs": {

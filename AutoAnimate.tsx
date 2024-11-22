@@ -301,23 +301,21 @@ const AnimationWrapper = styled(
 	"div",
 	({ alignment }: { alignment: "start" | "center" | "end" }) =>
 		unresponsive(css`
-			
-	
-	display: grid;
-	place-items: ${alignment};
-	place-content: ${alignment};
+			display: grid;
+			place-items: ${alignment};
+			place-content: ${alignment};
 
-	> * {
-		grid-area: 1 / 1 / 2 / 2;
-		min-width: 100%;
-		min-height: 100%;
-		display: grid;
-		place-items: ${alignment};
-		place-content: ${alignment};
+			> * {
+				grid-area: 1 / 1 / 2 / 2;
+				min-width: 100%;
+				min-height: 100%;
+				display: grid;
+				place-items: ${alignment};
+				place-content: ${alignment};
 
-		&:empty {
-			pointer-events: none;
-		}
-	}
-`),
+				&:empty {
+					pointer-events: none;
+				}
+			}
+		`),
 )

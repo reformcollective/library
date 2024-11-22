@@ -2,7 +2,7 @@ import type { Transitions } from "./Loader"
 
 /**
  * config schema and config defaults for the reform util library
- * see src/libraryConfig.ts for the actual config
+ * see app/libraryConfig.ts for the actual config
  */
 
 export type Config = {

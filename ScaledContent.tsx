@@ -55,14 +55,14 @@ export default function ScaledContent({
 const Outer = styled(
 	"div",
 	fresponsive(css`
-	display: grid;
-	place-items: start;
-`),
+		display: grid;
+		place-items: start;
+	`),
 )
 
 const Inner = styled("div", ({ scale }: { scale: number }) =>
 	fresponsive(css`
-	transform-origin: top left;
-	scale: ${scale};
-`),
+		transform-origin: top left;
+		scale: ${scale};
+	`),
 )

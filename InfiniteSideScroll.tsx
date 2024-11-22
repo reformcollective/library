@@ -243,35 +243,35 @@ export function InfiniteSideScroll({
 const Wrapper = styled(
 	"div",
 	fresponsive(css`
-	display: grid;
-`),
+		display: grid;
+	`),
 )
 
 const Row = styled(
 	"div",
 	fresponsive(css`
-	display: flex;
-	width: 100%;
-	overflow: hidden;
+		display: flex;
+		width: 100%;
+		overflow: hidden;
 
-	> * {
-		flex-shrink: 0;
-	}
-`),
+		> * {
+			flex-shrink: 0;
+		}
+	`),
 )
 
 const TwoButtons = styled(
 	"div",
 	fresponsive(css`
-	display: flex;
-`),
+		display: flex;
+	`),
 )
 
 const OneButton = styled(
 	TwoButtons,
 	fresponsive(css`
-	> *:first-child {
-		scale: -1 1;
-	}
-`),
+		> *:first-child {
+			scale: -1 1;
+		}
+	`),
 )

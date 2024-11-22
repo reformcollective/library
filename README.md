@@ -11,6 +11,6 @@ For example, if you're don't have three.js installed, you can add it to the excl
 
 ```
 {
-  "exclude": ["node_modules", "src/library/threeJS"]
+  "exclude": ["node_modules", "app/library/threeJS"]
 }
 ```

@@ -1,5 +1,5 @@
-import { Canvas, Meta, ArgTypes } from '@storybook/blocks';
-import * as Stories from './InfiniteSideScroll.stories'
+import { Canvas, Meta, ArgTypes } from "@storybook/blocks"
+import * as Stories from "./InfiniteSideScroll.stories"
 
 <Meta of={Stories} />
 
@@ -15,23 +15,22 @@ If you want to add a gap between items, just add left margin to your items. alte
 
 ## Custom Styling
 
-InfiniteSideScroll has a className prop to allow you to add custom styling if needed.  You can style the inner elements like so:
+InfiniteSideScroll has a className prop to allow you to add custom styling if needed. You can style the inner elements like so:
 
 ```js
+const StyledSideScroll = styled(InfiniteSideScroll)`
+	// custom styling for Wrapper
 
-  const StyledSideScroll = styled(InfiniteSideScroll)`
-    // custom styling for Wrapper
+	& .track {
+		// custom styling for Track
+	}
 
-    & .track {
-      // custom styling for Track
-    }
-
-    * .buttons {
-      // custom styling for the wrapper around the buttons
-    }
-  `
+	* .buttons {
+		// custom styling for the wrapper around the buttons
+	}
+`
 ```
 
-<Canvas/>
+<Canvas />
 
-<ArgTypes/>
+<ArgTypes />
