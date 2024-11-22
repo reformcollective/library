@@ -1,5 +1,4 @@
-import gsap from "gsap"
-import DrawSVGPlugin from "gsap/DrawSVGPlugin"
+import { gsap, DrawSVGPlugin } from "gsap/all"
 import { useState } from "react"
 import { useAnimation } from "./useAnimation"
 import { css, styled, unresponsive } from "./styled"

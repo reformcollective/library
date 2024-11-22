@@ -1,6 +1,6 @@
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { ScrollTrigger } from "gsap/all"
 import type { DependencyList } from "react"
-import { useEffect, useState } from "react"
+import { startTransition, useEffect, useState } from "react"
 import { isBrowser } from "./deviceDetection"
 import { useGSAP } from "@gsap/react"
 
@@ -28,7 +28,7 @@ let globalRefresh: NodeJS.Timeout | undefined
  */
 export const useAnimation = <F, T>(
 	createAnimations: F extends VoidFunction ? F : () => T,
-	deps: DependencyList,
+	deps?: DependencyList,
 	options?: {
 		scope?: React.RefObject<Element | null>
 		recreateOnResize?: boolean
@@ -39,6 +39,8 @@ export const useAnimation = <F, T>(
 	const [resizeSignal, setResizeSignal] = useState(
 		isBrowser && window.innerWidth,
 	)
+
+	const standardDeps = deps ?? []
 	const extraDeps = options?.extraDeps ?? []
 
 	type ReturnType =
@@ -78,8 +80,14 @@ export const useAnimation = <F, T>(
 		}
 	}, [options?.recreateOnResize])
 
+	const [firstRender, setFirstRender] = useState(true)
+
 	const { context, contextSafe } = useGSAP(
 		() => {
+			startTransition(() => {
+				setFirstRender(false)
+			})
+			if (firstRender) return
 			const result = createAnimations()
 
 			if (typeof result === "function") {
@@ -95,7 +103,7 @@ export const useAnimation = <F, T>(
 		{
 			revertOnUpdate: options?.revertOnUpdate,
 			scope: options?.scope,
-			dependencies: [resizeSignal, ...deps, ...extraDeps],
+			dependencies: [firstRender, resizeSignal, ...standardDeps, ...extraDeps],
 		},
 	)
 

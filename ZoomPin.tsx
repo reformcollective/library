@@ -1,5 +1,4 @@
-import gsap from "gsap"
-import Flip from "gsap/Flip"
+import { gsap, Flip } from "gsap/all"
 import {
 	type ComponentProps,
 	type ReactNode,

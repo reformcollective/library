@@ -1,5 +1,5 @@
 import { useEventListener } from "ahooks"
-import gsap from "gsap"
+import { gsap } from "gsap/all"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { loader } from "./Loader"
 import { loaderAwaitPromise } from "./Loader/promises"

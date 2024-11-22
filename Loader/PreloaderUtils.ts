@@ -1,5 +1,4 @@
-import { ScrollSmoother } from "gsap/ScrollSmoother"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { ScrollSmoother, ScrollTrigger } from "gsap/all"
 import libraryConfig from "libraryConfig"
 
 import { createScrollLock } from "library/Scroll"

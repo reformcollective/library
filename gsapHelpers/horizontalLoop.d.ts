@@ -1,7 +1,6 @@
 // horizontalLoop.d.ts
 
-import type { gsap } from "gsap"
-import type { Draggable } from "gsap/Draggable"
+import type { gsap, Draggable } from "gsap/all"
 
 interface HorizontalLoopConfig {
 	speed?: number

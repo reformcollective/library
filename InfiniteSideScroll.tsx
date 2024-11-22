@@ -1,6 +1,4 @@
-import gsap from "gsap"
-import Observer from "gsap/Observer"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { gsap, Observer, ScrollTrigger } from "gsap/all"
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react"
 import { addDebouncedEventListener } from "./functions"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"

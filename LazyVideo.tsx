@@ -1,5 +1,5 @@
 import { useRafInterval } from "ahooks"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { ScrollTrigger } from "gsap/all"
 import { useRef, useState } from "react"
 
 import { useAnimation } from "./useAnimation"

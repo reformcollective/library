@@ -1,5 +1,6 @@
-import { gsap } from "gsap"
-import ScrollSmoother from "gsap/ScrollSmoother"
+"use client"
+
+import { gsap, ScrollSmoother } from "gsap/all"
 import { useEffect, useState } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
 import TypedEventEmitter from "./TypedEventEmitter"
@@ -129,8 +130,10 @@ export const useIsSmooth = () => {
 	}, [])
 
 	// check for url flags
-	if (isBrowser && window.location.search.includes("noSmooth")) return false
-	if (isBrowser && window.location.search.includes("forceSmooth")) return true
+	if (isBrowser && window.location.search.toLowerCase().includes("noSmooth"))
+		return false
+	if (isBrowser && window.location.search.toLowerCase().includes("forceSmooth"))
+		return true
 
 	return smooth
 }

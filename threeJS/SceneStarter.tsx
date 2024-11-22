@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber"
-import gsap from "gsap"
+import gsap from "gsap/all"
 import AdaptivePixelRatio from "library/threeJS/ThreeJSHelpers"
 import { Suspense, useEffect, useRef } from "react"
 import * as THREE from "three"

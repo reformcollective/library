@@ -38,7 +38,7 @@ const designSizes = {
 type Options = { only?: "mobile" | "tablet" | "desktop"; scaleFully?: boolean }
 
 const convertToCamelCase = (str: string) => {
-	return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase())
+	return str.replace(/-([a-z])/g, (g) => g[1]?.toUpperCase() ?? "")
 }
 
 const addToObj = (element: Element, obj: Record<string, unknown>) => {

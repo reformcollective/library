@@ -1,6 +1,4 @@
-import gsap from "gsap"
-import { ScrollSmoother } from "gsap/ScrollSmoother"
-import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { gsap, ScrollSmoother, ScrollTrigger } from "gsap/all"
 import type { RefObject } from "react"
 import { useIsSmooth } from "./Scroll"
 import { useAnimation } from "./useAnimation"

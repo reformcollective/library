@@ -1,5 +1,5 @@
 import { useEventListener } from "ahooks"
-import { gsap } from "gsap"
+import { gsap } from "gsap/all"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
 import { useBetterThrottle } from "./useBetterThrottle"
