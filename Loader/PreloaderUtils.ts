@@ -64,9 +64,13 @@ let loaderIsDone = false
 export const getLoaderIsDone = () => loaderIsDone
 
 // preserve the scroll position throughout the initial render (page height may change because of pins etc)
-if (isBrowser) document.body.style.minHeight = "9999vh"
-const initialScroll = isBrowser ? window.scrollY : 0
-if (isBrowser) document.body.style.removeProperty("min-height")
+// rather than directly modifying the body element, we'll use a div appended to the body
+// to prevent messing up the RSC process
+const spacer = document.createElement("div")
+spacer.style.minHeight = "9999vh"
+document.body.append(spacer)
+const initialScroll = window.scrollY
+spacer.remove()
 
 const initialScrollLock = createScrollLock()
 
