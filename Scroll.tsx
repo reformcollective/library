@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
 import TypedEventEmitter from "./TypedEventEmitter"
 import { isBrowser } from "./deviceDetection"
-import { pageReady, pageUnmounted } from "./pageReady"
 
 type IgnoredOptions = "smoothTouch" | "ignoreMobileResize" | "effects"
 
@@ -210,8 +209,7 @@ export default function Scroll({
 			;(async () => {
 				const smoother = ScrollSmoother.get()
 				if (smoother) smoother.kill()
-				await pageUnmounted()
-				await pageReady()
+
 				setRefreshSignal((s) => s + 1)
 			})().catch(console.error)
 		}
