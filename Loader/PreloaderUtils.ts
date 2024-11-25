@@ -6,9 +6,18 @@ import { isBrowser } from "library/deviceDetection"
 import { useEffect, useRef } from "react"
 import { loader } from "."
 import { sleep } from "../functions"
-import { pageReady } from "../pageReady"
 import { allLoaderPromisesSettled } from "./promises"
 import { scrollToAnchor } from "./scrollToAnchor"
+
+let resolve: () => void
+const pageReady = new Promise<void>((res, rej) => {
+	resolve = res
+})
+export const useTriggerPreloader = async () => {
+	useEffect(() => {
+		resolve()
+	}, [])
+}
 
 /**
  * we get a percentage by simply guessing how long the page will take to load based on
@@ -64,13 +73,9 @@ let loaderIsDone = false
 export const getLoaderIsDone = () => loaderIsDone
 
 // preserve the scroll position throughout the initial render (page height may change because of pins etc)
-// rather than directly modifying the body element, we'll use a div appended to the body
-// to prevent messing up the RSC process
-const spacer = isBrowser ? document.createElement("div") : null
-if (spacer) spacer.style.minHeight = "9999vh"
-if (spacer) document.body.append(spacer)
+if (isBrowser) document.body.style.minHeight = "9999vh"
 const initialScroll = isBrowser ? window.scrollY : 0
-if (spacer) spacer.remove()
+if (isBrowser) document.body.style.removeProperty("min-height")
 
 const initialScrollLock = createScrollLock()
 
@@ -159,7 +164,7 @@ async function onComplete() {
  * and calls all the progress callbacks with the new percentage every frame
  */
 const updatePercent = () => {
-	pageReady()
+	pageReady
 		.then(async () => {
 			// short circuit if there are no callbacks or animations
 			await allLoaderPromisesSettled() // but not before promises are settled
@@ -177,7 +182,7 @@ const updatePercent = () => {
 	const currentTime = performance.now()
 	const progress = ((currentTime - startTime) / timeNeeded) * 100
 	if (progress >= 99) {
-		pageReady()
+		pageReady
 			.then(async () => {
 				return onComplete()
 			})
@@ -198,7 +203,7 @@ if (isBrowser) updatePercent()
  * all the animations and all the progress callbacks with 100%
  */
 if (isBrowser)
-	pageReady()
+	pageReady
 		.then(async () => {
 			await sleep(EXTRA_DELAY)
 			return onComplete()

@@ -2,7 +2,6 @@ import { useDeepCompareEffect, useEventListener } from "ahooks"
 import { ScrollSmoother, ScrollToPlugin, ScrollTrigger, gsap } from "gsap/all"
 import { createScrollLock } from "library/Scroll"
 import { linkIsExternal, pathnameMatches, sleep } from "library/functions"
-import { pageReady, pageUnmounted } from "library/pageReady"
 import type { TransitionNames } from "libraryConfig"
 import libraryConfig from "libraryConfig"
 import { loader } from "."
@@ -122,9 +121,7 @@ export const loadPage = async ({
 		loader.dispatchEvent("start", "instant")
 		loader.dispatchEvent("routeChange", "instant")
 
-		navigate({ to: navigateTo, routerNavigate })
-		await pageUnmounted()
-		await pageReady()
+		await navigate({ to: navigateTo, routerNavigate })
 
 		const scrollLock = createScrollLock("unlock")
 
@@ -179,8 +176,6 @@ export const loadPage = async ({
 			animationContext.revert()
 		},
 	})
-	await pageUnmounted()
-	await pageReady()
 
 	// wait for any promises to settle
 	await sleep(0)
@@ -261,7 +256,13 @@ const navigate = async ({
 			destination.hash = ""
 		}
 
+		const existingHref = window.location.href
 		routerNavigate(destination.pathname + destination.search + destination.hash)
+
+		// check for href changes
+		while (window.location.href === existingHref) {
+			await sleep(50)
+		}
 	}
 }
 
@@ -284,9 +285,6 @@ export function useBackButton() {
 		loader.dispatchEvent("start", "instant")
 		loader.dispatchEvent("routeChange", "instant")
 		document.body.style.minHeight = "9999vh"
-
-		await pageUnmounted()
-		await pageReady()
 
 		if (libraryConfig.scrollRestoration === false) window.scrollTo(0, 1)
 		else window.scrollTo(0, scrollPositions.get(window.location.href) ?? 0)
