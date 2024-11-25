@@ -34,16 +34,19 @@
 	},
 	"javascript": {
 		"formatter": {
-			"semicolons": "asNeeded"
-		}
-	},
-	"css": {
-		"formatter": {
-			"enabled": true
+			// using prettier instead of biome's formatter until biome formats css
+			"enabled": false
 		}
 	},
 	"files": {
-		"ignore": ["pnpm-lock.yaml", "gsapHelpers", "app/library/gsapHelpers"]
+		"ignore": [
+			".vscode",
+			"pnpm-lock.yaml",
+			"gsapHelpers",
+			"app/library/gsapHelpers",
+			"sanity.types.ts",
+			"schema.json"
+		]
 	},
 	"vcs": {
 		"enabled": true,

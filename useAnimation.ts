@@ -1,8 +1,8 @@
+import { useGSAP } from "@gsap/react"
 import { ScrollTrigger } from "gsap/all"
 import type { DependencyList } from "react"
 import { startTransition, useEffect, useState } from "react"
 import { isBrowser } from "./deviceDetection"
-import { useGSAP } from "@gsap/react"
 
 let globalRefresh: ReturnType<typeof setTimeout> | undefined
 

@@ -32,8 +32,7 @@ export const generateGradientBorder = (
  */
 const gradientBorderPseudo =
 	(type: string) =>
-	(gradient: string, borderSize = 1) =>
-		css`
+	(gradient: string, borderSize = 1) => css`
 		position: relative;
 		isolation: isolate;
 
