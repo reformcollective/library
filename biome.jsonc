@@ -34,12 +34,8 @@
 	},
 	"javascript": {
 		"formatter": {
-			"semicolons": "asNeeded"
-		}
-	},
-	"css": {
-		"formatter": {
-			"enabled": true
+			// using prettier instead of biome's formatter until biome formats css
+			"enabled": false
 		}
 	},
 	"files": {
