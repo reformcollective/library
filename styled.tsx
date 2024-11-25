@@ -115,40 +115,46 @@ function convertToResponsive(
 				 * generate media query for a single breakpoint
 				 */
 				// @ts-expect-error typescript cannot narrow here
-				output[media[only]][key] = value.replaceAll(
-					regex,
-					(_: unknown, px: string) => `${replacer(px, designSizes[only])}vw`,
-				)
+				output[media[only]][key] = value
+					?.toString()
+					.replaceAll(
+						regex,
+						(_: unknown, px: string) => `${replacer(px, designSizes[only])}vw`,
+					)
 			} else if (String(value).match(regex)) {
 				/**
 				 * generate media queries for each breakpoint
 				 */
 				/* convert full width values (not including smaller desktops that would always scale) */
 				// @ts-expect-error typescript cannot narrow here
-				output[media.fullWidth][key] = value.replaceAll(
-					regex,
-					(_: unknown, px: string) =>
+				output[media.fullWidth][key] = value
+					?.toString()
+					.replaceAll(regex, (_: unknown, px: string) =>
 						shouldScaleFully
 							? `${replacer(px, desktopDesignSize)}vw`
 							: `${(
 									(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
 									desktopBreakpoint
 								).toFixed(1)}px`.replace(".0px", "px"),
-				)
+					)
 
 				/* convert desktop values (not including full width) */
 				// @ts-expect-error typescript cannot narrow here
-				output[media.desktop][key] = value.replaceAll(
-					regex,
-					(_: unknown, px: string) => `${replacer(px, desktopDesignSize)}vw`,
-				)
+				output[media.desktop][key] = value
+					?.toString()
+					.replaceAll(
+						regex,
+						(_: unknown, px: string) => `${replacer(px, desktopDesignSize)}vw`,
+					)
 
 				/* convert tablet values */
 				// @ts-expect-error typescript cannot narrow here
-				output[media.tablet][key] = value.replaceAll(
-					regex,
-					(_: unknown, px: string) => `${replacer(px, tabletDesignSize)}vw`,
-				)
+				output[media.tablet][key] = value
+					?.toString()
+					.replaceAll(
+						regex,
+						(_: unknown, px: string) => `${replacer(px, tabletDesignSize)}vw`,
+					)
 
 				/* convert mobile values */
 				// @ts-expect-error typescript cannot narrow here
