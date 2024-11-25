@@ -43,7 +43,9 @@
 			".vscode",
 			"pnpm-lock.yaml",
 			"gsapHelpers",
-			"app/library/gsapHelpers"
+			"app/library/gsapHelpers",
+			"sanity.types.ts",
+			"schema.json"
 		]
 	},
 	"vcs": {
