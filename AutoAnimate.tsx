@@ -2,8 +2,8 @@ import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
-import { useBetterThrottle } from "./useBetterThrottle"
 import { css, styled, unresponsive } from "./styled"
+import { useBetterThrottle } from "./useBetterThrottle"
 
 const extractKey = (item: unknown): string => {
 	if (Array.isArray(item) && item.every((i) => typeof i === "string")) {

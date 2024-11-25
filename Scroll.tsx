@@ -1,11 +1,11 @@
 "use client"
 
-import { gsap, ScrollSmoother } from "gsap/all"
+import { ScrollSmoother, gsap } from "gsap/all"
 import { useEffect, useState } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
 import TypedEventEmitter from "./TypedEventEmitter"
 import { isBrowser } from "./deviceDetection"
-import { pageUnmounted, pageReady } from "./pageReady"
+import { pageReady, pageUnmounted } from "./pageReady"
 
 type IgnoredOptions = "smoothTouch" | "ignoreMobileResize" | "effects"
 

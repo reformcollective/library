@@ -1,5 +1,5 @@
 import { useDeepCompareEffect, useEventListener } from "ahooks"
-import { gsap, ScrollSmoother, ScrollToPlugin, ScrollTrigger } from "gsap/all"
+import { ScrollSmoother, ScrollToPlugin, ScrollTrigger, gsap } from "gsap/all"
 import { createScrollLock } from "library/Scroll"
 import { linkIsExternal, pathnameMatches, sleep } from "library/functions"
 import { pageReady, pageUnmounted } from "library/pageReady"

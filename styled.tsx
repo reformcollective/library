@@ -1,12 +1,12 @@
+import { type CSSObject, keyframes as restyleKeyframes } from "restyle"
 import type { KeyframesObject } from "restyle/keyframes"
-import { keyframes as restyleKeyframes, type CSSObject } from "restyle"
 import {
 	COMMENT,
-	compile,
 	DECLARATION,
 	type Element,
 	IMPORT,
 	RULESET,
+	compile,
 } from "stylis"
 
 // TODO respect library config
@@ -132,7 +132,7 @@ function convertToResponsive(
 							? `${replacer(px, desktopDesignSize)}vw`
 							: `${(
 									(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
-										desktopBreakpoint
+									desktopBreakpoint
 								).toFixed(1)}px`.replace(".0px", "px"),
 				)
 

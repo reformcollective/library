@@ -1,10 +1,10 @@
 import libraryConfig from "libraryConfig"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import type { CSSProperties, MouseEventHandler } from "react"
 import type { Transitions } from "."
 import { linkIsInternal } from "../functions"
 import { loadPage } from "./TransitionUtils"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 
 interface BaseLinkProps {
 	/**
