@@ -13,6 +13,10 @@ jobs:
   Run_Lighthouse_Tests:
     runs-on: ubuntu-latest
     steps:
+      - name: Load .env file
+        uses: oNaiPs/secrets-to-env-action@v1.5
+        with:
+          secrets: ${{ secrets.SECRETS_JSON }}
       # BEGIN INSTALLATION
       - uses: actions/checkout@v4
         with:
