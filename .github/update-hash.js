@@ -22,8 +22,6 @@ try {
 		.toString()
 		.trim()
 
-	console.log(`Latest hash of submodule at ${submodulePath}: ${latestHash}`)
-
 	// Update all files in the workflows folder
 	const files = fs.readdirSync(workflowsPath)
 
@@ -37,11 +35,6 @@ try {
 			const updatedContent = content.replace(
 				submoduleRegex,
 				(match, fileName, oldHash) => {
-					if (oldHash !== latestHash) {
-						console.log(
-							`Updating ${fileName} from [${oldHash}] to [${latestHash}]`,
-						)
-					}
 					return `${fileName}.yml@${latestHash}`
 				},
 			)
@@ -49,12 +42,9 @@ try {
 			// Write back the updated content if it has changed
 			if (content !== updatedContent) {
 				fs.writeFileSync(filePath, updatedContent, "utf8")
-				console.log(`Updated: ${filePath}`)
 			}
 		}
 	}
-
-	console.log("Submodule hashes updated successfully.")
 } catch (error) {
 	console.error("Error updating submodule hash:", error.message)
 	process.exit(1)
