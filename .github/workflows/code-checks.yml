@@ -1,14 +1,5 @@
-# EXAMPLE WORKFLOW FILE
-#
-# name: Code Checks
-# on: pull_request
-# jobs:
-#   library:
-#     uses: reformcollective/library/.github/workflows/code-checks.yml@main
-#     secrets:
-#       SECRETS_JSON: ${{ toJSON(secrets) }}
-
 name: Code Checks
+
 on:
   workflow_call:
     secrets:
@@ -20,127 +11,59 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Check_Formatting:
+  formatting:
     runs-on: ubuntu-latest
     steps:
-      # BEGIN INSTALLATION
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Use Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      - name: Enable corepack
-        run: corepack enable
-      - name: Install dependencies
-        run: pnpm install
-      # END INSTALLATION
-
-      - name: format
-        run: npm run format > /dev/null
+      - run: corepack enable
+      - run: pnpm install --no-frozen-lockfile
+      - uses: tj-actions/verify-changed-files@v20
+        id: verify-changed-files
+        with:
+          fail-if-changed: true
+          fail-message: 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
+      - run: pnpm run lint
         continue-on-error: true
-      - name: Check for changes and commit
-        run: |
-          if git diff --exit-code; then
-            echo "No changes detected"
-            exit 0
-          fi
-          if git diff --exit-code --ignore-submodules; then
-            echo "You have unformatted code in your submodules"
-            exit 1
-          fi
-          echo "You have unformatted code!"
-          git diff
-          exit 1
+      - uses: tj-actions/verify-changed-files@v20
+        id: verify-changed-files
+        with:
+          fail-if-changed: true
+          fail-message: 'Looks like there may be auto-fixable linting issues. Run "pnpm run lint" to fix them.'
+      - run: pnpm run format
+      - uses: tj-actions/verify-changed-files@v20
+        id: verify-changed-files
+        with:
+          fail-if-changed: true
+          fail-message: 'Looks like there may be formatting issues. Run "pnpm run format" to fix them.'
 
-  Generate_Types:
-    # install modules, run a build, then cache and upload so we can use in other builds
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
-      # BEGIN INSTALLATION
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Use Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - name: Enable corepack
-        run: corepack enable
-      # END INSTALLATION
-
-      - name: Caching Gatsby
-        id: gatsby-cache-build
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
-            public
-            .cache
-          key: ${{ runner.os }}-gatsby-build-${{ github.run_id }}
+            ${{ github.workspace }}/.next/cache
+          # Generate a new cache whenever packages or source files change.
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
-            ${{ runner.os }}-gatsby-build-
-      - name: Install dependencies
-        run: pnpm install
-      - name: Build
-        run: pnpm run build
-
-      - name: Upload generated types
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-types
-          path: src/types/gatsby-types.d.ts
-
-  Check_Linting:
-    runs-on: ubuntu-latest
-    needs: Generate_Types
-    steps:
-      # BEGIN INSTALLATION
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Use Node
-        uses: actions/setup-node@v4
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      - name: Enable corepack
-        run: corepack enable
-      - name: Install dependencies
-        run: pnpm install
-      # END INSTALLATION
-
-      - name: Fetch Generated Types
-        uses: actions/download-artifact@v4
-        with:
-          name: generated-types
-      - name: Lint
-        run: npm run lint
-
-  Type_Checking:
-    runs-on: ubuntu-latest
-    needs: Generate_Types
-    steps:
-      # BEGIN INSTALLATION
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Use Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - name: Enable corepack
-        run: corepack enable
-      - name: Install dependencies
-        run: pnpm install
-      # END INSTALLATION
-
-      - name: Fetch Generated Types
-        uses: actions/download-artifact@v4
-        with:
-          name: generated-types
-      - name: Check types
-        run: npx tsc --noEmit
+      - run: corepack enable
+      - run: pnpm install
+      # running a build will also check types
+      - run: pnpm run build
