@@ -31,12 +31,12 @@ jobs:
       - uses: tj-actions/verify-changed-files@v20
         with:
           fail-if-changed: true
-          fail-message: 'Looks like there may be auto-fixable linting issues. Run "pnpm run lint" to fix them.'
+          fail-message: 'Looks like there may be auto-fixable linting issues. Run "pnpm lint" to fix them.'
       - run: pnpm run format
       - uses: tj-actions/verify-changed-files@v20
         with:
           fail-if-changed: true
-          fail-message: 'Looks like there may be formatting issues. Run "pnpm run format" to fix them.'
+          fail-message: 'Looks like there may be formatting issues. Run "pnpm format" to fix them.'
 
   build:
     runs-on: ubuntu-latest
