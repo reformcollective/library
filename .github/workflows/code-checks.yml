@@ -5,8 +5,7 @@ on:
     secrets:
       SECRETS_JSON:
         required: false
-permissions:
-  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -24,7 +23,9 @@ jobs:
       - run: corepack enable
       - run: pnpm install
       - run: pnpm run format
-      - uses: autofix-ci/action@dd55f44df8f7cdb7a6bf74c78677eb8acd40cd0a
+      - uses: beauwilliams/run-node-formatter@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build:
     runs-on: ubuntu-latest
@@ -41,5 +42,5 @@ jobs:
           node-version-file: .nvmrc
       - run: corepack enable
       - run: pnpm install
-      # running a build will also check linting and formatting
+      # running a build will also check types
       - run: pnpm run build
