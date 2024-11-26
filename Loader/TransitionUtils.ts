@@ -247,6 +247,7 @@ const navigate = (to: string, cleanupFunction?: VoidFunction) => {
 
 		startTransition(() => {
 			gatsbyNavigate(
+				// @ts-expect-error gatsby as a framework is terrible
 				destination.pathname + destination.search + destination.hash,
 			)
 		})
