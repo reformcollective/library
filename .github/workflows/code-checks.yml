@@ -22,6 +22,8 @@ jobs:
           node-version-file: .nvmrc
       - run: corepack enable
       - run: pnpm install
+      - run: pnpm run lint
+        continue-on-error: true
       - run: pnpm run format
       - uses: tj-actions/verify-changed-files@v20
         id: verify-changed-files
