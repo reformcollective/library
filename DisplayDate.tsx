@@ -1,3 +1,5 @@
+"use client"
+
 import { useClientOnly } from "./ClientOnly"
 
 export function DisplayDate({
