@@ -23,20 +23,17 @@ jobs:
       - run: corepack enable
       - run: pnpm install --no-frozen-lockfile
       - uses: tj-actions/verify-changed-files@v20
-        id: verify-changed-files
         with:
           fail-if-changed: true
           fail-message: 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
       - run: pnpm run lint
         continue-on-error: true
       - uses: tj-actions/verify-changed-files@v20
-        id: verify-changed-files
         with:
           fail-if-changed: true
           fail-message: 'Looks like there may be auto-fixable linting issues. Run "pnpm run lint" to fix them.'
       - run: pnpm run format
       - uses: tj-actions/verify-changed-files@v20
-        id: verify-changed-files
         with:
           fail-if-changed: true
           fail-message: 'Looks like there may be formatting issues. Run "pnpm run format" to fix them.'
