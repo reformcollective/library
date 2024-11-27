@@ -46,13 +46,13 @@ export const defaultExtensions = [
 	 * images
 	 */
 	(d: unknown) => {
-		const { success: isValidImage, data } = z
-			.object({
-				gatsbyImageData: z.any().refine((x) => x && "images" in x),
-				description: z.string().nullish(),
-			})
+		const { success: isValidImage, data } = z.object({
+			gatsbyImageData: z.any(), // gatsbyImageData is an object; no need to refine it this way
+			description: z.string().nullish(),
+		})
 			.safeParse(d)
-
+		
+			console.log(d)
 		if (isValidImage)
 			return (
 				<DefaultImage

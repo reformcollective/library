@@ -161,7 +161,7 @@ export default function RichText({
 					return <A to={uri}>{children}</A>
 				}
 			},
-			[BLOCKS.QUOTE]: (node, children) => <Quote>{children}</Quote>,
+			[BLOCKS.QUOTE]: (node, children) => <c.blockquote>{children}</c.blockquote>,
 			[INLINES.EMBEDDED_ENTRY]: renderExtensions,
 			[BLOCKS.EMBEDDED_ASSET]: renderExtensions,
 			[BLOCKS.EMBEDDED_ENTRY]: renderExtensions,
