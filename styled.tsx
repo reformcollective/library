@@ -8,9 +8,9 @@ import {
 	RULESET,
 	compile,
 } from "stylis"
+import { styled as restyled } from "restyle"
 
-// TODO respect library config
-// import config from "libraryConfig";
+import config from "libraryConfig"
 import media, {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -41,7 +41,17 @@ const convertToCamelCase = (str: string) => {
 	return str.replace(/-([a-z])/g, (g) => g[1]?.toUpperCase() ?? "")
 }
 
-const addToObj = (element: Element, obj: Record<string, unknown>) => {
+const addToObj = ({
+	element,
+	obj,
+	selectorHash,
+	allowAmpersand,
+}: {
+	element: Element
+	obj: Record<string, unknown>
+	selectorHash: string
+	allowAmpersand: boolean
+}) => {
 	switch (element.type) {
 		case DECLARATION:
 			if (Array.isArray(element.props))
@@ -52,7 +62,7 @@ const addToObj = (element: Element, obj: Record<string, unknown>) => {
 			return
 		case COMMENT:
 			return
-		case RULESET:
+		case RULESET: {
 			if (!element.children.length) return
 			if (typeof element.children === "string")
 				throw new Error(
@@ -62,8 +72,21 @@ const addToObj = (element: Element, obj: Record<string, unknown>) => {
 				throw new Error(
 					"Unexpected case! String props in ruleset. Report the css that caused this.",
 				)
-			obj[element.props.join(",")] = serializeToObject(element.children)
+
+			const selector = element.props
+				.map((selector) =>
+					// restyle requires the use of ampersand in nested selectors, but stylis does not include it
+					selector.includes("&") && allowAmpersand ? selector : `& ${selector}`,
+				)
+				.join(",")
+
+			obj[selector + selectorHash] = serializeToObject({
+				elements: element.children,
+				selectorHash,
+				allowAmpersand,
+			})
 			return
+		}
 		case IMPORT:
 			throw new Error("Use javascript imports instead of @import")
 		default:
@@ -72,22 +95,42 @@ const addToObj = (element: Element, obj: Record<string, unknown>) => {
 				throw new Error(
 					"Unexpected case! String children in default case. Report the css that caused this.",
 				)
-			obj[element.value] = serializeToObject(element.children)
+			obj[element.value + selectorHash] = serializeToObject({
+				elements: element.children,
+				selectorHash,
+				allowAmpersand,
+			})
 			return
 	}
 }
 
-const serializeToObject = (elements: Element[]) => {
+const serializeToObject = ({
+	elements,
+	selectorHash,
+	allowAmpersand,
+}: {
+	elements: Element[]
+	selectorHash: string
+	allowAmpersand: boolean
+}) => {
 	const obj = {}
 	for (const element of elements) {
-		addToObj(element, obj)
+		addToObj({ element, obj, selectorHash, allowAmpersand })
 	}
 	return obj as CSSObject
 }
 
-export const convertCssToObject = (css: string) => {
+export const convertCssToObject = (
+	css: string,
+	selectorHash: number,
+	allowAmpersand = true,
+) => {
 	const compiled = compile(css)
-	return serializeToObject(compiled)
+	return serializeToObject({
+		elements: compiled,
+		allowAmpersand,
+		selectorHash: " ".repeat(selectorHash),
+	})
 }
 
 /**
@@ -97,16 +140,26 @@ export const convertCssToObject = (css: string) => {
  */
 function convertToResponsive(
 	cssIn: CSSObject,
-	{ only, scaleFully }: Options = {},
+	{
+		only,
+		scaleFully,
+		selectorHash,
+	}: Options & {
+		selectorHash: number
+	},
 ): CSSObject {
-	const shouldScaleFully = scaleFully
-	const output: CSSObject = {
-		...cssIn,
-		[media.fullWidth]: {},
-		[media.desktop]: {},
-		[media.tablet]: {},
-		[media.mobile]: {},
+	const shouldScaleFully = scaleFully ?? config.scaleFully
+
+	const hashedMedia = {
+		fullWidth: `${media.fullWidth}${" ".repeat(selectorHash)}`,
+		desktop: `${media.desktop}${" ".repeat(selectorHash)}`,
+		tablet: `${media.tablet}${" ".repeat(selectorHash)}`,
+		mobile: `${media.mobile}${" ".repeat(selectorHash)}`,
 	}
+
+	const output: CSSObject =
+		// when only is specified, styles are not top-level
+		only ? {} : { ...cssIn }
 
 	for (const [key, value] of Object.entries(cssIn)) {
 		if (typeof value !== "object") {
@@ -114,8 +167,9 @@ function convertToResponsive(
 				/**
 				 * generate media query for a single breakpoint
 				 */
+				output[hashedMedia[only]] ||= {}
 				// @ts-expect-error typescript cannot narrow here
-				output[media[only]][key] = value
+				output[hashedMedia[only]][key] = value
 					?.toString()
 					.replaceAll(
 						regex,
@@ -126,8 +180,9 @@ function convertToResponsive(
 				 * generate media queries for each breakpoint
 				 */
 				/* convert full width values (not including smaller desktops that would always scale) */
+				output[hashedMedia.fullWidth] ||= {}
 				// @ts-expect-error typescript cannot narrow here
-				output[media.fullWidth][key] = value
+				output[hashedMedia.fullWidth][key] = value
 					?.toString()
 					.replaceAll(regex, (_: unknown, px: string) =>
 						shouldScaleFully
@@ -139,8 +194,9 @@ function convertToResponsive(
 					)
 
 				/* convert desktop values (not including full width) */
+				output[hashedMedia.desktop] ||= {}
 				// @ts-expect-error typescript cannot narrow here
-				output[media.desktop][key] = value
+				output[hashedMedia.desktop][key] = value
 					?.toString()
 					.replaceAll(
 						regex,
@@ -148,8 +204,9 @@ function convertToResponsive(
 					)
 
 				/* convert tablet values */
+				output[hashedMedia.tablet] ||= {}
 				// @ts-expect-error typescript cannot narrow here
-				output[media.tablet][key] = value
+				output[hashedMedia.tablet][key] = value
 					?.toString()
 					.replaceAll(
 						regex,
@@ -157,8 +214,9 @@ function convertToResponsive(
 					)
 
 				/* convert mobile values */
+				output[hashedMedia.mobile] ||= {}
 				// @ts-expect-error typescript cannot narrow here
-				output[media.mobile][key] = value.replaceAll(
+				output[hashedMedia.mobile][key] = value.replaceAll(
 					regex,
 					(_: unknown, px: string) => `${replacer(px, mobileDesignSize)}vw`,
 				)
@@ -167,6 +225,7 @@ function convertToResponsive(
 			output[key] = convertToResponsive(value as CSSObject, {
 				only,
 				scaleFully,
+				selectorHash: selectorHash,
 			})
 		}
 	}
@@ -191,20 +250,48 @@ export function attrs<Props, usedKeys extends keyof Props>(
 	}
 }
 
+// because objects cannot have duplicate keys, we use whitespace to differentiate them
+// starting with 1 space at the end of a selector/query and incrementing from there
+// this will reset for each styled call via our proxy
+let hashCounter = 0
+
+/**
+ * Creates a JSX component that forwards a `className` prop with the generated
+ * atomic class names to the provided `Component`. Additionally, a `css` prop can
+ * be provided to override the initial `styles`.
+ *
+ * Note, the provided component must accept a `className` prop.
+ */
+export const styled = new Proxy(restyled, {
+	apply(target, thisArg, args) {
+		hashCounter = 0
+		return Reflect.apply(target, thisArg, args)
+	},
+})
+
+/**
+ * simple utility for composing styles as a string
+ */
 export const css = String.raw
-export {
-	styled,
-	media,
-	GlobalStyles,
-	type CSSObject,
-	type CSSValue,
-} from "restyle"
+export { media, GlobalStyles, type CSSObject, type CSSValue } from "restyle"
 export const fresponsive = (style: string, options?: Options) =>
-	convertToResponsive(convertCssToObject(style), options)
+	convertToResponsive(convertCssToObject(style, hashCounter), {
+		...options,
+		selectorHash: hashCounter++,
+	})
 export const ftablet = (style: string) =>
-	convertToResponsive(convertCssToObject(style), { only: "tablet" })
+	convertToResponsive(convertCssToObject(style, hashCounter), {
+		only: "tablet",
+		selectorHash: hashCounter++,
+	})
 export const fmobile = (style: string) =>
-	convertToResponsive(convertCssToObject(style), { only: "mobile" })
-export const unresponsive = (style: string) => convertCssToObject(style)
+	convertToResponsive(convertCssToObject(style, hashCounter), {
+		only: "mobile",
+		selectorHash: hashCounter++,
+	})
+export const unresponsive = (style: string) =>
+	convertCssToObject(style, hashCounter)
 export const keyframes = (...args: Parameters<typeof String.raw>) =>
-	restyleKeyframes(convertCssToObject(String.raw(...args)) as KeyframesObject)
+	restyleKeyframes(
+		convertCssToObject(String.raw(...args), 0, false) as KeyframesObject,
+	)
