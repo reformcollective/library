@@ -1,4 +1,33 @@
+/**
+ * Styled Utilities
+ *
+ * There are a few different things going on here:
+ *
+ * - First, if you want to understand how this file works, you should first familiarize yourself
+ *   with the restyle library, which forms the base of this solution:
+ *   https://www.restyle.dev/
+ *
+ * - We also need to convert CSS strings into CSS Objects. I'm doing this by compiling the CSS
+ *   into an AST using stylis and then serializing it into a CSS Object.
+ *
+ * - Once we have a CSS Object, we can convert it to responsive values by deeply traversing the
+ *   object and replacing values with responsive values.
+ *
+ * - The final bit of the puzzle is to prevent duplicate selectors and media queries from overwriting each other.
+ *   We do this by using whitespace so that each key is unique, and they don't conflict. Each styled call
+ *   resets the whitespace to an empty string, and each time we parse new CSS, we append one space to the selector.
+ *
+ */
+
+import media, {
+	desktopBreakpoint,
+	desktopDesignSize,
+	mobileDesignSize,
+	tabletDesignSize,
+} from "@/app/styles/media"
+import config from "libraryConfig"
 import { type CSSObject, keyframes as restyleKeyframes } from "restyle"
+import { styled as restyled } from "restyle"
 import type { KeyframesObject } from "restyle/keyframes"
 import {
 	COMMENT,
@@ -8,39 +37,38 @@ import {
 	RULESET,
 	compile,
 } from "stylis"
-import { styled as restyled } from "restyle"
-
-import config from "libraryConfig"
-import media, {
-	desktopBreakpoint,
-	desktopDesignSize,
-	mobileDesignSize,
-	tabletDesignSize,
-} from "@/app/styles/media"
-
-const PRECISION = 3
-
-const replacer = (match: string, breakpoint: number) => {
-	return ((Number.parseFloat(match) / breakpoint) * 100).toFixed(PRECISION)
-}
 
 /**
- * detects pixel values
+ * converts a css property value to camelCase
  */
-const regex = /(\d+.?\d*)px/g
-
-const designSizes = {
-	desktop: desktopDesignSize,
-	tablet: tabletDesignSize,
-	mobile: mobileDesignSize,
-}
-
-type Options = { only?: "mobile" | "tablet" | "desktop"; scaleFully?: boolean }
-
 const convertToCamelCase = (str: string) => {
 	return str.replace(/-([a-z])/g, (g) => g[1]?.toUpperCase() ?? "")
 }
 
+/**
+ * recursively serializes stylis output into a CSS Object
+ * works in tandem with addToObj
+ */
+const serializeToObject = ({
+	elements,
+	selectorHash,
+	allowAmpersand,
+}: {
+	elements: Element[]
+	selectorHash: string
+	allowAmpersand: boolean
+}) => {
+	const obj = {}
+	for (const element of elements) {
+		addToObj({ element, obj, selectorHash, allowAmpersand })
+	}
+	return obj as CSSObject
+}
+
+/**
+ * does the actual conversion from stylis output to CSS Object
+ * works in tandem with serializeToObject
+ */
 const addToObj = ({
 	element,
 	obj,
@@ -104,23 +132,14 @@ const addToObj = ({
 	}
 }
 
-const serializeToObject = ({
-	elements,
-	selectorHash,
-	allowAmpersand,
-}: {
-	elements: Element[]
-	selectorHash: string
-	allowAmpersand: boolean
-}) => {
-	const obj = {}
-	for (const element of elements) {
-		addToObj({ element, obj, selectorHash, allowAmpersand })
-	}
-	return obj as CSSObject
-}
-
-export const convertCssToObject = (
+/**
+ * takes in a CSS string and converts it to a CSS Object
+ * @param css the css to process
+ * @param selectorHash the hash to use for selector uniqueness, should be whitspace
+ * @param allowAmpersand whether to allow ampersand in nested selectors. keyframes shouldn't need these
+ * @returns the processed CSS Object
+ */
+const convertCssToObject = (
 	css: string,
 	selectorHash: number,
 	allowAmpersand = true,
@@ -131,6 +150,23 @@ export const convertCssToObject = (
 		allowAmpersand,
 		selectorHash: " ".repeat(selectorHash),
 	})
+}
+
+/**
+ * Converting CSS Objects into Responsive CSS Objects
+ */
+
+type Options = { only?: "mobile" | "tablet" | "desktop"; scaleFully?: boolean }
+
+const PRECISION = 3
+const regex = /(\d+.?\d*)px/g
+const replacer = (match: string, breakpoint: number) => {
+	return ((Number.parseFloat(match) / breakpoint) * 100).toFixed(PRECISION)
+}
+const designSizes = {
+	desktop: desktopDesignSize,
+	tablet: tabletDesignSize,
+	mobile: mobileDesignSize,
 }
 
 /**
