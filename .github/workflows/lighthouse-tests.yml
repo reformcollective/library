@@ -49,10 +49,6 @@ jobs:
       - name: Run Unlighthouse
         run: pnpm dlx unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./report/${{ github.sha }}
 
-      - name: Fix Asset Paths
-        run: |
-          find ./report/${{ github.sha }} -type f -name '*.html' -exec sed -i 's|src="assets/|src="./assets/|g' {} +
-
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
@@ -75,9 +71,8 @@ jobs:
           pattern: lighthouse-report-*
           merge-multiple: true
           path: ./reports
-      - run: ls
-      - run: ls ./reports
-      - run: ls ./reports/${{ github.sha }} || exit 0
+      - run: Fix Assets
+      - run: cp -r ./reports/${{ github.sha }}/assets ./reports/assets
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
