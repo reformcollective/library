@@ -77,6 +77,7 @@ jobs:
           path: ./reports
       - run: ls
       - run: ls ./reports
+      - run: ls ./reports/${{ github.sha }}
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
