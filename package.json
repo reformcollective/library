@@ -4,44 +4,27 @@
 	"description": "collection of utilities and helpers for reform collective",
 	"//": "anything that the supermodule may also install should use the ^major syntax. this is so that pnpm can combine duplicate versions to prevent inflating the bundle. this doesn't apply to dev dependencies (e.g. biome)",
 	"dependencies": {
-		"@contentful/rich-text-react-renderer": "^15",
-		"@contentful/rich-text-types": "^16",
-		"@gsap/react": "2.1.1",
+		"@gsap/react": "^2",
 		"@react-three/drei": "^9",
 		"@react-three/fiber": "^8",
 		"ahooks": "^3",
 		"gsap": "file:gsap-bonus.tgz",
 		"minisearch": "^7",
-		"react": "^18",
-		"styled-components": "^6",
+		"restyle": "^2.4.0",
+		"stylis": "^4.3.4",
 		"use-deep-compare": "^1",
 		"zod": "^3"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.0",
-		"@chromatic-com/storybook": "^2.0.1",
-		"@storybook/addon-essentials": "^8.3.0",
-		"@storybook/addon-interactions": "^8.3.0",
-		"@storybook/addon-links": "^8.3.0",
-		"@storybook/addon-onboarding": "^8.3.0",
-		"@storybook/blocks": "^8.3.0",
-		"@storybook/react": "^8.3.0",
-		"@storybook/react-vite": "^8.3.0",
-		"@storybook/test": "^8.3.0",
-		"@total-typescript/tsconfig": "1.0.4",
-		"@types/react": "^18",
+		"@biomejs/biome": "^1.9.4",
+		"@types/stylis": "^4.2.7",
 		"@types/three": "^0.168",
-		"@vitejs/plugin-react": "^4.3.1",
-		"prop-types": "^15.8.1",
-		"storybook": "^8.3.0",
-		"typescript": "^5.6.2"
+		"typescript": "^5.7.2"
 	},
 	"scripts": {
-		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build",
 		"lint": "biome check",
 		"format": "biome check --write"
 	},
 	"preinstall": "npx only-allow pnpm",
-	"packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903"
+	"packageManager": "pnpm@9.14.4"
 }

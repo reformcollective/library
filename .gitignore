@@ -1,9 +1,5 @@
 node_modules
 tsconfig.tsbuildinfo
 
-# Storybook
-*storybook.log
-storybook-static
-
 # we don't want the library to keep it's own lockfile, since it's managed by the root project
 pnpm-lock.yaml

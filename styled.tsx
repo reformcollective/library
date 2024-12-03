@@ -24,7 +24,7 @@ import media, {
 	desktopDesignSize,
 	mobileDesignSize,
 	tabletDesignSize,
-} from "@/app/styles/media"
+} from "styles/media"
 import config from "libraryConfig"
 import { type CSSObject, keyframes as restyleKeyframes } from "restyle"
 import { styled as restyled } from "restyle"
