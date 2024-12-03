@@ -17,7 +17,7 @@ concurrency:
 jobs:
   Run_Lighthouse_Tests:
     environment:
-      name: github-pages
+      name: unlighthouse
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
@@ -86,8 +86,8 @@ jobs:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
       #     publish_dir: ./audit-report
 
-      - name: Post comment
-        uses: JoseThen/comment-pr@v1.2.0
-        with:
-          comment: 'Report Link: https://${{ github.repository_owner }}.github.io/${{ github.repository }}/'
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Post comment
+      #   uses: JoseThen/comment-pr@v1.2.0
+      #   with:
+      #     comment: 'Report Link: https://${{ github.repository_owner }}.github.io/${{ github.repository }}/'
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
