@@ -63,7 +63,7 @@ jobs:
   deploy_result:
     environment:
       name: unlighthouse
-      url: ${{ steps.deployment.outputs.page_url }}/${{ github.sha }}
+      url: ${{ steps.deployment.outputs.page_url }}${{ github.sha }}
     needs: run_test
     runs-on: ubuntu-latest
     concurrency:
@@ -75,6 +75,8 @@ jobs:
           pattern: lighthouse-report-*
           merge-multiple: true
           path: ./reports
+      - run: ls
+      - run: ls ./reports
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
