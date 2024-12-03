@@ -65,7 +65,7 @@ jobs:
     environment:
       name: unlighthouse
       url: ${{ steps.deployment.outputs.page_url }}${{ github.sha }}
-    needs: run_test
+    needs: lighthouse_test
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-lighthouse-result
