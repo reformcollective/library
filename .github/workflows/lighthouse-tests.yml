@@ -47,16 +47,16 @@ jobs:
         run: pnpm exec gatsby serve & SERVER_PID=$!
 
       - name: Run Unlighthouse
-        run: pnpm dlx unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./${{ github.sha }}
+        run: pnpm dlx unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./report/${{ github.sha }}
 
       - name: Fix Asset Paths
         run: |
-          find ./${{ github.sha }} -type f -name '*.html' -exec sed -i 's|src="assets/|src="./assets/|g' {} +
+          find ./report/${{ github.sha }} -type f -name '*.html' -exec sed -i 's|src="assets/|src="./assets/|g' {} +
 
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
-          path: './${{ github.sha }}'
+          path: './report'
           name: lighthouse-report-${{ github.sha }}
 
 
@@ -77,7 +77,7 @@ jobs:
           path: ./reports
       - run: ls
       - run: ls ./reports
-      - run: ls ./reports/${{ github.sha }}
+      - run: ls ./reports/${{ github.sha }} || exit 0
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
