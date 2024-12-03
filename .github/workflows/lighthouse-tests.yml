@@ -38,6 +38,8 @@ jobs:
         run: corepack enable
       - name: Install dependencies
         run: corepack pnpm install
+      - name: Install Unlighthouse
+        run: corepack pnpm install -g @unlighthouse/cli puppeteer
       # END INSTALLATION
       
       - name: Build
