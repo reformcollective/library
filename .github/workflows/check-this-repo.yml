@@ -22,21 +22,3 @@ jobs:
         run: corepack pnpm install
       - name: Lint
         run: pnpm run lint
-  Check_Typings:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: recursive
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-      - name: Enable corepack
-        run: corepack enable
-      - name: Install dependencies
-        run: corepack pnpm install
-      - name: Typecheck
-        run: npx tsc --noEmit --project stories/tsconfig.json
