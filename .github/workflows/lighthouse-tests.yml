@@ -64,6 +64,13 @@ jobs:
         with:
           path: './audit-report'
 
+      # - name: Deploy
+      #   id: deployment
+      #   uses: actions/deploy-pages@v4
+
       - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./audit-report
+          destination_dir: ${{ github.sha }}
