@@ -5,12 +5,20 @@ on:
       SECRETS_JSON:
         required: false
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   Run_Lighthouse_Tests:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Load .env file
@@ -21,6 +29,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
       - name: Use Node
         uses: actions/setup-node@v4
         with:
@@ -29,40 +39,55 @@ jobs:
         run: corepack enable
       - name: Install dependencies
         run: pnpm install
-      - name: Install bun
-        run: npm install -g bun
       - name: Install Unlighthouse
         run: npm install -g @unlighthouse/cli puppeteer netlify-cli
       # END INSTALLATION
       
       - name: Build
-        run: bun run gatsby build
+        run: pnpm exec gatsby build
 
       - name: Serve
-        run: bun run gatsby serve & SERVER_PID=$!
+        run: pnpm exec gatsby serve & SERVER_PID=$!
 
       - name: Run Unlighthouse
         run: unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./audit-report
 
-      - name: Deploy to Github
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git clone https://$GITHUB_ACTOR:${{ secrets.GH_PAT }}@github.com/reformcollective/unlighthouse-reports.git
-          cd unlighthouse-reports
-          touch netlify.toml
-          echo "[build]" >> netlify.toml
-          echo "  base = \"./${{ github.sha }}\"" >> netlify.toml
-          mkdir ${{ github.sha }}
-          cd ${{ github.sha }}
-          cp -r ../../audit-report/* .
-          cd ..
-          git add .
-          git commit -m "${{ github.repository }} - $(date +'%Y-%m-%d %H:%M:%S')"
-          git push
+      - name: Upload Report
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './audit-report'
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+        # use Github pages instead. This will allow us to upload the build files as an artifact, and then deploy 
+        # straight to Github pages without the need for authentication. This means that when projects are passed off to clients, this will not break.
+      # - name: Deploy to Github
+      #   run: |
+      #     git config --global user.name "GitHub Actions"
+      #     git config --global user.email "actions@github.com"
+      #     git clone https://$GITHUB_ACTOR:${{ secrets.GH_PAT }}@github.com/reformcollective/unlighthouse-reports.git
+      #     cd unlighthouse-reports
+      #     touch netlify.toml
+      #     echo "[build]" >> netlify.toml
+      #     echo "  base = \"./${{ github.sha }}\"" >> netlify.toml
+      #     mkdir ${{ github.sha }}
+      #     cd ${{ github.sha }}
+      #     cp -r ../../audit-report/* .
+      #     cd ..
+      #     git add .
+      #     git commit -m "${{ github.repository }} - $(date +'%Y-%m-%d %H:%M:%S')"
+      #     git push
+
+      # - name: Deploy to GitHub Pages
+      #   uses: peaceiris/actions-gh-pages@v3
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: ./audit-report
 
       - name: Post comment
         uses: JoseThen/comment-pr@v1.2.0
         with:
-          comment: 'Report Link: https://deft-mochi-caac3e.netlify.app/'
+          comment: 'Report Link: https://${{ github.repository_owner }}.github.io/${{ github.repository }}/'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
