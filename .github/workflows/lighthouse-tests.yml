@@ -57,7 +57,7 @@ jobs:
 
       - name: Fix Asset Paths
         run: |
-          find ./audit-report -type f -name '*.html' -exec sed -i 's|src="/assets/|src="./assets/|g' {} +
+          find ./audit-report -type f -name '*.html' -exec sed -i 's|src="assets/|src="./assets/|g' {} +
 
       - name: Upload Report
         uses: actions/upload-pages-artifact@v3
