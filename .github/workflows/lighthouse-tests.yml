@@ -38,8 +38,6 @@ jobs:
         run: corepack enable
       - name: Install dependencies
         run: corepack pnpm install
-      - name: Install Unlighthouse
-        run: npm install -g @unlighthouse/cli puppeteer
       # END INSTALLATION
       
       - name: Build
@@ -49,16 +47,16 @@ jobs:
         run: pnpm exec gatsby serve & SERVER_PID=$!
 
       - name: Run Unlighthouse
-        run: unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./$GITHUB_SHA
+        run: pnpm dlx unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./{{ github.sha }}
 
       - name: Fix Asset Paths
         run: |
-          find ./$GITHUB_SHA -type f -name '*.html' -exec sed -i 's|src="assets/|src="./assets/|g' {} +
+          find ./{{ github.sha }} -type f -name '*.html' -exec sed -i 's|src="assets/|src="./assets/|g' {} +
 
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
-          path: './$GITHUB_SHA'
+          path: './{{ github.sha }}'
           name: lighthouse-report-${{ github.sha }}
 
 
