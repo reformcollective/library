@@ -18,12 +18,10 @@ concurrency:
 # image fix
 
 jobs:
-  Run_Lighthouse_Tests:
-    environment:
-      name: unlighthouse
-      url: ${{ steps.deployment.outputs.page_url }}
+  run_test:
     runs-on: ubuntu-latest
     steps:
+
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
@@ -32,8 +30,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
       - name: Use Node
         uses: actions/setup-node@v4
         with:
@@ -41,9 +37,7 @@ jobs:
       - name: Enable corepack
         run: corepack enable
       - name: Install dependencies
-        run: pnpm install
-      - name: Install Unlighthouse
-        run: npm install -g @unlighthouse/cli puppeteer netlify-cli
+        run: corepack pnpm install
       # END INSTALLATION
       
       - name: Build
@@ -53,24 +47,43 @@ jobs:
         run: pnpm exec gatsby serve & SERVER_PID=$!
 
       - name: Run Unlighthouse
-        run: unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./audit-report
+        run: unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./$GITHUB_SHA
 
       - name: Fix Asset Paths
         run: |
-          find ./audit-report -type f -name '*.html' -exec sed -i 's|src="assets/|src="./assets/|g' {} +
+          find ./$GITHUB_SHA -type f -name '*.html' -exec sed -i 's|src="assets/|src="./assets/|g' {} +
 
       - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          path: './$GITHUB_SHA'
+          name: lighthouse-report-${{ github.sha }}
+
+
+  deploy_result:
+    environment:
+      name: unlighthouse
+      url: ${{ steps.deployment.outputs.page_url }}/${{ github.sha }}
+    needs: run_test
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-lighthouse-result
+    steps:
+      - name: Download Latest Results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: lighthouse-report-*
+          merge-multiple: true
+          path: ./reports
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './audit-report'
+          # Upload entire repository
+          path: './reports'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
-      # - name: Deploy
-      #   id: deployment
-      #   uses: actions/deploy-pages@v4
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./audit-report
-          destination_dir: ${{ github.sha }}
+          
