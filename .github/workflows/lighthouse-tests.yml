@@ -18,7 +18,7 @@ concurrency:
 # image fix
 
 jobs:
-  run_test:
+  lighthouse_test:
     runs-on: ubuntu-latest
     steps:
 
@@ -49,6 +49,11 @@ jobs:
       - name: Run Unlighthouse
         run: pnpm dlx unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./report/${{ github.sha }}
 
+      - name: Fix Assets
+      # in ./report/${{ github.sha }}/index.html
+      # replace href="assets/logo with href="./assets/logo
+        run: sed -i 's/href="assets\//href=".\/assets\//g' ./report/${{ github.sha }}/index.html
+
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
@@ -56,7 +61,7 @@ jobs:
           name: lighthouse-report-${{ github.sha }}
 
 
-  deploy_result:
+  lighthouse_deploy:
     environment:
       name: unlighthouse
       url: ${{ steps.deployment.outputs.page_url }}${{ github.sha }}
@@ -71,8 +76,6 @@ jobs:
           pattern: lighthouse-report-*
           merge-multiple: true
           path: ./reports
-      - run: Fix Assets
-      - run: cp -r ./reports/${{ github.sha }}/assets ./reports/assets
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
