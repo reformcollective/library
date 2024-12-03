@@ -19,9 +19,9 @@ concurrency:
 
 jobs:
   Run_Lighthouse_Tests:
-    environment:
-      name: unlighthouse
-      url: ${{ steps.deployment.outputs.page_url }}
+    # environment:
+    #   name: unlighthouse
+    #   url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Load .env file
@@ -32,8 +32,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      # - name: Setup Pages
+      #   uses: actions/configure-pages@v5
       - name: Use Node
         uses: actions/setup-node@v4
         with:
@@ -59,11 +59,18 @@ jobs:
         run: |
           find ./audit-report -type f -name '*.html' -exec sed -i 's|src="assets/|src="./assets/|g' {} +
 
-      - name: Upload Report
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './audit-report'
+      # - name: Upload Report
+      #   uses: actions/upload-pages-artifact@v3
+      #   with:
+      #     path: './audit-report'
+
+      # - name: Deploy
+      #   id: deployment
+      #   uses: actions/deploy-pages@v4
 
       - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./audit-report
