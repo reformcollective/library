@@ -19,16 +19,16 @@
  *
  */
 
+import config from "libraryConfig"
+import { type CSSObject, keyframes as restyleKeyframes } from "restyle"
+import { styled as restyled } from "restyle"
+import type { KeyframesObject } from "restyle/keyframes"
 import media, {
 	desktopBreakpoint,
 	desktopDesignSize,
 	mobileDesignSize,
 	tabletDesignSize,
 } from "styles/media"
-import config from "libraryConfig"
-import { type CSSObject, keyframes as restyleKeyframes } from "restyle"
-import { styled as restyled } from "restyle"
-import type { KeyframesObject } from "restyle/keyframes"
 import {
 	COMMENT,
 	DECLARATION,
