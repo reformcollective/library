@@ -14,8 +14,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# custom url
-# budget restraint file
 # dont add pages or environment when moving to next starter
 # image fix
 
@@ -50,6 +48,10 @@ jobs:
       
       - name: Build
         run: pnpm exec gatsby build
+
+      - name: Fix Asset Paths
+        run: |
+          find ./public -type f -name '*.html' -exec sed -i 's|src="/assets/|src="./assets/|g' {} +
 
       - name: Serve
         run: pnpm exec gatsby serve & SERVER_PID=$!
