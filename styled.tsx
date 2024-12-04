@@ -203,59 +203,67 @@ function convertToResponsive(
 				/**
 				 * generate media query for a single breakpoint
 				 */
-				output[hashedMedia[only]] ||= {}
-				// @ts-expect-error typescript cannot narrow here
-				output[hashedMedia[only]][key] = value
-					?.toString()
-					.replaceAll(
-						regex,
-						(_: unknown, px: string) => `${replacer(px, designSizes[only])}vw`,
-					)
+				output[hashedMedia[only]] = {
+					...(output[hashedMedia[only]] ?? {}),
+					[key]: value
+						?.toString()
+						.replaceAll(
+							regex,
+							(_: unknown, px: string) =>
+								`${replacer(px, designSizes[only])}vw`,
+						),
+				}
 			} else if (String(value).match(regex)) {
 				/**
 				 * generate media queries for each breakpoint
 				 */
-				/* convert full width values (not including smaller desktops that would always scale) */
-				output[hashedMedia.fullWidth] ||= {}
-				// @ts-expect-error typescript cannot narrow here
-				output[hashedMedia.fullWidth][key] = value
-					?.toString()
-					.replaceAll(regex, (_: unknown, px: string) =>
-						shouldScaleFully
-							? `${replacer(px, desktopDesignSize)}vw`
-							: `${(
-									(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
-									desktopBreakpoint
-								).toFixed(1)}px`.replace(".0px", "px"),
-					)
+				output[hashedMedia.fullWidth] = {
+					...(output[hashedMedia.fullWidth] ?? {}),
+					[key]: value
+						?.toString()
+						.replaceAll(regex, (_: unknown, px: string) =>
+							shouldScaleFully
+								? `${replacer(px, desktopDesignSize)}vw`
+								: `${(
+										(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
+										desktopBreakpoint
+									).toFixed(1)}px`.replace(".0px", "px"),
+						),
+				}
 
 				/* convert desktop values (not including full width) */
-				output[hashedMedia.desktop] ||= {}
-				// @ts-expect-error typescript cannot narrow here
-				output[hashedMedia.desktop][key] = value
-					?.toString()
-					.replaceAll(
-						regex,
-						(_: unknown, px: string) => `${replacer(px, desktopDesignSize)}vw`,
-					)
+				output[hashedMedia.desktop] = {
+					...(output[hashedMedia.desktop] ?? {}),
+					[key]: value
+						?.toString()
+						.replaceAll(
+							regex,
+							(_: unknown, px: string) =>
+								`${replacer(px, desktopDesignSize)}vw`,
+						),
+				}
 
 				/* convert tablet values */
-				output[hashedMedia.tablet] ||= {}
-				// @ts-expect-error typescript cannot narrow here
-				output[hashedMedia.tablet][key] = value
-					?.toString()
-					.replaceAll(
-						regex,
-						(_: unknown, px: string) => `${replacer(px, tabletDesignSize)}vw`,
-					)
+				output[hashedMedia.tablet] = {
+					...(output[hashedMedia.tablet] ?? {}),
+					[key]: value
+						?.toString()
+						.replaceAll(
+							regex,
+							(_: unknown, px: string) => `${replacer(px, tabletDesignSize)}vw`,
+						),
+				}
 
 				/* convert mobile values */
-				output[hashedMedia.mobile] ||= {}
-				// @ts-expect-error typescript cannot narrow here
-				output[hashedMedia.mobile][key] = value.replaceAll(
-					regex,
-					(_: unknown, px: string) => `${replacer(px, mobileDesignSize)}vw`,
-				)
+				output[hashedMedia.mobile] = {
+					...(output[hashedMedia.mobile] ?? {}),
+					[key]: value
+						?.toString()
+						.replaceAll(
+							regex,
+							(_: unknown, px: string) => `${replacer(px, mobileDesignSize)}vw`,
+						),
+				}
 			}
 		} else {
 			output[key] = convertToResponsive(value as CSSObject, {
