@@ -159,7 +159,7 @@ const convertCssToObject = (
 type Options = { only?: "mobile" | "tablet" | "desktop"; scaleFully?: boolean }
 
 const PRECISION = 3
-const regex = /(\d+.?\d*)px/g
+const regex = /(\d+\.?\d*)px/g
 const replacer = (match: string, breakpoint: number) => {
 	return ((Number.parseFloat(match) / breakpoint) * 100).toFixed(PRECISION)
 }
