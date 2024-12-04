@@ -21,7 +21,8 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: corepack enable
-      - run: pnpm install || echo 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
+      - name: Install dependencies
+        run: pnpm install || echo 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
       - run: pnpm run lint
         continue-on-error: true
       - run: git status
