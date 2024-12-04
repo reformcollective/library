@@ -1,8 +1,8 @@
-import type { ImgHTMLAttributes } from "react"
-import Image, { type StaticImageData } from "next/image"
-import { SanityImage } from "sanity-image"
 import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import { dataset, projectId } from "@/sanity/lib/api"
+import Image, { type StaticImageData } from "next/image"
+import type { ImgHTMLAttributes } from "react"
+import { SanityImage } from "sanity-image"
 import { styled } from "./styled"
 
 type DefaultImageProps = Omit<
