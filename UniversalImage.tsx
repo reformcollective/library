@@ -37,7 +37,7 @@ export default function UniversalImage({ src, ...props }: UniversalImageProps) {
 	if (!src) return null
 
 	if (typeof src === "string") {
-		return <Image {...props} src={src} />
+		return <DefaultImage {...props} src={src} />
 	}
 
 	if ("_type" in src) {
@@ -59,18 +59,18 @@ export default function UniversalImage({ src, ...props }: UniversalImageProps) {
 	return <Image {...props} src={src} />
 }
 
-const DefaultSanityImage = styled(
-	SanityImage,
-	({
-		objectFit,
-		objectPosition,
-	}: {
-		objectFit?: string
-		objectPosition?: string
-	}) => ({
-		objectFit,
-		objectPosition,
-		height: "auto",
-		width: "100%",
-	}),
-)
+const defaultStyles = ({
+	objectFit,
+	objectPosition,
+}: {
+	objectFit?: string
+	objectPosition?: string
+}) => ({
+	objectFit,
+	objectPosition,
+	height: "auto",
+	width: "100%",
+})
+
+const DefaultSanityImage = styled(SanityImage, defaultStyles)
+const DefaultImage = styled("img", defaultStyles)
