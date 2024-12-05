@@ -129,7 +129,6 @@ export default function ImageSequence({
 			const maxLen = length.toString().length
 			const imageNumber = i.toString().padStart(maxLen, "0")
 
-			// eslint-disable-next-line no-unsanitized/method
 			const prom = import(`../images/sequences/${folder}/${imageNumber}.webp`)
 				.then((image: { default: string }) => {
 					return createImage(image.default, i)

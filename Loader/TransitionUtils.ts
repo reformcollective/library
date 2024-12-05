@@ -269,6 +269,7 @@ const navigate = async ({
 /**
  * manually track the scroll position so we can restore it when clicking back
  * gatsby can't restore scroll position if we have a transition animation
+ * TODO - next.js may not need this! worth testing at some point
  */
 const scrollPositions = new Map<string, number>()
 
