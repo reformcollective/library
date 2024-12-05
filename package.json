@@ -22,7 +22,7 @@
 		"typescript": "^5.7.2"
 	},
 	"scripts": {
-		"lint": "biome check",
+		"lint": "biome lint",
 		"format": "biome check --write"
 	},
 	"preinstall": "npx only-allow pnpm",
