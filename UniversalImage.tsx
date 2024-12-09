@@ -30,12 +30,14 @@ export type UniversalImageProps = DefaultImageProps & {
 export default function UniversalImage({
 	src,
 	alt = "",
-	...props
+	objectFit = "cover",
+	...otherProps
 }: UniversalImageProps) {
 	if (!src) return null
+	const props = { objectFit, alt, ...otherProps }
 
 	if (typeof src === "string") {
-		return <DefaultImage {...props} src={src} alt={alt} />
+		return <DefaultImage {...props} src={src} />
 	}
 
 	const isNextImage = "default" in src || "src" in src
@@ -45,7 +47,6 @@ export default function UniversalImage({
 		return (
 			<DefaultSanityImage
 				{...props}
-				alt={alt}
 				preview={src.data?.lqip}
 				// @ts-expect-error library type mismatch
 				hotspot={src.hotspot}
@@ -61,7 +62,7 @@ export default function UniversalImage({
 		)
 	}
 
-	return <Image {...props} src={src} alt={alt} />
+	return <DefaultNextImage placeholder="blur" {...props} src={src} />
 }
 
 const defaultStyles = ({
@@ -79,3 +80,4 @@ const defaultStyles = ({
 
 const DefaultSanityImage = styled(SanityImage, defaultStyles)
 const DefaultImage = styled("img", defaultStyles)
+const DefaultNextImage = styled(Image, defaultStyles)
