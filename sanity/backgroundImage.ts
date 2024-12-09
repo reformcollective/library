@@ -1,7 +1,7 @@
 import { dataset, projectId } from "@/sanity/lib/api"
-import type { SanityImageData } from "./imageMetadata"
-import { buildSrcSet } from "sanity-image"
 import { css } from "library/styled"
+import { buildSrcSet } from "sanity-image"
+import type { SanityImageData } from "./imageMetadata"
 
 const baseUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/`
 

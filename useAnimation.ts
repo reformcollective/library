@@ -1,4 +1,4 @@
-import { useGSAP, type ContextSafeFunc } from "@gsap/react"
+import { type ContextSafeFunc, useGSAP } from "@gsap/react"
 import gsap, { ScrollTrigger } from "gsap/all"
 import type { DependencyList } from "react"
 import { useEffect, useState } from "react"
