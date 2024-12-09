@@ -129,9 +129,9 @@ export const useIsSmooth = () => {
 	}, [])
 
 	// check for url flags
-	if (isBrowser && window.location.search.toLowerCase().includes("noSmooth"))
+	if (isBrowser && window.location.search.toLowerCase().includes("nosmooth"))
 		return false
-	if (isBrowser && window.location.search.toLowerCase().includes("forceSmooth"))
+	if (isBrowser && window.location.search.toLowerCase().includes("forcesmooth"))
 		return true
 
 	return smooth

@@ -82,7 +82,7 @@ const initialScrollLock = createScrollLock()
 /**
  * call all callbacks and set done to true
  */
-async function onComplete() {
+async function onComplete(skipScrollTop?: boolean) {
 	await allLoaderPromisesSettled()
 
 	// only call onComplete one time
@@ -102,14 +102,16 @@ async function onComplete() {
 	/**
 	 * scroll to top if needed
 	 */
-	if (isAtTop) {
-		ScrollSmoother.get()?.scrollTop(0)
-		ScrollTrigger.refresh()
-		ScrollSmoother.get()?.scrollTop(0)
-	} else {
-		ScrollSmoother.get()?.scrollTop(initialScroll)
-		ScrollTrigger.refresh()
-		ScrollSmoother.get()?.scrollTop(initialScroll)
+	if (!skipScrollTop) {
+		if (isAtTop) {
+			ScrollSmoother.get()?.scrollTop(0)
+			ScrollTrigger.refresh()
+			ScrollSmoother.get()?.scrollTop(0)
+		} else {
+			ScrollSmoother.get()?.scrollTop(initialScroll)
+			ScrollTrigger.refresh()
+			ScrollSmoother.get()?.scrollTop(initialScroll)
+		}
 	}
 
 	/**
@@ -170,7 +172,7 @@ const updatePercent = () => {
 			await allLoaderPromisesSettled() // but not before promises are settled
 			return animations.length === 0 ||
 				animations.every((a) => a.duration === 0)
-				? onComplete()
+				? onComplete(true)
 				: null
 		})
 		.catch(async () => {
