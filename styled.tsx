@@ -104,7 +104,9 @@ const addToObj = ({
 			const selector = element.props
 				.map((selector) =>
 					// restyle requires the use of ampersand in nested selectors, but stylis does not include it
-					selector.includes("&") && allowAmpersand ? selector : `& ${selector}`,
+					(selector.includes("&") || selector.startsWith(":")) && allowAmpersand
+						? selector
+						: `& ${selector}`,
 				)
 				.join(",")
 

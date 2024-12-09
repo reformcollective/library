@@ -1,10 +1,17 @@
-import { useGSAP } from "@gsap/react"
-import { ScrollTrigger } from "gsap/all"
+import { type ContextSafeFunc, useGSAP } from "@gsap/react"
+import gsap, { ScrollTrigger } from "gsap/all"
 import type { DependencyList } from "react"
-import { startTransition, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { isBrowser } from "./deviceDetection"
 
 let globalRefresh: ReturnType<typeof setTimeout> | undefined
+
+type Creation = (arg: {
+	context: gsap.Context
+	contextSafe: ContextSafeFunc
+}) => unknown
+
+gsap.registerPlugin(useGSAP)
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
@@ -26,8 +33,8 @@ let globalRefresh: ReturnType<typeof setTimeout> | undefined
  * @param options.recreateOnResize - whether to re-create the animations when the window is resized
  * @param options.extraDeps - sany extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
  */
-export const useAnimation = <F, T>(
-	createAnimations: F extends VoidFunction ? F : () => T,
+export const useAnimation = <InputFn extends Creation>(
+	createAnimations: InputFn,
 	deps?: DependencyList,
 	options?: {
 		scope?: React.RefObject<Element | null>
@@ -43,15 +50,11 @@ export const useAnimation = <F, T>(
 	const standardDeps = deps ?? []
 	const extraDeps = options?.extraDeps ?? []
 
-	type ReturnType =
+	type OutputType =
 		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
-		T extends Function
-			? undefined
-			: T extends object
-				? T | undefined
-				: undefined
+		ReturnType<InputFn> extends Function ? undefined : ReturnType<InputFn>
 
-	const [returnValue, setReturnValue] = useState<ReturnType>()
+	const [returnValue, setReturnValue] = useState<OutputType>()
 
 	/**
 	 * when the window is resized, we need to re-create animations
@@ -80,30 +83,22 @@ export const useAnimation = <F, T>(
 		}
 	}, [options?.recreateOnResize])
 
-	const [firstRender, setFirstRender] = useState(true)
-
 	const { context, contextSafe } = useGSAP(
-		() => {
-			startTransition(() => {
-				setFirstRender(false)
-			})
-			if (firstRender) return
-			const result = createAnimations()
+		(context, contextSafe) => {
+			if (!contextSafe) return
+
+			const result = createAnimations({ context, contextSafe })
 
 			if (typeof result === "function") {
 				return result
 			}
 
-			if (typeof result === "object" && result) {
-				setReturnValue(result as ReturnType)
-			} else {
-				setReturnValue(undefined)
-			}
+			setReturnValue(result as OutputType)
 		},
 		{
 			revertOnUpdate: options?.revertOnUpdate,
 			scope: options?.scope,
-			dependencies: [firstRender, resizeSignal, ...standardDeps, ...extraDeps],
+			dependencies: [resizeSignal, ...standardDeps, ...extraDeps],
 		},
 	)
 
