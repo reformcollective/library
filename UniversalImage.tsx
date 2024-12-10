@@ -18,10 +18,12 @@ export type UniversalImageData =
 	| null
 	| undefined
 
+type ObjectFit = "contain" | "cover" | "fill" | "none" | "scale-down"
+
 export type UniversalImageProps = DefaultImageProps & {
 	src: UniversalImageData
 	alt: string | undefined
-	objectFit?: string
+	objectFit?: ObjectFit
 	objectPosition?: string
 	width?: number
 	height?: number
