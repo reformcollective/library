@@ -1,3 +1,5 @@
+"use client"
+
 import { dataset, projectId } from "@/sanity/lib/api"
 import Image, { type StaticImageData } from "next/image"
 import type { ImgHTMLAttributes } from "react"
