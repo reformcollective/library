@@ -1,9 +1,16 @@
 import { defineField } from "sanity"
 
-export const imageWithAlt = (name: string) =>
+export const imageWithAlt = ({
+	name,
+	title,
+}: {
+	name: string
+	title?: string
+}) =>
 	defineField({
 		type: "image",
 		name,
+		title,
 		fields: [
 			defineField({
 				type: "text",
