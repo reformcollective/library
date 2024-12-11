@@ -21,7 +21,6 @@ jobs:
   lighthouse_test:
     runs-on: ubuntu-latest
     steps:
-
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
@@ -39,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: corepack pnpm install
       # END INSTALLATION
-      
+
       - name: Build
         run: pnpm run build
 
@@ -50,16 +49,15 @@ jobs:
         run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report/${{ github.sha }}
 
       - name: Fix Assets
-      # in ./report/${{ github.sha }}/index.html
-      # replace href="assets/logo with href="./assets/logo
+        # in ./report/${{ github.sha }}/index.html
+        # replace href="assets/logo with href="./assets/logo
         run: sed -i 's/href="assets\//href=".\/assets\//g' ./report/${{ github.sha }}/index.html
 
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
-          path: './report'
+          path: "./report"
           name: lighthouse-report-${{ github.sha }}
-
 
   lighthouse_deploy:
     environment:
@@ -82,9 +80,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
-          path: './reports'
+          path: "./reports"
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
-          
