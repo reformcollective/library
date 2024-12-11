@@ -42,6 +42,7 @@ import {
  * converts a css property value to camelCase
  */
 const convertToCamelCase = (str: string) => {
+	if (str.startsWith("--")) return str
 	return str.replace(/-([a-z])/g, (g) => g[1]?.toUpperCase() ?? "")
 }
 
@@ -301,6 +302,28 @@ export function attrs<Props, usedKeys extends keyof Props>(
 // this will reset for each styled call via our proxy
 let hashCounter = 0
 
+export const mergeStyles = (styles: CSSObject) => {
+	const output: CSSObject = {}
+
+	for (const [key, value] of Object.entries(styles)) {
+		console.log("processing", key, value)
+		const existing = output[key.trim()]
+		if (existing) console.log("overwriting/merging", key, value, existing)
+		if (typeof value === "object" && typeof existing === "object") {
+			output[key.trim()] = mergeStyles({
+				...existing,
+				...value,
+			})
+		} else if (typeof value === "object") {
+			output[key.trim()] = mergeStyles(value as CSSObject) // CSSProperties is deprecated and the type is bad
+		} else {
+			output[key.trim()] = value
+		}
+	}
+
+	return output
+}
+
 /**
  * Creates a JSX component that forwards a `className` prop with the generated
  * atomic class names to the provided `Component`. Additionally, a `css` prop can
@@ -308,12 +331,20 @@ let hashCounter = 0
  *
  * Note, the provided component must accept a `className` prop.
  */
-export const styled = new Proxy(restyled, {
-	apply(target, thisArg, args) {
-		hashCounter = 0
-		return Reflect.apply(target, thisArg, args)
-	},
-})
+export const styled: typeof restyled = (component, styles) => {
+	hashCounter = 0
+
+	if (styles === undefined) return restyled(component)
+
+	console.log("\nstyled\n\n")
+
+	return restyled(
+		component,
+		typeof styles === "function"
+			? (props) => mergeStyles(styles(props))
+			: mergeStyles(styles),
+	)
+}
 
 /**
  * simple utility for composing styles as a string
