@@ -5,14 +5,27 @@ on:
       SECRETS_JSON:
         required: false
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# dont add pages or environment when moving to next starter
+# image fix
+
 jobs:
-  Run_Lighthouse_Tests:
+  lighthouse_test:
     runs-on: ubuntu-latest
     steps:
+
+      - name: Load .env file
+        uses: oNaiPs/secrets-to-env-action@v1.5
+        with:
+          secrets: ${{ secrets.SECRETS_JSON }}
       # BEGIN INSTALLATION
       - uses: actions/checkout@v4
         with:
@@ -24,41 +37,54 @@ jobs:
       - name: Enable corepack
         run: corepack enable
       - name: Install dependencies
-        run: pnpm install
-      - name: Install bun
-        run: npm install -g bun
-      - name: Install Unlighthouse
-        run: npm install -g @unlighthouse/cli puppeteer netlify-cli
+        run: corepack pnpm install
       # END INSTALLATION
-
+      
       - name: Build
-        run: bun run gatsby build
+        run: pnpm run build
 
       - name: Serve
-        run: bun run gatsby serve & SERVER_PID=$!
+        run: pnpm run start & SERVER_PID=$!
 
       - name: Run Unlighthouse
-        run: unlighthouse-ci --site http://localhost:9000/ --build-static --output-path ./audit-report
+        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report/${{ github.sha }}
 
-      - name: Deploy to Github
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git clone https://$GITHUB_ACTOR:${{ secrets.GH_PAT }}@github.com/reformcollective/unlighthouse-reports.git
-          cd unlighthouse-reports
-          touch netlify.toml
-          echo "[build]" >> netlify.toml
-          echo "  base = \"./${{ github.sha }}\"" >> netlify.toml
-          mkdir ${{ github.sha }}
-          cd ${{ github.sha }}
-          cp -r ../../audit-report/* .
-          cd ..
-          git add .
-          git commit -m "${{ github.repository }} - $(date +'%Y-%m-%d %H:%M:%S')"
-          git push
+      - name: Fix Assets
+      # in ./report/${{ github.sha }}/index.html
+      # replace href="assets/logo with href="./assets/logo
+        run: sed -i 's/href="assets\//href=".\/assets\//g' ./report/${{ github.sha }}/index.html
 
-      - name: Post comment
-        uses: JoseThen/comment-pr@v1.2.0
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
         with:
-          comment: "Report Link: https://deft-mochi-caac3e.netlify.app/"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          path: './report'
+          name: lighthouse-report-${{ github.sha }}
+
+
+  lighthouse_deploy:
+    environment:
+      name: unlighthouse
+      url: ${{ steps.deployment.outputs.page_url }}${{ github.sha }}
+    needs: lighthouse_test
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-lighthouse-result
+    steps:
+      - name: Download Latest Results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: lighthouse-report-*
+          merge-multiple: true
+          path: ./reports
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: './reports'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+          
