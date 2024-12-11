@@ -12,6 +12,9 @@ type Creation = (arg: {
 }) => unknown
 
 gsap.registerPlugin(useGSAP)
+gsap.config({
+	nullTargetWarn: false,
+})
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
@@ -29,7 +32,7 @@ gsap.registerPlugin(useGSAP)
  * @param deps - any dependencies that should cause the animations to be re-created
  * @param options - options for the hook
  * @param options.scope - the scope of the animation for GSAP to use
- * @param options.revertOnUpdate - whether to revert the animation when the component is unmounted, rather than killing it
+ * @param options.killOnUpdate - whether to kill the animation when the component is unmounted, rather than reverting it
  * @param options.recreateOnResize - whether to re-create the animations when the window is resized
  * @param options.extraDeps - sany extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
  */
@@ -39,7 +42,7 @@ export const useAnimation = <InputFn extends Creation>(
 	options?: {
 		scope?: React.RefObject<Element | null>
 		recreateOnResize?: boolean
-		revertOnUpdate?: boolean
+		killOnUpdate?: boolean
 		extraDeps?: DependencyList
 	},
 ) => {
@@ -96,7 +99,7 @@ export const useAnimation = <InputFn extends Creation>(
 			setReturnValue(result as OutputType)
 		},
 		{
-			revertOnUpdate: options?.revertOnUpdate,
+			revertOnUpdate: !options?.killOnUpdate,
 			scope: options?.scope,
 			dependencies: [resizeSignal, ...standardDeps, ...extraDeps],
 		},
