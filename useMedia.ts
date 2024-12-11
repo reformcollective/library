@@ -1,11 +1,11 @@
 import { use } from "react"
-import { ScreenContext } from "./ScreenContext"
-import { isBrowser } from "./deviceDetection"
 import {
 	desktopBreakpoint,
 	mobileBreakpoint,
 	tabletBreakpoint,
 } from "styles/media"
+import { ScreenContext } from "./ScreenContext"
+import { isBrowser } from "./deviceDetection"
 
 export function useMedia<A, B, C, D>(fw: A, d: B, t: C, m: D) {
 	const { desktop, fullWidth, mobile, tablet } = use(ScreenContext)
