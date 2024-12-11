@@ -1,5 +1,6 @@
 node_modules
 tsconfig.tsbuildinfo
+.DS_Store
 
 # we don't want the library to keep it's own lockfile, since it's managed by the root project
 pnpm-lock.yaml
