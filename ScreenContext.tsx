@@ -7,9 +7,9 @@ import {
 	useState,
 } from "react"
 import {
-	desktopBreakpoint as desktop,
-	mobileBreakpoint as mobile,
-	tabletBreakpoint as tablet,
+	desktopBreakpoint,
+	mobileBreakpoint,
+	tabletBreakpoint,
 } from "styles/media"
 import { isBrowser } from "./deviceDetection"
 
@@ -36,10 +36,16 @@ export function ScreenProvider({ children }: Props) {
 	const setScreenContext = () => {
 		if (isBrowser)
 			startTransition(() => {
-				setM(window.innerWidth <= mobile)
-				setT(window.innerWidth > mobile && window.innerWidth <= tablet)
-				setD(window.innerWidth > tablet && window.innerWidth <= desktop)
-				setFw(window.innerWidth > desktop)
+				setM(window.innerWidth <= mobileBreakpoint)
+				setT(
+					window.innerWidth > mobileBreakpoint &&
+						window.innerWidth <= tabletBreakpoint,
+				)
+				setD(
+					window.innerWidth > tabletBreakpoint &&
+						window.innerWidth <= desktopBreakpoint,
+				)
+				setFw(window.innerWidth > desktopBreakpoint)
 			})
 	}
 
