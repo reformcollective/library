@@ -57,6 +57,8 @@ export default function UniversalImage({
 				// @ts-expect-error library type mismatch
 				crop={src.crop}
 				id={src.asset?._ref}
+				// if we provide width and height, expand the image to fit
+				mode="cover"
 				projectId={projectId}
 				dataset={dataset}
 				queryParams={{
