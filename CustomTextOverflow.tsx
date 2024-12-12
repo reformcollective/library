@@ -46,7 +46,7 @@ export default function CustomTextOverflow({
 	useEffect(() => {
 		const wrapper = wrapperRef.current
 		if (!wrapper) return
-		const lines = getNumberOfLines(wrapperRef.current)
+		const lines = getNumberOfLines(wrapper)
 
 		if (lines <= maxLines) {
 			wrapper.textContent = children

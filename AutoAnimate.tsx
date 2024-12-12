@@ -28,7 +28,7 @@ const extractKey = (item: unknown): string => {
  * the default algorithm will round up or down but we want to always round up
  * there is maybe a more elegant way to solve for this, but this works for now
  */
-const getSize = (element: React.RefObject<HTMLElement>) => {
+const getSize = (element: React.RefObject<HTMLElement | null>) => {
 	if (!element.current) return { width: 0, height: 0 }
 
 	// client size doesn't include borders, offset size and bounding rect do
@@ -192,8 +192,8 @@ export default function AutoAnimate({
 			if (skipFirstAnimation) return cleanup
 		}
 
-		let animateSlotIn: RefObject<HTMLDivElement> | undefined
-		let animateSlotOut: RefObject<HTMLDivElement> | undefined
+		let animateSlotIn: RefObject<HTMLDivElement | null> | undefined
+		let animateSlotOut: RefObject<HTMLDivElement | null> | undefined
 
 		/**
 		 * animate each slot to it's next position
