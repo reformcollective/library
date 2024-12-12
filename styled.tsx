@@ -42,6 +42,7 @@ import {
  * converts a css property value to camelCase
  */
 const convertToCamelCase = (str: string) => {
+	if (str.startsWith("--")) return str
 	return str.replace(/-([a-z])/g, (g) => g[1]?.toUpperCase() ?? "")
 }
 
@@ -104,7 +105,10 @@ const addToObj = ({
 			const selector = element.props
 				.map((selector) =>
 					// restyle requires the use of ampersand in nested selectors, but stylis does not include it
-					(selector.includes("&") || selector.startsWith(":")) && allowAmpersand
+					(selector.includes("&") ||
+						selector.startsWith(":") ||
+						selector.startsWith("[")) &&
+					allowAmpersand
 						? selector
 						: `& ${selector}`,
 				)
@@ -302,18 +306,47 @@ export function attrs<Props, usedKeys extends keyof Props>(
 let hashCounter = 0
 
 /**
+ * this visually has no effect, but produces smaller CSS files
+ */
+export const mergeStyles = (styles: CSSObject) => {
+	const output: CSSObject = {}
+
+	for (const [key, value] of Object.entries(styles)) {
+		const existing = output[key.trim()]
+		if (typeof value === "object" && typeof existing === "object") {
+			output[key.trim()] = mergeStyles({
+				...existing,
+				...value,
+			})
+		} else if (typeof value === "object") {
+			output[key.trim()] = mergeStyles(value as CSSObject) // CSSProperties is deprecated and the type is bad
+		} else {
+			output[key.trim()] = value
+		}
+	}
+
+	return output
+}
+
+/**
  * Creates a JSX component that forwards a `className` prop with the generated
  * atomic class names to the provided `Component`. Additionally, a `css` prop can
  * be provided to override the initial `styles`.
  *
  * Note, the provided component must accept a `className` prop.
  */
-export const styled = new Proxy(restyled, {
-	apply(target, thisArg, args) {
-		hashCounter = 0
-		return Reflect.apply(target, thisArg, args)
-	},
-})
+export const styled: typeof restyled = (component, styles) => {
+	hashCounter = 0
+
+	if (styles === undefined) return restyled(component)
+
+	return restyled(
+		component,
+		typeof styles === "function"
+			? (props) => mergeStyles(styles(props))
+			: mergeStyles(styles),
+	)
+}
 
 /**
  * simple utility for composing styles as a string

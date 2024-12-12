@@ -9,7 +9,7 @@
 		"@react-three/fiber": "^8",
 		"ahooks": "^3",
 		"minisearch": "^7",
-		"restyle": "^3.0.0",
+		"restyle": "github:RJWadley/restyle#f3fc72a60d0c618fe9c8b35717d9b8716f42dcab",
 		"sanity-image": "^0.2.0",
 		"stylis": "^4.3.4",
 		"use-deep-compare": "^1",
