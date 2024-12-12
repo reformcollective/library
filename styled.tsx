@@ -42,6 +42,7 @@ import {
  * converts a css property value to camelCase
  */
 const convertToCamelCase = (str: string) => {
+	if (str.startsWith("--")) return str
 	return str.replace(/-([a-z])/g, (g) => g[1]?.toUpperCase() ?? "")
 }
 
@@ -104,7 +105,7 @@ const addToObj = ({
 			const selector = element.props
 				.map((selector) =>
 					// restyle requires the use of ampersand in nested selectors, but stylis does not include it
-					(selector.includes("&") || selector.startsWith(":")) && allowAmpersand
+					(selector.includes("&") || selector.startsWith(":") || selector.startsWith("[")) && allowAmpersand
 						? selector
 						: `& ${selector}`,
 				)
