@@ -302,13 +302,14 @@ export function attrs<Props, usedKeys extends keyof Props>(
 // this will reset for each styled call via our proxy
 let hashCounter = 0
 
+/**
+ * this visually has no effect, but produces smaller CSS files
+ */
 export const mergeStyles = (styles: CSSObject) => {
 	const output: CSSObject = {}
 
 	for (const [key, value] of Object.entries(styles)) {
-		console.log("processing", key, value)
 		const existing = output[key.trim()]
-		if (existing) console.log("overwriting/merging", key, value, existing)
 		if (typeof value === "object" && typeof existing === "object") {
 			output[key.trim()] = mergeStyles({
 				...existing,
@@ -335,8 +336,6 @@ export const styled: typeof restyled = (component, styles) => {
 	hashCounter = 0
 
 	if (styles === undefined) return restyled(component)
-
-	console.log("\nstyled\n\n")
 
 	return restyled(
 		component,
