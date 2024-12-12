@@ -49,10 +49,8 @@ jobs:
         run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report/${{ github.sha }}
 
       - name: Fix Assets
-        # in ./report/${{ github.sha }}/index.html
-        # replace href="assets/logo with href="./assets/logo
-        run: sed -i 's/href="assets\//href=".\/assets\//g' ./report/${{ github.sha }}/index.html
-
+        run: awk '{gsub(/href="assets\//, "href=\"./assets/")}1' ./report/${{ github.sha }}/index.html
+        
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
