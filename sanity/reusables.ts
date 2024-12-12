@@ -34,6 +34,7 @@ export const imageWithAlt = ({
 			aiAssist: {
 				imageDescriptionField: "alt",
 			},
+			hotspot: true,
 		},
 	})
 

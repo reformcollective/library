@@ -1,3 +1,5 @@
+"use client"
+
 import { Observer, ScrollTrigger, gsap } from "gsap/all"
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react"
 import { addDebouncedEventListener } from "./functions"

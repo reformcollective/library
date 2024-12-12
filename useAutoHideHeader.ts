@@ -36,7 +36,7 @@ const checkElementsByAttribute = (attribute: string) => {
  * @param style the style to use for the header, either "scrub" which will sync with the scroller or "snap" which animates in either direction
  */
 export default function useAutoHideHeader(
-	wrapper: RefObject<HTMLDivElement> | null | undefined,
+	wrapper: RefObject<HTMLDivElement | null> | null | undefined,
 	styleIn: "scrub" | "snap" = "scrub",
 ) {
 	// scrub style only really works if we're using a smoother
