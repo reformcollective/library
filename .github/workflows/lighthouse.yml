@@ -50,7 +50,7 @@ jobs:
 
       - name: Fix Assets
         run: awk '{gsub(/href="assets\//, "href=\"./assets/")}1' ./report/${{ github.sha }}/index.html
-        
+
       - name: Upload Report
         uses: actions/upload-artifact@v4
         with:
