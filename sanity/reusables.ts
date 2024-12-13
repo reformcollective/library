@@ -5,8 +5,8 @@ import {
 	DoubleChevronUpIcon,
 	ImageIcon,
 } from "@sanity/icons"
-import { attrs, styled } from "library/styled"
 import UniversalImage, { type UniversalImageData } from "library/UniversalImage"
+import { attrs, styled } from "library/styled"
 import { defineField } from "sanity"
 
 export const createSectionPreview = (image: UniversalImageData) =>
