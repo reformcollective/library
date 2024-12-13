@@ -2,7 +2,7 @@
 
 import { dataset, projectId } from "@/sanity/lib/api"
 import Image, { type StaticImageData } from "next/image"
-import { use, createContext, type ImgHTMLAttributes } from "react"
+import { type ImgHTMLAttributes, createContext, use } from "react"
 import { SanityImage } from "sanity-image"
 import type { SanityImageData } from "./sanity/imageMetadata"
 import { styled } from "./styled"
