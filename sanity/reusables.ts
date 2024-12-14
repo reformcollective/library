@@ -5,7 +5,20 @@ import {
 	DoubleChevronUpIcon,
 	ImageIcon,
 } from "@sanity/icons"
+import UniversalImage, { type UniversalImageData } from "library/UniversalImage"
+import { attrs, styled } from "library/styled"
 import { defineField } from "sanity"
+
+export const createSectionPreview = (image: UniversalImageData) =>
+	attrs(
+		styled(UniversalImage, {
+			width: 160,
+			height: 90,
+			borderRadius: "0.1875rem",
+			objectFit: "cover !important",
+		}),
+		{ src: image, alt: "" },
+	)
 
 export const imageWithAlt = ({
 	name,
