@@ -58,3 +58,15 @@ export const useIsMobileOS = () => {
 export const useIsDesktopSafari = () => {
 	return useHookify(isDesktopSafari)
 }
+
+const isIframe = () => {
+	try {
+		return window.self !== window.top
+	} catch (e) {
+		return true
+	}
+}
+
+export const useIsIframe = () => {
+	return useHookify(isIframe)
+}
