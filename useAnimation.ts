@@ -1,7 +1,8 @@
 import { type ContextSafeFunc, useGSAP } from "@gsap/react"
 import gsap, { ScrollTrigger } from "gsap/all"
 import type { DependencyList } from "react"
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
+import { ScreenContext } from "./ScreenContext"
 import { isBrowser } from "./deviceDetection"
 
 let globalRefresh: ReturnType<typeof setTimeout> | undefined
@@ -86,9 +87,12 @@ export const useAnimation = <InputFn extends Creation>(
 		}
 	}, [options?.recreateOnResize])
 
+	const { initComplete } = use(ScreenContext)
+
 	const { context, contextSafe } = useGSAP(
 		(context, contextSafe) => {
 			if (!contextSafe) return
+			if (!initComplete) return
 
 			const result = createAnimations({ context, contextSafe })
 
@@ -101,7 +105,7 @@ export const useAnimation = <InputFn extends Creation>(
 		{
 			revertOnUpdate: !options?.killOnUpdate,
 			scope: options?.scope,
-			dependencies: [resizeSignal, ...standardDeps, ...extraDeps],
+			dependencies: [initComplete, resizeSignal, ...standardDeps, ...extraDeps],
 		},
 	)
 

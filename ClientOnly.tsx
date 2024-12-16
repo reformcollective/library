@@ -1,23 +1,16 @@
 "use client"
 
-import { startTransition, useEffect, useState } from "react"
-
-import { isBrowser } from "./deviceDetection"
+import { use } from "react"
+import { ScreenContext } from "./ScreenContext"
 
 export default function ClientOnly({
 	children,
 }: {
 	children: React.ReactNode
 }) {
-	const [mounted, setMounted] = useState(false)
+	const { initComplete } = use(ScreenContext)
 
-	useEffect(() => {
-		startTransition(() => {
-			setMounted(isBrowser)
-		})
-	}, [])
-
-	if (!mounted) return null
+	if (!initComplete) return null
 
 	return <>{children}</>
 }
@@ -26,15 +19,9 @@ export const useClientOnly = <T, F = undefined>(
 	value: T,
 	fallbackValue?: F,
 ) => {
-	const [mounted, setMounted] = useState(false)
+	const { initComplete } = use(ScreenContext)
 
-	useEffect(() => {
-		startTransition(() => {
-			setMounted(isBrowser)
-		})
-	}, [])
-
-	if (!mounted) return fallbackValue
+	if (!initComplete) return fallbackValue
 
 	return value
 }

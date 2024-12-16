@@ -1,10 +1,10 @@
 import { useEventListener } from "ahooks"
 import {
 	createContext,
-	startTransition,
+	useCallback,
 	useEffect,
-	useMemo,
 	useState,
+	useTransition,
 } from "react"
 import {
 	desktopBreakpoint,
@@ -21,6 +21,7 @@ export const ScreenContext = createContext({
 	desktop: false,
 	tablet: false,
 	mobile: false,
+	initComplete: false,
 })
 
 interface Props {
@@ -32,32 +33,38 @@ export function ScreenProvider({ children }: Props) {
 	const [d, setD] = useState<boolean>(false)
 	const [t, setT] = useState<boolean>(false)
 	const [m, setM] = useState<boolean>(true)
+	const [needsInit, setNeedsInit] = useState(true)
+	const [initializing, startTransition] = useTransition()
 
-	const setScreenContext = () => {
-		if (isBrowser)
-			startTransition(() => {
-				setM(window.innerWidth <= mobileBreakpoint)
-				setT(
-					window.innerWidth > mobileBreakpoint &&
-						window.innerWidth <= tabletBreakpoint,
-				)
-				setD(
-					window.innerWidth > tabletBreakpoint &&
-						window.innerWidth <= desktopBreakpoint,
-				)
-				setFw(window.innerWidth > desktopBreakpoint)
-			})
-	}
+	const setScreenContext = useCallback(() => {
+		if (isBrowser) setM(window.innerWidth <= mobileBreakpoint)
+		setT(
+			window.innerWidth > mobileBreakpoint &&
+				window.innerWidth <= tabletBreakpoint,
+		)
+		setD(
+			window.innerWidth > tabletBreakpoint &&
+				window.innerWidth <= desktopBreakpoint,
+		)
+		setFw(window.innerWidth > desktopBreakpoint)
+		setNeedsInit(false)
+	}, [])
 
-	useEffect(setScreenContext)
+	useEffect(() => {
+		startTransition(setScreenContext)
+	}, [setScreenContext])
 	useEventListener("resize", setScreenContext)
 
-	const screenValue = useMemo(() => {
-		return { fullWidth: fw, desktop: d, tablet: t, mobile: m }
-	}, [d, fw, t, m])
-
 	return (
-		<ScreenContext.Provider value={screenValue}>
+		<ScreenContext.Provider
+			value={{
+				fullWidth: fw,
+				desktop: d,
+				tablet: t,
+				mobile: m,
+				initComplete: !initializing && !needsInit,
+			}}
+		>
 			{children}
 		</ScreenContext.Provider>
 	)
