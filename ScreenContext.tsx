@@ -1,4 +1,3 @@
-import { useEventListener } from "ahooks"
 import {
 	createContext,
 	useCallback,
@@ -12,6 +11,7 @@ import {
 	tabletBreakpoint,
 } from "styles/media"
 import { isBrowser } from "./deviceDetection"
+import { useDebouncedEventListener } from "./viewportUtils"
 
 /**
  * Gives easy access to media queries
@@ -53,7 +53,7 @@ export function ScreenProvider({ children }: Props) {
 	useEffect(() => {
 		startTransition(setScreenContext)
 	}, [setScreenContext])
-	useEventListener("resize", setScreenContext)
+	useDebouncedEventListener("resize", setScreenContext)
 
 	return (
 		<ScreenContext.Provider

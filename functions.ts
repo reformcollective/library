@@ -1,22 +1,5 @@
 import { isBrowser } from "./deviceDetection"
 
-export const addDebouncedEventListener = (
-	element: Window | HTMLElement,
-	event: string,
-	callback: () => void,
-	delay: number,
-) => {
-	let timeout: ReturnType<typeof setTimeout> | undefined
-
-	const debouncedCallback = () => {
-		clearTimeout(timeout)
-		timeout = setTimeout(() => callback(), delay)
-	}
-
-	element.addEventListener(event, debouncedCallback)
-	return () => element.removeEventListener(event, debouncedCallback)
-}
-
 export const sleep = (ms: number) =>
 	new Promise((resolve) => {
 		setTimeout(resolve, ms)

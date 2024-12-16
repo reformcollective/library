@@ -2,10 +2,10 @@
 
 import { Observer, ScrollTrigger, gsap } from "gsap/all"
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react"
-import { addDebouncedEventListener } from "./functions"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { css, fresponsive, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
+import { createDebouncedEventListener } from "./viewportUtils"
 
 gsap.registerPlugin(Observer)
 
@@ -187,10 +187,10 @@ export function InfiniteSideScroll({
 		}
 
 		// update when the screen size changes
-		const remove = addDebouncedEventListener(window, "resize", update, 100)
+		const listener = createDebouncedEventListener("resize", update)
 
 		return () => {
-			remove()
+			listener.cleanup()
 			observer.disconnect()
 		}
 	}, [])

@@ -1,6 +1,5 @@
-import { useEventListener } from "ahooks"
 import config from "libraryConfig"
-import { startTransition, useEffect, useState } from "react"
+import { startTransition, useEffect, useRef, useState } from "react"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -13,6 +12,55 @@ import { isBrowser } from "./deviceDetection"
 import { getMedia } from "./useMedia"
 
 /**
+ * hook version of adding debounced event listener
+ * separate because needs to use ref for persistence
+ */
+export const useDebouncedEventListener = <
+	K extends keyof GlobalEventHandlersEventMap,
+>(
+	event: K,
+	listener: (ev: GlobalEventHandlersEventMap[K]) => unknown,
+	delay = 500,
+) => {
+	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+	useEffect(() => {
+		const handler = (ev: GlobalEventHandlersEventMap[K]) => {
+			if (timeout.current) clearTimeout(timeout.current)
+			timeout.current = setTimeout(() => {
+				listener(ev)
+			}, delay)
+		}
+
+		window.addEventListener(event, handler)
+		return () => window.removeEventListener(event, handler)
+	}, [delay, event, listener])
+}
+
+/**
+ * imperative version of adding debounced event listener
+ */
+export const createDebouncedEventListener = <
+	K extends keyof GlobalEventHandlersEventMap,
+>(
+	event: K,
+	listener: (ev: GlobalEventHandlersEventMap[K]) => unknown,
+	delay = 500,
+) => {
+	let timeout: ReturnType<typeof setTimeout> | null = null
+
+	const handler = (ev: GlobalEventHandlersEventMap[K]) => {
+		if (timeout) clearTimeout(timeout)
+		timeout = setTimeout(() => {
+			listener(ev)
+		}, delay)
+	}
+
+	window.addEventListener(event, handler)
+	return { cleanup: () => window.removeEventListener(event, handler) }
+}
+
+/**
  * hookify a get function to update on resize
  */
 function useHookify<P, T extends (input: P) => ReturnType<T>>(
@@ -21,7 +69,7 @@ function useHookify<P, T extends (input: P) => ReturnType<T>>(
 ): ReturnType<T> | undefined {
 	const [value, setValue] = useState<ReturnType<T>>()
 
-	useEventListener("resize", () => setValue(fn(arg)))
+	useDebouncedEventListener("resize", () => setValue(fn(arg)))
 	useEffect(() => {
 		startTransition(() => setValue(fn(arg)))
 	}, [fn, arg])
