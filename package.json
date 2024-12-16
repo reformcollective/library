@@ -9,7 +9,7 @@
 		"@react-three/fiber": "rc",
 		"ahooks": "^3",
 		"minisearch": "^7",
-		"restyle": "github:RJWadley/restyle#f3fc72a60d0c618fe9c8b35717d9b8716f42dcab",
+		"restyle": "github:RJWadley/restyle#add-type",
 		"sanity-image": "^0.2.0",
 		"stylis": "^4.3.4",
 		"use-deep-compare": "^1",
@@ -18,7 +18,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@types/stylis": "^4.2.7",
-		"@types/three": "^0.170",
+		"@types/three": "^0.171",
 		"typescript": "^5.7.2"
 	},
 	"scripts": {
