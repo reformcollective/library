@@ -108,23 +108,25 @@ const addToObj = ({
 				if (!element) return []
 				// media queries are hoisted to the top level
 				if (element.type === MEDIA) return getParentSelectors(element.parent)
+				// i do not know why - but stylis adds a \f character to some selectors
+				const selector = element.value.replaceAll("&\f", "&")
 				// restyle requires the use of ampersand in nested selectors, but stylis does not include it
 				// there are some exceptions to this rule though:
 				const needsNoAmpersand =
-					element.value.includes("&") ||
-					element.value.startsWith(":") ||
-					element.value.startsWith("[")
+					selector.includes("&") ||
+					selector.startsWith(":") ||
+					selector.startsWith("[")
 				// nested selectors are passed as-is
 				const isTopLevel = !element?.parent
 				return [
 					...getParentSelectors(element.parent),
 					allowAmpersand
 						? needsNoAmpersand
-							? element.value
+							? selector
 							: isTopLevel
-								? `& ${element.value}`
-								: element.value
-						: element.value,
+								? `& ${selector}`
+								: selector
+						: selector,
 				]
 			}
 
