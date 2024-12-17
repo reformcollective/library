@@ -1,5 +1,5 @@
 import config from "libraryConfig"
-import { startTransition, useEffect, useRef, useState } from "react"
+import { startTransition, use, useEffect, useRef, useState } from "react"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -10,6 +10,7 @@ import {
 } from "styles/media"
 import { isBrowser } from "./deviceDetection"
 import { getMedia } from "./useMedia"
+import { ScreenContext } from "./ScreenContext"
 
 /**
  * hook version of adding debounced event listener
@@ -68,11 +69,12 @@ function useHookify<P, T extends (input: P) => ReturnType<T>>(
 	arg: P,
 ): ReturnType<T> | undefined {
 	const [value, setValue] = useState<ReturnType<T>>()
+	const { initComplete } = use(ScreenContext)
 
 	useDebouncedEventListener("resize", () => setValue(fn(arg)))
 	useEffect(() => {
-		startTransition(() => setValue(fn(arg)))
-	}, [fn, arg])
+		if (initComplete) startTransition(() => setValue(fn(arg)))
+	}, [fn, arg, initComplete])
 
 	return value
 }

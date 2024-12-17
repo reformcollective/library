@@ -10,7 +10,6 @@ import {
 	mobileBreakpoint,
 	tabletBreakpoint,
 } from "styles/media"
-import { isBrowser } from "./deviceDetection"
 import { useDebouncedEventListener } from "./viewportUtils"
 
 /**
@@ -37,7 +36,10 @@ export function ScreenProvider({ children }: Props) {
 	const [initializing, startTransition] = useTransition()
 
 	const setScreenContext = useCallback(() => {
-		if (isBrowser) setM(window.innerWidth <= mobileBreakpoint)
+		// if page content overflows, we'll get the wrong innerwidth
+		// so hide it before calculating the media queries
+		document.body.style.display = "none"
+		setM(window.innerWidth <= mobileBreakpoint)
 		setT(
 			window.innerWidth > mobileBreakpoint &&
 				window.innerWidth <= tabletBreakpoint,
@@ -47,6 +49,7 @@ export function ScreenProvider({ children }: Props) {
 				window.innerWidth <= desktopBreakpoint,
 		)
 		setFw(window.innerWidth > desktopBreakpoint)
+		document.body.style.removeProperty("display")
 		setNeedsInit(false)
 	}, [])
 
