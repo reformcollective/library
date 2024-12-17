@@ -41,7 +41,7 @@ export type UniversalImageProps = DefaultImageProps & {
 
 // Cleans up the loading props by priority so that defaultEager if present is prioritized, then loading if present, then defaults to undefined(default). Could switch that last one to "lazy" if we want.
 
-const cleanupLoading = (
+const prioritizeLoading = (
 	loading: LoadingType | undefined,
 	defaultEager: boolean,
 ): "eager" | "lazy" | undefined => {
@@ -61,12 +61,12 @@ export default function UniversalImage({
 	if (!src) return null
 	const defaultEager = use(eagerContext)
 
-	const cleanedLoading = cleanupLoading(loading, defaultEager)
+	const prioritizedLoading = prioritizeLoading(loading, defaultEager)
 
 	const props = {
 		objectFit,
 		alt,
-		loading: cleanedLoading,
+		loading: prioritizedLoading,
 		...otherProps,
 	}
 
