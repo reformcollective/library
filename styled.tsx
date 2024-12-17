@@ -108,16 +108,24 @@ const addToObj = ({
 				if (!element) return []
 				// media queries are hoisted to the top level
 				if (element.type === MEDIA) return getParentSelectors(element.parent)
-				return [...getParentSelectors(element.parent), element.value].map(
-					(selector) =>
-						// restyle requires the use of ampersand in nested selectors, but stylis does not include it
-						(selector.includes("&") ||
-							selector.startsWith(":") ||
-							selector.startsWith("[")) &&
-						allowAmpersand
-							? selector
-							: `& ${selector}`,
-				)
+				// restyle requires the use of ampersand in nested selectors, but stylis does not include it
+				// there are some exceptions to this rule though:
+				const needsNoAmpersand =
+					element.value.includes("&") ||
+					element.value.startsWith(":") ||
+					element.value.startsWith("[")
+				// nested selectors are passed as-is
+				const isTopLevel = !element?.parent
+				return [
+					...getParentSelectors(element.parent),
+					allowAmpersand
+						? needsNoAmpersand
+							? element.value
+							: isTopLevel
+								? `& ${element.value}`
+								: element.value
+						: element.value,
+				]
 			}
 
 			const recurseAndAdd = (
