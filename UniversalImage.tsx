@@ -39,7 +39,7 @@ export type UniversalImageProps = DefaultImageProps & {
 	height?: number
 }
 
-// Cleans up the loading props by priority so that defaultEager if present is prioritized, then loading if present, then defaults to undefined(default). Could switch that last one to "lazy" if we want.
+// Cleans up the loading props by priority so that defaultEager if present is prioritized, then loading if present, then defaults to lazy if no other conditions are met
 
 const prioritizeLoading = (
 	loading: LoadingType | undefined,
@@ -47,8 +47,8 @@ const prioritizeLoading = (
 ): "eager" | "lazy" | undefined => {
 	if (defaultEager) return "eager"
 	if (loading === "default") return undefined
-	if (loading) return loading
-	return undefined
+	if (loading !== undefined) return loading
+	return "lazy"
 }
 
 export default function UniversalImage({
