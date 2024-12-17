@@ -89,6 +89,7 @@ const defaultStyles = ({
 	objectFit?: string
 	objectPosition?: string
 }) => ({
+	display: "block",
 	objectFit,
 	objectPosition,
 	height: "auto",
