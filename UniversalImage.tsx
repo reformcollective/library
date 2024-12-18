@@ -12,9 +12,11 @@ export const EagerImages = ({ children }: { children: React.ReactNode }) => (
 	<eagerContext.Provider value={true}>{children}</eagerContext.Provider>
 )
 
+type LoadingType = "eager" | "lazy" | "default"
+
 type DefaultImageProps = Omit<
 	ImgHTMLAttributes<HTMLImageElement>,
-	"src" | "width" | "height"
+	"src" | "width" | "height" | "loading"
 >
 
 export type UniversalImageData =
@@ -32,22 +34,39 @@ export type UniversalImageProps = DefaultImageProps & {
 	alt: string | undefined
 	objectFit?: ObjectFit
 	objectPosition?: string
+	loading?: LoadingType
 	width?: number
 	height?: number
+}
+
+// Cleans up the loading props by priority so that defaultEager if present is prioritized, then loading if present, then defaults to lazy if no other conditions are met
+
+const prioritizeLoading = (
+	loading: LoadingType | undefined,
+	defaultEager: boolean,
+): "eager" | "lazy" | undefined => {
+	if (defaultEager) return "eager"
+	if (loading === "default") return undefined
+	if (loading !== undefined) return loading
+	return "lazy"
 }
 
 export default function UniversalImage({
 	src,
 	alt = "",
 	objectFit = "cover",
+	loading,
 	...otherProps
 }: UniversalImageProps) {
 	if (!src) return null
 	const defaultEager = use(eagerContext)
+
+	const prioritizedLoading = prioritizeLoading(loading, defaultEager)
+
 	const props = {
 		objectFit,
 		alt,
-		loading: defaultEager ? ("eager" as const) : ("lazy" as const),
+		loading: prioritizedLoading,
 		...otherProps,
 	}
 
