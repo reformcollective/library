@@ -32,6 +32,14 @@ export const isDesktopSafari = () => {
 	return !isMobile && isSafari()
 }
 
+export const isIframe = () => {
+	try {
+		return window.self !== window.top
+	} catch (e) {
+		return true
+	}
+}
+
 /**
  * hookify a get function to update after hydration
  */
@@ -57,4 +65,8 @@ export const useIsMobileOS = () => {
 
 export const useIsDesktopSafari = () => {
 	return useHookify(isDesktopSafari)
+}
+
+export const useIsIframe = () => {
+	return useHookify(isIframe)
 }

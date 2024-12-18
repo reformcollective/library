@@ -1,9 +1,10 @@
 import { type ContextSafeFunc, useGSAP } from "@gsap/react"
 import gsap, { ScrollTrigger } from "gsap/all"
 import type { DependencyList } from "react"
-import { use, useEffect, useState } from "react"
+import { use, useDeferredValue, useEffect, useState } from "react"
 import { ScreenContext } from "./ScreenContext"
 import { isBrowser } from "./deviceDetection"
+import { createDebouncedEventListener } from "./viewportUtils"
 
 let globalRefresh: ReturnType<typeof setTimeout> | undefined
 
@@ -82,8 +83,8 @@ export const useAnimation = <InputFn extends Creation>(
 					return newValue
 				})
 			}
-			window.addEventListener("resize", onResize)
-			return () => window.removeEventListener("resize", onResize)
+			const listener = createDebouncedEventListener("resize", onResize)
+			return () => listener.cleanup()
 		}
 	}, [options?.recreateOnResize])
 
@@ -105,7 +106,12 @@ export const useAnimation = <InputFn extends Creation>(
 		{
 			revertOnUpdate: !options?.killOnUpdate,
 			scope: options?.scope,
-			dependencies: [initComplete, resizeSignal, ...standardDeps, ...extraDeps],
+			dependencies: [
+				useDeferredValue(initComplete),
+				useDeferredValue(resizeSignal),
+				...standardDeps,
+				...extraDeps,
+			],
 		},
 	)
 

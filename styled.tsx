@@ -34,6 +34,7 @@ import {
 	DECLARATION,
 	type Element,
 	IMPORT,
+	MEDIA,
 	RULESET,
 	compile,
 } from "stylis"
@@ -102,23 +103,61 @@ const addToObj = ({
 					"Unexpected case! String props in ruleset. Report the css that caused this.",
 				)
 
-			const selector = element.props
-				.map((selector) =>
-					// restyle requires the use of ampersand in nested selectors, but stylis does not include it
-					(selector.includes("&") ||
-						selector.startsWith(":") ||
-						selector.startsWith("[")) &&
+			// each element will have a parent, which will have a parent, etc. until we get to a parentless element
+			const getParentSelectors = (element: Element | null): string[] => {
+				if (!element) return []
+				// media queries are hoisted to the top level
+				if (element.type === MEDIA) return getParentSelectors(element.parent)
+				// i do not know why - but stylis adds a \f character to some selectors
+				const selector = element.value.replaceAll("&\f", "&")
+				// restyle requires the use of ampersand in nested selectors, but stylis does not include it
+				// there are some exceptions to this rule though:
+				const needsNoAmpersand =
+					selector.includes("&") ||
+					selector.startsWith(":") ||
+					selector.startsWith("[")
+				// nested selectors are passed as-is
+				const isTopLevel = !element?.parent
+				return [
+					...getParentSelectors(element.parent),
 					allowAmpersand
-						? selector
-						: `& ${selector}`,
-				)
-				.join(",")
+						? needsNoAmpersand
+							? selector
+							: isTopLevel
+								? `& ${selector}`
+								: selector
+						: selector,
+				]
+			}
 
-			obj[selector + selectorHash] = serializeToObject({
-				elements: element.children,
-				selectorHash,
-				allowAmpersand,
-			})
+			const recurseAndAdd = (
+				remainingSelectors: string[],
+				object: Record<string, unknown>,
+			) => {
+				const [nextSelector, ...remaining] = remainingSelectors
+				if (remaining.length === 0) {
+					if (typeof element.children === "string")
+						throw new Error(
+							"Unexpected case! String children in nested ruleset. Report the css that caused this.",
+						)
+					object[nextSelector + selectorHash] = serializeToObject({
+						elements: element.children,
+						selectorHash,
+						allowAmpersand,
+					})
+				} else if (nextSelector) {
+					const next =
+						typeof object[nextSelector] === "object"
+							? (object[nextSelector] ?? {})
+							: {}
+					recurseAndAdd(remaining, next as Record<string, unknown>)
+					object[nextSelector] = next
+				}
+			}
+
+			const selectors = getParentSelectors(element)
+			recurseAndAdd(selectors, obj)
+
 			return
 		}
 		case IMPORT:
@@ -162,7 +201,10 @@ const convertCssToObject = (
  * Converting CSS Objects into Responsive CSS Objects
  */
 
-type Options = { only?: "mobile" | "tablet" | "desktop"; scaleFully?: boolean }
+type Options = {
+	only?: "mobile" | "tablet" | "desktop" | "fullWidth"
+	scaleFully?: boolean
+}
 
 const PRECISION = 3
 const regex = /(\d+\.?\d*)px/g
@@ -170,6 +212,7 @@ const replacer = (match: string, breakpoint: number) => {
 	return ((Number.parseFloat(match) / breakpoint) * 100).toFixed(PRECISION)
 }
 const designSizes = {
+	fullWidth: desktopDesignSize,
 	desktop: desktopDesignSize,
 	tablet: tabletDesignSize,
 	mobile: mobileDesignSize,
@@ -213,10 +256,13 @@ function convertToResponsive(
 					...(output[hashedMedia[only]] ?? {}),
 					[key]: value
 						?.toString()
-						.replaceAll(
-							regex,
-							(_: unknown, px: string) =>
-								`${replacer(px, designSizes[only])}vw`,
+						.replaceAll(regex, (_: unknown, px: string) =>
+							only === "fullWidth" && !shouldScaleFully
+								? `${(
+										(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
+										desktopBreakpoint
+									).toFixed(1)}px`.replace(".0px", "px")
+								: `${replacer(px, designSizes[only])}vw`,
 						),
 				}
 			} else if (String(value).match(regex)) {
@@ -358,6 +404,16 @@ export const fresponsive = (style: string, options?: Options) =>
 		...options,
 		selectorHash: hashCounter++,
 	})
+export const flarge = (style: string) => ({
+	...convertToResponsive(convertCssToObject(style, hashCounter), {
+		only: "fullWidth",
+		selectorHash: hashCounter++,
+	}),
+	...convertToResponsive(convertCssToObject(style, hashCounter), {
+		only: "desktop",
+		selectorHash: hashCounter++,
+	}),
+})
 export const ftablet = (style: string) =>
 	convertToResponsive(convertCssToObject(style, hashCounter), {
 		only: "tablet",
