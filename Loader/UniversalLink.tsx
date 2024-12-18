@@ -35,7 +35,7 @@ interface ButtonProps extends BaseLinkProps {
 	/**
 	 * forward a ref to the button
 	 */
-	ref?: React.RefObject<HTMLButtonElement>
+	ref?: React.RefObject<HTMLButtonElement | null>
 	/**
 	 * Do you want to scroll to a specific location after the transition?
 	 */
@@ -57,7 +57,7 @@ interface AnchorProps extends BaseLinkProps {
 	/**
 	 * forward a ref to the link or anchor tag
 	 */
-	ref?: React.RefObject<HTMLAnchorElement>
+	ref?: React.RefObject<HTMLAnchorElement | null>
 
 	onClick?: undefined
 	type?: undefined
