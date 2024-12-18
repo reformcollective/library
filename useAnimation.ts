@@ -2,9 +2,8 @@ import { type ContextSafeFunc, useGSAP } from "@gsap/react"
 import gsap, { ScrollTrigger } from "gsap/all"
 import type { DependencyList } from "react"
 import { use, useDeferredValue, useEffect, useState } from "react"
-import { ScreenContext } from "./ScreenContext"
+import { createDebouncedEventListener, ScreenContext } from "./ScreenContext"
 import { isBrowser } from "./deviceDetection"
-import { createDebouncedEventListener } from "./viewportUtils"
 
 let globalRefresh: ReturnType<typeof setTimeout> | undefined
 

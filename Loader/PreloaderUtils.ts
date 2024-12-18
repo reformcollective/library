@@ -72,11 +72,6 @@ const timeNeeded = GET_TIME_NEEDED(startTime)
 let loaderIsDone = false
 export const getLoaderIsDone = () => loaderIsDone
 
-// preserve the scroll position throughout the initial render (page height may change because of pins etc)
-if (isBrowser) document.body.style.minHeight = "9999vh"
-const initialScroll = isBrowser ? window.scrollY : 0
-if (isBrowser) document.body.style.removeProperty("min-height")
-
 const initialScrollLock = createScrollLock()
 
 /**
@@ -95,7 +90,7 @@ async function onComplete(skipScrollTop?: boolean) {
 	// hold at 100 for a beat
 	await sleep(250)
 
-	const isAtTop =
+	const goToTop =
 		window.scrollY < window.innerHeight ||
 		libraryConfig.scrollRestoration === false
 
@@ -103,14 +98,10 @@ async function onComplete(skipScrollTop?: boolean) {
 	 * scroll to top if needed
 	 */
 	if (!skipScrollTop) {
-		if (isAtTop) {
+		if (goToTop) {
 			ScrollSmoother.get()?.scrollTop(0)
 			ScrollTrigger.refresh()
 			ScrollSmoother.get()?.scrollTop(0)
-		} else {
-			ScrollSmoother.get()?.scrollTop(initialScroll)
-			ScrollTrigger.refresh()
-			ScrollSmoother.get()?.scrollTop(initialScroll)
 		}
 	}
 
@@ -135,8 +126,8 @@ async function onComplete(skipScrollTop?: boolean) {
 		}
 
 		if (animation.only) {
-			if (animation.only === "whenAtTop" && isAtTop) callAnimation()
-			if (animation.only === "whenScrolled" && !isAtTop) callAnimation()
+			if (animation.only === "whenAtTop" && goToTop) callAnimation()
+			if (animation.only === "whenScrolled" && !goToTop) callAnimation()
 		} else callAnimation()
 	}
 
@@ -150,7 +141,6 @@ async function onComplete(skipScrollTop?: boolean) {
 		ScrollTrigger.refresh()
 	})
 	initialScrollLock.release()
-	if (!anchor && !isAtTop) ScrollSmoother.get()?.scrollTop(initialScroll)
 
 	// give refresh time to finish
 	await sleep(50)
