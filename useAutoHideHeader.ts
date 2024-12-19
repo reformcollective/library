@@ -2,7 +2,6 @@ import { ScrollTrigger, gsap } from "gsap/all"
 import type { RefObject } from "react"
 import { useIsSmooth } from "./Scroll"
 import { useAnimation } from "./useAnimation"
-import { loader } from "./Loader"
 import { usePathname } from "next/navigation"
 
 const isElementInViewport = (element: Element) => {
