@@ -100,8 +100,6 @@ export default function UniversalImage({
 				mode={sanityMode}
 				projectId={projectId}
 				dataset={dataset}
-				// htmlWidth={props.width}
-				// htmlHeight={props.height}
 				queryParams={{
 					q: 90,
 				}}
