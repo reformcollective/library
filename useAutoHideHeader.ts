@@ -70,7 +70,7 @@ export default function useAutoHideHeader(
 					const forceShowHeader =
 						checkElementsByAttribute("data-header-stick") ||
 						scroll === 0 ||
-						window.scrollY === 0
+						window.scrollY <= 5
 					const showHeader = style === "snap" && delta < 0
 					const hideHeader = style === "snap" && delta > 0
 
