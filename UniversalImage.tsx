@@ -37,6 +37,13 @@ export type UniversalImageProps = DefaultImageProps & {
 	loading?: LoadingType
 	width?: number
 	height?: number
+	/**
+	 * if you need to adjust object positioning or crop manually - for example, if you need the crop to be perfectly centered,
+	 * you can use the `contain` to fit the image to the boundaries provided without altering the aspect ratio.
+	 *
+	 * The default is `cover` which will crop the image to match the requested aspect ratio (based on width and height).
+	 */
+	sanityMode?: "contain" | "cover"
 }
 
 // Cleans up the loading props by priority so that defaultEager if present is prioritized, then loading if present, then defaults to lazy if no other conditions are met
@@ -55,6 +62,8 @@ export default function UniversalImage({
 	src,
 	alt = "",
 	objectFit = "cover",
+	objectPosition = "center",
+	sanityMode = "cover",
 	loading,
 	...otherProps
 }: UniversalImageProps) {
@@ -64,7 +73,8 @@ export default function UniversalImage({
 	const prioritizedLoading = prioritizeLoading(loading, defaultEager)
 
 	const props = {
-		objectFit,
+		objectFit: objectFit,
+		objectPosition: objectPosition,
 		alt,
 		loading: prioritizedLoading,
 		...otherProps,
@@ -87,8 +97,7 @@ export default function UniversalImage({
 				// @ts-expect-error library type mismatch
 				crop={src.crop}
 				id={src.asset?._ref}
-				// if we provide width and height, expand the image to fit
-				mode="cover"
+				mode={sanityMode}
 				projectId={projectId}
 				dataset={dataset}
 				queryParams={{
@@ -105,8 +114,8 @@ const defaultStyles = ({
 	objectFit,
 	objectPosition,
 }: {
-	objectFit?: string
-	objectPosition?: string
+	objectFit: string
+	objectPosition: string
 }) => ({
 	display: "block",
 	objectFit,

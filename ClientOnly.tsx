@@ -8,9 +8,9 @@ export default function ClientOnly({
 }: {
 	children: React.ReactNode
 }) {
-	const { initComplete } = use(ScreenContext)
+	const { screenContextReady } = use(ScreenContext)
 
-	if (!initComplete) return null
+	if (!screenContextReady) return null
 
 	return <>{children}</>
 }
@@ -19,9 +19,9 @@ export const useClientOnly = <T, F = undefined>(
 	value: T,
 	fallbackValue?: F,
 ) => {
-	const { initComplete } = use(ScreenContext)
+	const { screenContextReady } = use(ScreenContext)
 
-	if (!initComplete) return fallbackValue
+	if (!screenContextReady) return fallbackValue
 
 	return value
 }

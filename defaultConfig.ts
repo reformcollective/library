@@ -32,7 +32,7 @@ export type Config = {
 export const defaultConfig = {
 	defaultTransition: "instant",
 	scaleFully: false,
-	getTimeNeeded: (startTime: number) => startTime * 2 + 1000,
+	getTimeNeeded: (startTime: number) => startTime + 1000,
 	scrollRestoration: true,
 	saveAnchorNames: true,
 } as const satisfies Partial<Config>

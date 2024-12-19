@@ -128,7 +128,6 @@ export const portableText = ({
 			},
 			{ type: "image", icon: ImageIcon },
 			{ type: "file", icon: DocumentIcon },
-			{ type: "break" },
 			{ type: "youtube" },
 		],
 	})

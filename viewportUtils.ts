@@ -1,5 +1,5 @@
 import config from "libraryConfig"
-import { startTransition, use, useEffect, useRef, useState } from "react"
+import { startTransition, use, useEffect, useState } from "react"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -9,57 +9,8 @@ import {
 	tabletDesignSize,
 } from "styles/media"
 import { isBrowser } from "./deviceDetection"
+import { ScreenContext, useDebouncedEventListener } from "./ScreenContext"
 import { getMedia } from "./useMedia"
-import { ScreenContext } from "./ScreenContext"
-
-/**
- * hook version of adding debounced event listener
- * separate because needs to use ref for persistence
- */
-export const useDebouncedEventListener = <
-	K extends keyof GlobalEventHandlersEventMap,
->(
-	event: K,
-	listener: (ev: GlobalEventHandlersEventMap[K]) => unknown,
-	delay = 500,
-) => {
-	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-	useEffect(() => {
-		const handler = (ev: GlobalEventHandlersEventMap[K]) => {
-			if (timeout.current) clearTimeout(timeout.current)
-			timeout.current = setTimeout(() => {
-				listener(ev)
-			}, delay)
-		}
-
-		window.addEventListener(event, handler)
-		return () => window.removeEventListener(event, handler)
-	}, [delay, event, listener])
-}
-
-/**
- * imperative version of adding debounced event listener
- */
-export const createDebouncedEventListener = <
-	K extends keyof GlobalEventHandlersEventMap,
->(
-	event: K,
-	listener: (ev: GlobalEventHandlersEventMap[K]) => unknown,
-	delay = 500,
-) => {
-	let timeout: ReturnType<typeof setTimeout> | null = null
-
-	const handler = (ev: GlobalEventHandlersEventMap[K]) => {
-		if (timeout) clearTimeout(timeout)
-		timeout = setTimeout(() => {
-			listener(ev)
-		}, delay)
-	}
-
-	window.addEventListener(event, handler)
-	return { cleanup: () => window.removeEventListener(event, handler) }
-}
 
 /**
  * hookify a get function to update on resize
@@ -69,12 +20,12 @@ function useHookify<P, T extends (input: P) => ReturnType<T>>(
 	arg: P,
 ): ReturnType<T> | undefined {
 	const [value, setValue] = useState<ReturnType<T>>()
-	const { initComplete } = use(ScreenContext)
+	const { screenContextReady } = use(ScreenContext)
 
 	useDebouncedEventListener("resize", () => setValue(fn(arg)))
 	useEffect(() => {
-		if (initComplete) startTransition(() => setValue(fn(arg)))
-	}, [fn, arg, initComplete])
+		if (screenContextReady) startTransition(() => setValue(fn(arg)))
+	}, [fn, arg, screenContextReady])
 
 	return value
 }
