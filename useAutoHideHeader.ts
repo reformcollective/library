@@ -2,6 +2,8 @@ import { ScrollTrigger, gsap } from "gsap/all"
 import type { RefObject } from "react"
 import { useIsSmooth } from "./Scroll"
 import { useAnimation } from "./useAnimation"
+import { loader } from "./Loader"
+import { usePathname } from "next/navigation"
 
 const isElementInViewport = (element: Element) => {
 	const rect = element?.getBoundingClientRect()
@@ -43,48 +45,57 @@ export default function useAutoHideHeader(
 	const isSmooth = useIsSmooth()
 	const style = isSmooth ? styleIn : "snap"
 
-	useAnimation(() => {
-		let lastScroll = 0
-		if (!wrapper) return
+	const pathname = usePathname()
 
-		const props = {
-			ease: "power1.out",
-			duration: 0.4,
-		}
+	useAnimation(
+		() => {
+			let lastScroll = 0
+			if (!wrapper) return
 
-		const yTo = gsap.quickTo(wrapper.current, "y", props)
+			const props = {
+				ease: "power1.out",
+				duration: 0.4,
+			}
 
-		ScrollTrigger.create({
-			onUpdate: () => {
-				const scroll = window.lenis?.scroll ?? 0
-				const delta = scroll - lastScroll
-				lastScroll = scroll
-				const height = wrapper.current?.offsetHeight ?? 0
-				if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
+			const yTo = gsap.quickTo(wrapper.current, "y", props)
 
-				const forceHideHeader = checkElementsByAttribute("data-header-hide")
-				const forceShowHeader =
-					checkElementsByAttribute("data-header-stick") ||
-					scroll === 0 ||
-					window.scrollY === 0
-				const showHeader = style === "snap" && delta < 0
-				const hideHeader = style === "snap" && delta > 0
+			ScrollTrigger.create({
+				onUpdate: () => {
+					const scroll = window.lenis?.scroll ?? 0
+					const delta = scroll - lastScroll
+					lastScroll = scroll
+					const height = wrapper.current?.offsetHeight ?? 0
+					if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
 
-				// if forced sticky
-				if (forceShowHeader || (showHeader && !forceHideHeader)) {
-					yTo(0)
-				}
-				// if forced not sticky
-				else if (forceHideHeader || hideHeader) {
-					yTo(-height)
-				}
-				// scrub behavior, if needed
-				else if (style === "scrub") {
-					const currentY = Number(gsap.getProperty(wrapper.current, "y"))
-					const newY = Math.min(0, Math.max(-height, currentY - delta))
-					yTo(newY, newY)
-				}
-			},
-		})
-	}, [wrapper, style])
+					const forceHideHeader = checkElementsByAttribute("data-header-hide")
+					const forceShowHeader =
+						checkElementsByAttribute("data-header-stick") ||
+						scroll === 0 ||
+						window.scrollY === 0
+					const showHeader = style === "snap" && delta < 0
+					const hideHeader = style === "snap" && delta > 0
+
+					// if forced sticky
+					if (forceShowHeader || (showHeader && !forceHideHeader)) {
+						yTo(0)
+					}
+					// if forced not sticky
+					else if (forceHideHeader || hideHeader) {
+						yTo(-height)
+					}
+					// scrub behavior, if needed
+					else if (style === "scrub") {
+						const currentY = Number(gsap.getProperty(wrapper.current, "y"))
+						const newY = Math.min(0, Math.max(-height, currentY - delta))
+						yTo(newY, newY)
+					}
+				},
+			})
+		},
+		[wrapper, style],
+		{
+			// reset to top when pathname changes
+			extraDeps: [pathname],
+		},
+	)
 }
