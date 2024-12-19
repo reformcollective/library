@@ -37,6 +37,13 @@ export type UniversalImageProps = DefaultImageProps & {
 	loading?: LoadingType
 	width?: number
 	height?: number
+	/**
+	 * if you need to adjust object positioning or crop manually - for example, if you need the crop to be perfectly centered,
+	 * you can use the `contain` to fit the image to the boundaries provided without altering the aspect ratio.
+	 *
+	 * The default is `cover` which will crop the image to match the requested aspect ratio (based on width and height).
+	 */
+	sanityMode?: "contain" | "cover"
 }
 
 // Cleans up the loading props by priority so that defaultEager if present is prioritized, then loading if present, then defaults to lazy if no other conditions are met
@@ -55,6 +62,8 @@ export default function UniversalImage({
 	src,
 	alt = "",
 	objectFit = "cover",
+	objectPosition = "center",
+	sanityMode = "cover",
 	loading,
 	...otherProps
 }: UniversalImageProps) {
@@ -64,7 +73,8 @@ export default function UniversalImage({
 	const prioritizedLoading = prioritizeLoading(loading, defaultEager)
 
 	const props = {
-		objectFit,
+		cssObjectFit: objectFit,
+		cssObjectPosition: objectPosition,
 		alt,
 		loading: prioritizedLoading,
 		...otherProps,
@@ -87,10 +97,11 @@ export default function UniversalImage({
 				// @ts-expect-error library type mismatch
 				crop={src.crop}
 				id={src.asset?._ref}
-				// if we provide width and height, expand the image to fit
-				mode="cover"
+				mode={sanityMode}
 				projectId={projectId}
 				dataset={dataset}
+				// htmlWidth={props.width}
+				// htmlHeight={props.height}
 				queryParams={{
 					q: 90,
 				}}
@@ -98,19 +109,27 @@ export default function UniversalImage({
 		)
 	}
 
-	return <DefaultNextImage placeholder="blur" {...props} src={src} />
+	return (
+		<DefaultNextImage
+			placeholder="blur"
+			{...props}
+			src={src}
+			objectFit={objectFit}
+			objectPosition={objectPosition}
+		/>
+	)
 }
 
 const defaultStyles = ({
-	objectFit,
-	objectPosition,
+	cssObjectFit,
+	cssObjectPosition,
 }: {
-	objectFit?: string
-	objectPosition?: string
+	cssObjectFit?: string
+	cssObjectPosition?: string
 }) => ({
 	display: "block",
-	objectFit,
-	objectPosition,
+	objectFit: cssObjectFit,
+	objectPosition: cssObjectPosition,
 	height: "auto",
 	width: "100%",
 })
