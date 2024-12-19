@@ -7,6 +7,8 @@ import { isBrowser } from "./deviceDetection"
 import Lenis from "lenis"
 
 import "lenis/dist/lenis.css"
+import { pathnameMatches } from "./functions"
+import { studioUrl } from "@/sanity/lib/api"
 
 const locks: symbol[] = []
 const locksChange = new TypedEventEmitter<{ change: [] }>()
@@ -135,6 +137,7 @@ export default function Scroll({ children }: { children: ReactNode }) {
 	 */
 	useLayoutEffect(() => {
 		window.lenis?.destroy()
+		if (pathnameMatches(window.location.pathname, studioUrl)) return
 
 		// Initialize a new Lenis instance for smooth scrolling
 		const lenis = new Lenis()
