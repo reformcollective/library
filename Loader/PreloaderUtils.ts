@@ -1,22 +1,24 @@
-import { ScrollSmoother, ScrollTrigger } from "gsap/all"
+import { ScrollTrigger } from "gsap/all"
 import libraryConfig from "libraryConfig"
 
 import { createScrollLock } from "library/Scroll"
 import { isBrowser } from "library/deviceDetection"
-import { useEffect, useRef } from "react"
+import { use, useEffect, useRef } from "react"
 import { loader } from "."
 import { sleep } from "../functions"
 import { allLoaderPromisesSettled } from "./promises"
 import { scrollToAnchor } from "./scrollToAnchor"
+import { ScreenContext } from "library/ScreenContext"
 
 let resolve: () => void
 const pageReady = new Promise<void>((res, rej) => {
 	resolve = res
 })
 export const useTriggerPreloader = async () => {
-	useEffect(() => {
+	const { initComplete } = use(ScreenContext)
+	if (initComplete) {
 		resolve()
-	}, [])
+	}
 }
 
 /**
@@ -34,7 +36,7 @@ const GET_TIME_NEEDED = libraryConfig.getTimeNeeded
  * the animations will play either when the percentage reaches 100% or when
  * the document is ready plus this delay, whichever comes first
  */
-const EXTRA_DELAY = 5000
+const EXTRA_DELAY = 1000
 
 /**
  * the status of the preloader
@@ -99,9 +101,7 @@ async function onComplete(skipScrollTop?: boolean) {
 	 */
 	if (!skipScrollTop) {
 		if (goToTop) {
-			ScrollSmoother.get()?.scrollTop(0)
-			ScrollTrigger.refresh()
-			ScrollSmoother.get()?.scrollTop(0)
+			window.scrollTo(0, 0)
 		}
 	}
 
@@ -134,12 +134,7 @@ async function onComplete(skipScrollTop?: boolean) {
 	await sleep(longestAnimation * 1000 + 10)
 	loaderIsDone = true
 
-	// refreshing immediately can cause ScrollSmoother to jump to top
-	// doing a safe refresh doesn't math correctly
-	// so we do a standard refresh after a short delay
-	requestAnimationFrame(() => {
-		ScrollTrigger.refresh()
-	})
+	ScrollTrigger.refresh()
 	initialScrollLock.release()
 
 	// give refresh time to finish

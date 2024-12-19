@@ -8,6 +8,7 @@
 		"@react-three/drei": "^9",
 		"@react-three/fiber": "rc",
 		"ahooks": "^3",
+		"lenis": "1.1.18",
 		"minisearch": "^7",
 		"restyle": "github:RJWadley/restyle#add-type",
 		"sanity-image": "^0.2.0",

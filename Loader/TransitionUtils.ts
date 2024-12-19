@@ -1,5 +1,5 @@
 import { useDeepCompareEffect, useEventListener } from "ahooks"
-import { ScrollSmoother, ScrollToPlugin, ScrollTrigger, gsap } from "gsap/all"
+import { ScrollToPlugin, ScrollTrigger, gsap } from "gsap/all"
 import { createScrollLock } from "library/Scroll"
 import { linkIsExternal, pathnameMatches, sleep } from "library/functions"
 import type { TransitionNames } from "libraryConfig"
@@ -75,39 +75,21 @@ export const loadPage = async ({
 		navigateTo.startsWith("#") ||
 		pathnameMatches(pathname, window.location.pathname)
 	) {
-		const scrollLock = createScrollLock("unlock")
-
 		// save the anchor to the URL
 		if (libraryConfig.saveAnchorNames)
 			window.history.replaceState({}, "", navigateTo)
 
 		// scroll to anchor if applicable, otherwise scroll to top
-		const scrollTo = (smooth: boolean) => {
-			if (anchorName) {
-				const scrollOffset = getScrollOffset(anchorName)
-				ScrollSmoother.get()?.scrollTo(
-					anchorName,
-					smooth,
-					`top top+=${scrollOffset}`,
-				)
-				loader.dispatchEvent("scroll", anchorName)
-			} else {
-				ScrollSmoother.get()?.scrollTo(0, smooth)
-				loader.dispatchEvent("scroll", null)
-			}
+		if (anchorName) {
+			const scrollOffset = getScrollOffset(anchorName)
+			window.lenis?.scrollTo(anchorName, {
+				offset: scrollOffset,
+			})
+			loader.dispatchEvent("scroll", anchorName)
+		} else {
+			window.lenis?.scrollTo(0)
+			loader.dispatchEvent("scroll", null)
 		}
-
-		scrollTo(true)
-		const smooth = ScrollSmoother.get()?.smooth() ?? 0
-		gsap.delayedCall(smooth, () => {
-			scrollLock.release()
-
-			if (ScrollSmoother.get()?.paused()) {
-				ScrollSmoother.get()?.paused(false)
-				scrollTo(false)
-				ScrollSmoother.get()?.paused(true)
-			}
-		})
 
 		return
 	}
@@ -129,8 +111,7 @@ export const loadPage = async ({
 		if (anchorName) {
 			await scrollToAnchor(anchorName)
 		} else {
-			ScrollSmoother.get()?.scrollTo(0, false)
-			window.scrollTo(0, 1)
+			window.lenis?.scrollTo(0, { immediate: true })
 		}
 
 		scrollLock.release()
@@ -188,8 +169,7 @@ export const loadPage = async ({
 		await scrollToAnchor(anchorName)
 	} else {
 		// if no anchor, scroll to the top of the page
-		window.scrollTo(0, 0)
-		ScrollSmoother.get()?.scrollTo(0, false)
+		window.lenis?.scrollTo(0, { immediate: true })
 	}
 
 	const exitAnimations = allTransitions[transition]?.outAnimation ?? []

@@ -1,4 +1,4 @@
-import { ScrollSmoother, ScrollTrigger, gsap } from "gsap/all"
+import { ScrollTrigger, gsap } from "gsap/all"
 import type { RefObject } from "react"
 import { useIsSmooth } from "./Scroll"
 import { useAnimation } from "./useAnimation"
@@ -56,7 +56,7 @@ export default function useAutoHideHeader(
 
 		ScrollTrigger.create({
 			onUpdate: () => {
-				const scroll = ScrollSmoother.get()?.scrollTop() ?? 0
+				const scroll = window.lenis?.scroll ?? 0
 				const delta = scroll - lastScroll
 				lastScroll = scroll
 				const height = wrapper.current?.offsetHeight ?? 0
