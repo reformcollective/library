@@ -44,7 +44,7 @@ jobs:
         run: pnpm run build
 
       - name: Serve
-        run: pnpm run start & SERVER_PID=$!
+        run: pnpm run serve & SERVER_PID=$!
 
       - name: Run Unlighthouse
         run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report/${{ github.sha }}
