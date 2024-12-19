@@ -357,7 +357,7 @@ export function attrs<Props, usedKeys extends keyof Props>(
 let hashCounter = 0
 
 /**
- * fixes combined nesetd selectors
+ * fixes combined nested selectors
  * otherwise, visually has no effect, but produces smaller CSS files
  */
 export const mergeStyles = (styles: CSSObject) => {

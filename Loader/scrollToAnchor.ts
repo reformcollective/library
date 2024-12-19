@@ -25,14 +25,14 @@ export const scrollToAnchor = async (anchor: string) => {
 	let goodAttemptCount = 0
 	let missingAnchorCount = 0
 
-	const attemptsNeeded = 60
+	const attemptsNeeded = 20
 
 	return new Promise<void>((resolve) => {
 		const check = () => {
 			const anchorEl = document.querySelector(anchor)
 			if (!anchorEl) {
 				missingAnchorCount += 1
-				if (missingAnchorCount > 10) resolve()
+				if (missingAnchorCount > attemptsNeeded) resolve()
 				requestAnimationFrame(check)
 				return
 			}

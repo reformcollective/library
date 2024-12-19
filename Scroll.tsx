@@ -1,17 +1,12 @@
 "use client"
 
 import { ScrollTrigger, gsap } from "gsap/all"
-import { useEffect, useLayoutEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react"
 import TypedEventEmitter from "./TypedEventEmitter"
 import { isBrowser } from "./deviceDetection"
 import Lenis from "lenis"
 
 import "lenis/dist/lenis.css"
-
-interface ScrollProps {
-	children: React.ReactNode
-	className?: string
-}
 
 const locks: symbol[] = []
 const locksChange = new TypedEventEmitter<{ change: [] }>()
@@ -134,7 +129,7 @@ declare global {
 	}
 }
 
-export default function Scroll({ children, className = "" }: ScrollProps) {
+export default function Scroll({ children }: { children: ReactNode }) {
 	/**
 	 * create the smoother
 	 */

@@ -82,8 +82,6 @@ const initialScrollLock = createScrollLock()
 async function onComplete(skipScrollTop?: boolean) {
 	await allLoaderPromisesSettled()
 
-	console.log("complete")
-
 	// only call onComplete one time
 	if (preloaderState !== "loading") return
 

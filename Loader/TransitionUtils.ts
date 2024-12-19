@@ -75,6 +75,8 @@ export const loadPage = async ({
 		navigateTo.startsWith("#") ||
 		pathnameMatches(pathname, window.location.pathname)
 	) {
+		const scrollLock = createScrollLock("unlock")
+
 		// save the anchor to the URL
 		if (libraryConfig.saveAnchorNames)
 			window.history.replaceState({}, "", navigateTo)
@@ -84,10 +86,13 @@ export const loadPage = async ({
 			const scrollOffset = getScrollOffset(anchorName)
 			window.lenis?.scrollTo(anchorName, {
 				offset: scrollOffset,
+				onComplete: scrollLock.release,
 			})
 			loader.dispatchEvent("scroll", anchorName)
 		} else {
-			window.lenis?.scrollTo(0)
+			window.lenis?.scrollTo(0, {
+				onComplete: scrollLock.release,
+			})
 			loader.dispatchEvent("scroll", null)
 		}
 
