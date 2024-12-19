@@ -114,6 +114,7 @@ export default function UniversalImage({
 			placeholder="blur"
 			{...props}
 			src={src}
+			// props used by styles are not passed to the img tag, so pass these separately
 			objectFit={objectFit}
 			objectPosition={objectPosition}
 		/>
