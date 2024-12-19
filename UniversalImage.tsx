@@ -73,8 +73,8 @@ export default function UniversalImage({
 	const prioritizedLoading = prioritizeLoading(loading, defaultEager)
 
 	const props = {
-		cssObjectFit: objectFit,
-		cssObjectPosition: objectPosition,
+		objectFit: objectFit,
+		objectPosition: objectPosition,
 		alt,
 		loading: prioritizedLoading,
 		...otherProps,
@@ -107,28 +107,19 @@ export default function UniversalImage({
 		)
 	}
 
-	return (
-		<DefaultNextImage
-			placeholder="blur"
-			{...props}
-			src={src}
-			// props used by styles are not passed to the img tag, so pass these separately
-			objectFit={objectFit}
-			objectPosition={objectPosition}
-		/>
-	)
+	return <DefaultNextImage placeholder="blur" {...props} src={src} />
 }
 
 const defaultStyles = ({
-	cssObjectFit,
-	cssObjectPosition,
+	objectFit,
+	objectPosition,
 }: {
-	cssObjectFit?: string
-	cssObjectPosition?: string
+	objectFit: string
+	objectPosition: string
 }) => ({
 	display: "block",
-	objectFit: cssObjectFit,
-	objectPosition: cssObjectPosition,
+	objectFit,
+	objectPosition,
 	height: "auto",
 	width: "100%",
 })
