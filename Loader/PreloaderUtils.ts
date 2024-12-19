@@ -82,6 +82,8 @@ const initialScrollLock = createScrollLock()
 async function onComplete(skipScrollTop?: boolean) {
 	await allLoaderPromisesSettled()
 
+	console.log("complete")
+
 	// only call onComplete one time
 	if (preloaderState !== "loading") return
 
@@ -101,7 +103,13 @@ async function onComplete(skipScrollTop?: boolean) {
 	 */
 	if (!skipScrollTop) {
 		if (goToTop) {
-			window.scrollTo(0, 0)
+			const unlock = createScrollLock("unlock")
+			window.lenis?.scrollTo(0, {
+				onComplete: () => {
+					window.lenis?.scrollTo(0, { immediate: true })
+					unlock.release()
+				},
+			})
 		}
 	}
 
@@ -157,7 +165,7 @@ const updatePercent = () => {
 			await allLoaderPromisesSettled() // but not before promises are settled
 			return animations.length === 0 ||
 				animations.every((a) => a.duration === 0)
-				? onComplete(true)
+				? onComplete()
 				: null
 		})
 		.catch(async () => {
