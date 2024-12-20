@@ -152,6 +152,21 @@ export default function Scroll({ children }: { children: ReactNode }) {
 		// Disable lag smoothing in GSAP to prevent any delay in scroll animations
 		gsap.ticker.lagSmoothing(0)
 
+		// refresh on resize
+		let needsRefresh = false
+		const onResize = () => {
+			needsRefresh = true
+		}
+		const check = () => {
+			if (needsRefresh && lenis.velocity === 0) {
+				needsRefresh = false
+				console.log("refreshing")
+				ScrollTrigger.refresh()
+			}
+			requestAnimationFrame(check)
+		}
+		requestAnimationFrame(check)
+
 		/**
 		 * pull state from the scroll locks
 		 */
@@ -169,8 +184,10 @@ export default function Scroll({ children }: { children: ReactNode }) {
 		onChange()
 
 		locksChange.addEventListener("change", onChange)
+		window.addEventListener("resize", onResize)
 		return () => {
 			locksChange.removeEventListener("change", onChange)
+			window.removeEventListener("resize", onResize)
 		}
 	}, [])
 
