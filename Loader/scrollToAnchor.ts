@@ -1,4 +1,4 @@
-import { ScrollSmoother, ScrollTrigger } from "gsap/all"
+import { ScrollTrigger } from "gsap/all"
 import { refreshScrollLocks } from "library/Scroll"
 
 /**
@@ -32,7 +32,7 @@ export const scrollToAnchor = async (anchor: string) => {
 			const anchorEl = document.querySelector(anchor)
 			if (!anchorEl) {
 				missingAnchorCount += 1
-				if (missingAnchorCount > 10) resolve()
+				if (missingAnchorCount > attemptsNeeded) resolve()
 				requestAnimationFrame(check)
 				return
 			}
@@ -40,9 +40,11 @@ export const scrollToAnchor = async (anchor: string) => {
 			const scrollOffset = getScrollOffset(anchor)
 			ScrollTrigger.refresh()
 			// in order to properly scroll to the anchor, we need to unpause the smoother
-			ScrollSmoother.get()?.paused(false)
-			ScrollSmoother.get()?.scrollTo(anchor, false, `top: ${scrollOffset}px`)
-			const newPosition = ScrollSmoother.get()?.scrollTop() ?? 0
+			window.lenis?.scrollTo(anchor, {
+				offset: scrollOffset,
+				immediate: true,
+			})
+			const newPosition = window.scrollY
 
 			// if we moved less than 10 pixels, count it as a good attempt
 			// otherwise reset the counter

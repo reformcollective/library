@@ -109,24 +109,29 @@ const addToObj = ({
 				// media queries are hoisted to the top level
 				if (element.type === MEDIA) return getParentSelectors(element.parent)
 				// i do not know why - but stylis adds a \f character to some selectors
-				const selector = element.value.replaceAll("&\f", "&")
-				// restyle requires the use of ampersand in nested selectors, but stylis does not include it
-				// there are some exceptions to this rule though:
-				const needsNoAmpersand =
-					selector.includes("&") ||
-					selector.startsWith(":") ||
-					selector.startsWith("[")
+				const selectors = element.value.replaceAll("&\f", "&").split(",")
 				// nested selectors are passed as-is
 				const isTopLevel = !element?.parent
+
 				return [
 					...getParentSelectors(element.parent),
-					allowAmpersand
-						? needsNoAmpersand
-							? selector
-							: isTopLevel
-								? `& ${selector}`
+					selectors
+						.map((selector) => {
+							// restyle requires the use of ampersand in nested selectors, but stylis does not include it
+							// there are some exceptions to this rule though:
+							const needsNoAmpersand =
+								selector.includes("&") ||
+								selector.startsWith(":") ||
+								selector.startsWith("[")
+							return allowAmpersand
+								? needsNoAmpersand
+									? selector
+									: isTopLevel
+										? `& ${selector}`
+										: selector
 								: selector
-						: selector,
+						})
+						.join(","),
 				]
 			}
 
@@ -352,22 +357,26 @@ export function attrs<Props, usedKeys extends keyof Props>(
 let hashCounter = 0
 
 /**
- * this visually has no effect, but produces smaller CSS files
+ * fixes combined nested selectors
+ * otherwise, visually has no effect, but produces smaller CSS files
  */
 export const mergeStyles = (styles: CSSObject) => {
 	const output: CSSObject = {}
 
 	for (const [key, value] of Object.entries(styles)) {
-		const existing = output[key.trim()]
-		if (typeof value === "object" && typeof existing === "object") {
-			output[key.trim()] = mergeStyles({
-				...existing,
-				...value,
-			})
-		} else if (typeof value === "object") {
-			output[key.trim()] = mergeStyles(value as CSSObject) // CSSProperties is deprecated and the type is bad
-		} else {
-			output[key.trim()] = value
+		const selectors = key.split(",").map((key) => key.trim())
+		for (const selector of selectors) {
+			const existing = output[selector]
+			if (typeof value === "object" && typeof existing === "object") {
+				output[selector] = mergeStyles({
+					...existing,
+					...value,
+				})
+			} else if (typeof value === "object") {
+				output[selector] = mergeStyles(value as CSSObject) // CSSProperties is deprecated and the type is bad
+			} else {
+				output[selector] = value
+			}
 		}
 	}
 

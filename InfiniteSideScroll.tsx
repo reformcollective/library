@@ -5,7 +5,7 @@ import { Fragment, type ReactNode, useEffect, useRef, useState } from "react"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { css, fresponsive, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
-import { createDebouncedEventListener } from "./viewportUtils"
+import { createDebouncedEventListener } from "./ScreenContext"
 
 gsap.registerPlugin(Observer)
 

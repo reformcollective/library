@@ -1,26 +1,14 @@
 "use client"
 
-import { ScrollSmoother, gsap } from "gsap/all"
-import { useEffect, useState } from "react"
-import { useDeepCompareMemo } from "use-deep-compare"
+import { ScrollTrigger, gsap } from "gsap/all"
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react"
 import TypedEventEmitter from "./TypedEventEmitter"
 import { isBrowser } from "./deviceDetection"
+import Lenis from "lenis"
 
-type IgnoredOptions = "smoothTouch" | "ignoreMobileResize" | "effects"
-
-interface ScrollProps {
-	children: React.ReactNode
-	/**
-	 * by default we save compute on mobile by ignoring resize
-	 * (triggers shouldn't depend on innerHeight anyway)
-	 *
-	 * if you want to enable mobile resize checks, set this to true
-	 * add a class name if you need to style the scroll div
-	 */
-	mobileResize?: boolean
-	className?: string
-	options?: Omit<ScrollSmoother.Vars, IgnoredOptions>
-}
+import "lenis/dist/lenis.css"
+import { pathnameMatches } from "./functions"
+import { studioUrl } from "@/sanity/lib/api"
 
 const locks: symbol[] = []
 const locksChange = new TypedEventEmitter<{ change: [] }>()
@@ -94,7 +82,7 @@ export const usePinType = () => {
 }
 
 /**
- * returns true if ScrollSmoother is enabled
+ * returns true if scroll smoothing is enabled
  */
 export const useIsSmooth = () => {
 	const [smooth, setSmooth] = useState(
@@ -137,108 +125,51 @@ export const useIsSmooth = () => {
 	return smooth
 }
 
-/**
- * searches for and initializes smoother effects any time the component is rendered
- */
-export const useSmootherEffects = () => {
-	useEffect(() => {
-		ScrollSmoother.get()?.effects("[data-speed], [data-lag]", {})
-	})
+declare global {
+	interface Window {
+		lenis?: Lenis
+	}
 }
 
-export default function Scroll({
-	children,
-	mobileResize = false,
-	className = "",
-	options,
-}: ScrollProps) {
-	const isSmooth = useIsSmooth()
-	const [refreshSignal, setRefreshSignal] = useState(0)
-	const stableOptions = useDeepCompareMemo(() => options, [options])
-
+export default function Scroll({ children }: { children: ReactNode }) {
 	/**
 	 * create the smoother
 	 */
-	// biome-ignore lint/correctness/useExhaustiveDependencies: refreshSignal is required to handle specific navigation cases
-	useEffect(() => {
-		const smoother = ScrollSmoother.create({
-			...stableOptions,
-			// initially use a low smooth level to mitigate scroll flash
-			smooth: isSmooth ? 0.01 : 0,
-			smoothTouch: isSmooth ? 0.01 : 0,
-			ignoreMobileResize: !mobileResize,
-			effects: true,
-			onUpdate: (e) => {
-				// if at the top, enable overscroll behavior (pull to refresh)
-				const maxScroll = document.body.scrollHeight - window.innerHeight
-				if (e.scrollTop() === 0 || maxScroll - e.scrollTop() < 100) {
-					document.body.style.overscrollBehaviorY = "auto"
-					document.documentElement.style.overscrollBehaviorY = "auto"
-				} else {
-					document.body.style.overscrollBehaviorY = "none"
-					document.documentElement.style.overscrollBehaviorY = "none"
-				}
-				// always allow sideways overscroll (forward/back usually)
-				document.body.style.overscrollBehaviorX = "auto"
-				document.documentElement.style.overscrollBehaviorX = "auto"
+	useLayoutEffect(() => {
+		window.lenis?.destroy()
+		if (pathnameMatches(window.location.pathname, studioUrl)) return
 
-				stableOptions?.onUpdate?.(e)
-			},
+		// Initialize a new Lenis instance for smooth scrolling
+		const lenis = new Lenis()
+		window.lenis = lenis
+
+		// Synchronize Lenis scrolling with GSAP's ScrollTrigger plugin
+		lenis.on("scroll", ScrollTrigger.update)
+
+		// Add Lenis's requestAnimationFrame (raf) method to GSAP's ticker
+		// This ensures Lenis's smooth scroll animation updates on each GSAP tick
+		gsap.ticker.add((time) => {
+			lenis.raf(time * 1000) // Convert time from seconds to milliseconds
 		})
 
-		// to avoid flashing when smoother across re-renders, set the smooth level after a short delay
-		const smoothLevel =
-			typeof stableOptions?.smooth === "number" ? stableOptions.smooth : 1
-		setTimeout(
-			() => {
-				smoother.smooth(isSmooth ? smoothLevel : 0)
-			},
-			(smoothLevel * 1000) / 2,
-		)
+		// Disable lag smoothing in GSAP to prevent any delay in scroll animations
+		gsap.ticker.lagSmoothing(0)
 
-		return () => {
-			smoother.kill()
-		}
-	}, [isSmooth, mobileResize, refreshSignal])
-
-	/**
-	 * kill the smoother when back/forward buttons are pressed
-	 */
-	useEffect(() => {
-		const killSmoother = () => {
-			;(async () => {
-				const smoother = ScrollSmoother.get()
-				if (smoother) smoother.kill()
-
-				setRefreshSignal((s) => s + 1)
-			})().catch(console.error)
-		}
-
-		window.addEventListener("popstate", killSmoother)
-		return () => {
-			window.removeEventListener("popstate", killSmoother)
-		}
-	}, [])
-
-	/**
-	 * pull state from the scroll locks
-	 */
-	useEffect(() => {
+		/**
+		 * pull state from the scroll locks
+		 */
 		const onChange = () => {
-			const smoother = ScrollSmoother.get()
 			const unlockers = locks.find(
 				(lock) => lock.description === "scroll-unlock",
 			)
 			const lockers = locks.find((lock) => lock.description === "scroll-lock")
 
-			if (unlockers) smoother?.paused(false)
-			else if (lockers) smoother?.paused(true)
-			else smoother?.paused(false)
+			if (unlockers) lenis.start()
+			else if (lockers) lenis.stop()
+			else lenis.start()
 		}
 
-		// we don't want to invoke onChange the first render, as that will
-		// interfere with the initial creation of the smoother
-		gsap.delayedCall(0.1, onChange)
+		onChange()
 
 		locksChange.addEventListener("change", onChange)
 		return () => {
@@ -246,9 +177,5 @@ export default function Scroll({
 		}
 	}, [])
 
-	return (
-		<div className={className} id="smooth-wrapper">
-			<div id="smooth-content">{children}</div>
-		</div>
-	)
+	return <>{children}</>
 }

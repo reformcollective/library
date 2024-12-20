@@ -1,22 +1,24 @@
-import { ScrollSmoother, ScrollTrigger } from "gsap/all"
+import { ScrollTrigger } from "gsap/all"
 import libraryConfig from "libraryConfig"
 
 import { createScrollLock } from "library/Scroll"
 import { isBrowser } from "library/deviceDetection"
-import { useEffect, useRef } from "react"
+import { use, useEffect, useRef } from "react"
 import { loader } from "."
 import { sleep } from "../functions"
 import { allLoaderPromisesSettled } from "./promises"
 import { scrollToAnchor } from "./scrollToAnchor"
+import { ScreenContext } from "library/ScreenContext"
 
 let resolve: () => void
 const pageReady = new Promise<void>((res, rej) => {
 	resolve = res
 })
 export const useTriggerPreloader = async () => {
-	useEffect(() => {
+	const { initComplete } = use(ScreenContext)
+	if (initComplete) {
 		resolve()
-	}, [])
+	}
 }
 
 /**
@@ -34,7 +36,7 @@ const GET_TIME_NEEDED = libraryConfig.getTimeNeeded
  * the animations will play either when the percentage reaches 100% or when
  * the document is ready plus this delay, whichever comes first
  */
-const EXTRA_DELAY = 5000
+const EXTRA_DELAY = 1000
 
 /**
  * the status of the preloader
@@ -72,11 +74,6 @@ const timeNeeded = GET_TIME_NEEDED(startTime)
 let loaderIsDone = false
 export const getLoaderIsDone = () => loaderIsDone
 
-// preserve the scroll position throughout the initial render (page height may change because of pins etc)
-if (isBrowser) document.body.style.minHeight = "9999vh"
-const initialScroll = isBrowser ? window.scrollY : 0
-if (isBrowser) document.body.style.removeProperty("min-height")
-
 const initialScrollLock = createScrollLock()
 
 /**
@@ -95,7 +92,7 @@ async function onComplete(skipScrollTop?: boolean) {
 	// hold at 100 for a beat
 	await sleep(250)
 
-	const isAtTop =
+	const goToTop =
 		window.scrollY < window.innerHeight ||
 		libraryConfig.scrollRestoration === false
 
@@ -103,14 +100,14 @@ async function onComplete(skipScrollTop?: boolean) {
 	 * scroll to top if needed
 	 */
 	if (!skipScrollTop) {
-		if (isAtTop) {
-			ScrollSmoother.get()?.scrollTop(0)
-			ScrollTrigger.refresh()
-			ScrollSmoother.get()?.scrollTop(0)
-		} else {
-			ScrollSmoother.get()?.scrollTop(initialScroll)
-			ScrollTrigger.refresh()
-			ScrollSmoother.get()?.scrollTop(initialScroll)
+		if (goToTop) {
+			const unlock = createScrollLock("unlock")
+			window.lenis?.scrollTo(0, {
+				onComplete: () => {
+					window.lenis?.scrollTo(0, { immediate: true })
+					unlock.release()
+				},
+			})
 		}
 	}
 
@@ -135,22 +132,16 @@ async function onComplete(skipScrollTop?: boolean) {
 		}
 
 		if (animation.only) {
-			if (animation.only === "whenAtTop" && isAtTop) callAnimation()
-			if (animation.only === "whenScrolled" && !isAtTop) callAnimation()
+			if (animation.only === "whenAtTop" && goToTop) callAnimation()
+			if (animation.only === "whenScrolled" && !goToTop) callAnimation()
 		} else callAnimation()
 	}
 
 	await sleep(longestAnimation * 1000 + 10)
 	loaderIsDone = true
 
-	// refreshing immediately can cause ScrollSmoother to jump to top
-	// doing a safe refresh doesn't math correctly
-	// so we do a standard refresh after a short delay
-	requestAnimationFrame(() => {
-		ScrollTrigger.refresh()
-	})
+	ScrollTrigger.refresh()
 	initialScrollLock.release()
-	if (!anchor && !isAtTop) ScrollSmoother.get()?.scrollTop(initialScroll)
 
 	// give refresh time to finish
 	await sleep(50)
@@ -172,7 +163,7 @@ const updatePercent = () => {
 			await allLoaderPromisesSettled() // but not before promises are settled
 			return animations.length === 0 ||
 				animations.every((a) => a.duration === 0)
-				? onComplete(true)
+				? onComplete()
 				: null
 		})
 		.catch(async () => {
