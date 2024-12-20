@@ -57,10 +57,6 @@ export function ScreenProvider({ children }: Props) {
 	const [initializing, startTransition] = useTransition()
 
 	const setScreenContext = useCallback(() => {
-		// if page content overflows, we'll get the wrong innerwidth
-		// so hide it before calculating the media queries
-		document.body.style.maxWidth = "0"
-		document.body.style.overflow = "clip"
 		setM(window.innerWidth <= mobileBreakpoint)
 		setT(
 			window.innerWidth > mobileBreakpoint &&
@@ -73,8 +69,6 @@ export function ScreenProvider({ children }: Props) {
 		setFw(window.innerWidth > desktopBreakpoint)
 		setInnerHeight(window.innerHeight)
 		setInnerWidth(window.innerWidth)
-		document.body.style.removeProperty("max-width")
-		document.body.style.removeProperty("overflow")
 		setNeedsInit(false)
 	}, [])
 
