@@ -154,13 +154,14 @@ export default function Scroll({ children }: { children: ReactNode }) {
 
 		// refresh on resize
 		let needsRefresh = false
+		let isMounted = true
 		const onResize = () => {
 			needsRefresh = true
 		}
 		const check = () => {
+			if (!isMounted) return
 			if (needsRefresh && lenis.velocity === 0) {
 				needsRefresh = false
-				console.log("refreshing")
 				ScrollTrigger.refresh()
 			}
 			requestAnimationFrame(check)
@@ -186,6 +187,7 @@ export default function Scroll({ children }: { children: ReactNode }) {
 		locksChange.addEventListener("change", onChange)
 		window.addEventListener("resize", onResize)
 		return () => {
+			isMounted = false
 			locksChange.removeEventListener("change", onChange)
 			window.removeEventListener("resize", onResize)
 		}
