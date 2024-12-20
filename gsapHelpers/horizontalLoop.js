@@ -160,7 +160,7 @@ export function horizontalLoop(items, config) {
 				populateWidths()
 				deep && populateTimeline()
 				populateOffsets()
-				deep && tl.draggable
+				deep && tl.draggable && config.paused
 					? tl.time(times[curIndex], true)
 					: tl.progress(progress, true)
 			},
@@ -219,6 +219,7 @@ export function horizontalLoop(items, config) {
 				lastSnap,
 				initChangeX,
 				wasPlaying,
+				hasMoved,
 				align = () =>
 					tl.progress(
 						wrap(startProgress + (draggable.startX - draggable.x) * ratio),
@@ -232,6 +233,7 @@ export function horizontalLoop(items, config) {
 				trigger: items[0].parentNode,
 				type: "x",
 				onPressInit() {
+					hasMoved = false
 					let x = this.x
 					gsap.killTweensOf(tl)
 					wasPlaying = !tl.paused()
@@ -242,7 +244,10 @@ export function horizontalLoop(items, config) {
 					initChangeX = startProgress / -ratio - x
 					gsap.set(proxy, { x: startProgress / -ratio })
 				},
-				onDrag: align,
+				onDrag: () => {
+					hasMoved = true
+					align()
+				},
 				onThrowUpdate: align,
 				overshootTolerance: 0,
 				inertia: true,
@@ -263,6 +268,7 @@ export function horizontalLoop(items, config) {
 				onRelease() {
 					syncIndex()
 					draggable.isThrowing && (indexIsDirty = true)
+					if (!hasMoved) wasPlaying && tl.play()
 				},
 				onThrowComplete: () => {
 					syncIndex()

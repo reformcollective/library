@@ -1,9 +1,8 @@
 import { type ContextSafeFunc, useGSAP } from "@gsap/react"
-import gsap, { ScrollTrigger } from "gsap/all"
+import gsap from "gsap/all"
 import type { DependencyList } from "react"
-import { use, useDeferredValue, useEffect, useState } from "react"
-import { createDebouncedEventListener, ScreenContext } from "./ScreenContext"
-import { isBrowser } from "./deviceDetection"
+import { use, useDeferredValue, useState } from "react"
+import { ScreenContext } from "./ScreenContext"
 
 let globalRefresh: ReturnType<typeof setTimeout> | undefined
 
@@ -47,10 +46,6 @@ export const useAnimation = <InputFn extends Creation>(
 		extraDeps?: DependencyList
 	},
 ) => {
-	const [resizeSignal, setResizeSignal] = useState(
-		isBrowser && window.innerWidth,
-	)
-
 	const standardDeps = deps ?? []
 	const extraDeps = options?.extraDeps ?? []
 
@@ -60,34 +55,8 @@ export const useAnimation = <InputFn extends Creation>(
 
 	const [returnValue, setReturnValue] = useState<OutputType>()
 
-	/**
-	 * when the window is resized, we need to re-create animations
-	 * if the width of the window changes by more than 10px
-	 */
-	useEffect(() => {
-		if (options?.recreateOnResize) {
-			const onResize = () => {
-				setResizeSignal((previous) => {
-					const newValue = window.innerWidth
-
-					// if the value has changed
-					// make sure scrolltrigger gets refreshed
-					if (newValue !== previous) {
-						clearTimeout(globalRefresh)
-						globalRefresh = setTimeout(() => {
-							ScrollTrigger.refresh()
-						}, 1)
-					}
-
-					return newValue
-				})
-			}
-			const listener = createDebouncedEventListener("resize", onResize)
-			return () => listener.cleanup()
-		}
-	}, [options?.recreateOnResize])
-
-	const { initComplete } = use(ScreenContext)
+	const { initComplete, innerWidth } = use(ScreenContext)
+	const resizeSignal = Math.round(innerWidth)
 
 	const { context, contextSafe } = useGSAP(
 		(context, contextSafe) => {
