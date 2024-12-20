@@ -137,7 +137,12 @@ export default function Scroll({ children }: { children: ReactNode }) {
 	 */
 	useLayoutEffect(() => {
 		window.lenis?.destroy()
-		if (pathnameMatches(window.location.pathname, studioUrl)) return
+
+		// lenis cannot be initialized on the studio
+		if (pathnameMatches(window.location.pathname, studioUrl)) {
+			if (window.lenis) window.location.reload()
+			return
+		}
 
 		// Initialize a new Lenis instance for smooth scrolling
 		const lenis = new Lenis()
