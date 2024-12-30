@@ -16,10 +16,7 @@ export default function DraftModeToast() {
 	const [pending, startTransition] = useTransition()
 
 	useEffect(() => {
-		if (
-			isPresentationTool === false &&
-			(env === "live" || env === "presentation-window")
-		) {
+		if (isPresentationTool === false && env === "live") {
 			/**
 			 * We delay the toast in case we're inside Presentation Tool
 			 */
