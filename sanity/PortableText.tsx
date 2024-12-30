@@ -139,59 +139,114 @@ export const TypedPortableText = <MarkType extends Input>({
 	)
 }
 
+const DefaultH1 = styled("h1", { fontWeight: "bold", fontSize: "2em" })
+const DefaultH2 = styled("h2", { fontWeight: "bold", fontSize: "1.5em" })
+const DefaultH3 = styled("h3", { fontWeight: "bold", fontSize: "1.25em" })
+const DefaultH4 = styled("h4", { fontWeight: "bold", fontSize: "1em" })
+const DefaultH5 = styled("h5", { fontWeight: "bold", fontSize: "0.875em" })
+const DefaultH6 = styled("h6", { fontWeight: "bold", fontSize: "0.75em" })
+const DefaultBlockQuote = styled("blockquote", {
+	borderLeft: "1px solid currentcolor",
+	marginLeft: 0,
+	padding: "1em 2em",
+	opacity: 0.7,
+})
+
 const defaultBlocks = {
-	h1: styled("h1", { fontWeight: "bold", fontSize: "2em" }),
-	h2: styled("h2", { fontWeight: "bold", fontSize: "1.5em" }),
-	h3: styled("h3", { fontWeight: "bold", fontSize: "1.25em" }),
-	h4: styled("h4", { fontWeight: "bold", fontSize: "1em" }),
-	h5: styled("h5", { fontWeight: "bold", fontSize: "0.875em" }),
-	h6: styled("h6", { fontWeight: "bold", fontSize: "0.75em" }),
-	blockquote: styled("blockquote", {
-		borderLeft: "1px solid currentcolor",
-		marginLeft: 0,
-		padding: "1em 2em",
-		opacity: 0.7,
-	}),
+	h1: ({ children }: { children: ReactNode }) => (
+		<DefaultH1>{children}</DefaultH1>
+	),
+	h2: ({ children }: { children: ReactNode }) => (
+		<DefaultH2>{children}</DefaultH2>
+	),
+	h3: ({ children }: { children: ReactNode }) => (
+		<DefaultH3>{children}</DefaultH3>
+	),
+	h4: ({ children }: { children: ReactNode }) => (
+		<DefaultH4>{children}</DefaultH4>
+	),
+	h5: ({ children }: { children: ReactNode }) => (
+		<DefaultH5>{children}</DefaultH5>
+	),
+	h6: ({ children }: { children: ReactNode }) => (
+		<DefaultH6>{children}</DefaultH6>
+	),
+	blockquote: ({ children }: { children: ReactNode }) => (
+		<DefaultBlockQuote>{children}</DefaultBlockQuote>
+	),
 }
 
+const DefaultBullet = styled("ul", {
+	listStyle: "disc",
+	paddingLeft: "1.5em",
+})
+const DefaultNumber = styled("ol", {
+	listStyle: "decimal",
+	paddingLeft: "1.5em",
+})
+
 const defaultList = {
-	bullet: styled("ul", {
-		listStyle: "disc",
-		paddingLeft: "1.5em",
-	}),
-	number: styled("ol", {
-		listStyle: "decimal",
-		paddingLeft: "1.5em",
-	}),
+	bullet: ({ children }: { children: ReactNode }) => (
+		<DefaultBullet>{children}</DefaultBullet>
+	),
+	number: ({ children }: { children: ReactNode }) => (
+		<DefaultNumber>{children}</DefaultNumber>
+	),
 }
+
+const DefaultStrong = styled("strong", {
+	fontWeight: "bold",
+})
+const DefaultEm = styled("em", {
+	fontStyle: "italic",
+})
+const DefaultCode = styled("code", {
+	fontFamily: "monospace",
+	background: "#333",
+	color: "#fff",
+	padding: "0.2em 0.3em",
+	borderRadius: "0.2em",
+})
+const DefaultUnderline = styled("u", {
+	textDecoration: "underline",
+})
+const DefaultStrikeThrough = styled("s", {
+	textDecoration: "line-through",
+})
+const DefaultSuper = styled("sup", {
+	fontSize: "0.8em",
+	verticalAlign: "super",
+})
+const DefaultSub = styled("sub", {
+	fontSize: "0.8em",
+	verticalAlign: "sub",
+})
+const DefaultLink = styled(UniversalLink, {
+	textDecoration: "underline",
+})
+
 const defaultMarks = {
-	strong: styled("strong", {
-		fontWeight: "bold",
-	}),
-	em: styled("em", {
-		fontStyle: "italic",
-	}),
-	code: styled("code", {
-		fontFamily: "monospace",
-		background: "#333",
-		color: "#fff",
-		padding: "0.2em 0.3em",
-		borderRadius: "0.2em",
-	}),
-	underline: styled("u", {
-		textDecoration: "underline",
-	}),
-	"strike-through": styled("s", {
-		textDecoration: "line-through",
-	}),
-	super: styled("sup", {
-		fontSize: "0.8em",
-		verticalAlign: "super",
-	}),
-	sub: styled("sub", {
-		fontSize: "0.8em",
-		verticalAlign: "sub",
-	}),
+	strong: ({ children }: { children: ReactNode }) => (
+		<DefaultStrong>{children}</DefaultStrong>
+	),
+	em: ({ children }: { children: ReactNode }) => (
+		<DefaultEm>{children}</DefaultEm>
+	),
+	code: ({ children }: { children: ReactNode }) => (
+		<DefaultCode>{children}</DefaultCode>
+	),
+	underline: ({ children }: { children: ReactNode }) => (
+		<DefaultUnderline>{children}</DefaultUnderline>
+	),
+	"strike-through": ({ children }: { children: ReactNode }) => (
+		<DefaultStrikeThrough>{children}</DefaultStrikeThrough>
+	),
+	super: ({ children }: { children: ReactNode }) => (
+		<DefaultSuper>{children}</DefaultSuper>
+	),
+	sub: ({ children }: { children: ReactNode }) => (
+		<DefaultSub>{children}</DefaultSub>
+	),
 	link: ({
 		value,
 		children,
@@ -209,7 +264,3 @@ const defaultMarks = {
 			<>{children} (empty link)</>
 		),
 }
-
-const DefaultLink = styled(UniversalLink, {
-	textDecoration: "underline",
-})

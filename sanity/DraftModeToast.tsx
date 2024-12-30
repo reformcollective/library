@@ -33,8 +33,6 @@ export default function DraftModeToast() {
 				},
 			})
 
-			console.log("toastId", toastId)
-
 			return () => {
 				toast.dismiss(toastId)
 			}
