@@ -1,7 +1,7 @@
 "use client"
 
 import { ScrollTrigger, gsap } from "gsap/all"
-import { useEffect, useLayoutEffect, useState, type ReactNode } from "react"
+import { useEffect, useLayoutEffect, useState } from "react"
 import TypedEventEmitter from "./TypedEventEmitter"
 import { isBrowser } from "./deviceDetection"
 import Lenis from "lenis"
@@ -129,11 +129,11 @@ declare global {
 	}
 }
 
-export default function Scroll({ children }: { children: ReactNode }) {
-	/**
-	 * create the smoother
-	 */
+export const useSmoothScroll = () => {
 	useLayoutEffect(() => {
+		/**
+		 * create the smoother
+		 */
 		window.lenis?.destroy()
 
 		// Initialize a new Lenis instance for smooth scrolling
@@ -192,6 +192,4 @@ export default function Scroll({ children }: { children: ReactNode }) {
 			window.removeEventListener("resize", onResize)
 		}
 	}, [])
-
-	return <>{children}</>
 }

@@ -7,7 +7,7 @@ import {
 } from "@sanity/icons"
 import UniversalImage, { type UniversalImageData } from "library/UniversalImage"
 import { attrs, styled } from "library/styled"
-import { defineField } from "sanity"
+import { defineField, type ImageOptions, type ImageRule } from "sanity"
 
 export const createSectionPreview = (image: UniversalImageData) =>
 	attrs(
@@ -20,20 +20,19 @@ export const createSectionPreview = (image: UniversalImageData) =>
 		{ src: image, alt: "" },
 	)
 
-export const imageWithAlt = ({
-	name,
-	required,
-	title,
-}: {
-	name: string
-	title?: string
-	required?: boolean
-}) =>
+export const imageWithAlt = (
+	// sanity type is complicated here, so just add things as needed
+	schemaField: {
+		name: string
+		title?: string
+		description?: string
+		validation?: (rule: ImageRule) => ImageRule
+		options?: ImageOptions
+	},
+) =>
 	defineField({
+		...schemaField,
 		type: "image",
-		name,
-		title,
-		validation: required ? (rule) => rule.required() : undefined,
 		fields: [
 			defineField({
 				type: "text",
@@ -46,8 +45,10 @@ export const imageWithAlt = ({
 		options: {
 			aiAssist: {
 				imageDescriptionField: "alt",
+				...schemaField.options?.aiAssist,
 			},
 			hotspot: true,
+			...schemaField.options,
 		},
 	})
 
