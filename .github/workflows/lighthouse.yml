@@ -56,4 +56,4 @@ jobs:
           source-dir: ./report/
           umbrella-dir: ${{ github.repository }}
           deploy-repository: reformcollective/lighthouse
-          token: ${{ secrets.LIGHTHOUSE_PAT }}
+          token: ${{ env.LIGHTHOUSE_PAT }}
