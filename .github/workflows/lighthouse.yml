@@ -47,46 +47,13 @@ jobs:
         run: pnpm run serve & SERVER_PID=$!
 
       - name: Run Unlighthouse
-        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report/${{ github.sha }}
+        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report
         continue-on-error: true
 
-      - name: Fix Assets
-        run: awk '{gsub(/href="assets\//, "href=\"./assets/")}1' ./report/${{ github.sha }}/index.html
-
-      - name: Upload Report
-        uses: actions/upload-artifact@v4
+      - name: Deploy preview
+        uses: rossjrw/pr-preview-action@v1
         with:
-          path: "./report"
-          name: lighthouse-report-${{ github.sha }}
-
-  lighthouse_deploy:
-    environment:
-      name: unlighthouse
-      url: ${{ steps.deployment.outputs.page_url }}${{ github.sha }}
-    needs: lighthouse_test
-    if: always()
-    runs-on: ubuntu-latest
-    concurrency:
-      group: deploy-lighthouse-result
-    steps:
-      - name: Download Latest Results
-        uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ secrets.REFORM_PAT }}
-          repository: ${{ github.repository }}
-          pattern: lighthouse-report-*
-          merge-multiple: true
-          path: ./reports
-      - name: Log report count
-        run: |
-          echo "Report count: $(ls -1 ./reports | wc -l)"
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: "./reports"
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          source-dir: ./report/
+          umbrella-dir: ${{ github.repository }}
+          deploy-repository: reformcollective/lighthouse
+          token: ${{ secrets.LIGHTHOUSE_PAT }}
