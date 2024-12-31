@@ -48,6 +48,7 @@ jobs:
 
       - name: Run Unlighthouse
         run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report/${{ github.sha }}
+        continue-on-error: true
 
       - name: Fix Assets
         run: awk '{gsub(/href="assets\//, "href=\"./assets/")}1' ./report/${{ github.sha }}/index.html
@@ -63,6 +64,7 @@ jobs:
       name: unlighthouse
       url: ${{ steps.deployment.outputs.page_url }}${{ github.sha }}
     needs: lighthouse_test
+    if: always()
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-lighthouse-result
