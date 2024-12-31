@@ -139,6 +139,10 @@ export const TypedPortableText = <MarkType extends Input>({
 	)
 }
 
+/**
+ * i've added several default styles, but feel free to add more or configure them
+ */
+
 const DefaultH1 = styled("h1", { fontWeight: "bold", fontSize: "2em" })
 const DefaultH2 = styled("h2", { fontWeight: "bold", fontSize: "1.5em" })
 const DefaultH3 = styled("h3", { fontWeight: "bold", fontSize: "1.25em" })
