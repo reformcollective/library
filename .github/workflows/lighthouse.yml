@@ -19,7 +19,7 @@ concurrency:
 # image fix
 
 jobs:
-  lighthouse_test:
+  lighthouse:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
@@ -39,18 +39,21 @@ jobs:
       - name: Enable corepack
         run: corepack enable
       - name: Install dependencies
+        if: github.event.action != 'closed'
         run: corepack pnpm install
       # END INSTALLATION
 
       - name: Build
+        if: github.event.action != 'closed'
         run: pnpm run build
 
       - name: Serve
+        if: github.event.action != 'closed'
         run: pnpm run serve & SERVER_PID=$!
 
       - name: Run Unlighthouse
-      # https://reformcollective.github.io/lighthouse/reformcollective/reform-next-starter/pr-21/
-        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report 
+        if: github.event.action != 'closed'
+        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
 
       - name: Deploy preview
         id: deployment
