@@ -32,7 +32,6 @@ jobs:
           message: |
             Lighthouse report is generating
           comment-tag: lighthouse
-          github-token: ${{ env.LIGHTHOUSE_PAT }}
 
       # BEGIN INSTALLATION
       - uses: actions/checkout@v4
@@ -77,4 +76,3 @@ jobs:
             Lighthouse report completed!
             [View report](${{ steps.deployment.outputs.deployment-url }})
           comment-tag: lighthouse
-          github-token: ${{ env.LIGHTHOUSE_PAT }}
