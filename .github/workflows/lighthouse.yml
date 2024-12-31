@@ -22,15 +22,18 @@ jobs:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
-      - name: Loading Comment
-        uses: JoseThen/comment-pr@v1.2.0
-        with:
-          comment: Lighthouse report is generating
-          GITHUB_TOKEN: ${{ secrets.LIGHTHOUSE_PAT }}
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
+          
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v3
+        with:
+          message: |
+            Lighthouse report is generating
+          comment-tag: lighthouse
+
       # BEGIN INSTALLATION
       - uses: actions/checkout@v4
         with:
@@ -67,9 +70,10 @@ jobs:
           deploy-repository: reformcollective/lighthouse
           token: ${{ env.LIGHTHOUSE_PAT }}
 
-      - name: Create comment
-        if: always()
-        uses: JoseThen/comment-pr@v1.2.0
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v3
         with:
-          comment: Lighthouse report can be found at ${{ steps.deployment.outputs.deployment-url }}
-          GITHUB_TOKEN: ${{ env.LIGHTHOUSE_PAT }}
+          message: |
+            Lighthouse report completed!
+            [View report](${{ steps.deployment.outputs.deployment-url }})
+          comment-tag: lighthouse
