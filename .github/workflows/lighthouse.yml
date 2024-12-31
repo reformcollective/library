@@ -72,6 +72,7 @@ jobs:
       - name: Download Latest Results
         uses: actions/download-artifact@v4
         with:
+          github-token: ${{ secrets.REFORM_PAT }}
           pattern: lighthouse-report-*
           merge-multiple: true
           path: ./reports
