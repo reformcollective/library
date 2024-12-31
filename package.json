@@ -5,8 +5,6 @@
 	"//": "anything that the supermodule may also install should use the ^major syntax. this is so that pnpm can combine duplicate versions to prevent inflating the bundle. this doesn't apply to dev dependencies (e.g. biome)",
 	"dependencies": {
 		"@gsap/react": "^2",
-		"@react-three/drei": "^9",
-		"@react-three/fiber": "rc",
 		"ahooks": "^3",
 		"lenis": "^1.1.18",
 		"minisearch": "^7",
