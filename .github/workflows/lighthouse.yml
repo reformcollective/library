@@ -27,12 +27,6 @@ jobs:
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
-      - name: Comment PR
-        uses: thollander/actions-comment-pull-request@v3
-        with:
-          message: |
-            Lighthouse report is generating
-          comment-tag: lighthouse
 
       # BEGIN INSTALLATION
       - uses: actions/checkout@v4
@@ -55,27 +49,16 @@ jobs:
         run: pnpm run serve & SERVER_PID=$!
 
       - name: Run Unlighthouse
-        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report
+      # https://reformcollective.github.io/lighthouse/reformcollective/reform-next-starter/pr-21/
+        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report 
 
       - name: Deploy preview
         id: deployment
         # don't skip if unlighthouse fails
         if: always()
-        # ignore if fails
-        continue-on-error: true
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: ./report/
           umbrella-dir: ${{ github.repository }}
           deploy-repository: reformcollective/lighthouse
           token: ${{ env.LIGHTHOUSE_PAT }}
-
-      - name: Comment PR
-        # don't skip if unlighthouse fails
-        if: always()
-        uses: thollander/actions-comment-pull-request@v3
-        with:
-          message: |
-            Lighthouse report completed!
-            [View report](${{ steps.deployment.outputs.deployment-url }})
-          comment-tag: lighthouse
