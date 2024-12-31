@@ -26,7 +26,7 @@ jobs:
         uses: JoseThen/comment-pr@v1.2.0
         with:
           comment: Lighthouse report is generating
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.LIGHTHOUSE_PAT }}
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
@@ -72,4 +72,4 @@ jobs:
         uses: JoseThen/comment-pr@v1.2.0
         with:
           comment: Lighthouse report can be found at ${{ steps.deployment.outputs.deployment-url }}
-          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ env.LIGHTHOUSE_PAT }}
