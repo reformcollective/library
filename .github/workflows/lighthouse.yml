@@ -73,6 +73,9 @@ jobs:
           pattern: lighthouse-report-*
           merge-multiple: true
           path: ./reports
+      - name: Log report count
+        run: |
+          echo "Report count: $(ls -1 ./reports | wc -l)"
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
