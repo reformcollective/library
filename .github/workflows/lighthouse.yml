@@ -48,9 +48,10 @@ jobs:
 
       - name: Run Unlighthouse
         run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report
-        continue-on-error: true
 
       - name: Deploy preview
+        # don't skip if unlighthouse fails
+        if: always()
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: ./report/
