@@ -68,6 +68,7 @@ jobs:
           token: ${{ env.LIGHTHOUSE_PAT }}
             
       - name: Create comment
+        if: always()
         uses: JoseThen/comment-pr@v1.2.0
         with:
           comment: Lighthouse report can be found at ${{ steps.deployment.outputs.deployment-url }}
