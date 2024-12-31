@@ -21,10 +21,12 @@ jobs:
   lighthouse_test:
     timeout-minutes: 15
     runs-on: ubuntu-latest
-    environment:
-      name: unlighthouse
-      url: ${{ steps.deployment.outputs.deployment-url }}
     steps:
+      - name: Loading Comment
+        uses: JoseThen/comment-pr@v1.2.0
+        with:
+          comment: Lighthouse report is generating
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
@@ -64,3 +66,9 @@ jobs:
           umbrella-dir: ${{ github.repository }}
           deploy-repository: reformcollective/lighthouse
           token: ${{ env.LIGHTHOUSE_PAT }}
+            
+      - name: Create comment
+        uses: JoseThen/comment-pr@v1.2.0
+        with:
+          comment: Lighthouse report can be found at ${{ steps.deployment.outputs.deployment-url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
