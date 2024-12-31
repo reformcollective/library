@@ -71,6 +71,8 @@ jobs:
           token: ${{ env.LIGHTHOUSE_PAT }}
 
       - name: Comment PR
+        # don't skip if unlighthouse fails
+        if: always()
         uses: thollander/actions-comment-pull-request@v3
         with:
           message: |
