@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react"
 
 // sanity will run in JSDOM, so check for that to ensure we're not running extra code for schema scripts
-const isJSDOM = window.navigator.userAgent.toLowerCase().includes("jsdom")
-export const isBrowser = typeof window !== "undefined" || !isJSDOM
+const isJSDOM =
+	typeof window !== "undefined" &&
+	window.navigator.userAgent.toLowerCase().includes("jsdom")
+export const isBrowser = typeof window !== "undefined" && !isJSDOM
 
 export const isIOS = () => {
 	if (!isBrowser) return false
