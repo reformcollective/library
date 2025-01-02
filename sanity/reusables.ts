@@ -1,7 +1,6 @@
 import UniversalImage, { type UniversalImageData } from "library/UniversalImage"
 import { attrs, styled } from "library/styled"
-import type { ComponentType, ReactNode } from "react"
-import { defineField, type ImageOptions, type ImageRule } from "sanity"
+import { defineField, type ImageDefinition } from "sanity"
 
 export const createSectionPreview = (image: UniversalImageData) =>
 	attrs(
@@ -14,17 +13,7 @@ export const createSectionPreview = (image: UniversalImageData) =>
 		{ src: image, alt: "" },
 	)
 
-export const imageWithAlt = (
-	// sanity type is complicated here, so just add things as needed
-	schemaField: {
-		name: string
-		title?: string
-		description?: string
-		validation?: (rule: ImageRule) => ImageRule
-		options?: ImageOptions
-		icon?: ReactNode | ComponentType
-	},
-) =>
+export const imageWithAlt = (schemaField: Omit<ImageDefinition, "type">) =>
 	defineField({
 		...schemaField,
 		type: "image",
