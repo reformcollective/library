@@ -1,9 +1,13 @@
 import { client } from "@/sanity/lib/client"
 import { token } from "@/sanity/lib/token"
-import type { ClientPerspective, QueryParams } from "@sanity/client"
 import DraftModeToast from "library/sanity/DraftModeToast"
 import { fetchImageMeta } from "library/sanity/imageMetadata"
-import { defineLive, VisualEditing } from "next-sanity"
+import {
+	defineLive,
+	VisualEditing,
+	type ClientPerspective,
+	type QueryParams,
+} from "next-sanity"
 import { draftMode } from "next/headers"
 import { Toaster } from "sonner"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
