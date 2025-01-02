@@ -10,7 +10,7 @@ export const createSectionPreview = (image: UniversalImageData) =>
 			borderRadius: "0.1875rem",
 			objectFit: "cover !important",
 		}),
-		{ src: image, alt: "" },
+		{ src: image, alt: "", objectFit: "cover" },
 	)
 
 export const imageWithAlt = (schemaField: Omit<ImageDefinition, "type">) =>
