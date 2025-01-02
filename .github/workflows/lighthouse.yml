@@ -9,6 +9,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -18,7 +19,7 @@ concurrency:
 # image fix
 
 jobs:
-  lighthouse_test:
+  lighthouse:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
@@ -26,6 +27,7 @@ jobs:
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
+
       # BEGIN INSTALLATION
       - uses: actions/checkout@v4
         with:
@@ -37,49 +39,29 @@ jobs:
       - name: Enable corepack
         run: corepack enable
       - name: Install dependencies
+        if: github.event.action != 'closed'
         run: corepack pnpm install
       # END INSTALLATION
 
       - name: Build
+        if: github.event.action != 'closed'
         run: pnpm run build
 
       - name: Serve
+        if: github.event.action != 'closed'
         run: pnpm run serve & SERVER_PID=$!
 
       - name: Run Unlighthouse
-        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --build-static --output-path ./report/${{ github.sha }}
+        if: github.event.action != 'closed'
+        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
 
-      - name: Fix Assets
-        run: awk '{gsub(/href="assets\//, "href=\"./assets/")}1' ./report/${{ github.sha }}/index.html
-
-      - name: Upload Report
-        uses: actions/upload-artifact@v4
-        with:
-          path: "./report"
-          name: lighthouse-report-${{ github.sha }}
-
-  lighthouse_deploy:
-    environment:
-      name: unlighthouse
-      url: ${{ steps.deployment.outputs.page_url }}${{ github.sha }}
-    needs: lighthouse_test
-    runs-on: ubuntu-latest
-    concurrency:
-      group: deploy-lighthouse-result
-    steps:
-      - name: Download Latest Results
-        uses: actions/download-artifact@v4
-        with:
-          pattern: lighthouse-report-*
-          merge-multiple: true
-          path: ./reports
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: "./reports"
-      - name: Deploy to GitHub Pages
+      - name: Deploy preview
         id: deployment
-        uses: actions/deploy-pages@v4
+        # don't skip if unlighthouse fails
+        if: always()
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./report/
+          umbrella-dir: ${{ github.repository }}
+          deploy-repository: reformcollective/lighthouse
+          token: ${{ env.LIGHTHOUSE_PAT }}

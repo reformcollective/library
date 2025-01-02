@@ -1,43 +1,47 @@
-import type { PerformanceMonitorApi } from "@react-three/drei"
-import { PerformanceMonitor } from "@react-three/drei"
-import { useThree } from "@react-three/fiber"
-import { isBrowser } from "library/deviceDetection"
-import { useEffect, useState } from "react"
+// I've removed this because of react 19 support
+// by the next time we do three.js, react 19 will probably be supported
+// and you can bring this back
 
-const getDevicePixelRatio = () => {
-	if (!isBrowser) return 1
+// import type { PerformanceMonitorApi } from "@react-three/drei"
+// import { PerformanceMonitor } from "@react-three/drei"
+// import { useThree } from "@react-three/fiber"
+// import { isBrowser } from "library/deviceDetection"
+// import { useEffect, useState } from "react"
 
-	return window.devicePixelRatio
-}
+// const getDevicePixelRatio = () => {
+// 	if (!isBrowser) return 1
 
-export default function AdaptivePixelRatio() {
-	const sendDPRtoThree = useThree((state) => state.setDpr)
-	const [DPR, setDPR] = useState(getDevicePixelRatio())
+// 	return window.devicePixelRatio
+// }
 
-	useEffect(() => {
-		const roundedToNearestTenth = Math.round(DPR * 10) / 10
-		sendDPRtoThree(roundedToNearestTenth)
-	}, [DPR, sendDPRtoThree])
+// export default function AdaptivePixelRatio() {
+// 	const sendDPRtoThree = useThree((state) => state.setDpr)
+// 	const [DPR, setDPR] = useState(getDevicePixelRatio())
 
-	const incline = () => {
-		const maxDPR = getDevicePixelRatio()
+// 	useEffect(() => {
+// 		const roundedToNearestTenth = Math.round(DPR * 10) / 10
+// 		sendDPRtoThree(roundedToNearestTenth)
+// 	}, [DPR, sendDPRtoThree])
 
-		setDPR((previous) => {
-			const newDPR = previous + 0.1
-			return Math.min(newDPR, maxDPR)
-		})
-	}
+// 	const incline = () => {
+// 		const maxDPR = getDevicePixelRatio()
 
-	const decline = (e: PerformanceMonitorApi) => {
-		const minDPR = 0.5
+// 		setDPR((previous) => {
+// 			const newDPR = previous + 0.1
+// 			return Math.min(newDPR, maxDPR)
+// 		})
+// 	}
 
-		const factorToDecrease = 1 - e.factor
+// 	const decline = (e: PerformanceMonitorApi) => {
+// 		const minDPR = 0.5
 
-		setDPR((previous) => {
-			const newDPR = previous - factorToDecrease
-			return Math.max(newDPR, minDPR)
-		})
-	}
+// 		const factorToDecrease = 1 - e.factor
 
-	return <PerformanceMonitor onIncline={incline} onDecline={decline} />
-}
+// 		setDPR((previous) => {
+// 			const newDPR = previous - factorToDecrease
+// 			return Math.max(newDPR, minDPR)
+// 		})
+// 	}
+
+// 	return <PerformanceMonitor onIncline={incline} onDecline={decline} />
+// }

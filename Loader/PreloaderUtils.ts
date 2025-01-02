@@ -1,14 +1,13 @@
 import { ScrollTrigger } from "gsap/all"
-import libraryConfig from "libraryConfig"
-
+import { ScreenContext } from "library/ScreenContext"
 import { createScrollLock } from "library/Scroll"
 import { isBrowser } from "library/deviceDetection"
+import libraryConfig from "libraryConfig"
 import { use, useEffect, useRef } from "react"
 import { loader } from "."
 import { sleep } from "../functions"
 import { allLoaderPromisesSettled } from "./promises"
 import { scrollToAnchor } from "./scrollToAnchor"
-import { ScreenContext } from "library/ScreenContext"
 
 let resolve: () => void
 const pageReady = new Promise<void>((res, rej) => {

@@ -4,8 +4,6 @@ import type { DependencyList } from "react"
 import { use, useDeferredValue, useState } from "react"
 import { ScreenContext } from "./ScreenContext"
 
-let globalRefresh: ReturnType<typeof setTimeout> | undefined
-
 type Creation = (arg: {
 	context: gsap.Context
 	contextSafe: ContextSafeFunc

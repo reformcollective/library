@@ -1,6 +1,6 @@
 import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import { defineQuery } from "next-sanity"
-import { sanityFetch } from "../../../sanity/lib/fetch"
+import { sanityFetch } from "sanity/lib/live"
 
 export type SanityImageData = {
 	asset?: { _ref: string }

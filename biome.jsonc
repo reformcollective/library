@@ -1,8 +1,6 @@
 {
 	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
-	"organizeImports": {
-		"enabled": false
-	},
+	"organizeImports": { "enabled": false },
 	"linter": {
 		"enabled": true,
 		"rules": {
@@ -39,12 +37,7 @@
 		}
 	},
 	"files": {
-		"ignore": [
-			".vscode",
-			"pnpm-lock.yaml",
-			"gsapHelpers",
-			"app/library/gsapHelpers"
-		]
+		"ignore": ["pnpm-lock.yaml", "gsapHelpers", "app/library/gsapHelpers"]
 	},
 	"vcs": {
 		"enabled": true,
