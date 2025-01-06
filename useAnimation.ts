@@ -1,18 +1,18 @@
-import { type ContextSafeFunc, useGSAP } from "@gsap/react"
-import gsap from "gsap/all"
-import type { DependencyList } from "react"
-import { use, useDeferredValue, useState } from "react"
-import { ScreenContext } from "./ScreenContext"
+import { type ContextSafeFunc, useGSAP } from "@gsap/react";
+import gsap from "gsap/all";
+import type { DependencyList } from "react";
+import { use, useDeferredValue, useState } from "react";
+import { ScreenContext } from "./ScreenContext";
 
 type Creation = (arg: {
-	context: gsap.Context
-	contextSafe: ContextSafeFunc
-}) => unknown
+	context: gsap.Context;
+	contextSafe: ContextSafeFunc;
+}) => unknown;
 
-gsap.registerPlugin(useGSAP)
+gsap.registerPlugin(useGSAP);
 gsap.config({
 	nullTargetWarn: false,
-})
+});
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
@@ -38,36 +38,36 @@ export const useAnimation = <InputFn extends Creation>(
 	createAnimations: InputFn,
 	deps?: DependencyList,
 	options?: {
-		scope?: React.RefObject<Element | null>
-		recreateOnResize?: boolean
-		killOnUpdate?: boolean
-		extraDeps?: DependencyList
+		scope?: React.RefObject<Element | null>;
+		recreateOnResize?: boolean;
+		killOnUpdate?: boolean;
+		extraDeps?: DependencyList;
 	},
 ) => {
-	const standardDeps = deps ?? []
-	const extraDeps = options?.extraDeps ?? []
+	const standardDeps = deps ?? [];
+	const extraDeps = options?.extraDeps ?? [];
 
 	type OutputType =
 		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
-		ReturnType<InputFn> extends Function ? undefined : ReturnType<InputFn>
+		ReturnType<InputFn> extends Function ? undefined : ReturnType<InputFn>;
 
-	const [returnValue, setReturnValue] = useState<OutputType>()
+	const [returnValue, setReturnValue] = useState<OutputType>();
 
-	const { initComplete, innerWidth } = use(ScreenContext)
-	const resizeSignal = Math.round(innerWidth)
+	const { initComplete, innerWidth } = use(ScreenContext);
+	const resizeSignal = Math.round(innerWidth);
 
 	const { context, contextSafe } = useGSAP(
 		(context, contextSafe) => {
-			if (!contextSafe) return
-			if (!initComplete) return
+			if (!contextSafe) return;
+			if (!initComplete) return;
 
-			const result = createAnimations({ context, contextSafe })
+			const result = createAnimations({ context, contextSafe });
 
 			if (typeof result === "function") {
-				return result
+				return result;
 			}
 
-			setReturnValue(result as OutputType)
+			setReturnValue(result as OutputType);
 		},
 		{
 			revertOnUpdate: !options?.killOnUpdate,
@@ -79,7 +79,7 @@ export const useAnimation = <InputFn extends Creation>(
 				...extraDeps,
 			],
 		},
-	)
+	);
 
-	return { context, contextSafe, result: returnValue }
-}
+	return { context, contextSafe, result: returnValue };
+};

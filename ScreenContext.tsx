@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
 	createContext,
@@ -7,12 +7,12 @@ import {
 	useRef,
 	useState,
 	useTransition,
-} from "react"
+} from "react";
 import {
 	desktopBreakpoint,
 	mobileBreakpoint,
 	tabletBreakpoint,
-} from "styles/media"
+} from "styles/media";
 
 /**
  * Gives easy access to media queries
@@ -40,42 +40,42 @@ export const ScreenContext = createContext({
 	 * use this for animations, etc. that need to run after hydration has completed
 	 */
 	initComplete: false,
-})
+});
 
 interface Props {
-	children: React.ReactNode
+	children: React.ReactNode;
 }
 
 export function ScreenProvider({ children }: Props) {
-	const [fw, setFw] = useState<boolean>(false)
-	const [d, setD] = useState<boolean>(false)
-	const [t, setT] = useState<boolean>(false)
-	const [m, setM] = useState<boolean>(true)
-	const [innerWidth, setInnerWidth] = useState(0)
-	const [innerHeight, setInnerHeight] = useState(0)
-	const [needsInit, setNeedsInit] = useState(true)
-	const [initializing, startTransition] = useTransition()
+	const [fw, setFw] = useState<boolean>(false);
+	const [d, setD] = useState<boolean>(false);
+	const [t, setT] = useState<boolean>(false);
+	const [m, setM] = useState<boolean>(true);
+	const [innerWidth, setInnerWidth] = useState(0);
+	const [innerHeight, setInnerHeight] = useState(0);
+	const [needsInit, setNeedsInit] = useState(true);
+	const [initializing, startTransition] = useTransition();
 
 	const setScreenContext = useCallback(() => {
-		setM(window.innerWidth <= mobileBreakpoint)
+		setM(window.innerWidth <= mobileBreakpoint);
 		setT(
 			window.innerWidth > mobileBreakpoint &&
 				window.innerWidth <= tabletBreakpoint,
-		)
+		);
 		setD(
 			window.innerWidth > tabletBreakpoint &&
 				window.innerWidth <= desktopBreakpoint,
-		)
-		setFw(window.innerWidth > desktopBreakpoint)
-		setInnerHeight(window.innerHeight)
-		setInnerWidth(window.innerWidth)
-		setNeedsInit(false)
-	}, [])
+		);
+		setFw(window.innerWidth > desktopBreakpoint);
+		setInnerHeight(window.innerHeight);
+		setInnerWidth(window.innerWidth);
+		setNeedsInit(false);
+	}, []);
 
 	useEffect(() => {
-		startTransition(setScreenContext)
-	}, [setScreenContext])
-	useDebouncedEventListener("resize", setScreenContext)
+		startTransition(setScreenContext);
+	}, [setScreenContext]);
+	useDebouncedEventListener("resize", setScreenContext);
 
 	return (
 		<ScreenContext.Provider
@@ -92,7 +92,7 @@ export function ScreenProvider({ children }: Props) {
 		>
 			{children}
 		</ScreenContext.Provider>
-	)
+	);
 }
 
 /**
@@ -106,20 +106,20 @@ export const useDebouncedEventListener = <
 	listener: (ev: GlobalEventHandlersEventMap[K]) => unknown,
 	delay = 500,
 ) => {
-	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	useEffect(() => {
 		const handler = (ev: GlobalEventHandlersEventMap[K]) => {
-			if (timeout.current) clearTimeout(timeout.current)
+			if (timeout.current) clearTimeout(timeout.current);
 			timeout.current = setTimeout(() => {
-				listener(ev)
-			}, delay)
-		}
+				listener(ev);
+			}, delay);
+		};
 
-		window.addEventListener(event, handler)
-		return () => window.removeEventListener(event, handler)
-	}, [delay, event, listener])
-}
+		window.addEventListener(event, handler);
+		return () => window.removeEventListener(event, handler);
+	}, [delay, event, listener]);
+};
 
 /**
  * imperative version of adding debounced event listener
@@ -131,15 +131,15 @@ export const createDebouncedEventListener = <
 	listener: (ev: GlobalEventHandlersEventMap[K]) => unknown,
 	delay = 500,
 ) => {
-	let timeout: ReturnType<typeof setTimeout> | null = null
+	let timeout: ReturnType<typeof setTimeout> | null = null;
 
 	const handler = (ev: GlobalEventHandlersEventMap[K]) => {
-		if (timeout) clearTimeout(timeout)
+		if (timeout) clearTimeout(timeout);
 		timeout = setTimeout(() => {
-			listener(ev)
-		}, delay)
-	}
+			listener(ev);
+		}, delay);
+	};
 
-	window.addEventListener(event, handler)
-	return { cleanup: () => window.removeEventListener(event, handler) }
-}
+	window.addEventListener(event, handler);
+	return { cleanup: () => window.removeEventListener(event, handler) };
+};
