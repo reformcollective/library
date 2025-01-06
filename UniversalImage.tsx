@@ -4,8 +4,9 @@ import { dataset, projectId } from "@/sanity/lib/api"
 import Image, { type StaticImageData } from "next/image"
 import { type ImgHTMLAttributes, createContext, use } from "react"
 import { SanityImage } from "sanity-image"
-import type { SanityImageData } from "./sanity/imageMetadata"
 import { styled } from "./styled"
+import type { AssetMeta } from "./sanity/assetMetadata"
+import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 
 export const eagerContext = createContext(false)
 export const EagerImages = ({ children }: { children: React.ReactNode }) => (
@@ -18,6 +19,13 @@ type DefaultImageProps = Omit<
 	ImgHTMLAttributes<HTMLImageElement>,
 	"src" | "width" | "height" | "loading"
 >
+
+type SanityImageData = {
+	asset?: { _ref: string }
+	crop?: SanityImageCrop
+	hotspot?: SanityImageHotspot
+	data?: AssetMeta
+}
 
 export type UniversalImageData =
 	| SanityImageData

@@ -13,10 +13,12 @@ export const createSectionPreview = (image: UniversalImageData) =>
 		{ src: image, alt: "", objectFit: "cover" },
 	)
 
-export const imageWithAlt = <
+export const universalImage = <
 	AspectType extends "known" | "untouched" | "unknown" | undefined = undefined,
+	WithAlt extends boolean | undefined = undefined,
 >({
 	aspectRatioType,
+	withAlt,
 	...schemaField
 }: Omit<ImageDefinition, "type"> & {
 	/**
@@ -30,6 +32,10 @@ export const imageWithAlt = <
 	 * This is pretty safe, but we lose the ability to control hotspots
 	 */
 	aspectRatioType?: AspectType
+	/**
+	 * if you need to omit the alt text field - sometimes it's not needed
+	 */
+	withAlt?: WithAlt
 }) =>
 	defineField({
 		...schemaField,
@@ -40,7 +46,8 @@ export const imageWithAlt = <
 				name: "alt",
 				title: "Alternative text",
 				rows: 2,
-				validation: (rule) => rule.required(),
+				validation: withAlt === false ? undefined : (rule) => rule.required(),
+				hidden: withAlt === false,
 			}),
 			defineField({
 				type: "string",
@@ -51,6 +58,7 @@ export const imageWithAlt = <
 				hidden: true,
 				readOnly: true,
 			}),
+			...(schemaField.fields ?? []),
 		],
 		options: {
 			aiAssist: {
