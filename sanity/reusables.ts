@@ -1,8 +1,9 @@
-import UniversalImage, { type UniversalImageData } from "library/UniversalImage"
 import { attrs, styled } from "library/styled"
+import type { StaticImageData } from "next/image"
 import { defineField, type ImageDefinition } from "sanity"
+import UniversalImage from "./SanityImage"
 
-export const createSectionPreview = (image: UniversalImageData) =>
+export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
 		styled(UniversalImage, {
 			width: 160,
@@ -14,24 +15,29 @@ export const createSectionPreview = (image: UniversalImageData) =>
 	)
 
 export const universalImage = <
-	AspectType extends "known" | "untouched" | "unknown" | undefined = undefined,
+	CropType extends "css" | "sanity" | "uncropped" | undefined = undefined,
 	WithAlt extends boolean | undefined = undefined,
 >({
-	aspectRatioType,
+	cropType,
 	withAlt,
 	...schemaField
 }: Omit<ImageDefinition, "type"> & {
 	/**
-	 * `known` means we know exactly what the aspect ratio of the image will be
+	 * if we're cropping the image, how will we do it?
 	 *
-	 * `untouched` means we have no idea what the aspect ratio of the image will be
-	 * AND we PINKY PROMISE not to try to crop the image in our CSS
+	 * `css` means we'll crop the image in the CSS.
+	 * this is the safest and easiest, but we don't get hotspots.
+	 * this is the default
 	 *
-	 * `unknown` means we have no idea what the aspect ratio of the image will be
-	 * AND we will be cropping the image in the CSS.
-	 * This is pretty safe, but we lose the ability to control hotspots
+	 * `sanity` means we'll crop the image at build time using sanity's CMS.
+	 * this gets us hotspots and cropping, but we have to specify the aspect ratio in our props.
+	 *
+	 * `uncropped` means we'll not crop the image at all.
+	 * this is ideal for images we won't know the size of, like inline blog images
+	 *
+	 * @default css
 	 */
-	aspectRatioType?: AspectType
+	cropType?: CropType
 	/**
 	 * if you need to omit the alt text field - sometimes it's not needed
 	 */
@@ -51,9 +57,9 @@ export const universalImage = <
 			}),
 			defineField({
 				type: "string",
-				name: "aspectRatioType",
+				name: "cropType",
 				options: {
-					list: [aspectRatioType ?? "unknown"],
+					list: [cropType ?? "css"],
 				},
 				hidden: true,
 				readOnly: true,
@@ -66,7 +72,7 @@ export const universalImage = <
 				...schemaField.options?.aiAssist,
 			},
 			// if we're manually cropping, we don't want hotspots (they will be ignored front-end)
-			hotspot: aspectRatioType && aspectRatioType !== "unknown",
+			hotspot: cropType && cropType !== "css",
 			...schemaField.options,
 		},
 	})
