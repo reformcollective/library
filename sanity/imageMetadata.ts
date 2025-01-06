@@ -1,6 +1,6 @@
 import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import { defineQuery } from "next-sanity"
-import { sanityFetch } from "sanity/lib/live"
+import { sanityFetch } from "../../../sanity/lib/fetch"
 
 export type SanityImageData = {
 	asset?: { _ref: string }
@@ -10,11 +10,19 @@ export type SanityImageData = {
 		lqip?: string
 		blurHash?: string
 		dominantColor?: string
+		originalFilename?: string
+		size?: number
+		extension?: string
+		url?: string
 	}
 }
 
 const imageQuery = defineQuery(`
 	*[_id == $asset && _type == "sanity.imageAsset"][0]
+`)
+
+const fileQuery = defineQuery(`
+	*[_id == $asset && _type == "sanity.fileAsset"][0]	
 `)
 
 export type DeepImageMeta<T> = T extends { asset?: { _ref?: string } }
@@ -41,8 +49,14 @@ export const fetchImageMeta = async <InputType>(
 			"_ref" in input.asset &&
 			typeof input.asset._ref === "string"
 		) {
-			const { data: asset } = await sanityFetch({
+			const imageAsset = await sanityFetch({
 				query: imageQuery,
+				params: {
+					asset: input.asset._ref,
+				},
+			})
+			const fileAsset = await sanityFetch({
+				query: fileQuery,
 				params: {
 					asset: input.asset._ref,
 				},
@@ -51,9 +65,13 @@ export const fetchImageMeta = async <InputType>(
 			return {
 				...input,
 				data: {
-					blurHash: asset?.metadata?.blurHash,
-					lqip: asset?.metadata?.lqip,
-					dominantColor: asset?.metadata?.palette?.dominant?.background,
+					blurHash: imageAsset?.metadata?.blurHash,
+					lqip: imageAsset?.metadata?.lqip,
+					dominantColor: imageAsset?.metadata?.palette?.dominant?.background,
+					originalFilename: fileAsset?.originalFilename,
+					size: fileAsset?.size,
+					extension: fileAsset?.extension,
+					url: fileAsset?.url,
 				} satisfies NonNullable<SanityImageData["data"]>,
 			} as Output
 		}
