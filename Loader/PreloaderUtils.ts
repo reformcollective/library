@@ -35,7 +35,7 @@ const GET_TIME_NEEDED = libraryConfig.getTimeNeeded
  * the animations will play either when the percentage reaches 100% or when
  * the document is ready plus this delay, whichever comes first
  */
-const EXTRA_DELAY = 1000
+const EXTRA_DELAY = libraryConfig.extraLoaderDelay
 
 /**
  * the status of the preloader
