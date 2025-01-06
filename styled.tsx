@@ -407,7 +407,12 @@ export const styled: typeof restyled = (component, styles) => {
  * simple utility for composing styles as a string
  */
 export const css = String.raw
-export { media, GlobalStyles, type CSSObject, type CSSValue } from "restyle"
+export {
+	media as mediaBuilder,
+	GlobalStyles,
+	type CSSObject,
+	type CSSValue,
+} from "restyle"
 export const fresponsive = (style: string, options?: Options) =>
 	convertToResponsive(convertCssToObject(style, hashCounter), {
 		...options,

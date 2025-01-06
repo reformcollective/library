@@ -1,12 +1,12 @@
 import { dataset, projectId } from "@/sanity/lib/api"
 import { css } from "library/styled"
 import { buildSrcSet } from "sanity-image"
-import type { SanityImageData } from "./imageMetadata"
+import type { ImageWithFetchedMeta } from "./imageMetadata"
 
 const baseUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/`
 
 export const sanityImageToBackgroundImage = (
-	image: SanityImageData,
+	image: ImageWithFetchedMeta,
 	/**
 	 * if your image is likely to be displayed larger than the screen,
 	 * you can increase this value to improve the quality
