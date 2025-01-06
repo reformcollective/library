@@ -12,7 +12,7 @@ export const createSectionPreview = (image: StaticImageData) =>
 			objectFit: "cover !important",
 		}),
 		{ src: image, alt: "", objectFit: "cover" },
-	);
+	)
 
 export const universalImage = <
 	CropType extends "css" | "sanity" | "uncropped" | undefined = undefined,
@@ -75,4 +75,4 @@ export const universalImage = <
 			hotspot: cropType && cropType !== "css",
 			...schemaField.options,
 		},
-	});
+	})

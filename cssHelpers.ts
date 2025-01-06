@@ -1,4 +1,4 @@
-import { css } from "./styled";
+import { css } from "./styled"
 
 /**
  * a selector to use when applying styles to auto-filled inputs
@@ -17,7 +17,7 @@ import { css } from "./styled";
 export const inputAutofill = `
   &:autofill,
   &[data-com-onepassword-filled]
-`;
+`
 
 export const svgColor = (color: string) => css`
 	*[fill]:not([fill="none"], .color-ignore) {
@@ -27,4 +27,4 @@ export const svgColor = (color: string) => css`
 	*[stroke]:not([stroke="none"], .color-ignore) {
 		stroke: ${color};
 	}
-`;
+`

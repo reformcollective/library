@@ -3,49 +3,49 @@
  * because github actions doesn't support local reusable workflows in submodules
  */
 
-const { execSync } = require("node:child_process");
-const fs = require("node:fs");
-const path = require("node:path");
+const { execSync } = require("node:child_process")
+const fs = require("node:fs")
+const path = require("node:path")
 
 // Path to the submodule
-const submodulePath = "app/library";
+const submodulePath = "app/library"
 
 // Path to the .github/workflows folder
-const workflowsPath = ".github/workflows";
+const workflowsPath = ".github/workflows"
 
 // Regex to match the submodule reference in workflow files
-const submoduleRegex = /(code-checks|check-updates|lighthouse)\.yml@(.*)/g;
+const submoduleRegex = /(code-checks|check-updates|lighthouse)\.yml@(.*)/g
 
 try {
 	// Get the latest commit hash of the submodule
 	const latestHash = execSync(`git -C ${submodulePath} rev-parse HEAD`)
 		.toString()
-		.trim();
+		.trim()
 
 	// Update all files in the workflows folder
-	const files = fs.readdirSync(workflowsPath);
+	const files = fs.readdirSync(workflowsPath)
 
 	for (const file of files) {
-		const filePath = path.join(workflowsPath, file);
+		const filePath = path.join(workflowsPath, file)
 
 		if (fs.statSync(filePath).isFile() && file.endsWith(".yml")) {
-			const content = fs.readFileSync(filePath, "utf8");
+			const content = fs.readFileSync(filePath, "utf8")
 
 			// Replace the old hash with the new one
 			const updatedContent = content.replace(
 				submoduleRegex,
 				(match, fileName, oldHash) => {
-					return `${fileName}.yml@${latestHash}`;
+					return `${fileName}.yml@${latestHash}`
 				},
-			);
+			)
 
 			// Write back the updated content if it has changed
 			if (content !== updatedContent) {
-				fs.writeFileSync(filePath, updatedContent, "utf8");
+				fs.writeFileSync(filePath, updatedContent, "utf8")
 			}
 		}
 	}
 } catch (error) {
-	console.error("Error updating submodule hash:", error.message);
-	process.exit(1);
+	console.error("Error updating submodule hash:", error.message)
+	process.exit(1)
 }

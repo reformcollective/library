@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import { ScrollTrigger, gsap } from "gsap/all";
-import { useEffect, useLayoutEffect, useState } from "react";
-import TypedEventEmitter from "./TypedEventEmitter";
-import { isBrowser } from "./deviceDetection";
-import Lenis from "lenis";
+import { ScrollTrigger, gsap } from "gsap/all"
+import { useEffect, useLayoutEffect, useState } from "react"
+import TypedEventEmitter from "./TypedEventEmitter"
+import { isBrowser } from "./deviceDetection"
+import Lenis from "lenis"
 
-import "lenis/dist/lenis.css";
+import "lenis/dist/lenis.css"
 
-const locks: symbol[] = [];
-const locksChange = new TypedEventEmitter<{ change: [] }>();
+const locks: symbol[] = []
+const locksChange = new TypedEventEmitter<{ change: [] }>()
 
 export const refreshScrollLocks = () => {
-	locksChange.dispatchEvent("change");
-};
+	locksChange.dispatchEvent("change")
+}
 
 /**
  * lock and unlock the scroller, without interfering with other tools that also lock the scroller
@@ -22,25 +22,25 @@ export const refreshScrollLocks = () => {
  * or force to unlock scrolling (even if locks exist)
  */
 export const createScrollLock = (type: "lock" | "unlock" = "lock") => {
-	const lockId = Symbol(`scroll-${type}`);
+	const lockId = Symbol(`scroll-${type}`)
 
-	locks.push(lockId);
-	locksChange.dispatchEvent("change");
+	locks.push(lockId)
+	locksChange.dispatchEvent("change")
 
 	return {
 		/**
 		 * you can call this multiple times without issue if it's more convenient
 		 */
 		release: () => {
-			const index = locks.indexOf(lockId);
+			const index = locks.indexOf(lockId)
 
 			if (index >= 0) {
-				locks.splice(index, 1);
-				locksChange.dispatchEvent("change");
+				locks.splice(index, 1)
+				locksChange.dispatchEvent("change")
 			}
 		},
-	};
-};
+	}
+}
 
 /**
  * lock and unlock the scroller, without interfering with other tools that also lock the scroller
@@ -56,28 +56,28 @@ export const useScrollLock = (
 	type: "lock" | "unlock" = "lock",
 	value?: boolean,
 ) => {
-	const [locked, setLocked] = useState(false);
-	const shouldLock = value ?? locked;
+	const [locked, setLocked] = useState(false)
+	const shouldLock = value ?? locked
 
 	useEffect(() => {
 		if (shouldLock) {
-			const lock = createScrollLock(type);
+			const lock = createScrollLock(type)
 
-			return () => lock.release();
+			return () => lock.release()
 		}
-	}, [type, shouldLock]);
+	}, [type, shouldLock])
 
-	return [locked, setLocked] as const;
-};
+	return [locked, setLocked] as const
+}
 
 /**
  * shorthand for pins, which selects "fixed" if scroller is off and "transform"
  * if scroller is on
  */
 export const usePinType = () => {
-	const isSmooth = useIsSmooth();
-	return isSmooth ? "transform" : "fixed";
-};
+	const isSmooth = useIsSmooth()
+	return isSmooth ? "transform" : "fixed"
+}
 
 /**
  * returns true if scroll smoothing is enabled
@@ -86,46 +86,46 @@ export const useIsSmooth = () => {
 	const [smooth, setSmooth] = useState(
 		typeof window !== "undefined" &&
 			window.matchMedia("(hover: hover)").matches,
-	);
+	)
 
 	useEffect(() => {
 		const enableSmooth = () => {
-			setSmooth(true);
-		};
+			setSmooth(true)
+		}
 		const disableSmooth = () => {
-			setSmooth(false);
-			gsap.set("#smooth-content", { clearProps: "transform" });
-		};
+			setSmooth(false)
+			gsap.set("#smooth-content", { clearProps: "transform" })
+		}
 
-		window.addEventListener("wheel", enableSmooth, { passive: true });
-		window.addEventListener("touchstart", disableSmooth, { passive: true });
+		window.addEventListener("wheel", enableSmooth, { passive: true })
+		window.addEventListener("touchstart", disableSmooth, { passive: true })
 
 		return () => {
-			window.removeEventListener("wheel", enableSmooth);
-			window.removeEventListener("touchstart", disableSmooth);
-		};
-	}, []);
+			window.removeEventListener("wheel", enableSmooth)
+			window.removeEventListener("touchstart", disableSmooth)
+		}
+	}, [])
 
 	// if the device is mobile, set the initial value to false
 	useEffect(() => {
-		const hover = window.matchMedia("(hover: hover)");
+		const hover = window.matchMedia("(hover: hover)")
 		if (!hover.matches) {
-			setSmooth(false);
+			setSmooth(false)
 		}
-	}, []);
+	}, [])
 
 	// check for url flags
 	if (isBrowser && window.location.search.toLowerCase().includes("nosmooth"))
-		return false;
+		return false
 	if (isBrowser && window.location.search.toLowerCase().includes("forcesmooth"))
-		return true;
+		return true
 
-	return smooth;
-};
+	return smooth
+}
 
 declare global {
 	interface Window {
-		lenis?: Lenis;
+		lenis?: Lenis
 	}
 }
 
@@ -134,39 +134,39 @@ export const useSmoothScroll = () => {
 		/**
 		 * create the smoother
 		 */
-		window.lenis?.destroy();
+		window.lenis?.destroy()
 
 		// Initialize a new Lenis instance for smooth scrolling
-		const lenis = new Lenis();
-		window.lenis = lenis;
+		const lenis = new Lenis()
+		window.lenis = lenis
 
 		// Synchronize Lenis scrolling with GSAP's ScrollTrigger plugin
-		lenis.on("scroll", ScrollTrigger.update);
+		lenis.on("scroll", ScrollTrigger.update)
 
 		// Add Lenis's requestAnimationFrame (raf) method to GSAP's ticker
 		// This ensures Lenis's smooth scroll animation updates on each GSAP tick
 		gsap.ticker.add((time) => {
-			lenis.raf(time * 1000); // Convert time from seconds to milliseconds
-		});
+			lenis.raf(time * 1000) // Convert time from seconds to milliseconds
+		})
 
 		// Disable lag smoothing in GSAP to prevent any delay in scroll animations
-		gsap.ticker.lagSmoothing(0);
+		gsap.ticker.lagSmoothing(0)
 
 		// refresh on resize
-		let needsRefresh = false;
-		let isMounted = true;
+		let needsRefresh = false
+		let isMounted = true
 		const onResize = () => {
-			needsRefresh = true;
-		};
+			needsRefresh = true
+		}
 		const check = () => {
-			if (!isMounted) return;
+			if (!isMounted) return
 			if (needsRefresh && lenis.velocity === 0) {
-				needsRefresh = false;
-				ScrollTrigger.refresh();
+				needsRefresh = false
+				ScrollTrigger.refresh()
 			}
-			requestAnimationFrame(check);
-		};
-		requestAnimationFrame(check);
+			requestAnimationFrame(check)
+		}
+		requestAnimationFrame(check)
 
 		/**
 		 * pull state from the scroll locks
@@ -174,22 +174,22 @@ export const useSmoothScroll = () => {
 		const onChange = () => {
 			const unlockers = locks.find(
 				(lock) => lock.description === "scroll-unlock",
-			);
-			const lockers = locks.find((lock) => lock.description === "scroll-lock");
+			)
+			const lockers = locks.find((lock) => lock.description === "scroll-lock")
 
-			if (unlockers) lenis.start();
-			else if (lockers) lenis.stop();
-			else lenis.start();
-		};
+			if (unlockers) lenis.start()
+			else if (lockers) lenis.stop()
+			else lenis.start()
+		}
 
-		onChange();
+		onChange()
 
-		locksChange.addEventListener("change", onChange);
-		window.addEventListener("resize", onResize);
+		locksChange.addEventListener("change", onChange)
+		window.addEventListener("resize", onResize)
 		return () => {
-			isMounted = false;
-			locksChange.removeEventListener("change", onChange);
-			window.removeEventListener("resize", onResize);
-		};
-	}, []);
-};
+			isMounted = false
+			locksChange.removeEventListener("change", onChange)
+			window.removeEventListener("resize", onResize)
+		}
+	}, [])
+}

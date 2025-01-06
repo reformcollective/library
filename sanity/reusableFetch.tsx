@@ -7,10 +7,10 @@ import {
 	VisualEditing,
 	type ClientPerspective,
 	type QueryParams,
-} from "next-sanity";
-import { draftMode } from "next/headers";
-import { Toaster } from "sonner";
-import LiveWrapper, { handleError } from "./reusableFetchClient";
+} from "next-sanity"
+import { draftMode } from "next/headers"
+import { Toaster } from "sonner"
+import LiveWrapper, { handleError } from "./reusableFetchClient"
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
@@ -23,7 +23,7 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	serverToken: token,
 	// Required for stand-alone live previews, the token is only shared to the browser if it's a valid Next.js Draft Mode session
 	browserToken: token,
-});
+})
 
 /**
  * Used to fetch data in Server Components, it has built in support for handling Draft Mode and perspectives.
@@ -38,11 +38,11 @@ const sanityFetch = async <const QueryString extends string>({
 	stega,
 	tag,
 }: {
-	query: QueryString;
-	params?: QueryParams | Promise<QueryParams>;
-	perspective?: Exclude<ClientPerspective, "raw">;
-	stega?: boolean;
-	tag?: string;
+	query: QueryString
+	params?: QueryParams | Promise<QueryParams>
+	perspective?: Exclude<ClientPerspective, "raw">
+	stega?: boolean
+	tag?: string
 }) => {
 	const { data, sourceMap, tags } = await internalFetch({
 		query,
@@ -50,17 +50,17 @@ const sanityFetch = async <const QueryString extends string>({
 		stega,
 		perspective,
 		tag,
-	});
+	})
 
 	return {
 		data: await fetchAssetMeta(data),
 		sourceMap,
 		tags,
-	};
-};
+	}
+}
 
 export const SanityLive = async () => {
-	const { isEnabled: isDraftMode } = await draftMode();
+	const { isEnabled: isDraftMode } = await draftMode()
 
 	return (
 		<>
@@ -75,7 +75,7 @@ export const SanityLive = async () => {
 				<InternalLive onError={handleError} />
 			</LiveWrapper>
 		</>
-	);
-};
+	)
+}
 
-export { sanityFetch };
+export { sanityFetch }

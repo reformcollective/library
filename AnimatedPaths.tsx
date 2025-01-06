@@ -1,12 +1,12 @@
-import { DrawSVGPlugin, gsap } from "gsap/all";
-import { useState } from "react";
-import { css, styled, unresponsive } from "./styled";
-import { useAnimation } from "./useAnimation";
+import { DrawSVGPlugin, gsap } from "gsap/all"
+import { useState } from "react"
+import { css, styled, unresponsive } from "./styled"
+import { useAnimation } from "./useAnimation"
 
-gsap.registerPlugin(DrawSVGPlugin);
+gsap.registerPlugin(DrawSVGPlugin)
 
 const randomNumber = (min: number, max: number) =>
-	Math.floor(Math.random() * (max - min + 1)) + min;
+	Math.floor(Math.random() * (max - min + 1)) + min
 
 export function AnimatedPaths({
 	children,
@@ -20,32 +20,32 @@ export function AnimatedPaths({
 	/**
 	 * pass in the SVG
 	 */
-	children: React.ReactNode;
+	children: React.ReactNode
 	/**
 	 * style the wrapper, if desired
 	 */
-	className?: string;
+	className?: string
 	/**
 	 * which paths should animate?
 	 * by default, all paths will animate
 	 */
-	selector?: string;
+	selector?: string
 	/**
 	 * if you have issues with the animation pausing improperly,
 	 * for example, if the lines are pinned,
 	 * set this to true
 	 */
-	continuous?: boolean;
+	continuous?: boolean
 	/**
 	 * set the length of the line to draw
 	 * min and max values
 	 */
-	lineLength?: [number, number];
+	lineLength?: [number, number]
 	/**
 	 * set the speed of the line to draw in pixels per second
 	 * min and max values
 	 */
-	lineSpeed?: [number, number];
+	lineSpeed?: [number, number]
 	/**
 	 * if you only want to animate over a certain subset of the paths,
 	 * you can pass the start and end points here
@@ -54,31 +54,31 @@ export function AnimatedPaths({
 	 * starting point, as a percentage of the total path length
 	 * ending point, as a percentage of the total path length
 	 */
-	lineRange?: [number, number];
+	lineRange?: [number, number]
 }) {
-	const [wrapper, setWrapper] = useState<HTMLDivElement | null>(null);
-	const [start, end] = lineRange;
+	const [wrapper, setWrapper] = useState<HTMLDivElement | null>(null)
+	const [start, end] = lineRange
 
 	useAnimation(
 		() => {
-			const getLineLength = () => randomNumber(lineLength[0], lineLength[1]);
-			const getLineSpeed = () => randomNumber(lineSpeed[0], lineSpeed[1]);
+			const getLineLength = () => randomNumber(lineLength[0], lineLength[1])
+			const getLineSpeed = () => randomNumber(lineSpeed[0], lineSpeed[1])
 
 			const drawPath = (target: SVGPathElement) => {
-				const length = DrawSVGPlugin.getLength(target) * (end - start);
-				const startingPoint = DrawSVGPlugin.getLength(target) * start;
-				const size = Math.min(length / 2, getLineLength());
+				const length = DrawSVGPlugin.getLength(target) * (end - start)
+				const startingPoint = DrawSVGPlugin.getLength(target) * start
+				const size = Math.min(length / 2, getLineLength())
 
 				// in pixels per second
-				const speed = getLineSpeed();
-				const totalDuration = length / speed;
+				const speed = getLineSpeed()
+				const totalDuration = length / speed
 
 				// what percentage of the line is the size?
-				const endProportion = size / length;
+				const endProportion = size / length
 
 				const tl = gsap.timeline({
 					repeat: -1,
-				});
+				})
 
 				tl.fromTo(
 					target,
@@ -103,20 +103,20 @@ export function AnimatedPaths({
 						duration: totalDuration * endProportion,
 						drawSVG: `${startingPoint + length} ${startingPoint + length}`,
 						ease: "linear",
-					});
+					})
 
 				// don't repeat more than once per second
 				tl.to(null, {
 					duration: 1,
-				});
+				})
 
-				return tl;
-			};
+				return tl
+			}
 
 			if (wrapper) {
 				const allPaths: SVGPathElement[] = Array.from(
 					wrapper.querySelectorAll(selector),
-				);
+				)
 
 				const tl = gsap.timeline({
 					repeat: -1,
@@ -129,14 +129,14 @@ export function AnimatedPaths({
 							? "play play play play"
 							: "play pause resume pause",
 					},
-				});
+				})
 
 				for (const path of allPaths) {
 					gsap.set(path, {
 						visibility: "visible",
-					});
+					})
 
-					tl.add(drawPath(path), randomNumber(2, 6) / 10);
+					tl.add(drawPath(path), randomNumber(2, 6) / 10)
 				}
 			}
 		},
@@ -154,7 +154,7 @@ export function AnimatedPaths({
 		{
 			recreateOnResize: true,
 		},
-	);
+	)
 
 	return (
 		<Wrapper
@@ -164,7 +164,7 @@ export function AnimatedPaths({
 		>
 			{children}
 		</Wrapper>
-	);
+	)
 }
 
 const Wrapper = styled("div", ({ selector }: { selector: string }) =>
@@ -173,4 +173,4 @@ const Wrapper = styled("div", ({ selector }: { selector: string }) =>
 			visibility: hidden;
 		}
 	`),
-);
+)

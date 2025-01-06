@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { Observer, ScrollTrigger, gsap } from "gsap/all";
-import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
-import { horizontalLoop } from "./gsapHelpers/horizontalLoop";
-import { css, fresponsive, styled } from "./styled";
-import { useAnimation } from "./useAnimation";
-import { createDebouncedEventListener } from "./ScreenContext";
+import { Observer, ScrollTrigger, gsap } from "gsap/all"
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react"
+import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
+import { css, fresponsive, styled } from "./styled"
+import { useAnimation } from "./useAnimation"
+import { createDebouncedEventListener } from "./ScreenContext"
 
-gsap.registerPlugin(Observer);
+gsap.registerPlugin(Observer)
 
 export function InfiniteSideScroll({
 	children,
@@ -19,28 +19,28 @@ export function InfiniteSideScroll({
 	disableDrag = false,
 	scrollVelocity,
 }: {
-	children: React.ReactNode;
-	className?: string;
+	children: React.ReactNode
+	className?: string
 	/**
 	 * if specified, a button will be shown to scroll forward and backward by an item
 	 */
-	ArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode;
+	ArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
 	/**
 	 * if specified, a different button may be used for scrolling backwards (if you'd rather not use an auto-flipped button)
 	 */
-	BackArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode;
+	BackArrowButton?: (props: { onClick?: VoidFunction }) => ReactNode
 	/**
 	 * speed of the marquee. 1 is about 100 pixels per second. 0 or undefined will disable marqueeing
 	 */
-	marqueeSpeed?: number;
+	marqueeSpeed?: number
 	/**
 	 * if true, the marquee will move to the right instead of to the left
 	 */
-	reversed?: boolean;
+	reversed?: boolean
 	/**
 	 * if true, the marquee will not be draggable or scrollable manually (you can still use the buttons, if specified)
 	 */
-	disableDrag?: boolean;
+	disableDrag?: boolean
 	/**
 	 * if specified, will scrub based on vertical scroll velocity
 	 * can also be negative to reverse the direction
@@ -48,21 +48,21 @@ export function InfiniteSideScroll({
 	 * you can also pass a function, which will be called with the velocity and should return the scrub value
 	 * (this is useful if you want to e.g. always scrub forward regardless of scroll direction)
 	 */
-	scrollVelocity?: number | ((velocity: number) => number);
+	scrollVelocity?: number | ((velocity: number) => number)
 }) {
-	const rowRef = useRef<HTMLDivElement>(null);
-	const [numberNeeded, setNumberNeeded] = useState(1);
+	const rowRef = useRef<HTMLDivElement>(null)
+	const [numberNeeded, setNumberNeeded] = useState(1)
 
 	const { result: loop } = useAnimation(
 		() => {
-			if (!rowRef.current) return;
-			const draggable = !disableDrag;
+			if (!rowRef.current) return
+			const draggable = !disableDrag
 
 			// calculate the gap size between instances so that we can pad the marquee when it loops
 			// doing the math properly here is a bit tricky, but gives us lots of flexibility in how we pad our marquee
-			const childCount = rowRef.current.children.length / numberNeeded;
-			const firstLastChild = rowRef.current.children[childCount - 1];
-			const secondFirstChild = rowRef.current.children[childCount];
+			const childCount = rowRef.current.children.length / numberNeeded
+			const firstLastChild = rowRef.current.children[childCount - 1]
+			const secondFirstChild = rowRef.current.children[childCount]
 			const gap =
 				firstLastChild && secondFirstChild
 					? // distance from right edge of first to left edge of second
@@ -70,7 +70,7 @@ export function InfiniteSideScroll({
 							firstLastChild.getBoundingClientRect().right -
 								secondFirstChild.getBoundingClientRect().left,
 						)
-					: 0;
+					: 0
 
 			const loop = horizontalLoop(rowRef.current.children, {
 				draggable,
@@ -81,15 +81,15 @@ export function InfiniteSideScroll({
 				repeat: -1,
 				// padding right should match the calculated gap
 				paddingRight: gap,
-			});
+			})
 
 			// start centered
 			if (marqueeSpeed === 0) {
-				loop.toIndex(0);
-				loop.timeScale(999);
+				loop.toIndex(0)
+				loop.timeScale(999)
 				requestAnimationFrame(() => {
-					loop.timeScale(1);
-				});
+					loop.timeScale(1)
+				})
 			}
 
 			if (scrollVelocity)
@@ -98,37 +98,37 @@ export function InfiniteSideScroll({
 						const delta =
 							typeof scrollVelocity === "function"
 								? scrollVelocity(self.getVelocity())
-								: self.getVelocity() * (scrollVelocity / 1000);
-						loop.scrollBy(delta);
+								: self.getVelocity() * (scrollVelocity / 1000)
+						loop.scrollBy(delta)
 					},
-				});
+				})
 
 			// if we don't support dragging, we can stop here
-			if (!draggable) return loop;
+			if (!draggable) return loop
 
-			let tween: gsap.core.Tween | undefined;
+			let tween: gsap.core.Tween | undefined
 
 			const onWheel = (e: WheelEvent) => {
-				if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
-				if (loop.draggable.isDragging || loop.draggable.isThrowing) return;
+				if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return
+				if (loop.draggable.isDragging || loop.draggable.isThrowing) return
 
-				e.preventDefault();
-				tween?.kill();
-				gsap.killTweensOf(loop);
-				loop.scrollBy(e.deltaX);
-			};
+				e.preventDefault()
+				tween?.kill()
+				gsap.killTweensOf(loop)
+				loop.scrollBy(e.deltaX)
+			}
 
 			/**
 			 * we have to use a regular event listener because the Observer
 			 * can't preventDefault on wheel events (which we need to prevent overscroll in safari)
 			 */
 			gsap.context(() => {
-				const row = rowRef.current;
-				row?.addEventListener("wheel", onWheel);
+				const row = rowRef.current
+				row?.addEventListener("wheel", onWheel)
 				return () => {
-					row?.removeEventListener("wheel", onWheel);
-				};
-			});
+					row?.removeEventListener("wheel", onWheel)
+				}
+			})
 
 			/**
 			 * stop detection is much easier on an Observer than a WheelEvent
@@ -138,21 +138,21 @@ export function InfiniteSideScroll({
 				target: rowRef.current,
 				type: "wheel",
 				onStop: () => {
-					if (marqueeSpeed && !reversed) loop.play();
-					else if (marqueeSpeed && reversed) loop.reverse();
+					if (marqueeSpeed && !reversed) loop.play()
+					else if (marqueeSpeed && reversed) loop.reverse()
 					else
 						tween = loop.toIndex(loop.current(), {
 							ease: "power3.inOut",
 							duration: 1,
-						});
+						})
 				},
-			});
+			})
 
-			return loop;
+			return loop
 		},
 		[marqueeSpeed, reversed, disableDrag, scrollVelocity, numberNeeded],
 		{ recreateOnResize: true },
-	);
+	)
 
 	useEffect(() => {
 		/**
@@ -163,46 +163,46 @@ export function InfiniteSideScroll({
 				const totalChildrenWidth = Array.from(rowRef.current.children).reduce(
 					(total, child) => total + child.clientWidth,
 					0,
-				);
+				)
 
 				setNumberNeeded((oldNumber) => {
-					const widthPerRepeat = totalChildrenWidth / oldNumber;
-					const newNumber = Math.ceil(window.innerWidth / widthPerRepeat) + 1;
+					const widthPerRepeat = totalChildrenWidth / oldNumber
+					const newNumber = Math.ceil(window.innerWidth / widthPerRepeat) + 1
 					return Number.isFinite(newNumber) && newNumber > 0
 						? newNumber
-						: oldNumber;
-				});
+						: oldNumber
+				})
 			}
-		};
+		}
 
-		update();
+		update()
 
 		// update when the marquee children change size
 		const elementsToObserve = Array.from(
 			rowRef.current?.querySelectorAll("*") ?? [],
-		);
-		const observer = new ResizeObserver(update);
+		)
+		const observer = new ResizeObserver(update)
 		for (const element of elementsToObserve) {
-			observer.observe(element);
+			observer.observe(element)
 		}
 
 		// update when the screen size changes
-		const listener = createDebouncedEventListener("resize", update);
+		const listener = createDebouncedEventListener("resize", update)
 
 		return () => {
-			listener.cleanup();
-			observer.disconnect();
-		};
-	}, []);
+			listener.cleanup()
+			observer.disconnect()
+		}
+	}, [])
 
 	/**
 	 * some logic to determine which buttons to show, and if we need to flip the back button
 	 */
-	const hasButtons = Boolean(ArrowButton || BackArrowButton);
-	const hasTwoButtons = Boolean(ArrowButton && BackArrowButton);
-	const BackButton = BackArrowButton || ArrowButton;
-	const ForwardButton = ArrowButton || BackArrowButton;
-	const ButtonWrapper = hasTwoButtons ? TwoButtons : OneButton;
+	const hasButtons = Boolean(ArrowButton || BackArrowButton)
+	const hasTwoButtons = Boolean(ArrowButton && BackArrowButton)
+	const BackButton = BackArrowButton || ArrowButton
+	const ForwardButton = ArrowButton || BackArrowButton
+	const ButtonWrapper = hasTwoButtons ? TwoButtons : OneButton
 
 	return (
 		<Wrapper className={className}>
@@ -237,7 +237,7 @@ export function InfiniteSideScroll({
 				</ButtonWrapper>
 			)}
 		</Wrapper>
-	);
+	)
 }
 
 const Wrapper = styled(
@@ -246,7 +246,7 @@ const Wrapper = styled(
 		display: grid;
 		position: relative;
 	`),
-);
+)
 
 const Row = styled(
 	"div",
@@ -259,14 +259,14 @@ const Row = styled(
 			flex-shrink: 0;
 		}
 	`),
-);
+)
 
 const TwoButtons = styled(
 	"div",
 	fresponsive(css`
 		display: flex;
 	`),
-);
+)
 
 const OneButton = styled(
 	TwoButtons,
@@ -275,4 +275,4 @@ const OneButton = styled(
 			scale: -1 1;
 		}
 	`),
-);
+)

@@ -1,12 +1,12 @@
-import UniversalLink from "library/Loader/UniversalLink";
-import { styled } from "library/styled";
+import UniversalLink from "library/Loader/UniversalLink"
+import { styled } from "library/styled"
 import {
 	PortableText,
 	type ListNestMode,
 	type MissingComponentHandler,
 	type PortableTextComponents,
-} from "next-sanity";
-import type { ReactNode } from "react";
+} from "next-sanity"
+import type { ReactNode } from "react"
 
 type PossibleMarks =
 	| "strong"
@@ -15,71 +15,69 @@ type PossibleMarks =
 	| "underline"
 	| "strike-through"
 	| "super"
-	| "sub";
+	| "sub"
 
 type Input = {
-	_type: string;
-	style?: string;
-	list?: string;
-	listItem?: string;
+	_type: string
+	style?: string
+	list?: string
+	listItem?: string
 	markDefs?: Array<{
-		_type: string;
-	}>;
-};
+		_type: string
+	}>
+}
 
 type UnionToIntersection<U> = (
-	U extends unknown
-		? (x: U) => void
-		: never
+	U extends unknown ? (x: U) => void : never
 ) extends (x: infer I) => void
 	? I
-	: never;
+	: never
 
-type Component = ({ children }: { children: ReactNode }) => ReactNode;
+type Component = ({ children }: { children: ReactNode }) => ReactNode
 type ValueComponent<ValueType = never> = ({
 	children,
 	value,
 }: {
-	children: ReactNode;
-	value: ValueType;
-}) => ReactNode;
+	children: ReactNode
+	value: ValueType
+}) => ReactNode
 
 type GetMarkDefinition<Item extends Input> = Item extends unknown
 	? Item["_type"] extends "block"
 		? {
 				block?: NonNullable<Item["style"]> extends string
 					? {
-							[style in NonNullable<Item["style"]>]: Component;
+							[style in NonNullable<Item["style"]>]: Component
 						}
-					: undefined;
+					: undefined
 				list?: NonNullable<Item["listItem"]> extends string
 					? {
-							[listItem in NonNullable<Item["listItem"]>]: Component;
+							[listItem in NonNullable<Item["listItem"]>]: Component
 						}
-					: undefined;
+					: undefined
 				listItem?: NonNullable<Item["listItem"]> extends string
 					? {
-							[listItem in NonNullable<Item["listItem"]>]: Component;
+							[listItem in NonNullable<Item["listItem"]>]: Component
 						}
-					: undefined;
+					: undefined
 				marks?: {
-					[mark in PossibleMarks]?: Component;
+					[mark in PossibleMarks]?: Component
 				} & {
 					[customMark in NonNullable<
 						Item["markDefs"]
-					>[number] as customMark["_type"]]?: ValueComponent<customMark>;
-				};
+					>[number] as customMark["_type"]]?: ValueComponent<customMark>
+				}
 			}
 		: {
 				types: {
 					[itemType in Exclude<Item["_type"], "block">]: ValueComponent<
 						Item & { _type: itemType }
-					>;
-				};
+					>
+				}
 			}
-	: never;
+	: never
 
-type GetComponents<T extends Input> = UnionToIntersection<GetMarkDefinition<T>>;
+type GetComponents<T extends Input> = UnionToIntersection<GetMarkDefinition<T>>
 
 export const TypedPortableText = <MarkType extends Input>({
 	value,
@@ -90,11 +88,11 @@ export const TypedPortableText = <MarkType extends Input>({
 	/**
 	 * One or more blocks to render
 	 */
-	value: MarkType | MarkType[] | null | undefined;
+	value: MarkType | MarkType[] | null | undefined
 	/**
 	 * React components to use for rendering
 	 */
-	components?: NoInfer<GetComponents<MarkType>>;
+	components?: NoInfer<GetComponents<MarkType>>
 	/**
 	 * Function to call when encountering unknown unknown types, eg blocks, marks,
 	 * block style, list styles without an associated React component.
@@ -102,18 +100,18 @@ export const TypedPortableText = <MarkType extends Input>({
 	 * Will print a warning message to the console by default.
 	 * Pass `false` to disable.
 	 */
-	onMissingComponent?: MissingComponentHandler | false;
+	onMissingComponent?: MissingComponentHandler | false
 	/**
 	 * Determines whether or not lists are nested inside of list items (`html`)
 	 * or as a direct child of another list (`direct` - for React Native)
 	 *
 	 * You rarely (if ever) need/want to customize this
 	 */
-	listNestingMode?: ListNestMode;
+	listNestingMode?: ListNestMode
 }) => {
-	if (!value) return null;
+	if (!value) return null
 
-	const cast = (components ?? {}) as Partial<PortableTextComponents>;
+	const cast = (components ?? {}) as Partial<PortableTextComponents>
 
 	return (
 		<PortableText
@@ -138,25 +136,25 @@ export const TypedPortableText = <MarkType extends Input>({
 			listNestingMode={listNestingMode}
 			onMissingComponent={onMissingComponent}
 		/>
-	);
-};
+	)
+}
 
 /**
  * i've added several default styles, but feel free to add more or configure them
  */
 
-const DefaultH1 = styled("h1", { fontWeight: "bold", fontSize: "2em" });
-const DefaultH2 = styled("h2", { fontWeight: "bold", fontSize: "1.5em" });
-const DefaultH3 = styled("h3", { fontWeight: "bold", fontSize: "1.25em" });
-const DefaultH4 = styled("h4", { fontWeight: "bold", fontSize: "1em" });
-const DefaultH5 = styled("h5", { fontWeight: "bold", fontSize: "0.875em" });
-const DefaultH6 = styled("h6", { fontWeight: "bold", fontSize: "0.75em" });
+const DefaultH1 = styled("h1", { fontWeight: "bold", fontSize: "2em" })
+const DefaultH2 = styled("h2", { fontWeight: "bold", fontSize: "1.5em" })
+const DefaultH3 = styled("h3", { fontWeight: "bold", fontSize: "1.25em" })
+const DefaultH4 = styled("h4", { fontWeight: "bold", fontSize: "1em" })
+const DefaultH5 = styled("h5", { fontWeight: "bold", fontSize: "0.875em" })
+const DefaultH6 = styled("h6", { fontWeight: "bold", fontSize: "0.75em" })
 const DefaultBlockQuote = styled("blockquote", {
 	borderLeft: "1px solid currentcolor",
 	marginLeft: 0,
 	padding: "1em 2em",
 	opacity: 0.7,
-});
+})
 
 const defaultBlocks = {
 	h1: ({ children }: { children: ReactNode }) => (
@@ -180,16 +178,16 @@ const defaultBlocks = {
 	blockquote: ({ children }: { children: ReactNode }) => (
 		<DefaultBlockQuote>{children}</DefaultBlockQuote>
 	),
-};
+}
 
 const DefaultBullet = styled("ul", {
 	listStyle: "disc",
 	paddingLeft: "1.5em",
-});
+})
 const DefaultNumber = styled("ol", {
 	listStyle: "decimal",
 	paddingLeft: "1.5em",
-});
+})
 
 const defaultList = {
 	bullet: ({ children }: { children: ReactNode }) => (
@@ -198,38 +196,38 @@ const defaultList = {
 	number: ({ children }: { children: ReactNode }) => (
 		<DefaultNumber>{children}</DefaultNumber>
 	),
-};
+}
 
 const DefaultStrong = styled("strong", {
 	fontWeight: "bold",
-});
+})
 const DefaultEm = styled("em", {
 	fontStyle: "italic",
-});
+})
 const DefaultCode = styled("code", {
 	fontFamily: "monospace",
 	background: "#333",
 	color: "#fff",
 	padding: "0.2em 0.3em",
 	borderRadius: "0.2em",
-});
+})
 const DefaultUnderline = styled("u", {
 	textDecoration: "underline",
-});
+})
 const DefaultStrikeThrough = styled("s", {
 	textDecoration: "line-through",
-});
+})
 const DefaultSuper = styled("sup", {
 	fontSize: "0.8em",
 	verticalAlign: "super",
-});
+})
 const DefaultSub = styled("sub", {
 	fontSize: "0.8em",
 	verticalAlign: "sub",
-});
+})
 const DefaultLink = styled(UniversalLink, {
 	textDecoration: "underline",
-});
+})
 
 const defaultMarks = {
 	strong: ({ children }: { children: ReactNode }) => (
@@ -258,15 +256,15 @@ const defaultMarks = {
 		children,
 	}: {
 		value: {
-			href?: string;
-			_type: "link";
-			_key: string;
-		};
-		children: ReactNode;
+			href?: string
+			_type: "link"
+			_key: string
+		}
+		children: ReactNode
 	}) =>
 		value.href ? (
 			<DefaultLink href={value.href}>{children}</DefaultLink>
 		) : (
 			<>{children} (empty link)</>
 		),
-};
+}

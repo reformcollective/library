@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import { use } from "react";
-import { ScreenContext } from "./ScreenContext";
+import { use } from "react"
+import { ScreenContext } from "./ScreenContext"
 
 export default function ClientOnly({
 	children,
 }: {
-	children: React.ReactNode;
+	children: React.ReactNode
 }) {
-	const { screenContextReady } = use(ScreenContext);
+	const { screenContextReady } = use(ScreenContext)
 
-	if (!screenContextReady) return null;
+	if (!screenContextReady) return null
 
-	return <>{children}</>;
+	return <>{children}</>
 }
 
 export const useClientOnly = <T, F = undefined>(
 	value: T,
 	fallbackValue?: F,
 ) => {
-	const { screenContextReady } = use(ScreenContext);
+	const { screenContextReady } = use(ScreenContext)
 
-	if (!screenContextReady) return fallbackValue;
+	if (!screenContextReady) return fallbackValue
 
-	return value;
-};
+	return value
+}

@@ -1,4 +1,4 @@
-import { Flip, gsap } from "gsap/all";
+import { Flip, gsap } from "gsap/all"
 import {
 	type ComponentProps,
 	type ReactNode,
@@ -6,37 +6,37 @@ import {
 	use,
 	useEffect,
 	useState,
-} from "react";
-import { useDeepCompareMemo } from "use-deep-compare";
-import { usePinType } from "./Scroll";
-import createSmoothPin from "./smoothPin";
-import { useAnimation } from "./useAnimation";
-import { useBreakpoint } from "./viewportUtils";
+} from "react"
+import { useDeepCompareMemo } from "use-deep-compare"
+import { usePinType } from "./Scroll"
+import createSmoothPin from "./smoothPin"
+import { useAnimation } from "./useAnimation"
+import { useBreakpoint } from "./viewportUtils"
 
-gsap.registerPlugin(Flip);
+gsap.registerPlugin(Flip)
 
 const Context = createContext<{
-	fromEl: HTMLDivElement | null;
-	toEl: HTMLDivElement | null;
-	setFromEl: (el: HTMLDivElement | null) => void;
-	setToEl: (el: HTMLDivElement | null) => void;
+	fromEl: HTMLDivElement | null
+	toEl: HTMLDivElement | null
+	setFromEl: (el: HTMLDivElement | null) => void
+	setToEl: (el: HTMLDivElement | null) => void
 }>({
 	fromEl: null,
 	toEl: null,
 	setFromEl: () => {
-		throw new Error("You must wrap the entire section with ZoomPinProvider");
+		throw new Error("You must wrap the entire section with ZoomPinProvider")
 	},
 	setToEl: () => {
-		throw new Error("You must wrap the entire section with ZoomPinProvider");
+		throw new Error("You must wrap the entire section with ZoomPinProvider")
 	},
-});
+})
 
 const useSize = (el?: HTMLDivElement | null) => {
-	const [width, setWidth] = useState(el?.offsetWidth);
-	const [height, setHeight] = useState(el?.offsetHeight);
+	const [width, setWidth] = useState(el?.offsetWidth)
+	const [height, setHeight] = useState(el?.offsetHeight)
 
 	useEffect(() => {
-		if (!el) return;
+		if (!el) return
 
 		const observer = new ResizeObserver(() => {
 			// sometimes applying a pin can change the size by a very small amount
@@ -48,7 +48,7 @@ const useSize = (el?: HTMLDivElement | null) => {
 				Math.abs((p ?? 0) - el.clientWidth) > 1
 					? el.clientWidth
 					: p,
-			);
+			)
 			setHeight((p) =>
 				// apply if undefined
 				p === undefined ||
@@ -56,67 +56,67 @@ const useSize = (el?: HTMLDivElement | null) => {
 				Math.abs((p ?? 0) - el.clientHeight) > 1
 					? el.clientHeight
 					: p,
-			);
-		});
+			)
+		})
 
-		observer.observe(el);
+		observer.observe(el)
 
-		return () => observer.disconnect();
-	}, [el]);
+		return () => observer.disconnect()
+	}, [el])
 
-	return { width, height };
-};
+	return { width, height }
+}
 
 export const ZoomPinProvider = ({
 	children,
 	dependencies = [],
 	options,
 }: {
-	children: ReactNode;
+	children: ReactNode
 	/**
 	 * if you need to recreate the animation
 	 * these work like useEffect dependencies
 	 */
-	dependencies?: unknown[];
+	dependencies?: unknown[]
 	/**
 	 * options for the flip animation and its scrolltrigger
 	 */
-	options?: Flip.FitVars;
+	options?: Flip.FitVars
 }) => {
-	const [fromEl, setFromEl] = useState<HTMLDivElement | null>(null);
-	const [toEl, setToEl] = useState<HTMLDivElement | null>(null);
-	const fromSize = useSize(fromEl);
-	const toSize = useSize(toEl);
-	const pinType = usePinType();
+	const [fromEl, setFromEl] = useState<HTMLDivElement | null>(null)
+	const [toEl, setToEl] = useState<HTMLDivElement | null>(null)
+	const fromSize = useSize(fromEl)
+	const toSize = useSize(toEl)
+	const pinType = usePinType()
 	// to prevent pin errors, recreate the pin on breakpoint changes
-	const breakpoint = useBreakpoint();
-	const stableOptions = useDeepCompareMemo(() => options, [options]);
+	const breakpoint = useBreakpoint()
+	const stableOptions = useDeepCompareMemo(() => options, [options])
 
 	useAnimation(
 		() => {
-			if (!fromEl || !toEl) return;
+			if (!fromEl || !toEl) return
 			gsap.set([fromEl, toEl], {
 				clearProps: "transform",
 				willChange: "transform",
-			});
+			})
 
 			/**
 			 * capture the end state of the animation (where we want fromEl to end at)
 			 */
 			const topDiff =
-				fromEl.getBoundingClientRect().top - toEl.getBoundingClientRect().top;
-			const heightDiff = (fromSize.height ?? 0) - (toSize.height ?? 0);
+				fromEl.getBoundingClientRect().top - toEl.getBoundingClientRect().top
+			const heightDiff = (fromSize.height ?? 0) - (toSize.height ?? 0)
 			gsap.set(toEl, {
 				y: topDiff + heightDiff / 2,
-			});
-			const state = Flip.getState(toEl);
+			})
+			const state = Flip.getState(toEl)
 
 			/**
 			 * fit fromEl onto toEl and animate to the end state
 			 */
 			Flip.fit(toEl, fromEl, {
 				scale: true,
-			});
+			})
 			Flip.fit(toEl, state, {
 				scale: true,
 				duration: 1,
@@ -129,7 +129,7 @@ export const ZoomPinProvider = ({
 					scrub: true,
 					...(stableOptions?.scrollTrigger ?? {}),
 				},
-			});
+			})
 
 			/**
 			 * and pin toEl for the needed duration
@@ -144,14 +144,14 @@ export const ZoomPinProvider = ({
 				pin: toEl.parentElement,
 				pinSpacing: false,
 				smoothLevel: Math.min(200, Math.abs(heightDiff) / 4),
-			});
+			})
 		},
 		[fromEl, toEl, pinType, fromSize.height, toSize.height, stableOptions],
 		{
 			recreateOnResize: true,
 			extraDeps: [breakpoint, fromSize.width, toSize.width, ...dependencies],
 		},
-	);
+	)
 
 	return (
 		<Context.Provider
@@ -164,12 +164,12 @@ export const ZoomPinProvider = ({
 		>
 			{children}
 		</Context.Provider>
-	);
-};
+	)
+}
 
 export const ZoomPinFrom = (props: ComponentProps<"div">) => {
-	const { toEl, setFromEl } = use(Context);
-	const { width, height } = useSize(toEl);
+	const { toEl, setFromEl } = use(Context)
+	const { width, height } = useSize(toEl)
 
 	return (
 		<div
@@ -179,14 +179,14 @@ export const ZoomPinFrom = (props: ComponentProps<"div">) => {
 				aspectRatio: `${width}/${height}`,
 			}}
 		/>
-	);
-};
+	)
+}
 
 export const ZoomPinTo = ({
 	children,
 	...props
 }: ComponentProps<"div"> & { children: ReactNode }) => {
-	const { setToEl } = use(Context);
+	const { setToEl } = use(Context)
 
 	return (
 		// extra wrapper to shield against unmount errors
@@ -195,5 +195,5 @@ export const ZoomPinTo = ({
 				<div ref={setToEl}>{children}</div>
 			</div>
 		</div>
-	);
-};
+	)
+}

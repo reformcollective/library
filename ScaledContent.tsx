@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { css, fresponsive, styled } from "./styled";
+import { useEffect, useRef } from "react"
+import { css, fresponsive, styled } from "./styled"
 
 /**
  * scales it's content to a certain size while maintaining
@@ -11,37 +11,37 @@ export default function ScaledContent({
 	scale,
 	children,
 }: {
-	scale: number | null | undefined;
-	children: React.ReactNode;
+	scale: number | null | undefined
+	children: React.ReactNode
 }) {
-	const outer = useRef<HTMLDivElement | null>(null);
-	const inner = useRef<HTMLDivElement | null>(null);
+	const outer = useRef<HTMLDivElement | null>(null)
+	const inner = useRef<HTMLDivElement | null>(null)
 
 	useEffect(() => {
-		if (!outer.current || !inner.current) return;
+		if (!outer.current || !inner.current) return
 		const update = () => {
-			if (!outer.current || !inner.current) return;
-			const { width, height } = inner.current.getBoundingClientRect();
-			outer.current.style.width = `${width}px`;
-			outer.current.style.height = `${height}px`;
-		};
+			if (!outer.current || !inner.current) return
+			const { width, height } = inner.current.getBoundingClientRect()
+			outer.current.style.width = `${width}px`
+			outer.current.style.height = `${height}px`
+		}
 
-		update();
+		update()
 
 		// use a resize observer to update the size of the outer div
 		// when the inner div changes size
-		const observer = new ResizeObserver(update);
-		observer.observe(inner.current);
+		const observer = new ResizeObserver(update)
+		observer.observe(inner.current)
 
 		// and as the page loads, we may need to update the size
 		// easier to just do it on an interval
-		const interval = setInterval(update, 1000);
+		const interval = setInterval(update, 1000)
 
 		return () => {
-			observer.disconnect();
-			clearInterval(interval);
-		};
-	}, []);
+			observer.disconnect()
+			clearInterval(interval)
+		}
+	}, [])
 
 	return (
 		<Outer ref={outer}>
@@ -49,7 +49,7 @@ export default function ScaledContent({
 				{children}
 			</Inner>
 		</Outer>
-	);
+	)
 }
 
 const Outer = styled(
@@ -58,11 +58,11 @@ const Outer = styled(
 		display: grid;
 		place-items: start;
 	`),
-);
+)
 
 const Inner = styled("div", ({ scale }: { scale: number }) =>
 	fresponsive(css`
 		transform-origin: top left;
 		scale: ${scale};
 	`),
-);
+)

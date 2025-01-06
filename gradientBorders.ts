@@ -1,4 +1,4 @@
-import { css } from "./styled";
+import { css } from "./styled"
 
 /**
  * generates CSS for a gradient border with a transparent background
@@ -25,15 +25,14 @@ export const generateGradientBorder = (
 		linear-gradient(#fff 0 0);
 	mask-composite: xor;
 	mask-composite: exclude;
-`;
+`
 
 /**
  * generates a gradient border and puts it in a pseudo element before the element
  */
 const gradientBorderPseudo =
 	(type: string) =>
-	(gradient: string, borderSize = 1) =>
-		css`
+	(gradient: string, borderSize = 1) => css`
 		position: relative;
 		isolation: isolate;
 
@@ -45,7 +44,7 @@ const gradientBorderPseudo =
 			border-radius: inherit;
 			${generateGradientBorder(gradient, borderSize)}
 		}
-	`;
+	`
 
-export const gradientBorderBefore = gradientBorderPseudo("before");
-export const gradientBorderAfter = gradientBorderPseudo("after");
+export const gradientBorderBefore = gradientBorderPseudo("before")
+export const gradientBorderAfter = gradientBorderPseudo("after")

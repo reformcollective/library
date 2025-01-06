@@ -42,4 +42,4 @@ export const eases = {
 		inOut: "cubic-bezier(0.445, 0.05, 0.55, 0.95)",
 		out: "cubic-bezier(0.39, 0.575, 0.565, 1)",
 	},
-} as const;
+} as const

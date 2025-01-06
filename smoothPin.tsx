@@ -1,4 +1,4 @@
-import { ScrollTrigger, gsap } from "gsap/all";
+import { ScrollTrigger, gsap } from "gsap/all"
 
 /**
  * creates a ScrollTrigger with a smoothly animated pin effect
@@ -15,44 +15,44 @@ export default function createSmoothPin({
 	/**
 	 * you must specify a pin type! usePinType is a good way to do this
 	 */
-	pinType: "fixed" | "transform";
+	pinType: "fixed" | "transform"
 	/**
 	 * trigger must be an element, and may not be a selector
 	 */
-	trigger: Element | null | undefined;
+	trigger: Element | null | undefined
 	/**
 	 * where should the smooth effect be applied?
 	 * at the start of the pin, the end, or both?
 	 */
-	smoothType?: "in" | "out" | "both";
+	smoothType?: "in" | "out" | "both"
 	/**
 	 * how long, in pixels scrolled, should the smooth effect last?
 	 */
-	smoothLevel?: number;
+	smoothLevel?: number
 	/**
 	 * pin: true is implied, although if you want to pin something other than the trigger, you can specify it here
 	 */
-	pin?: Element | null | undefined;
+	pin?: Element | null | undefined
 }) {
-	const tweens: gsap.core.Tween[] = [];
+	const tweens: gsap.core.Tween[] = []
 	const trigger = ScrollTrigger.create({
 		pin: true,
 		...options,
 		onRefresh: (...props) => {
 			for (const trigger of tweens) {
-				trigger.scrollTrigger?.refresh();
+				trigger.scrollTrigger?.refresh()
 			}
-			options.onRefresh?.(...props);
+			options.onRefresh?.(...props)
 		},
-	});
+	})
 
-	if (options.pinType === "fixed") return trigger;
-	if (goopLevel === 0) return trigger;
+	if (options.pinType === "fixed") return trigger
+	if (goopLevel === 0) return trigger
 
 	// the dom element may not exist yet, so we need to wait for it to be created
 	gsap.delayedCall(0, () => {
 		const goop =
-			options.pin?.parentElement ?? options.trigger?.parentElement ?? null;
+			options.pin?.parentElement ?? options.trigger?.parentElement ?? null
 
 		/**
 		 * goop at start
@@ -91,7 +91,7 @@ export default function createSmoothPin({
 						},
 					},
 				),
-			);
+			)
 		}
 
 		/**
@@ -131,9 +131,9 @@ export default function createSmoothPin({
 						},
 					},
 				),
-			);
+			)
 		}
-	});
+	})
 
-	return trigger;
+	return trigger
 }
