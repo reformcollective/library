@@ -49,13 +49,13 @@ export const fetchImageMeta = async <InputType>(
 			"_ref" in input.asset &&
 			typeof input.asset._ref === "string"
 		) {
-			const imageAsset = await sanityFetch({
+			const { data: imageAsset } = await sanityFetch({
 				query: imageQuery,
 				params: {
 					asset: input.asset._ref,
 				},
 			})
-			const fileAsset = await sanityFetch({
+			const { data: fileAsset } = await sanityFetch({
 				query: fileQuery,
 				params: {
 					asset: input.asset._ref,
