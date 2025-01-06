@@ -16,6 +16,10 @@ export type Config = {
 	 */
 	getTimeNeeded: (startTime: number) => number
 	/**
+	 * extra delay to add to preloader
+	 */
+	extraLoaderDelay: number
+	/**
 	 * the default transition to use if none is specified
 	 */
 	defaultTransition: Transitions
@@ -35,4 +39,5 @@ export const defaultConfig = {
 	getTimeNeeded: (startTime: number) => startTime + 1000,
 	scrollRestoration: true,
 	saveAnchorNames: true,
+	extraLoaderDelay: 0,
 } as const satisfies Partial<Config>
