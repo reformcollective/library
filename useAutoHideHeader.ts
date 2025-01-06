@@ -1,31 +1,31 @@
-import { ScrollTrigger, gsap } from "gsap/all"
-import type { RefObject } from "react"
-import { useIsSmooth } from "./Scroll"
-import { useAnimation } from "./useAnimation"
-import { usePathname } from "next/navigation"
+import { ScrollTrigger, gsap } from "gsap/all";
+import type { RefObject } from "react";
+import { useIsSmooth } from "./Scroll";
+import { useAnimation } from "./useAnimation";
+import { usePathname } from "next/navigation";
 
 const isElementInViewport = (element: Element) => {
-	const rect = element?.getBoundingClientRect()
+	const rect = element?.getBoundingClientRect();
 	return (
 		rect &&
 		rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
 		rect.bottom >= 0
-	)
-}
+	);
+};
 
 /**
  * check if any elements with the given attribute are in the viewport
  * @param attribute the attribute to check for
  */
 const checkElementsByAttribute = (attribute: string) => {
-	const elements = document.querySelectorAll(`[${attribute}]`)
+	const elements = document.querySelectorAll(`[${attribute}]`);
 	for (const element of elements) {
 		if (isElementInViewport(element)) {
-			return true
+			return true;
 		}
 	}
-	return false
-}
+	return false;
+};
 
 /**
  * A custom hook that controls header visibility based on scroll position and specified elements.
@@ -41,60 +41,60 @@ export default function useAutoHideHeader(
 	styleIn: "scrub" | "snap" = "scrub",
 ) {
 	// scrub style only really works if we're using a smoother
-	const isSmooth = useIsSmooth()
-	const style = isSmooth ? styleIn : "snap"
+	const isSmooth = useIsSmooth();
+	const style = isSmooth ? styleIn : "snap";
 
-	const pathname = usePathname()
+	const pathname = usePathname();
 
 	useAnimation(
 		() => {
-			let lastScroll = 0
-			if (!wrapper) return
+			let lastScroll = 0;
+			if (!wrapper) return;
 
 			const props = {
 				ease: "power1.out",
 				duration: 0.4,
-			}
+			};
 
-			const yTo = gsap.quickTo(wrapper.current, "y", props)
+			const yTo = gsap.quickTo(wrapper.current, "y", props);
 
 			ScrollTrigger.create({
 				onUpdate: () => {
-					const scroll = window.lenis?.scroll ?? 0
-					const delta = scroll - lastScroll
-					lastScroll = scroll
-					const height = wrapper.current?.offsetHeight ?? 0
-					if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
+					const scroll = window.lenis?.scroll ?? 0;
+					const delta = scroll - lastScroll;
+					lastScroll = scroll;
+					const height = wrapper.current?.offsetHeight ?? 0;
+					if (delta > 100 || delta < -100) return; // short circuit on large scrolls, since those are probably page transitions
 
-					const forceHideHeader = checkElementsByAttribute("data-header-hide")
+					const forceHideHeader = checkElementsByAttribute("data-header-hide");
 					const forceShowHeader =
 						checkElementsByAttribute("data-header-stick") ||
 						scroll === 0 ||
-						window.scrollY <= 5
-					const showHeader = style === "snap" && delta < 0
-					const hideHeader = style === "snap" && delta > 0
+						window.scrollY <= 5;
+					const showHeader = style === "snap" && delta < 0;
+					const hideHeader = style === "snap" && delta > 0;
 
 					// if forced sticky
 					if (forceShowHeader || (showHeader && !forceHideHeader)) {
-						yTo(0)
+						yTo(0);
 					}
 					// if forced not sticky
 					else if (forceHideHeader || hideHeader) {
-						yTo(-height)
+						yTo(-height);
 					}
 					// scrub behavior, if needed
 					else if (style === "scrub") {
-						const currentY = Number(gsap.getProperty(wrapper.current, "y"))
-						const newY = Math.min(0, Math.max(-height, currentY - delta))
-						yTo(newY, newY)
+						const currentY = Number(gsap.getProperty(wrapper.current, "y"));
+						const newY = Math.min(0, Math.max(-height, currentY - delta));
+						yTo(newY, newY);
 					}
 				},
-			})
+			});
 		},
 		[wrapper, style],
 		{
 			// reset to top when pathname changes
 			extraDeps: [pathname],
 		},
-	)
+	);
 }

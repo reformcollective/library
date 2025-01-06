@@ -1,6 +1,8 @@
-import UniversalImage, { type UniversalImageData } from "library/UniversalImage"
-import { attrs, styled } from "library/styled"
-import { defineField, type ImageDefinition } from "sanity"
+import UniversalImage, {
+	type UniversalImageData,
+} from "library/UniversalImage";
+import { attrs, styled } from "library/styled";
+import { defineField, type ImageDefinition } from "sanity";
 
 export const createSectionPreview = (image: UniversalImageData) =>
 	attrs(
@@ -11,7 +13,7 @@ export const createSectionPreview = (image: UniversalImageData) =>
 			objectFit: "cover !important",
 		}),
 		{ src: image, alt: "", objectFit: "cover" },
-	)
+	);
 
 export const imageWithAlt = (schemaField: Omit<ImageDefinition, "type">) =>
 	defineField({
@@ -34,4 +36,4 @@ export const imageWithAlt = (schemaField: Omit<ImageDefinition, "type">) =>
 			hotspot: true,
 			...schemaField.options,
 		},
-	})
+	});

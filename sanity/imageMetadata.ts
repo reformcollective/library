@@ -1,35 +1,35 @@
-import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
-import { defineQuery } from "next-sanity"
-import { sanityFetch } from "sanity/lib/live"
+import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types";
+import { defineQuery } from "next-sanity";
+import { sanityFetch } from "sanity/lib/live";
 
 export type SanityImageData = {
-	asset?: { _ref: string }
-	hotspot?: SanityImageHotspot
-	crop?: SanityImageCrop
+	asset?: { _ref: string };
+	hotspot?: SanityImageHotspot;
+	crop?: SanityImageCrop;
 	data?: {
-		lqip?: string
-		blurHash?: string
-		dominantColor?: string
-	}
-}
+		lqip?: string;
+		blurHash?: string;
+		dominantColor?: string;
+	};
+};
 
 const imageQuery = defineQuery(`
 	*[_id == $asset && _type == "sanity.imageAsset"][0]
-`)
+`);
 
 export type DeepImageMeta<T> = T extends { asset?: { _ref?: string } }
 	? T & { data?: SanityImageData["data"] }
 	: T extends object
 		? { [K in keyof T]: DeepImageMeta<T[K]> }
-		: T
+		: T;
 
 export const fetchImageMeta = async <InputType>(
 	input: InputType,
 ): Promise<DeepImageMeta<InputType>> => {
-	type Output = DeepImageMeta<InputType>
+	type Output = DeepImageMeta<InputType>;
 
 	if (Array.isArray(input)) {
-		return (await Promise.all(input.map((i) => fetchImageMeta(i)))) as Output
+		return (await Promise.all(input.map((i) => fetchImageMeta(i)))) as Output;
 	}
 
 	if (typeof input === "object" && input !== null) {
@@ -46,7 +46,7 @@ export const fetchImageMeta = async <InputType>(
 				params: {
 					asset: input.asset._ref,
 				},
-			})
+			});
 
 			return {
 				...input,
@@ -55,7 +55,7 @@ export const fetchImageMeta = async <InputType>(
 					lqip: asset?.metadata?.lqip,
 					dominantColor: asset?.metadata?.palette?.dominant?.background,
 				} satisfies NonNullable<SanityImageData["data"]>,
-			} as Output
+			} as Output;
 		}
 
 		return Object.fromEntries(
@@ -64,8 +64,8 @@ export const fetchImageMeta = async <InputType>(
 					async ([key, value]) => [key, await fetchImageMeta(value)] as const,
 				),
 			),
-		) as Output
+		) as Output;
 	}
 
-	return input as Output
-}
+	return input as Output;
+};

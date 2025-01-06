@@ -1,69 +1,69 @@
-"use client"
+"use client";
 
-import libraryConfig from "libraryConfig"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import type { CSSProperties, MouseEventHandler } from "react"
-import type { Transitions } from "."
-import { linkIsInternal } from "../functions"
-import { loadPage } from "./TransitionUtils"
+import libraryConfig from "libraryConfig";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { CSSProperties, MouseEventHandler } from "react";
+import type { Transitions } from ".";
+import { linkIsInternal } from "../functions";
+import { loadPage } from "./TransitionUtils";
 
 interface BaseLinkProps {
 	/**
 	 * should the link open in a new tab?
 	 */
-	openInNewTab?: boolean
-	children: React.ReactNode
-	className?: string
-	onMouseEnter?: MouseEventHandler
-	onMouseLeave?: MouseEventHandler
-	ariaLabel?: string
-	anchor?: string
-	"aria-disabled"?: boolean
-	style?: CSSProperties
+	openInNewTab?: boolean;
+	children: React.ReactNode;
+	className?: string;
+	onMouseEnter?: MouseEventHandler;
+	onMouseLeave?: MouseEventHandler;
+	ariaLabel?: string;
+	anchor?: string;
+	"aria-disabled"?: boolean;
+	style?: CSSProperties;
 }
 
 interface ButtonProps extends BaseLinkProps {
 	/**
 	 * what should happen when the button is clicked?
 	 */
-	onClick?: MouseEventHandler
+	onClick?: MouseEventHandler;
 	/**
 	 * what type of button is this?
 	 */
-	type: "submit" | "button" | "reset"
+	type: "submit" | "button" | "reset";
 	/**
 	 * forward a ref to the button
 	 */
-	ref?: React.RefObject<HTMLButtonElement | null>
+	ref?: React.RefObject<HTMLButtonElement | null>;
 	/**
 	 * Do you want to scroll to a specific location after the transition?
 	 */
-	anchor?: string
+	anchor?: string;
 
-	href?: undefined
-	transition?: undefined
+	href?: undefined;
+	transition?: undefined;
 }
 
 interface AnchorProps extends BaseLinkProps {
 	/**
 	 * where should the link navigate to?
 	 */
-	href: string
+	href: string;
 	/**
 	 * which transition should be used when navigating to this link?
 	 */
-	transition?: Transitions
+	transition?: Transitions;
 	/**
 	 * forward a ref to the link or anchor tag
 	 */
-	ref?: React.RefObject<HTMLAnchorElement | null>
+	ref?: React.RefObject<HTMLAnchorElement | null>;
 
-	onClick?: undefined
-	type?: undefined
+	onClick?: undefined;
+	type?: undefined;
 }
 
-export type UniversalLinkProps = ButtonProps | AnchorProps
+export type UniversalLinkProps = ButtonProps | AnchorProps;
 
 /**
  * a link that navigates when clicked, using the specified transition
@@ -92,21 +92,21 @@ export default function UniversalLink({
 			>
 				{children}
 			</button>
-		)
+		);
 	}
 
-	const internal = linkIsInternal(href)
-	const router = useRouter()
+	const internal = linkIsInternal(href);
+	const router = useRouter();
 
 	const handleClick: React.MouseEventHandler = (e) => {
-		e.preventDefault()
+		e.preventDefault();
 
 		if (openInNewTab || !internal) {
-			window.open(href, "_blank")
+			window.open(href, "_blank");
 		} else {
-			loadPage({ to: href, transition, routerNavigate: router.push })
+			loadPage({ to: href, transition, routerNavigate: router.push });
 		}
-	}
+	};
 
 	return internal ? (
 		<Link
@@ -128,5 +128,5 @@ export default function UniversalLink({
 		>
 			{children}
 		</a>
-	)
+	);
 }

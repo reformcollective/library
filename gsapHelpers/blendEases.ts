@@ -1,4 +1,4 @@
-import gsap from "gsap/all"
+import gsap from "gsap/all";
 
 /**
  * @see https://gsap.com/docs/v3/HelperFunctions/helpers/blendEases/
@@ -8,12 +8,13 @@ export function blendEases(
 	endEase: gsap.EaseString | gsap.EaseFunction,
 	blender?: any,
 ) {
-	var parse = (ease: any) => typeof ease === "function" ? ease : gsap.parseEase("power4.inOut"),
+	var parse = (ease: any) =>
+			typeof ease === "function" ? ease : gsap.parseEase("power4.inOut"),
 		s = gsap.parseEase(startEase),
 		e = gsap.parseEase(endEase),
-		blender = parse(blender)
+		blender = parse(blender);
 	return (v: any) => {
-		var b = blender(v)
-		return s(v) * (1 - b) + e(v) * b
-	}
+		var b = blender(v);
+		return s(v) * (1 - b) + e(v) * b;
+	};
 }

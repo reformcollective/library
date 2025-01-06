@@ -1,31 +1,31 @@
-import { ScrollTrigger } from "gsap/all"
-import { ScreenContext } from "library/ScreenContext"
-import { createScrollLock } from "library/Scroll"
-import { isBrowser } from "library/deviceDetection"
-import libraryConfig from "libraryConfig"
-import { use, useEffect, useRef } from "react"
-import { loader } from "."
-import { sleep } from "../functions"
-import { allLoaderPromisesSettled } from "./promises"
-import { scrollToAnchor } from "./scrollToAnchor"
+import { ScrollTrigger } from "gsap/all";
+import { ScreenContext } from "library/ScreenContext";
+import { createScrollLock } from "library/Scroll";
+import { isBrowser } from "library/deviceDetection";
+import libraryConfig from "libraryConfig";
+import { use, useEffect, useRef } from "react";
+import { loader } from ".";
+import { sleep } from "../functions";
+import { allLoaderPromisesSettled } from "./promises";
+import { scrollToAnchor } from "./scrollToAnchor";
 
-let resolve: () => void
+let resolve: () => void;
 const pageReady = new Promise<void>((res, rej) => {
-	resolve = res
-})
+	resolve = res;
+});
 export const useTriggerPreloader = async () => {
-	const { initComplete } = use(ScreenContext)
+	const { initComplete } = use(ScreenContext);
 	if (initComplete) {
-		resolve()
+		resolve();
 	}
-}
+};
 
 /**
  * we get a percentage by simply guessing how long the page will take to load based on
  * how long it's taken to load so far
  * the amount of time needed to load the page is pretty arbitrary, so you can adjust this function to fit
  */
-const GET_TIME_NEEDED = libraryConfig.getTimeNeeded
+const GET_TIME_NEEDED = libraryConfig.getTimeNeeded;
 
 /**
  * extra number of milliseconds to wait after the document is ready
@@ -35,7 +35,7 @@ const GET_TIME_NEEDED = libraryConfig.getTimeNeeded
  * the animations will play either when the percentage reaches 100% or when
  * the document is ready plus this delay, whichever comes first
  */
-const EXTRA_DELAY = 1000
+const EXTRA_DELAY = 1000;
 
 /**
  * the status of the preloader
@@ -44,7 +44,7 @@ const EXTRA_DELAY = 1000
  * complete: we've started the out animation
  */
 let preloaderState: "loading" | "waitingForAnimate" | "animating" | "allDone" =
-	"loading"
+	"loading";
 
 interface PreloaderAnimation {
 	/**
@@ -52,101 +52,101 @@ interface PreloaderAnimation {
 	 * for example, a preloader that covers the entire screen is critical, since if the animation doesn't play
 	 * the screen will be stuck on the preloader
 	 */
-	critical?: boolean
+	critical?: boolean;
 	/**
 	 * if you'd like different animations when the page is scrolled down (i.e. reloaded when scrolled) you can specify this here
 	 */
-	only?: "whenScrolled" | "whenAtTop"
+	only?: "whenScrolled" | "whenAtTop";
 	/**
 	 * how long the animation takes to finish (when scrolling can 'unlock')
 	 */
-	duration: number
+	duration: number;
 	/**
 	 * a function to run the animation
 	 */
-	callback: VoidFunction
+	callback: VoidFunction;
 }
 
-let animations: PreloaderAnimation[] = []
-const startTime = performance.now()
-const timeNeeded = GET_TIME_NEEDED(startTime)
-let loaderIsDone = false
-export const getLoaderIsDone = () => loaderIsDone
+let animations: PreloaderAnimation[] = [];
+const startTime = performance.now();
+const timeNeeded = GET_TIME_NEEDED(startTime);
+let loaderIsDone = false;
+export const getLoaderIsDone = () => loaderIsDone;
 
-const initialScrollLock = createScrollLock()
+const initialScrollLock = createScrollLock();
 
 /**
  * call all callbacks and set done to true
  */
 async function onComplete(skipScrollTop?: boolean) {
-	await allLoaderPromisesSettled()
+	await allLoaderPromisesSettled();
 
 	// only call onComplete one time
-	if (preloaderState !== "loading") return
+	if (preloaderState !== "loading") return;
 
-	preloaderState = "waitingForAnimate"
-	loader.dispatchEvent("start", "initial")
-	loader.dispatchEvent("progressUpdated", 100)
+	preloaderState = "waitingForAnimate";
+	loader.dispatchEvent("start", "initial");
+	loader.dispatchEvent("progressUpdated", 100);
 
 	// hold at 100 for a beat
-	await sleep(250)
+	await sleep(250);
 
 	const goToTop =
 		window.scrollY < window.innerHeight ||
-		libraryConfig.scrollRestoration === false
+		libraryConfig.scrollRestoration === false;
 
 	/**
 	 * scroll to top if needed
 	 */
 	if (!skipScrollTop) {
 		if (goToTop) {
-			const unlock = createScrollLock("unlock")
+			const unlock = createScrollLock("unlock");
 			window.lenis?.scrollTo(0, {
 				onComplete: () => {
-					window.lenis?.scrollTo(0, { immediate: true })
-					unlock.release()
+					window.lenis?.scrollTo(0, { immediate: true });
+					unlock.release();
 				},
-			})
+			});
 		}
 	}
 
 	/**
 	 * scroll to anchor if needed
 	 */
-	const anchor = window.location.hash
+	const anchor = window.location.hash;
 	if (anchor) {
-		await scrollToAnchor(anchor)
+		await scrollToAnchor(anchor);
 	}
 
-	preloaderState = "animating"
+	preloaderState = "animating";
 
 	/**
 	 * run all the animations
 	 */
-	let longestAnimation = 0
+	let longestAnimation = 0;
 	for (const animation of animations) {
 		const callAnimation = () => {
-			animation.callback()
-			longestAnimation = Math.max(longestAnimation, animation.duration)
-		}
+			animation.callback();
+			longestAnimation = Math.max(longestAnimation, animation.duration);
+		};
 
 		if (animation.only) {
-			if (animation.only === "whenAtTop" && goToTop) callAnimation()
-			if (animation.only === "whenScrolled" && !goToTop) callAnimation()
-		} else callAnimation()
+			if (animation.only === "whenAtTop" && goToTop) callAnimation();
+			if (animation.only === "whenScrolled" && !goToTop) callAnimation();
+		} else callAnimation();
 	}
 
-	await sleep(longestAnimation * 1000 + 10)
-	loaderIsDone = true
+	await sleep(longestAnimation * 1000 + 10);
+	loaderIsDone = true;
 
-	ScrollTrigger.refresh()
-	initialScrollLock.release()
+	ScrollTrigger.refresh();
+	initialScrollLock.release();
 
 	// give refresh time to finish
-	await sleep(50)
+	await sleep(50);
 
-	loader.dispatchEvent("end", "initial")
-	preloaderState = "allDone"
+	loader.dispatchEvent("end", "initial");
+	preloaderState = "allDone";
 }
 
 /**
@@ -159,34 +159,34 @@ const updatePercent = () => {
 	pageReady
 		.then(async () => {
 			// short circuit if there are no callbacks or animations
-			await allLoaderPromisesSettled() // but not before promises are settled
+			await allLoaderPromisesSettled(); // but not before promises are settled
 			return animations.length === 0 ||
 				animations.every((a) => a.duration === 0)
 				? onComplete()
-				: null
+				: null;
 		})
 		.catch(async () => {
-			return onComplete()
-		})
+			return onComplete();
+		});
 
-	if (preloaderState !== "loading") return
+	if (preloaderState !== "loading") return;
 
-	const currentTime = performance.now()
-	const progress = ((currentTime - startTime) / timeNeeded) * 100
+	const currentTime = performance.now();
+	const progress = ((currentTime - startTime) / timeNeeded) * 100;
 	if (progress >= 99) {
 		pageReady
 			.then(async () => {
-				return onComplete()
+				return onComplete();
 			})
 			.catch(async () => {
-				return onComplete()
-			})
+				return onComplete();
+			});
 	} else {
-		loader.dispatchEvent("progressUpdated", progress)
-		if (isBrowser) requestAnimationFrame(updatePercent)
+		loader.dispatchEvent("progressUpdated", progress);
+		if (isBrowser) requestAnimationFrame(updatePercent);
 	}
-}
-if (isBrowser) updatePercent()
+};
+if (isBrowser) updatePercent();
 
 /**
  * document based loader
@@ -197,13 +197,13 @@ if (isBrowser) updatePercent()
 if (isBrowser)
 	pageReady
 		.then(async () => {
-			await sleep(EXTRA_DELAY)
-			return onComplete()
+			await sleep(EXTRA_DELAY);
+			return onComplete();
 		})
 		.catch(async () => {
-			await sleep(EXTRA_DELAY)
-			return onComplete()
-		})
+			await sleep(EXTRA_DELAY);
+			return onComplete();
+		});
 
 /**
  * register a callback (such as an animation) to be called when the page is loaded
@@ -211,23 +211,23 @@ if (isBrowser)
  * @param animation function to call when the page is loaded
  */
 export const usePreloader = (animation: PreloaderAnimation) => {
-	const latestCallback = useRef(animation.callback)
-	latestCallback.current = animation.callback
+	const latestCallback = useRef(animation.callback);
+	latestCallback.current = animation.callback;
 
 	useEffect(() => {
-		const onCall = () => latestCallback.current()
+		const onCall = () => latestCallback.current();
 
-		if (preloaderState === "animating") onCall()
-		else if (preloaderState === "allDone" && animation.critical) onCall()
+		if (preloaderState === "animating") onCall();
+		else if (preloaderState === "allDone" && animation.critical) onCall();
 		else if (preloaderState !== "allDone")
 			animations.push({
 				duration: animation.duration,
 				callback: onCall,
 				only: animation.only,
-			})
+			});
 
 		return () => {
-			animations = animations.filter((a) => a.callback !== onCall)
-		}
-	}, [animation.duration, animation.only, animation.critical])
-}
+			animations = animations.filter((a) => a.callback !== onCall);
+		};
+	}, [animation.duration, animation.only, animation.critical]);
+};

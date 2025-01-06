@@ -1,9 +1,9 @@
-import { dataset, projectId } from "@/sanity/lib/api"
-import { css } from "library/styled"
-import { buildSrcSet } from "sanity-image"
-import type { SanityImageData } from "./imageMetadata"
+import { dataset, projectId } from "@/sanity/lib/api";
+import { css } from "library/styled";
+import { buildSrcSet } from "sanity-image";
+import type { SanityImageData } from "./imageMetadata";
 
-const baseUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/`
+const baseUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/`;
 
 export const sanityImageToBackgroundImage = (
 	image: SanityImageData,
@@ -13,7 +13,7 @@ export const sanityImageToBackgroundImage = (
 	 */
 	scaleFactor = 1,
 ) => {
-	if (!image.asset) return ""
+	if (!image.asset) return "";
 
 	const srcSet = buildSrcSet({
 		id: image.asset?._ref,
@@ -25,19 +25,19 @@ export const sanityImageToBackgroundImage = (
 		queryParams: {
 			q: 90,
 		},
-	})
-	const defaultSrc = srcSet[0]?.split(" ")[0]
+	});
+	const defaultSrc = srcSet[0]?.split(" ")[0];
 
 	const converted = srcSet.flatMap((src) => {
-		const [url, size] = src.split(" ")
+		const [url, size] = src.split(" ");
 		return url && size && url !== "" && size !== ""
 			? css`
 					@media (min-width: ${Number.parseInt(size) / (2 * scaleFactor)}px) {
 						background-image: url(${url});
 					}
 				`
-			: []
-	})
+			: [];
+	});
 
 	return [
 		css`
@@ -45,5 +45,5 @@ export const sanityImageToBackgroundImage = (
 			background-image: url(${defaultSrc || srcSet[0]?.split(" ")[0]});
 		`,
 		...converted,
-	].join("")
-}
+	].join("");
+};

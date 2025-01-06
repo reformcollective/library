@@ -1,21 +1,21 @@
-import { useRafInterval } from "ahooks"
-import { ScrollTrigger } from "gsap/all"
-import { useRef, useState } from "react"
+import { useRafInterval } from "ahooks";
+import { ScrollTrigger } from "gsap/all";
+import { useRef, useState } from "react";
 
-import { useAnimation } from "./useAnimation"
+import { useAnimation } from "./useAnimation";
 
 type Props = {
-	poster: string
-	className?: string
-	style?: React.CSSProperties
-	ref?: React.RefObject<HTMLVideoElement>
-	contextMenu?: boolean
-	loop?: boolean
-	autoPlay?: boolean
+	poster: string;
+	className?: string;
+	style?: React.CSSProperties;
+	ref?: React.RefObject<HTMLVideoElement>;
+	contextMenu?: boolean;
+	loop?: boolean;
+	autoPlay?: boolean;
 } & (
 	| { sourceMP4: string; sourceWEBM?: string }
 	| { sourceMP4?: string; sourceWEBM: string }
-)
+);
 
 export function LazyVideo({
 	poster,
@@ -27,25 +27,25 @@ export function LazyVideo({
 	autoPlay = true,
 	...props
 }: Props) {
-	const [showVideo, setShowVideo] = useState(false)
-	const alternateRef = useRef<HTMLVideoElement>(null)
-	const refToUse = ref ?? alternateRef
+	const [showVideo, setShowVideo] = useState(false);
+	const alternateRef = useRef<HTMLVideoElement>(null);
+	const refToUse = ref ?? alternateRef;
 
 	const { result: trigger } = useAnimation(() => {
 		return ScrollTrigger.create({
 			trigger: refToUse.current,
 			start: "top bottom",
 			onEnter: () => setShowVideo(true),
-		})
-	}, [refToUse])
+		});
+	}, [refToUse]);
 
 	/**
 	 * if the video starts off screen and animates in, the trigger might not catch it
 	 * so we need to refresh the trigger every couple frames
 	 */
 	useRafInterval(() => {
-		if (!showVideo) trigger?.refresh()
-	}, 32)
+		if (!showVideo) trigger?.refresh();
+	}, 32);
 
 	return (
 		<video
@@ -56,7 +56,7 @@ export function LazyVideo({
 			loop={loop}
 			playsInline
 			onContextMenu={(e) => {
-				!contextMenu && e.preventDefault()
+				!contextMenu && e.preventDefault();
 			}}
 			ref={refToUse}
 		>
@@ -67,5 +67,5 @@ export function LazyVideo({
 				</>
 			)}
 		</video>
-	)
+	);
 }

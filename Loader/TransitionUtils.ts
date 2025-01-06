@@ -1,20 +1,20 @@
-import { useDeepCompareEffect, useEventListener } from "ahooks"
-import { ScrollToPlugin, ScrollTrigger, gsap } from "gsap/all"
-import { createScrollLock } from "library/Scroll"
-import { linkIsExternal, pathnameMatches, sleep } from "library/functions"
-import type { TransitionNames } from "libraryConfig"
-import libraryConfig from "libraryConfig"
-import { loader } from "."
-import { getLoaderIsDone } from "./PreloaderUtils"
-import { allLoaderPromisesSettled } from "./promises"
-import { getScrollOffset, scrollToAnchor } from "./scrollToAnchor"
+import { useDeepCompareEffect, useEventListener } from "ahooks";
+import { ScrollToPlugin, ScrollTrigger, gsap } from "gsap/all";
+import { createScrollLock } from "library/Scroll";
+import { linkIsExternal, pathnameMatches, sleep } from "library/functions";
+import type { TransitionNames } from "libraryConfig";
+import libraryConfig from "libraryConfig";
+import { loader } from ".";
+import { getLoaderIsDone } from "./PreloaderUtils";
+import { allLoaderPromisesSettled } from "./promises";
+import { getScrollOffset, scrollToAnchor } from "./scrollToAnchor";
 
-gsap.registerPlugin(ScrollToPlugin)
+gsap.registerPlugin(ScrollToPlugin);
 
-type LoaderTransitions = TransitionNames | "instant"
+type LoaderTransitions = TransitionNames | "instant";
 interface Animation {
-	callback: VoidFunction
-	duration: number
+	callback: VoidFunction;
+	duration: number;
 }
 
 /**
@@ -23,23 +23,23 @@ interface Animation {
 const allTransitions: Record<
 	string,
 	{
-		inAnimation: Animation[]
-		outAnimation: Animation[]
+		inAnimation: Animation[];
+		outAnimation: Animation[];
 	}
-> = {}
+> = {};
 
 /**
  * if we click a link during a transition, delay it until the transition is done
  */
 let pendingNavigation: {
-	to: string
-	transition?: LoaderTransitions
-} | null = null
+	to: string;
+	transition?: LoaderTransitions;
+} | null = null;
 
 /**
  * and likewise, the currently running navigation
  */
-let currentNavigation: string | null = null
+let currentNavigation: string | null = null;
 
 /**
  * load a page, making use of the specified transition
@@ -51,19 +51,19 @@ export const loadPage = async ({
 	transition,
 	routerNavigate,
 }: {
-	to: string
-	transition: LoaderTransitions
-	routerNavigate: (to: string) => unknown
+	to: string;
+	transition: LoaderTransitions;
+	routerNavigate: (to: string) => unknown;
 }) => {
-	const anchorName = new URL(navigateTo, window.location.origin).hash
-	const pathname = new URL(navigateTo, window.location.origin).pathname
+	const anchorName = new URL(navigateTo, window.location.origin).hash;
+	const pathname = new URL(navigateTo, window.location.origin).pathname;
 
 	// if a transition is already in progress, wait for it to finish before loading the next page
 	if (currentNavigation !== null) {
 		// ignore double clicks
 		if (!pathnameMatches(pathname, currentNavigation))
-			pendingNavigation = { to: navigateTo, transition }
-		return
+			pendingNavigation = { to: navigateTo, transition };
+		return;
 	}
 
 	/**
@@ -75,28 +75,28 @@ export const loadPage = async ({
 		navigateTo.startsWith("#") ||
 		pathnameMatches(pathname, window.location.pathname)
 	) {
-		const scrollLock = createScrollLock("unlock")
+		const scrollLock = createScrollLock("unlock");
 
 		// save the anchor to the URL
 		if (libraryConfig.saveAnchorNames)
-			window.history.replaceState({}, "", navigateTo)
+			window.history.replaceState({}, "", navigateTo);
 
 		// scroll to anchor if applicable, otherwise scroll to top
 		if (anchorName) {
-			const scrollOffset = getScrollOffset(anchorName)
+			const scrollOffset = getScrollOffset(anchorName);
 			window.lenis?.scrollTo(anchorName, {
 				offset: scrollOffset,
 				onComplete: scrollLock.release,
-			})
-			loader.dispatchEvent("scroll", anchorName)
+			});
+			loader.dispatchEvent("scroll", anchorName);
 		} else {
 			window.lenis?.scrollTo(0, {
 				onComplete: scrollLock.release,
-			})
-			loader.dispatchEvent("scroll", null)
+			});
+			loader.dispatchEvent("scroll", null);
 		}
 
-		return
+		return;
 	}
 
 	/**
@@ -105,99 +105,99 @@ export const loadPage = async ({
 	 * if no transition is specified, instantly transition pages
 	 */
 	if (transition === "instant" || !transition || !allTransitions[transition]) {
-		loader.dispatchEvent("start", "instant")
-		loader.dispatchEvent("routeChange", "instant")
+		loader.dispatchEvent("start", "instant");
+		loader.dispatchEvent("routeChange", "instant");
 
-		await navigate({ to: navigateTo, routerNavigate })
+		await navigate({ to: navigateTo, routerNavigate });
 
-		const scrollLock = createScrollLock("unlock")
+		const scrollLock = createScrollLock("unlock");
 
 		// scroll to anchor if applicable, otherwise scroll to top
 		if (anchorName) {
-			await scrollToAnchor(anchorName)
+			await scrollToAnchor(anchorName);
 		} else {
-			window.lenis?.scrollTo(0, { immediate: true })
+			window.lenis?.scrollTo(0, { immediate: true });
 		}
 
-		scrollLock.release()
+		scrollLock.release();
 
-		loader.dispatchEvent("end", "instant")
-		return
+		loader.dispatchEvent("end", "instant");
+		return;
 	}
 
 	/**
 	 * NORMAL TRANSITION
 	 */
-	currentNavigation = navigateTo
+	currentNavigation = navigateTo;
 
 	// wait for the preloader to finish animation before starting the transition
-	while (!getLoaderIsDone()) await sleep(100)
+	while (!getLoaderIsDone()) await sleep(100);
 
 	const animationContext = gsap.context(() => {
 		// we need to pass a function in order to create a new context
-	})
-	const enterAnimations = allTransitions[transition]?.inAnimation ?? []
+	});
+	const enterAnimations = allTransitions[transition]?.inAnimation ?? [];
 
 	// run each animation, add it to the context, and get the duration of the longest one
-	let entranceDuration = 0
+	let entranceDuration = 0;
 	for (const animation of enterAnimations) {
-		const { callback, duration: animationDuration } = animation
-		animationContext.add(callback)
-		entranceDuration = Math.max(entranceDuration, animationDuration)
+		const { callback, duration: animationDuration } = animation;
+		animationContext.add(callback);
+		entranceDuration = Math.max(entranceDuration, animationDuration);
 	}
 
 	// dispatch events
-	loader.dispatchEvent("start", transition)
+	loader.dispatchEvent("start", transition);
 
 	// wait for entrance animation to finish
-	await sleep(entranceDuration * 1000)
-	loader.dispatchEvent("routeChange", transition)
-	const scrollLock = createScrollLock()
+	await sleep(entranceDuration * 1000);
+	loader.dispatchEvent("routeChange", transition);
+	const scrollLock = createScrollLock();
 
 	// actually navigate to the page
 	await navigate({
 		to: navigateTo,
 		routerNavigate,
 		cleanupFunction: () => {
-			animationContext.revert()
+			animationContext.revert();
 		},
-	})
+	});
 
 	// wait for any promises to settle
-	await sleep(0)
-	await allLoaderPromisesSettled()
+	await sleep(0);
+	await allLoaderPromisesSettled();
 
 	// if the desired behavior is to scroll to a certain point on the page
 	// after the transition, do so. This is done after the exit animation
 	// to prevent the page from jumping around
 	if (anchorName) {
-		await scrollToAnchor(anchorName)
+		await scrollToAnchor(anchorName);
 	} else {
 		// if no anchor, scroll to the top of the page
-		window.lenis?.scrollTo(0, { immediate: true })
+		window.lenis?.scrollTo(0, { immediate: true });
 	}
 
-	const exitAnimations = allTransitions[transition]?.outAnimation ?? []
+	const exitAnimations = allTransitions[transition]?.outAnimation ?? [];
 
 	// run each animation, add it to the context, and get the duration of the longest one
-	let exitDuration = 0
+	let exitDuration = 0;
 	for (const animation of exitAnimations) {
-		const { callback, duration: animationDuration } = animation
-		animationContext.add(callback)
-		exitDuration = Math.max(exitDuration, animationDuration)
+		const { callback, duration: animationDuration } = animation;
+		animationContext.add(callback);
+		exitDuration = Math.max(exitDuration, animationDuration);
 	}
 
 	// wait for exit animation to finish
-	await sleep(exitDuration * 1000 + 10)
+	await sleep(exitDuration * 1000 + 10);
 
 	// dispatch finished events
-	loader.dispatchEvent("end", transition)
-	scrollLock.release()
-	ScrollTrigger.refresh()
+	loader.dispatchEvent("end", transition);
+	scrollLock.release();
+	ScrollTrigger.refresh();
 
 	// cleanup and reset
-	animationContext.revert()
-	currentNavigation = null
+	animationContext.revert();
+	currentNavigation = null;
 
 	// start the next transition if applicable
 	if (pendingNavigation?.transition) {
@@ -205,10 +205,10 @@ export const loadPage = async ({
 			to: pendingNavigation.to,
 			transition: pendingNavigation.transition,
 			routerNavigate,
-		})
-		pendingNavigation = null
+		});
+		pendingNavigation = null;
 	}
-}
+};
 
 /**
  * navigate to an external or internal link without a transition
@@ -220,43 +220,45 @@ const navigate = async ({
 	routerNavigate,
 	cleanupFunction,
 }: {
-	to: string
-	routerNavigate: (to: string) => unknown
-	cleanupFunction?: VoidFunction
+	to: string;
+	routerNavigate: (to: string) => unknown;
+	cleanupFunction?: VoidFunction;
 }) => {
-	const isExternal = linkIsExternal(to)
+	const isExternal = linkIsExternal(to);
 
 	if (isExternal) {
-		window.open(to)
+		window.open(to);
 
 		// if the user presses the back button after navigation, we'll need to cleanup any animations
 		setTimeout(() => {
-			cleanupFunction?.()
-		}, 1000)
+			cleanupFunction?.();
+		}, 1000);
 	} else {
-		const destination = new URL(to, window.location.origin)
+		const destination = new URL(to, window.location.origin);
 
 		// scrub the hash from the URL if needed
 		if (!libraryConfig.saveAnchorNames) {
-			destination.hash = ""
+			destination.hash = "";
 		}
 
-		const existingHref = window.location.href
-		routerNavigate(destination.pathname + destination.search + destination.hash)
+		const existingHref = window.location.href;
+		routerNavigate(
+			destination.pathname + destination.search + destination.hash,
+		);
 
 		// check for href changes
 		while (window.location.href === existingHref) {
-			await sleep(50)
+			await sleep(50);
 		}
 	}
-}
+};
 
 /**
  * manually track the scroll position so we can restore it when clicking back
  * gatsby can't restore scroll position if we have a transition animation
  * TODO - next.js may not need this! worth testing at some point
  */
-const scrollPositions = new Map<string, number>()
+const scrollPositions = new Map<string, number>();
 
 /**
  * handles scroll restoration for forward/back buttons
@@ -264,23 +266,23 @@ const scrollPositions = new Map<string, number>()
  */
 export function useBackButton() {
 	useEventListener("scroll", () => {
-		scrollPositions.set(window.location.href, window.scrollY)
-	})
+		scrollPositions.set(window.location.href, window.scrollY);
+	});
 
 	useEventListener("popstate", async () => {
-		loader.dispatchEvent("start", "instant")
-		loader.dispatchEvent("routeChange", "instant")
-		document.body.style.minHeight = "9999vh"
+		loader.dispatchEvent("start", "instant");
+		loader.dispatchEvent("routeChange", "instant");
+		document.body.style.minHeight = "9999vh";
 
-		if (libraryConfig.scrollRestoration === false) window.scrollTo(0, 1)
-		else window.scrollTo(0, scrollPositions.get(window.location.href) ?? 0)
+		if (libraryConfig.scrollRestoration === false) window.scrollTo(0, 1);
+		else window.scrollTo(0, scrollPositions.get(window.location.href) ?? 0);
 
 		// using back then forward can cause page to disappear until we scroll, so we'll do that manually
-		window.scrollBy(0, 1)
-		await sleep(500)
-		loader.dispatchEvent("end", "instant")
-		document.body.style.removeProperty("min-height")
-	})
+		window.scrollBy(0, 1);
+		await sleep(500);
+		loader.dispatchEvent("end", "instant");
+		document.body.style.removeProperty("min-height");
+	});
 }
 
 /**
@@ -296,10 +298,10 @@ export function useBackButton() {
 export const usePageTransition = (
 	name: Exclude<LoaderTransitions, "instant">,
 	details: {
-		in: VoidFunction
-		out: VoidFunction
-		inDuration: number
-		outDuration: number
+		in: VoidFunction;
+		out: VoidFunction;
+		inDuration: number;
+		outDuration: number;
 	},
 ) => {
 	useDeepCompareEffect(() => {
@@ -308,13 +310,13 @@ export const usePageTransition = (
 			out: outAnimation,
 			inDuration,
 			outDuration,
-		} = details
+		} = details;
 
 		// merge the new details into the existing animation of this name
 		const previous = allTransitions[name] ?? {
 			inAnimation: [],
 			outAnimation: [],
-		}
+		};
 
 		allTransitions[name] = {
 			inAnimation: [
@@ -325,15 +327,15 @@ export const usePageTransition = (
 				...previous.outAnimation,
 				{ callback: outAnimation, duration: outDuration },
 			],
-		}
+		};
 
 		return () => {
-			const callbacksToRemove = [inAnimation, outAnimation]
+			const callbacksToRemove = [inAnimation, outAnimation];
 
 			const previous = allTransitions[name] ?? {
 				inAnimation: [],
 				outAnimation: [],
-			}
+			};
 
 			allTransitions[name] = {
 				inAnimation: previous.inAnimation.filter(
@@ -342,7 +344,7 @@ export const usePageTransition = (
 				outAnimation: previous.outAnimation.filter(
 					({ callback }) => !callbacksToRemove.includes(callback),
 				),
-			}
-		}
-	}, [name, details])
-}
+			};
+		};
+	}, [name, details]);
+};

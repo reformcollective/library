@@ -1,5 +1,5 @@
-import config from "libraryConfig"
-import { startTransition, use, useEffect, useState } from "react"
+import config from "libraryConfig";
+import { startTransition, use, useEffect, useState } from "react";
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -7,10 +7,10 @@ import {
 	mobileDesignSize,
 	tabletBreakpoint,
 	tabletDesignSize,
-} from "styles/media"
-import { isBrowser } from "./deviceDetection"
-import { ScreenContext, useDebouncedEventListener } from "./ScreenContext"
-import { getMedia } from "./useMedia"
+} from "styles/media";
+import { isBrowser } from "./deviceDetection";
+import { ScreenContext, useDebouncedEventListener } from "./ScreenContext";
+import { getMedia } from "./useMedia";
 
 /**
  * hookify a get function to update on resize
@@ -19,15 +19,15 @@ function useHookify<P, T extends (input: P) => ReturnType<T>>(
 	fn: T,
 	arg: P,
 ): ReturnType<T> | undefined {
-	const [value, setValue] = useState<ReturnType<T>>()
-	const { screenContextReady } = use(ScreenContext)
+	const [value, setValue] = useState<ReturnType<T>>();
+	const { screenContextReady } = use(ScreenContext);
 
-	useDebouncedEventListener("resize", () => setValue(fn(arg)))
+	useDebouncedEventListener("resize", () => setValue(fn(arg)));
 	useEffect(() => {
-		if (screenContextReady) startTransition(() => setValue(fn(arg)))
-	}, [fn, arg, screenContextReady])
+		if (screenContextReady) startTransition(() => setValue(fn(arg)));
+	}, [fn, arg, screenContextReady]);
 
-	return value
+	return value;
 }
 
 /**
@@ -35,18 +35,18 @@ function useHookify<P, T extends (input: P) => ReturnType<T>>(
  * since VH can't be calculated without it
  */
 const createMeasuringElement = () => {
-	if (!isBrowser) return
-	const div = document.createElement("div")
-	div.style.position = "absolute"
-	div.style.top = "0"
-	div.style.left = "0"
-	div.style.width = "100%"
-	div.style.height = "100vh"
-	div.style.visibility = "hidden"
-	document.body.append(div)
-	return div
-}
-const measuringElement = createMeasuringElement()
+	if (!isBrowser) return;
+	const div = document.createElement("div");
+	div.style.position = "absolute";
+	div.style.top = "0";
+	div.style.left = "0";
+	div.style.width = "100%";
+	div.style.height = "100vh";
+	div.style.visibility = "hidden";
+	document.body.append(div);
+	return div;
+};
+const measuringElement = createMeasuringElement();
 
 /**
  * calculates a vh value based on the current viewport
@@ -57,7 +57,7 @@ const measuringElement = createMeasuringElement()
  * @returns the calculated vh value in pixels
  */
 export function getVH(amount: number) {
-	return ((measuringElement?.clientHeight ?? 0) / 100) * amount
+	return ((measuringElement?.clientHeight ?? 0) / 100) * amount;
 }
 
 /**
@@ -69,7 +69,7 @@ export function getVH(amount: number) {
  * @returns the calculated vh value in pixels
  */
 export function useVH(amount: number) {
-	return useHookify(getVH, amount)
+	return useHookify(getVH, amount);
 }
 
 /**
@@ -78,15 +78,15 @@ export function useVH(amount: number) {
  * for an updating value, use useBreakpoint
  */
 export const getBreakpoint = () => {
-	if (typeof window === "undefined") return "mobile"
+	if (typeof window === "undefined") return "mobile";
 
-	const { innerWidth } = window
+	const { innerWidth } = window;
 
-	if (innerWidth <= mobileBreakpoint) return "mobile"
-	if (innerWidth <= tabletBreakpoint) return "tablet"
-	if (innerWidth <= desktopBreakpoint) return "desktop"
-	return "fullWidth"
-}
+	if (innerWidth <= mobileBreakpoint) return "mobile";
+	if (innerWidth <= tabletBreakpoint) return "tablet";
+	if (innerWidth <= desktopBreakpoint) return "desktop";
+	return "fullWidth";
+};
 
 /**
  * gets the name of the current breakpoint
@@ -94,8 +94,8 @@ export const getBreakpoint = () => {
  * for a one-shot calculation, use getBreakpoint
  */
 export const useBreakpoint = () => {
-	return useHookify(getBreakpoint, null)
-}
+	return useHookify(getBreakpoint, null);
+};
 
 /**
  * calculates a vw value based on the current viewport width
@@ -106,19 +106,19 @@ export const useBreakpoint = () => {
  * @returns the calculated vw value
  */
 export function getPxToVw(px: number) {
-	const currentBreakpoint = getBreakpoint()
+	const currentBreakpoint = getBreakpoint();
 
-	let conversionValue = desktopDesignSize
+	let conversionValue = desktopDesignSize;
 	if (currentBreakpoint === "mobile") {
-		conversionValue = mobileDesignSize
+		conversionValue = mobileDesignSize;
 	} else if (currentBreakpoint === "tablet") {
-		conversionValue = tabletDesignSize
+		conversionValue = tabletDesignSize;
 	}
 
 	if (isBrowser) {
-		return px / (conversionValue / 100)
+		return px / (conversionValue / 100);
 	}
-	return 0
+	return 0;
 }
 
 /**
@@ -130,7 +130,7 @@ export function getPxToVw(px: number) {
  * @returns the calculated vw value
  */
 export function usePxToVw(px: number) {
-	return useHookify(getPxToVw, px)
+	return useHookify(getPxToVw, px);
 }
 
 /**
@@ -143,9 +143,9 @@ export function usePxToVw(px: number) {
  */
 export function getVwToPx(vw: number) {
 	if (isBrowser) {
-		return vw * (window.innerWidth / 100)
+		return vw * (window.innerWidth / 100);
 	}
-	return 0
+	return 0;
 }
 
 /**
@@ -157,7 +157,7 @@ export function getVwToPx(vw: number) {
  * @returns the calculated pixel value
  */
 export function useVwToPx(vw: number) {
-	return useHookify(getVwToPx, vw)
+	return useHookify(getVwToPx, vw);
 }
 
 /**
@@ -171,16 +171,16 @@ export function useVwToPx(vw: number) {
  * @returns the calculated px value
  */
 export function getResponsivePixels(px: number) {
-	const value = getVwToPx(getPxToVw(px))
+	const value = getVwToPx(getPxToVw(px));
 
 	// short circuit if we're not using responsive pixels
 	const adjustedPx =
 		(Number.parseFloat(((px / desktopDesignSize) * 100).toFixed(3)) / 100) *
-		desktopBreakpoint
+		desktopBreakpoint;
 
-	if (!config.scaleFully) return getMedia(adjustedPx, value, value, value)
+	if (!config.scaleFully) return getMedia(adjustedPx, value, value, value);
 
-	return value
+	return value;
 }
 
 /**
@@ -194,5 +194,5 @@ export function getResponsivePixels(px: number) {
  * @returns the calculated px value
  */
 export function useResponsivePixels(px: number) {
-	return useHookify(getResponsivePixels, px)
+	return useHookify(getResponsivePixels, px);
 }
