@@ -29,13 +29,13 @@ export function horizontalLoop(items, config) {
 				repeat: config.repeat,
 				onUpdate:
 					onChange &&
-					function () {
-						let i = tl.closestIndex()
+					(() => {
+						const i = tl.closestIndex()
 						if (lastIndex !== i) {
 							lastIndex = i
 							onChange(items[i], i)
 						}
-					},
+					}),
 				paused: config.paused,
 				defaults: { ease: "none" },
 				onReverseComplete: () =>
@@ -66,14 +66,15 @@ export function horizontalLoop(items, config) {
 				spaceBefore[0] +
 				items[length - 1].offsetWidth *
 					gsap.getProperty(items[length - 1], "scaleX") +
-				(parseFloat(config.paddingRight) || 0),
+				(Number.parseFloat(config.paddingRight) || 0),
 			populateWidths = () => {
 				let b1 = container.getBoundingClientRect(),
 					b2
 				items.forEach((el, i) => {
-					widths[i] = parseFloat(gsap.getProperty(el, "width", "px"))
+					widths[i] = Number.parseFloat(gsap.getProperty(el, "width", "px"))
 					xPercents[i] = snap(
-						(parseFloat(gsap.getProperty(el, "x", "px")) / widths[i]) * 100 +
+						(Number.parseFloat(gsap.getProperty(el, "x", "px")) / widths[i]) *
+							100 +
 							gsap.getProperty(el, "xPercent"),
 					)
 					b2 = el.getBoundingClientRect()
@@ -155,7 +156,7 @@ export function horizontalLoop(items, config) {
 				timeWrap = gsap.utils.wrap(0, tl.duration())
 			},
 			refresh = (deep) => {
-				let progress = tl.progress()
+				const progress = tl.progress()
 				tl.progress(0, true)
 				populateWidths()
 				deep && populateTimeline()
@@ -193,7 +194,7 @@ export function horizontalLoop(items, config) {
 		}
 		tl.toIndex = (index, vars) => toIndex(index, vars)
 		tl.closestIndex = (setCurrent) => {
-			let index = getClosest(times, tl.time(), tl.duration())
+			const index = getClosest(times, tl.time(), tl.duration())
 			if (setCurrent) {
 				curIndex = index
 				indexIsDirty = false
@@ -234,7 +235,7 @@ export function horizontalLoop(items, config) {
 				type: "x",
 				onPressInit() {
 					hasMoved = false
-					let x = this.x
+					const x = this.x
 					gsap.killTweensOf(tl)
 					wasPlaying = !tl.paused()
 					tl.pause()
@@ -278,7 +279,7 @@ export function horizontalLoop(items, config) {
 			tl.draggable = draggable
 		}
 		tl.scrollBy = (pixels) => {
-			let wrap = gsap.utils.wrap(0, 1),
+			const wrap = gsap.utils.wrap(0, 1),
 				progress = wrap(tl.progress() + pixels / totalWidth)
 			tl.progress(progress)
 			tl.closestIndex(true)

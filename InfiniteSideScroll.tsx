@@ -244,6 +244,7 @@ const Wrapper = styled(
 	"div",
 	fresponsive(css`
 		display: grid;
+		position: relative;
 	`),
 )
 

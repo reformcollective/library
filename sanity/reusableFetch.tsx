@@ -1,7 +1,7 @@
 import { client } from "@/sanity/lib/client"
 import { token } from "@/sanity/lib/token"
 import DraftModeToast from "library/sanity/DraftModeToast"
-import { fetchImageMeta } from "library/sanity/imageMetadata"
+import { fetchAssetMeta } from "library/sanity/assetMetadata"
 import {
 	defineLive,
 	VisualEditing,
@@ -53,7 +53,7 @@ const sanityFetch = async <const QueryString extends string>({
 	})
 
 	return {
-		data: await fetchImageMeta(data),
+		data: await fetchAssetMeta(data),
 		sourceMap,
 		tags,
 	}

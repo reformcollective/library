@@ -49,7 +49,7 @@ interface AnchorProps extends BaseLinkProps {
 	/**
 	 * where should the link navigate to?
 	 */
-	href: string
+	href: string | null | undefined
 	/**
 	 * which transition should be used when navigating to this link?
 	 */
@@ -95,11 +95,12 @@ export default function UniversalLink({
 		)
 	}
 
-	const internal = linkIsInternal(href)
+	const internal = href ? linkIsInternal(href) : false
 	const router = useRouter()
 
 	const handleClick: React.MouseEventHandler = (e) => {
 		e.preventDefault()
+		if (!href) return
 
 		if (openInNewTab || !internal) {
 			window.open(href, "_blank")
@@ -108,7 +109,7 @@ export default function UniversalLink({
 		}
 	}
 
-	return internal ? (
+	return internal && href ? (
 		<Link
 			href={href}
 			onClick={handleClick}
@@ -120,7 +121,7 @@ export default function UniversalLink({
 		</Link>
 	) : (
 		<a
-			href={href}
+			href={href ?? undefined}
 			onClick={handleClick}
 			ref={ref}
 			aria-label={ariaLabel}

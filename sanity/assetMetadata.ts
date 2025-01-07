@@ -1,20 +1,14 @@
-import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import { defineQuery } from "next-sanity"
 import { sanityFetch } from "sanity/lib/live"
 
-export type SanityImageData = {
-	asset?: { _ref: string }
-	hotspot?: SanityImageHotspot
-	crop?: SanityImageCrop
-	data?: {
-		lqip?: string
-		blurHash?: string
-		dominantColor?: string
-		originalFilename?: string
-		size?: number
-		extension?: string
-		url?: string
-	}
+export type AssetMeta = {
+	lqip?: string
+	blurHash?: string
+	dominantColor?: string
+	originalFilename?: string
+	size?: number
+	extension?: string
+	url?: string
 }
 
 const imageQuery = defineQuery(`
@@ -25,19 +19,19 @@ const fileQuery = defineQuery(`
 	*[_id == $asset && _type == "sanity.fileAsset"][0]	
 `)
 
-export type DeepImageMeta<T> = T extends { asset?: { _ref?: string } }
-	? T & { data?: SanityImageData["data"] }
+export type DeepAssetMeta<T> = T extends { asset?: { _ref?: string } }
+	? T & { data?: AssetMeta }
 	: T extends object
-		? { [K in keyof T]: DeepImageMeta<T[K]> }
+		? { [K in keyof T]: DeepAssetMeta<T[K]> }
 		: T
 
-export const fetchImageMeta = async <InputType>(
+export const fetchAssetMeta = async <InputType>(
 	input: InputType,
-): Promise<DeepImageMeta<InputType>> => {
-	type Output = DeepImageMeta<InputType>
+): Promise<DeepAssetMeta<InputType>> => {
+	type Output = DeepAssetMeta<InputType>
 
 	if (Array.isArray(input)) {
-		return (await Promise.all(input.map((i) => fetchImageMeta(i)))) as Output
+		return (await Promise.all(input.map((i) => fetchAssetMeta(i)))) as Output
 	}
 
 	if (typeof input === "object" && input !== null) {
@@ -62,24 +56,26 @@ export const fetchImageMeta = async <InputType>(
 				},
 			})
 
+			const asset = imageAsset ?? fileAsset
+
 			return {
 				...input,
 				data: {
 					blurHash: imageAsset?.metadata?.blurHash,
 					lqip: imageAsset?.metadata?.lqip,
 					dominantColor: imageAsset?.metadata?.palette?.dominant?.background,
-					originalFilename: fileAsset?.originalFilename,
-					size: fileAsset?.size,
-					extension: fileAsset?.extension,
-					url: fileAsset?.url,
-				} satisfies NonNullable<SanityImageData["data"]>,
+					originalFilename: asset?.originalFilename,
+					size: asset?.size,
+					extension: asset?.extension,
+					url: asset?.url,
+				} satisfies NonNullable<AssetMeta>,
 			} as Output
 		}
 
 		return Object.fromEntries(
 			await Promise.all(
 				Object.entries(input).map(
-					async ([key, value]) => [key, await fetchImageMeta(value)] as const,
+					async ([key, value]) => [key, await fetchAssetMeta(value)] as const,
 				),
 			),
 		) as Output
