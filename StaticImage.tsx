@@ -32,7 +32,7 @@ export type StaticImageProps = DefaultImageProps & {
 	loading?: LoadingType
 } & (
 		| {
-				src: StaticImageData | { default: StaticImageData }
+				src: StaticImageData
 				width?: number
 				height?: number
 		  }
@@ -76,9 +76,10 @@ export default function StaticImage({
 		)
 	}
 
+	const isSVG = src.src.endsWith(".svg")
 	return (
 		<DefaultNextImage
-			placeholder="blur"
+			placeholder={isSVG ? undefined : "blur"}
 			{...props}
 			src={src}
 			aspectRatio={
