@@ -7,8 +7,8 @@ const { execSync } = require("node:child_process")
 const fs = require("node:fs")
 const path = require("node:path")
 
-// Path to the submodule
-const submodulePath = "app/library"
+// Path to the submodule (../)
+const submodulePath = path.join(__dirname, "..")
 
 // Path to the .github/workflows folder
 const workflowsPath = ".github/workflows"
