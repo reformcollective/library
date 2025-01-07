@@ -258,7 +258,7 @@ function convertToResponsive(
 				 * generate media query for a single breakpoint
 				 */
 				output[hashedMedia[only]] = {
-					...(output[hashedMedia[only]] ?? {}),
+					...((output[hashedMedia[only]] ?? {}) as Record<string, string>),
 					[key]: value
 						?.toString()
 						.replaceAll(regex, (_: unknown, px: string) =>
@@ -275,7 +275,7 @@ function convertToResponsive(
 				 * generate media queries for each breakpoint
 				 */
 				output[hashedMedia.fullWidth] = {
-					...(output[hashedMedia.fullWidth] ?? {}),
+					...((output[hashedMedia.fullWidth] ?? {}) as Record<string, string>),
 					[key]: value
 						?.toString()
 						.replaceAll(regex, (_: unknown, px: string) =>
@@ -290,7 +290,7 @@ function convertToResponsive(
 
 				/* convert desktop values (not including full width) */
 				output[hashedMedia.desktop] = {
-					...(output[hashedMedia.desktop] ?? {}),
+					...((output[hashedMedia.desktop] ?? {}) as Record<string, string>),
 					[key]: value
 						?.toString()
 						.replaceAll(
@@ -302,7 +302,7 @@ function convertToResponsive(
 
 				/* convert tablet values */
 				output[hashedMedia.tablet] = {
-					...(output[hashedMedia.tablet] ?? {}),
+					...((output[hashedMedia.tablet] ?? {}) as Record<string, string>),
 					[key]: value
 						?.toString()
 						.replaceAll(
@@ -313,7 +313,7 @@ function convertToResponsive(
 
 				/* convert mobile values */
 				output[hashedMedia.mobile] = {
-					...(output[hashedMedia.mobile] ?? {}),
+					...((output[hashedMedia.mobile] ?? {}) as Record<string, string>),
 					[key]: value
 						?.toString()
 						.replaceAll(
@@ -407,7 +407,12 @@ export const styled: typeof restyled = (component, styles) => {
  * simple utility for composing styles as a string
  */
 export const css = String.raw
-export { media, GlobalStyles, type CSSObject, type CSSValue } from "restyle"
+export {
+	media as mediaBuilder,
+	GlobalStyles,
+	type CSSObject,
+	type CSSValue,
+} from "restyle"
 export const fresponsive = (style: string, options?: Options) =>
 	convertToResponsive(convertCssToObject(style, hashCounter), {
 		...options,
