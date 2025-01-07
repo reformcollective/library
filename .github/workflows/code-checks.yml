@@ -5,6 +5,10 @@ on:
     secrets:
       SECRETS_JSON:
         required: false
+    inputs:
+      isSanity:
+        required: true
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -62,6 +66,7 @@ jobs:
       - run: corepack enable
       - run: pnpm install
       - run: pnpm run lint
-      - run: pnpm exec sanity documents validate -y
+      - if: inputs.isSanity == 'true'
+        run: pnpm exec sanity documents validate -y
       # running a build will also check types
       - run: pnpm run build
