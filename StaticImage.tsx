@@ -93,7 +93,7 @@ export const defaultImageStyles = ({
 	objectPosition,
 	aspectRatio,
 }: {
-	objectFit: string
+	objectFit: "contain" | "cover"
 	objectPosition: string
 	aspectRatio: string
 }) => ({
