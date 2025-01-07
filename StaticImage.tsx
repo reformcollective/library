@@ -5,9 +5,9 @@ import type { StaticImageData } from "next/image"
 import Image from "next/image"
 import { createContext, use, type ImgHTMLAttributes } from "react"
 
-export const eagerContext = createContext(false)
+export const EagerContext = createContext(false)
 export const EagerImages = ({ children }: { children: React.ReactNode }) => (
-	<eagerContext.Provider value={true}>{children}</eagerContext.Provider>
+	<EagerContext.Provider value={true}>{children}</EagerContext.Provider>
 )
 
 type LoadingType = "eager" | "lazy" | "default"
@@ -53,7 +53,7 @@ export default function StaticImage({
 }: StaticImageProps) {
 	if (!src) return null
 
-	const defaultEager = use(eagerContext)
+	const defaultEager = use(EagerContext)
 	const prioritizedLoading = prioritizeLoading(loading, defaultEager)
 
 	const props = {

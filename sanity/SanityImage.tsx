@@ -4,7 +4,7 @@ import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import type { AssetMeta } from "library/sanity/assetMetadata"
 import StaticImage, {
 	defaultImageStyles,
-	eagerContext,
+	EagerContext,
 	prioritizeLoading,
 	type DefaultImageProps,
 	type StaticImageProps,
@@ -69,7 +69,7 @@ export default function SanityUniversalImage(
 		return <StaticImage {...props} />
 	}
 
-	const defaultEager = use(eagerContext)
+	const defaultEager = use(EagerContext)
 	const prioritizedLoading = prioritizeLoading(props.loading, defaultEager)
 
 	const { src, ...rest } = props
