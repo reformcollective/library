@@ -1,13 +1,22 @@
 "use client"
 
 import { Observer, ScrollTrigger, gsap } from "gsap/all"
-import { Fragment, type ReactNode, useEffect, useRef, useState } from "react"
+import {
+	Fragment,
+	type ReactNode,
+	type RefObject,
+	useEffect,
+	useRef,
+	useState,
+} from "react"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { css, fresponsive, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
 import { createDebouncedEventListener } from "./ScreenContext"
 
 gsap.registerPlugin(Observer)
+
+export type InfiniteLoop = ReturnType<typeof horizontalLoop>
 
 export function InfiniteSideScroll({
 	children,
@@ -18,6 +27,8 @@ export function InfiniteSideScroll({
 	reversed = false,
 	disableDrag = false,
 	scrollVelocity,
+	onChange,
+	loopRef,
 }: {
 	children: React.ReactNode
 	className?: string
@@ -49,9 +60,21 @@ export function InfiniteSideScroll({
 	 * (this is useful if you want to e.g. always scrub forward regardless of scroll direction)
 	 */
 	scrollVelocity?: number | ((velocity: number) => number)
+	/**
+	 * firest when the marquee moves with the current index
+	 */
+	onChange?: (index: number) => void
+	/**
+	 * if you need to access the loop, to e.g. manually scroll to a certain index
+	 * you can access the loop via a ref
+	 */
+	loopRef?: RefObject<InfiniteLoop | null>
 }) {
 	const rowRef = useRef<HTMLDivElement>(null)
 	const [numberNeeded, setNumberNeeded] = useState(1)
+
+	const latestOnChange = useRef(onChange)
+	latestOnChange.current = onChange
 
 	const { result: loop } = useAnimation(
 		() => {
@@ -62,14 +85,22 @@ export function InfiniteSideScroll({
 			// doing the math properly here is a bit tricky, but gives us lots of flexibility in how we pad our marquee
 			const childCount = rowRef.current.children.length / numberNeeded
 			const firstLastChild = rowRef.current.children[childCount - 1]
+			const firstLastRightMargin = Number(
+				gsap.getProperty(firstLastChild ?? null, "marginRight"),
+			)
 			const secondFirstChild = rowRef.current.children[childCount]
+			const secondFirstLeftMargin = Number(
+				gsap.getProperty(secondFirstChild ?? null, "marginLeft"),
+			)
 			const gap =
 				firstLastChild && secondFirstChild
 					? // distance from right edge of first to left edge of second
 						Math.abs(
 							firstLastChild.getBoundingClientRect().right -
 								secondFirstChild.getBoundingClientRect().left,
-						)
+						) -
+						firstLastRightMargin -
+						secondFirstLeftMargin
 					: 0
 
 			const loop = horizontalLoop(rowRef.current.children, {
@@ -81,7 +112,11 @@ export function InfiniteSideScroll({
 				repeat: -1,
 				// padding right should match the calculated gap
 				paddingRight: gap,
+				onChange: (_, index) => {
+					latestOnChange.current?.(index)
+				},
 			})
+			if (loopRef) loopRef.current = loop
 
 			// start centered
 			if (marqueeSpeed === 0) {
@@ -150,7 +185,14 @@ export function InfiniteSideScroll({
 
 			return loop
 		},
-		[marqueeSpeed, reversed, disableDrag, scrollVelocity, numberNeeded],
+		[
+			marqueeSpeed,
+			reversed,
+			disableDrag,
+			scrollVelocity,
+			numberNeeded,
+			loopRef,
+		],
 		{ recreateOnResize: true },
 	)
 

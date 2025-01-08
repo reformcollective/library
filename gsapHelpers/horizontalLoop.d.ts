@@ -11,6 +11,7 @@ interface HorizontalLoopConfig {
 	snap?: boolean | number | ((value: number) => number)
 	draggable?: boolean
 	center?: boolean
+	onChange?: (items: unknown, index: number) => void
 }
 
 interface HorizontalLoopTimeline extends gsap.core.Timeline {
