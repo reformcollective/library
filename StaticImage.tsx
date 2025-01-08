@@ -14,7 +14,7 @@ type LoadingType = "eager" | "lazy" | "default"
 export type DefaultImageProps = Omit<
 	ImgHTMLAttributes<HTMLImageElement>,
 	"src" | "width" | "height" | "loading"
->
+> & { ref?: React.Ref<HTMLImageElement> }
 export const prioritizeLoading = (
 	loading: LoadingType | undefined,
 	defaultEager: boolean,
