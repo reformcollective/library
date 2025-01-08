@@ -390,17 +390,34 @@ export const mergeStyles = (styles: CSSObject) => {
  *
  * Note, the provided component must accept a `className` prop.
  */
-export const styled: typeof restyled = (component, styles) => {
-	hashCounter = 0
+type ClassNameMessage = "Component must accept a `className` prop"
+type AcceptsClassName<T> = T extends keyof React.JSX.IntrinsicElements
+	? "className" extends keyof React.JSX.IntrinsicElements[T]
+		? T
+		: ClassNameMessage
+	: T extends React.ComponentType<infer P>
+		? "className" extends keyof P
+			? T
+			: ClassNameMessage
+		: ClassNameMessage
 
-	if (styles === undefined) return restyled(component)
+export const styled = <ComponentType extends React.ElementType, StyleProps>(
+	component: AcceptsClassName<ComponentType>,
+	styles: CSSObject | ((props: StyleProps) => CSSObject),
+) => {
+	hashCounter = 0
+	type Output = (
+		prop: React.ComponentProps<ComponentType> & StyleProps,
+	) => import("react/jsx-runtime").JSX.Element
+
+	if (styles === undefined) return restyled(component as "div") as Output
 
 	return restyled(
-		component,
+		component as "div",
 		typeof styles === "function"
 			? (props) => mergeStyles(styles(props))
 			: mergeStyles(styles),
-	)
+	) as Output
 }
 
 /**
