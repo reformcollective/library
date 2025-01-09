@@ -47,7 +47,7 @@ type GetMarkDefinition<Item extends Input> = Item extends unknown
 		? {
 				block?: NonNullable<Item["style"]> extends string
 					? {
-							[style in NonNullable<Item["style"]>]: Component
+							[style in NonNullable<Item["style"]>]?: Component
 						}
 					: undefined
 				list?: NonNullable<Item["listItem"]> extends string
@@ -143,20 +143,34 @@ export const TypedPortableText = <MarkType extends Input>({
  * i've added several default styles, but feel free to add more or configure them
  */
 
-const DefaultH1 = styled("h1", { fontWeight: "bold", fontSize: "2em" })
-const DefaultH2 = styled("h2", { fontWeight: "bold", fontSize: "1.5em" })
-const DefaultH3 = styled("h3", { fontWeight: "bold", fontSize: "1.25em" })
-const DefaultH4 = styled("h4", { fontWeight: "bold", fontSize: "1em" })
-const DefaultH5 = styled("h5", { fontWeight: "bold", fontSize: "0.875em" })
-const DefaultH6 = styled("h6", { fontWeight: "bold", fontSize: "0.75em" })
+const DefaultNormal = styled("div", {
+	minHeight: "1em",
+	marginTop: "0.5em",
+	marginBottom: "0.5em",
+})
+const hStyle = {
+	fontWeight: "bold",
+	minHeight: "1em",
+	marginTop: "1em",
+	marginBottom: "0.5em",
+}
+const DefaultH1 = styled("h1", { ...hStyle, fontSize: "2em" })
+const DefaultH2 = styled("h2", { ...hStyle, fontSize: "1.5em" })
+const DefaultH3 = styled("h3", { ...hStyle, fontSize: "1.25em" })
+const DefaultH4 = styled("h4", { ...hStyle, fontSize: "1em" })
+const DefaultH5 = styled("h5", { ...hStyle, fontSize: "0.875em" })
+const DefaultH6 = styled("h6", { ...hStyle, fontSize: "0.75em" })
 const DefaultBlockQuote = styled("blockquote", {
 	borderLeft: "1px solid currentcolor",
 	marginLeft: 0,
 	padding: "1em 2em",
-	opacity: 0.7,
+	opacity: 0.8,
 })
 
 const defaultBlocks = {
+	normal: ({ children }: { children: ReactNode }) => (
+		<DefaultNormal>{children}</DefaultNormal>
+	),
 	h1: ({ children }: { children: ReactNode }) => (
 		<DefaultH1>{children}</DefaultH1>
 	),
