@@ -106,9 +106,9 @@ export const loadPage = async ({
 	 */
 	if (transition === "instant" || !transition || !allTransitions[transition]) {
 		loader.dispatchEvent("start", "instant")
-		loader.dispatchEvent("routeChange", "instant")
 
 		await navigate({ to: navigateTo, routerNavigate })
+		loader.dispatchEvent("routeChange", "instant")
 
 		const scrollLock = createScrollLock("unlock")
 
@@ -151,7 +151,6 @@ export const loadPage = async ({
 
 	// wait for entrance animation to finish
 	await sleep(entranceDuration * 1000)
-	loader.dispatchEvent("routeChange", transition)
 	const scrollLock = createScrollLock()
 
 	// actually navigate to the page
@@ -162,6 +161,7 @@ export const loadPage = async ({
 			animationContext.revert()
 		},
 	})
+	loader.dispatchEvent("routeChange", transition)
 
 	// wait for any promises to settle
 	await sleep(0)
