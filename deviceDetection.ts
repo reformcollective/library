@@ -6,7 +6,9 @@ import { useEffect, useState } from "react"
 const isJSDOM =
 	typeof window !== "undefined" &&
 	window.navigator.userAgent.toLowerCase().includes("jsdom")
-export const isBrowser = typeof window !== "undefined" && !isJSDOM
+const isGithubActions = !!process.env.GITHUB_ACTIONS
+export const isBrowser =
+	typeof window !== "undefined" && !isJSDOM && !isGithubActions
 
 export const isIOS = () => {
 	if (!isBrowser) return false

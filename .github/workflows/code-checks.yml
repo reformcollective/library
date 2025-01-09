@@ -18,6 +18,10 @@ jobs:
   formatting:
     runs-on: ubuntu-latest
     steps:
+      - name: Load .env file
+        uses: oNaiPs/secrets-to-env-action@v1.5
+        with:
+          secrets: ${{ secrets.SECRETS_JSON }}
       - uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -66,7 +70,7 @@ jobs:
       - run: corepack enable
       - run: pnpm install
       - run: pnpm run lint
-      - if: inputs.isSanity == 'true'
+      - if: inputs.isSanity == true
         run: pnpm exec sanity documents validate -y
       # running a build will also check types
       - run: pnpm run build
