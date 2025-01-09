@@ -6,7 +6,7 @@
 	"dependencies": {
 		"@gsap/react": "^2",
 		"ahooks": "^3",
-		"lenis": "^1.1.18",
+		"lenis": "^1.1.19",
 		"minisearch": "^7",
 		"restyle": "github:RJWadley/restyle#add-type",
 		"sanity-image": "^0.2.0",
@@ -18,8 +18,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@types/stylis": "^4.2.7",
-		"@types/three": "^0.171",
-		"typescript": "^5.7.2"
+		"@types/three": "^0.172",
+		"typescript": "^5.7.3"
 	},
 	"scripts": {
 		"lint": "biome lint",
