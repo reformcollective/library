@@ -70,7 +70,7 @@ jobs:
       - run: corepack enable
       - run: pnpm install
       - run: pnpm run lint
-      - if: inputs.isSanity == 'true'
+      - if: inputs.isSanity == true
         run: pnpm exec sanity documents validate -y
       # running a build will also check types
       - run: pnpm run build
