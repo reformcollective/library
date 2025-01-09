@@ -61,7 +61,7 @@ export function InfiniteSideScroll({
 	 */
 	scrollVelocity?: number | ((velocity: number) => number)
 	/**
-	 * firest when the marquee moves with the current index
+	 * fires when the marquee moves with the current index
 	 */
 	onChange?: (index: number) => void
 	/**
