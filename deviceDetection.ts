@@ -8,6 +8,11 @@ const isJSDOM =
 	window.navigator.userAgent.toLowerCase().includes("jsdom")
 export const isBrowser = typeof window !== "undefined" && !isJSDOM
 
+// sanity will sometimes fail - even if we're checking above correctly
+// this is a workaround for the most common case
+window.cancelAnimationFrame ||= () => {}
+window.requestAnimationFrame ||= () => 0
+
 export const isIOS = () => {
 	if (!isBrowser) return false
 	const userAgent = window.navigator.userAgent.toLowerCase()
