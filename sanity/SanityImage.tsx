@@ -92,7 +92,9 @@ export default function SanityUniversalImage(
 				q: 90,
 			}}
 			aspectRatio={
-				props.width && props.height ? `${props.width}/${props.height}` : ""
+				props.width && props.height
+					? `${props.width}/${props.height}`
+					: undefined
 			}
 		/>
 	)
