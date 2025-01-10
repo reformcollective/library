@@ -79,7 +79,7 @@ type GetMarkDefinition<Item extends Input> = Item extends unknown
 
 type GetComponents<T extends Input> = UnionToIntersection<GetMarkDefinition<T>>
 
-export const TypedPortableText = <MarkType extends Input>({
+export const TypedPortableText = <MarkType extends Input[]>({
 	value,
 	components,
 	listNestingMode,
@@ -88,11 +88,11 @@ export const TypedPortableText = <MarkType extends Input>({
 	/**
 	 * One or more blocks to render
 	 */
-	value: MarkType | MarkType[] | null | undefined
+	value: MarkType | null | undefined
 	/**
 	 * React components to use for rendering
 	 */
-	components?: NoInfer<GetComponents<MarkType>>
+	components?: NoInfer<GetComponents<MarkType[number]>>
 	/**
 	 * Function to call when encountering unknown unknown types, eg blocks, marks,
 	 * block style, list styles without an associated React component.
