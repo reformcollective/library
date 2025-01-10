@@ -47,7 +47,7 @@ export default function StaticImage({
 	src,
 	alt = "",
 	objectFit = "cover",
-	objectPosition = "center",
+	objectPosition,
 	loading,
 	...otherProps
 }: StaticImageProps) {
@@ -83,7 +83,9 @@ export default function StaticImage({
 			{...props}
 			src={src}
 			aspectRatio={
-				props.width && props.height ? `${props.width}/${props.height}` : ""
+				props.width && props.height
+					? `${props.width}/${props.height}`
+					: undefined
 			}
 		/>
 	)
@@ -95,8 +97,8 @@ export const defaultImageStyles = ({
 	aspectRatio,
 }: {
 	objectFit: "contain" | "cover"
-	objectPosition: string
-	aspectRatio: string
+	objectPosition: string | undefined
+	aspectRatio: string | undefined
 }) => ({
 	display: "block",
 	objectFit,
