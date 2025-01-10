@@ -84,7 +84,8 @@ export default function SanityUniversalImage(
 			// @ts-expect-error library type mismatch
 			crop={src.crop}
 			id={src.asset?._ref}
-			mode={props.objectFit}
+			mode={props.objectFit ?? "cover"}
+			objectFit={props.objectFit ?? "cover"}
 			projectId={projectId}
 			dataset={dataset}
 			queryParams={{
