@@ -129,6 +129,10 @@ declare global {
 	}
 }
 
+ScrollTrigger.config({
+	ignoreMobileResize: true,
+})
+
 export const useSmoothScroll = () => {
 	useLayoutEffect(() => {
 		/**
