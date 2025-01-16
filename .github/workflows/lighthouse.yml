@@ -27,6 +27,7 @@ jobs:
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
+      - run: touch .env
 
       # BEGIN INSTALLATION
       - uses: actions/checkout@v4
