@@ -105,6 +105,7 @@ export default function UniversalLink({
 		if (openInNewTab || !internal) {
 			window.open(href, "_blank")
 		} else {
+			router.prefetch(href)
 			loadPage({ to: href, transition, routerNavigate: router.push })
 		}
 	}
