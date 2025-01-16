@@ -21,7 +21,7 @@ concurrency:
 jobs:
   lighthouse:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
