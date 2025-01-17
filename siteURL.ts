@@ -1,9 +1,13 @@
 /**
  * currently, NETLIFY and VERCEL are supported
  *
- * prefer adding support for other platforms here
- * rather then overriding the URL manually
+ * if you need to override the site URL, for example to deploy on another platform
+ *
+ * either update this file to support that platform
+ * OR you can set the NEXT_PUBLIC_SITE_OVERRIDE_URL environment variable
  */
+
+const overrideURL = process.env.NEXT_PUBLIC_SITE_OVERRIDE_URL
 
 const netlifyURL = process.env.DEPLOY_PRIME_URL?.startsWith("https://main--")
 	? // if we're on prod branch, use the public URL
@@ -15,7 +19,8 @@ const vercelURL = process.env.VERCEL_URL
 	? `https://${process.env.VERCEL_URL}`
 	: undefined
 
-export const siteURL = vercelURL || netlifyURL || "http://localhost:3000"
+export const siteURL =
+	overrideURL || vercelURL || netlifyURL || "http://localhost:3000"
 
 if (process.env.NODE_ENV === "production" && siteURL.includes("localhost")) {
 	console.warn(
