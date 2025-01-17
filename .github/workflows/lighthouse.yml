@@ -47,6 +47,10 @@ jobs:
         if: github.event.action != 'closed'
         run: pnpm run build
 
+      - name: kill the process running on port 3000
+        if: github.event.action != 'closed'
+        run: kill -9 $(lsof -t -i:3000)
+
       - name: Serve
         if: github.event.action != 'closed'
         run: pnpm run serve & SERVER_PID=$!
