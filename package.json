@@ -6,7 +6,7 @@
 	"dependencies": {
 		"@gsap/react": "^2",
 		"ahooks": "^3",
-		"lenis": "^1.1.19",
+		"lenis": "^1.1.20",
 		"minisearch": "^7",
 		"restyle": "^3.1.1",
 		"sanity-image": "^0.2.0",
