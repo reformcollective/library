@@ -5,8 +5,26 @@ import { useEffect, useLayoutEffect, useState } from "react"
 import TypedEventEmitter from "./TypedEventEmitter"
 import { isBrowser } from "./deviceDetection"
 import Lenis from "lenis"
+import { css, GlobalStyles, unresponsive } from "./styled"
 
-import "lenis/dist/lenis.css"
+const styles = unresponsive(css`
+	html.lenis,
+	html.lenis body {
+		height: auto;
+	}
+
+	.lenis.lenis-smooth [data-lenis-prevent] {
+		overscroll-behavior: contain;
+	}
+
+	.lenis.lenis-stopped {
+		overflow: clip;
+	}
+
+	.lenis.lenis-smooth iframe {
+		pointer-events: none;
+	}
+`)
 
 const locks: symbol[] = []
 const locksChange = new TypedEventEmitter<{ change: [] }>()
@@ -133,7 +151,7 @@ ScrollTrigger.config({
 	ignoreMobileResize: true,
 })
 
-export const useSmoothScroll = () => {
+export const SmoothScrollStyle = () => {
 	useLayoutEffect(() => {
 		/**
 		 * create the smoother
@@ -196,4 +214,6 @@ export const useSmoothScroll = () => {
 			window.removeEventListener("resize", onResize)
 		}
 	}, [])
+
+	return <GlobalStyles>{styles}</GlobalStyles>
 }

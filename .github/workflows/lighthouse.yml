@@ -21,7 +21,7 @@ concurrency:
 jobs:
   lighthouse:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
@@ -48,9 +48,17 @@ jobs:
         if: github.event.action != 'closed'
         run: pnpm run build
 
+      - name: kill the process running on port 3000
+        if: github.event.action != 'closed'
+        run: kill -9 $(lsof -t -i:3000)
+
       - name: Serve
         if: github.event.action != 'closed'
         run: pnpm run serve & SERVER_PID=$!
+
+      - name: Wait for server...
+        if: github.event.action != 'closed'
+        run: sleep 5
 
       - name: Run Unlighthouse
         if: github.event.action != 'closed'
