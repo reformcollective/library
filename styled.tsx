@@ -403,7 +403,7 @@ type AcceptsClassName<T> = T extends keyof React.JSX.IntrinsicElements
 
 export const styled = <ComponentType extends React.ElementType, StyleProps>(
 	component: AcceptsClassName<ComponentType>,
-	styles: CSSObject | ((props: StyleProps) => CSSObject),
+	styles?: CSSObject | ((props: StyleProps) => CSSObject),
 ) => {
 	hashCounter = 0
 	type Output = (
