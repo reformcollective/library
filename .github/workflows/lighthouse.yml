@@ -55,6 +55,10 @@ jobs:
         if: github.event.action != 'closed'
         run: pnpm run serve & SERVER_PID=$!
 
+      - name: Wait for server...
+        if: github.event.action != 'closed'
+        run: sleep 5
+
       - name: Run Unlighthouse
         if: github.event.action != 'closed'
         run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
