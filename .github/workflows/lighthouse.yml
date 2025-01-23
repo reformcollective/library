@@ -81,7 +81,7 @@ jobs:
         id: deployment
         # don't skip if unlighthouse fails
         if: always()
-        uses: rjwadley/pr-preview-action@v1
+        uses: rjwadley/pr-preview-action@c7b44485908d30d2d062ce01794660fceb4688ab
         with:
           source-dir: ./report/
           umbrella-dir: ${{ github.repository }}
