@@ -52,7 +52,6 @@ export default function StaticImage({
 	objectPosition,
 	loading,
 	sizes = "100vw",
-	priority = false,
 	...otherProps
 }: StaticImageProps) {
 	if (!src) return null
@@ -87,7 +86,6 @@ export default function StaticImage({
 			{...props}
 			src={src}
 			sizes={sizes}
-			priority={priority}
 			aspectRatio={
 				props.width && props.height
 					? `${props.width}/${props.height}`
