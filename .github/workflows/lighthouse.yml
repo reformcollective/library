@@ -69,7 +69,7 @@ jobs:
 
       - name: Run Unlighthouse
         if: github.event.action != 'closed'
-        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
+        run: pnpm dlx unlighthouse-ci --site http://localhost:${{ steps.port.outputs.port }}/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
 
       - name: kill the server
         if: github.event.action != 'closed'
