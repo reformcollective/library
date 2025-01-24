@@ -22,7 +22,6 @@ jobs:
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
-      - run: touch .env
       - uses: actions/checkout@v4
         with:
           submodules: recursive
