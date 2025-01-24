@@ -237,7 +237,7 @@ export function horizontalLoop(items, config) {
 					hasMoved = false
 					const x = this.x
 					gsap.killTweensOf(tl)
-					wasPlaying = !tl.paused()
+					wasPlaying = wasPlaying || !tl.paused()
 					tl.pause()
 					startProgress = tl.progress()
 					refresh()
