@@ -25,7 +25,7 @@ type AnchorProps = {
 	/**
 	 * where should the link navigate to?
 	 */
-	href: Route | string | null | undefined
+	href: Route | string | null | undefined | { href: `https://${string}` }
 	/**
 	 * which transition should be used when navigating to this link?
 	 */
@@ -65,7 +65,9 @@ export default function UniversalLink({
 
 	const href =
 		props.href && typeof props.href === "object"
-			? route(props.href)
+			? "href" in props.href
+				? props.href.href
+				: route(props.href)
 			: props.href
 	const internal = href ? linkIsInternal(href) : false
 	const router = useRouter()
@@ -90,7 +92,7 @@ export default function UniversalLink({
 		<Link
 			onClick={handleClick}
 			{...props}
-			// biome-ignore lint/suspicious/noExplicitAny: I am very intentionally disabling type checking here because a cast would not be universally compatible
+			// biome-ignore lint/suspicious/noExplicitAny: I am very intentionally disabling type checking here because a cast would not be backwards compatible
 			href={href as any}
 		>
 			{children}
