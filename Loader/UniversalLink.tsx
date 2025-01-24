@@ -3,65 +3,40 @@
 import libraryConfig from "libraryConfig"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import type { CSSProperties, MouseEventHandler } from "react"
+import type { Route } from "nextjs-routes"
+import { route } from "nextjs-routes"
+import type { ComponentProps } from "react"
 import type { Transitions } from "."
 import { linkIsInternal } from "../functions"
 import { loadPage } from "./TransitionUtils"
 
-interface BaseLinkProps {
-	/**
-	 * should the link open in a new tab?
-	 */
-	openInNewTab?: boolean
-	children: React.ReactNode
-	className?: string
-	onMouseEnter?: MouseEventHandler
-	onMouseLeave?: MouseEventHandler
-	ariaLabel?: string
-	anchor?: string
-	"aria-disabled"?: boolean
-	style?: CSSProperties
-}
-
-interface ButtonProps extends BaseLinkProps {
-	/**
-	 * what should happen when the button is clicked?
-	 */
-	onClick?: MouseEventHandler
+type ButtonProps = {
 	/**
 	 * what type of button is this?
 	 */
 	type: "submit" | "button" | "reset"
-	/**
-	 * forward a ref to the button
-	 */
-	ref?: React.RefObject<HTMLButtonElement | null>
-	/**
-	 * Do you want to scroll to a specific location after the transition?
-	 */
-	anchor?: string
 
 	href?: undefined
 	transition?: undefined
-}
+	openInNewTab?: undefined
+} & Omit<ComponentProps<"button">, "type">
 
-interface AnchorProps extends BaseLinkProps {
+type AnchorProps = {
 	/**
 	 * where should the link navigate to?
 	 */
-	href: string | null | undefined
+	href: Route | string | null | undefined | { href: `https://${string}` }
 	/**
 	 * which transition should be used when navigating to this link?
 	 */
 	transition?: Transitions
 	/**
-	 * forward a ref to the link or anchor tag
+	 * open this link in a new tab?
 	 */
-	ref?: React.RefObject<HTMLAnchorElement | null>
+	openInNewTab?: boolean
 
-	onClick?: undefined
 	type?: undefined
-}
+} & Omit<ComponentProps<"a">, "href" | "onClick">
 
 export type UniversalLinkProps = ButtonProps | AnchorProps
 
@@ -70,21 +45,14 @@ export type UniversalLinkProps = ButtonProps | AnchorProps
  * @returns
  */
 export default function UniversalLink({
-	href,
-	transition = libraryConfig.defaultTransition,
-	openInNewTab = false,
-	ref,
-	type,
 	children,
-	ariaLabel,
+	transition = libraryConfig.defaultTransition,
+	openInNewTab,
 	...props
 }: UniversalLinkProps) {
-	if (type) {
+	if (props.type) {
 		return (
 			<button
-				type={type}
-				ref={ref}
-				aria-label={ariaLabel}
 				{...props}
 				style={{
 					cursor: "pointer",
@@ -95,6 +63,12 @@ export default function UniversalLink({
 		)
 	}
 
+	const href =
+		props.href && typeof props.href === "object"
+			? "href" in props.href
+				? props.href.href
+				: route(props.href)
+			: props.href
 	const internal = href ? linkIsInternal(href) : false
 	const router = useRouter()
 
@@ -106,28 +80,25 @@ export default function UniversalLink({
 			window.open(href, "_blank")
 		} else {
 			router.prefetch(href)
-			loadPage({ to: href, transition, routerNavigate: router.push })
+			loadPage({
+				to: href,
+				transition,
+				routerNavigate: router.push as (url: string) => unknown,
+			})
 		}
 	}
 
 	return internal && href ? (
 		<Link
-			href={href}
 			onClick={handleClick}
-			ref={ref}
-			aria-label={ariaLabel}
 			{...props}
+			// biome-ignore lint/suspicious/noExplicitAny: I am very intentionally disabling type checking here because a cast would not be backwards compatible
+			href={href as any}
 		>
 			{children}
 		</Link>
 	) : (
-		<a
-			href={href ?? undefined}
-			onClick={handleClick}
-			ref={ref}
-			aria-label={ariaLabel}
-			{...props}
-		>
+		<a onClick={handleClick} {...props} href={href ?? undefined}>
 			{children}
 		</a>
 	)

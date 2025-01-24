@@ -47,13 +47,20 @@ jobs:
         if: github.event.action != 'closed'
         run: pnpm run build
 
-      - name: kill the process running on port 3000
-        if: github.event.action != 'closed'
-        run: kill -9 $(lsof -t -i:3000)
+      - name: find an open port >= 3000
+        id: port
+        run: |
+          while true; do
+            port=$((RANDOM%10000 + 3000))
+            if ! lsof -i:$port -t; then
+              echo "port=$port" >> $GITHUB_OUTPUT
+              break
+            fi
+          done
 
       - name: Serve
         if: github.event.action != 'closed'
-        run: pnpm run serve & SERVER_PID=$!
+        run: pnpm run serve --port ${{ steps.port.outputs.port }} & exit 0
 
       - name: Wait for server...
         if: github.event.action != 'closed'
@@ -61,7 +68,13 @@ jobs:
 
       - name: Run Unlighthouse
         if: github.event.action != 'closed'
-        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
+        run: pnpm dlx unlighthouse-ci --site http://localhost:${{ steps.port.outputs.port }}/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
+
+      - name: kill the server
+        # don't skip if unlighthouse fails
+        if: always()
+        run: kill -9 $(lsof -t -i:${{ steps.port.outputs.port }})
+        continue-on-error: true
 
       - name: Deploy preview
         id: deployment
