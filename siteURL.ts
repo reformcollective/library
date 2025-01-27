@@ -22,8 +22,17 @@ const vercelURL = process.env.VERCEL_URL
 export const siteURL =
 	overrideURL || vercelURL || netlifyURL || "http://localhost:3000"
 
-if (process.env.NODE_ENV === "production" && siteURL.includes("localhost")) {
+if (process.env.CI && siteURL.includes("localhost")) {
 	console.warn(
 		"site depends on NETLIFY or VERCEL environment variables, which are not present.",
 	)
+	console.warn(`
+NETLIFY:
+	DEPLOY_PRIME_URL: ${process.env.DEPLOY_PRIME_URL || "not set"}
+	URL: ${process.env.URL || "not set"}
+	DEPLOY_URL: ${process.env.DEPLOY_URL || "not set"}
+
+VERCEL:
+	VERCEL_URL: ${process.env.VERCEL_URL || "not set"}
+`)
 }
