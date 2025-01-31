@@ -1,38 +1,59 @@
 /**
- * currently, NETLIFY and VERCEL are supported
- *
- * if you need to override the site URL, for example to deploy on another platform
- *
- * either update this file to support that platform
- * OR you can set the NEXT_PUBLIC_SITE_OVERRIDE_URL environment variable
+ * Support for NETLIFY and VERCEL deployments
  */
 
 const overrideURL = process.env.NEXT_PUBLIC_SITE_OVERRIDE_URL
 
-const netlifyURL = process.env.DEPLOY_PRIME_URL?.startsWith("https://main--")
-	? // if we're on prod branch, use the public URL
-		process.env.URL
-	: // otherwise, use this deploy's unique URL
-		process.env.DEPLOY_URL
+// Helper to safely check environments
+const isVercel = process.env.VERCEL === "1"
+const isNetlify = process.env.NETLIFY === "true"
+const isCI = process.env.CI === "true" || isVercel || isNetlify
 
-const vercelURL = process.env.VERCEL_URL
-	? `https://${process.env.VERCEL_URL}`
-	: undefined
+// Netlify URL logic
+const netlifyURL = (() => {
+	if (!isNetlify) return null
+	return process.env.DEPLOY_PRIME_URL?.startsWith("https://main--")
+		? process.env.URL
+		: process.env.DEPLOY_URL
+})()
+
+// Vercel URL logic
+const vercelURL = (() => {
+	if (!isVercel) return null
+	return process.env.VERCEL_ENV === "production"
+		? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+		: `https://${process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL}`
+})()
+
+// Debug logging in CI environments
+if (isCI) {
+	console.log("Deploy Environment:", {
+		platform: isVercel ? "Vercel" : isNetlify ? "Netlify" : "Other CI",
+		netlifyVars: isNetlify
+			? {
+					DEPLOY_PRIME_URL: process.env.DEPLOY_PRIME_URL,
+					URL: process.env.URL,
+					DEPLOY_URL: process.env.DEPLOY_URL,
+				}
+			: null,
+		vercelVars: isVercel
+			? {
+					VERCEL_ENV: process.env.VERCEL_ENV,
+					VERCEL_URL: process.env.VERCEL_URL,
+					VERCEL_BRANCH_URL: process.env.VERCEL_BRANCH_URL,
+					VERCEL_PROJECT_PRODUCTION_URL:
+						process.env.VERCEL_PROJECT_PRODUCTION_URL,
+				}
+			: null,
+	})
+}
 
 export const siteURL =
 	overrideURL || vercelURL || netlifyURL || "http://localhost:3000"
 
-if (process.env.CI && siteURL.includes("localhost")) {
+// Only warn if we're in CI and can't determine the URL
+if (isCI && siteURL === "http://localhost:3000") {
 	console.warn(
-		"site depends on NETLIFY or VERCEL environment variables, which are not present.",
+		"Warning: Unable to determine deployment URL in CI environment. Check platform environment variables.",
 	)
-	console.warn(`
-NETLIFY:
-	DEPLOY_PRIME_URL: ${process.env.DEPLOY_PRIME_URL || "not set"}
-	URL: ${process.env.URL || "not set"}
-	DEPLOY_URL: ${process.env.DEPLOY_URL || "not set"}
-
-VERCEL:
-	VERCEL_URL: ${process.env.VERCEL_URL || "not set"}
-`)
 }
