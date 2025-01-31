@@ -15,9 +15,10 @@ const netlifyURL = process.env.DEPLOY_PRIME_URL?.startsWith("https://main--")
 	: // otherwise, use this deploy's unique URL
 		process.env.DEPLOY_URL
 
-const vercelURL = process.env.VERCEL_URL
-	? `https://${process.env.VERCEL_URL}`
-	: undefined
+const vercelURL =
+	process.env.VERCEL_ENV === "production"
+		? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+		: `https://${process.env.VERCEL_BRANCH_URL || process.env.VERCEL_URL}`
 
 export const siteURL =
 	overrideURL || vercelURL || netlifyURL || "http://localhost:3000"
