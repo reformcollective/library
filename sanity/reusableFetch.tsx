@@ -72,7 +72,7 @@ export const SanityLive = async () => {
 				</>
 			)}
 			<LiveWrapper>
-				<InternalLive onError={handleError} />
+				<InternalLive onError={handleError} refreshOnFocus={false} />
 			</LiveWrapper>
 		</>
 	)
