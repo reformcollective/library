@@ -21,8 +21,10 @@ export const generateGradientBorder = (
 
 	/* clip out the background so we get transparency */
 	mask:
+		/* stylelint-disable-next-line declaration-property-value-no-unknown */
 		linear-gradient(#fff 0 0) padding-box,
 		linear-gradient(#fff 0 0);
+	/* stylelint-disable-next-line declaration-property-value-no-unknown */
 	mask-composite: xor;
 	mask-composite: exclude;
 `
