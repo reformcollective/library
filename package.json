@@ -26,7 +26,7 @@
 		"format": "biome check --write"
 	},
 	"preinstall": "npx only-allow pnpm",
-	"packageManager": "pnpm@10.2.1",
+	"packageManager": "pnpm@10.3.0",
 	"engines": {
 		"node": "22.x"
 	}
