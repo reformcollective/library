@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      - run: corepack enable
+      - run: npm i -g corepack@latest && corepack enable
       - name: Install dependencies
         run: pnpm install || echo 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
       - run: pnpm run lint
@@ -67,7 +67,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      - run: corepack enable
+      - name: Enable corepack
+        run: npm i -g corepack@latest && corepack enable
       - run: pnpm install
       - run: pnpm run lint
       - if: inputs.isSanity == true
