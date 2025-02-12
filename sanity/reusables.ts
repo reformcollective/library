@@ -75,4 +75,19 @@ export const universalImage = <
 			hotspot: cropType && cropType !== "css",
 			...schemaField.options,
 		},
+		preview: {
+			select: {
+				alt: "alt",
+				image: "asset.url",
+				title: "asset.title",
+				fallback: "asset.originalFilename",
+			},
+			prepare({ image, alt, fallback, title }) {
+				console.log({ image, alt, fallback })
+				return {
+					imageUrl: image,
+					title: alt || title || fallback,
+				}
+			},
+		},
 	})
