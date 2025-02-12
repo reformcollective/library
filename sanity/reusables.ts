@@ -2,6 +2,7 @@ import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
 import { defineField, type ImageDefinition } from "sanity"
 import UniversalImage from "./SanityImage"
+import { requiredLinkField } from "sanity-plugin-link-field"
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
@@ -90,4 +91,23 @@ export const universalImage = <
 				}
 			},
 		},
+	})
+
+export const universalLink = ({
+	withText = true,
+	required,
+	...props
+}: {
+	name: string
+	title?: string
+	withText?: boolean
+	required?: boolean
+}) =>
+	defineField({
+		...props,
+		type: "link",
+		options: { enableText: withText },
+		validation: required
+			? (rule) => rule.custom((field) => requiredLinkField(field))
+			: undefined,
 	})
