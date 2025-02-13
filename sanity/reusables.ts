@@ -84,7 +84,6 @@ export const universalImage = <
 				fallback: "asset.originalFilename",
 			},
 			prepare({ image, alt, fallback, title }) {
-				console.log({ image, alt, fallback })
 				return {
 					imageUrl: image,
 					title: alt || title || fallback,
