@@ -20,12 +20,14 @@ const fileQuery = defineQuery(`
 `)
 
 const linkQuery = defineQuery(`
-	*[_id == $link && defined(slug.current)][0]
+	*[_id == $asset && defined(slug.current)][0] {
+		slug
+	}
 `)
 
 export type DeepAssetMeta<T> = T extends { asset?: { _ref?: string } }
 	? T & { data?: AssetMeta }
-	: T extends { internalLink?: { _ref?: string } }
+	: T extends { _type: "link"; internalLink?: { _ref?: string } }
 		? T & { internalSlug?: string }
 		: T extends object
 			? { [K in keyof T]: DeepAssetMeta<T[K]> }
@@ -79,8 +81,9 @@ export const fetchAssetMeta = async <InputType>(
 		}
 
 		if (
+			"_type" in input &&
+			input._type === "link" &&
 			"internalLink" in input &&
-			input.internalLink &&
 			typeof input.internalLink === "object" &&
 			input.internalLink !== null &&
 			"_ref" in input.internalLink &&
@@ -89,7 +92,7 @@ export const fetchAssetMeta = async <InputType>(
 			const { data: link } = await sanityFetch({
 				query: linkQuery,
 				params: {
-					link: input.internalLink._ref,
+					asset: input.internalLink._ref,
 				},
 			})
 

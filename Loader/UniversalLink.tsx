@@ -168,12 +168,7 @@ export default function UniversalLink({
 			{children}
 		</Link>
 	) : (
-		<a
-			onClick={handleClick}
-			{...props}
-			href={url ?? undefined}
-			rel="noopener noreferrer"
-		>
+		<a onClick={handleClick} {...props} href={url ?? undefined}>
 			{children}
 		</a>
 	)
