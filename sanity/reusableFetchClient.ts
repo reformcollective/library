@@ -1,8 +1,8 @@
 "use client"
 
-import { useClientOnly } from "library/ClientOnly"
 import { isBrowser } from "library/deviceDetection"
 import { isCorsOriginError } from "next-sanity"
+import { useState } from "react"
 import { toast } from "sonner"
 import { studioUrl } from "../../../sanity/lib/api"
 
@@ -16,12 +16,12 @@ export default function LiveWrapper({
 }: {
 	children: React.ReactNode
 }) {
-	const isStudio = useClientOnly(
-		isBrowser && window.location.pathname.startsWith(studioUrl),
-		true,
-	)
+	const [show, setShow] = useState(false)
 
-	return isStudio ? null : children
+	const newShow = isBrowser && window.location.pathname.startsWith(studioUrl)
+	if (newShow !== show) setShow(newShow)
+
+	return show ? null : children
 }
 
 export function handleError(error: unknown) {
