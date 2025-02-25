@@ -1,43 +1,71 @@
-import { useRafInterval } from "ahooks"
+"use client"
+
 import { ScrollTrigger } from "gsap/all"
-import { useRef, useState } from "react"
+import { useRef, useState, type ReactNode, type Ref } from "react"
 
 import { useAnimation } from "./useAnimation"
+import useCombinedRefs from "./useCombinedRefs"
+import { useRafInterval } from "ahooks"
 
 type Props = {
-	poster: string
+	poster?: string
 	className?: string
 	style?: React.CSSProperties
 	ref?: React.RefObject<HTMLVideoElement>
 	contextMenu?: boolean
 	loop?: boolean
 	autoPlay?: boolean
-} & (
-	| { sourceMP4: string; sourceWEBM?: string }
-	| { sourceMP4?: string; sourceWEBM: string }
-)
+}
 
 export function LazyVideo({
-	poster,
-	sourceMP4,
-	sourceWEBM,
+	autoPlay,
+	loop,
+	muted,
+	onLoad,
 	ref,
-	contextMenu = true,
-	loop = true,
-	autoPlay = true,
+	children,
 	...props
-}: Props) {
+}: {
+	/**
+	 * specify a poster image
+	 */
+	poster?: string
+	/**
+	 * should the video play automatically when loaded?
+	 * this will mute the video
+	 */
+	autoPlay?: boolean
+	/**
+	 * should we mute the video?
+	 * this option is also implied by autoPlay
+	 */
+	muted?: boolean
+	/**
+	 * should the video repeat?
+	 */
+	loop?: boolean
+	/**
+	 * callback when the first frame of the video has loaded
+	 */
+	onLoad?: (video: HTMLVideoElement) => void
+	children?: ReactNode
+	className?: string
+	style?: React.CSSProperties
+	ref?: Ref<HTMLVideoElement>
+}) {
 	const [showVideo, setShowVideo] = useState(false)
-	const alternateRef = useRef<HTMLVideoElement>(null)
-	const refToUse = ref ?? alternateRef
+	const videoRef = useCombinedRefs(ref)
+	const hasStartedLoading = useRef(false)
 
 	const { result: trigger } = useAnimation(() => {
 		return ScrollTrigger.create({
-			trigger: refToUse.current,
-			start: "top bottom",
+			trigger: videoRef.current,
+			start: "top-=200 bottom",
+			end: "bottom+=200 top",
 			onEnter: () => setShowVideo(true),
+			onEnterBack: () => setShowVideo(true),
 		})
-	}, [refToUse])
+	}, [videoRef])
 
 	/**
 	 * if the video starts off screen and animates in, the trigger might not catch it
@@ -45,27 +73,25 @@ export function LazyVideo({
 	 */
 	useRafInterval(() => {
 		if (!showVideo) trigger?.refresh()
-	}, 32)
+	}, 100)
 
 	return (
 		<video
 			{...props}
-			poster={poster}
+			ref={videoRef}
 			autoPlay={autoPlay}
-			muted
+			muted={muted || autoPlay}
 			loop={loop}
 			playsInline
-			onContextMenu={(e) => {
-				!contextMenu && e.preventDefault()
+			onLoadedData={(e) => {
+				if (!hasStartedLoading.current) {
+					const video = e.target as HTMLVideoElement
+					hasStartedLoading.current = true
+					onLoad?.(video)
+				}
 			}}
-			ref={refToUse}
 		>
-			{showVideo && (
-				<>
-					{sourceWEBM && <source src={sourceWEBM} type="video/webm" />}
-					{sourceMP4 && <source src={sourceMP4} type="video/mp4" />}
-				</>
-			)}
+			{showVideo && children}
 		</video>
 	)
 }
