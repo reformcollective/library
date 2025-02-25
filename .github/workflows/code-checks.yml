@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   formatting:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/setup-node@v4
+      - uses: useblacksmith/setup-node@v5
         with:
           node-version-file: .nvmrc
       - run: npm i -g corepack@latest && corepack enable
@@ -46,7 +46,7 @@ jobs:
           fail-message: 'Looks like there may be formatting issues. Run "pnpm format" to fix them.'
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions/cache@v4
+      - uses: useblacksmith/cache@v5
         with:
           path: |
             ${{ github.workspace }}/.next/cache
@@ -64,7 +64,7 @@ jobs:
           # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
-      - uses: actions/setup-node@v4
+      - uses: useblacksmith/setup-node@v5
         with:
           node-version-file: .nvmrc
       - name: Enable corepack
