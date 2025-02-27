@@ -1,15 +1,25 @@
-import { type ContextSafeFunc, useGSAP } from "@gsap/react"
 import gsap from "gsap/all"
 import type { DependencyList } from "react"
-import { use, useDeferredValue, useRef, useState } from "react"
+import {
+	use,
+	useDeferredValue,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react"
 import { ScreenContext } from "./ScreenContext"
+import { isBrowser } from "./deviceDetection"
 
+const useIsoEffect = isBrowser ? useLayoutEffect : useEffect
+
+type ContextSafeFunc = <T extends (...args: unknown[]) => unknown>(func: T) => T
 type Creation = (arg: {
 	context: gsap.Context
 	contextSafe: ContextSafeFunc
 }) => unknown
 
-gsap.registerPlugin(useGSAP)
 gsap.config({
 	nullTargetWarn: false,
 })
@@ -63,59 +73,45 @@ export const useAnimation = <InputFn extends Creation>(
 		extraDeps?: DependencyList
 	},
 ) => {
-	const standardDeps = deps ?? []
-	const extraDeps = options?.extraDeps ?? []
-
 	type OutputType =
 		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
 		ReturnType<InputFn> extends Function ? undefined : ReturnType<InputFn>
 
-	const [returnValue, setReturnValue] = useState<OutputType>()
-
+	const standardDeps = deps ?? []
+	const extraDeps = options?.extraDeps ?? []
 	const { initComplete, innerWidth } = use(ScreenContext)
 	const resizeSignal = Math.round(innerWidth)
-	const previousContext = useRef(gsap.context(() => {}))
+
+	const dependencies = [
+		options?.updateBehavior,
+		options?.recreateOnResize ? resizeSignal : undefined,
+		useDeferredValue(initComplete),
+		useDeferredValue(resizeSignal),
+		...standardDeps,
+		...extraDeps,
+	]
+
+	const [returnValue, setReturnValue] = useState<OutputType>()
+	const context = useRef(gsap.context(() => {}))
 	const cleanups = useRef<(() => unknown)[]>([])
+	const runCleanup = (revert: boolean) => {
+		context.current.kill(revert)
+		for (const cleanup of cleanups.current) {
+			cleanup()
+		}
+		cleanups.current = []
+	}
 
-	const { context, contextSafe } = useGSAP(
-		(context, contextSafe) => {
-			if (!contextSafe) return
-			if (!initComplete) return
-
-			if (options?.updateBehavior === "kill") {
-				previousContext.current.kill()
-				previousContext.current = gsap.context(() => {})
-				for (const cleanup of cleanups.current) {
-					cleanup()
-				}
-				cleanups.current = []
-			}
-
-			previousContext.current.add(() => {
-				const result = createAnimations({ context, contextSafe })
-
-				if (typeof result === "function") {
-					cleanups.current.push(result as () => unknown)
-					return result
-				}
-
-				setReturnValue(result as OutputType)
-			})
-		},
-		{
-			revertOnUpdate:
-				options?.updateBehavior === "revert" ||
-				options?.updateBehavior === undefined,
-			scope: options?.scope,
-			dependencies: [
-				options?.updateBehavior,
-				useDeferredValue(initComplete),
-				useDeferredValue(resizeSignal),
-				...standardDeps,
-				...extraDeps,
-			],
-		},
+	const contextSafe: ContextSafeFunc = useMemo(
+		() => (func) => context.current.add(null, func),
+		[context],
 	)
 
-	return { context, contextSafe, result: returnValue }
+	useIsoEffect(() => {}, [])
+
+	return {
+		context,
+		contextSafe,
+		result: returnValue,
+	}
 }
