@@ -25,22 +25,41 @@ gsap.config({
  *   })
  * }, [wrapperEl])
  *  ```
- * @param createAnimations - function that creates the animation. you can return a cleanup function that will be called
- * or an object that will be returned by the hook
- * @param deps - any dependencies that should cause the animations to be re-created
- * @param options - options for the hook
- * @param options.scope - the scope of the animation for GSAP to use
- * @param options.killOnUpdate - whether to kill the animation when the component is unmounted, rather than reverting it
- * @param options.recreateOnResize - whether to re-create the animations when the window is resized
- * @param options.extraDeps - sany extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
  */
 export const useAnimation = <InputFn extends Creation>(
+	/**
+	 * function that creates the animation. you can return also cleanup function that will be called on revert/kill
+	 */
 	createAnimations: InputFn,
-	deps?: DependencyList,
+	/**
+	 * any dependencies that should cause the animations to be re-created
+	 */
+	deps: DependencyList,
+	/**
+	 * options for the hook
+	 */
 	options?: {
+		/**
+		 * the scope of the animation for GSAP to use
+		 */
 		scope?: React.RefObject<Element | null>
+		/**
+		 * whether to re-create the animations when the window is resized
+		 */
 		recreateOnResize?: boolean
-		killOnUpdate?: boolean
+		/**
+		 * when deps change, how should we handle currently running animations?
+		 * kill them, or revert them. when the component unmounts,
+		 * we'll always fully revert regardless of this setting
+		 */
+		updateBehavior?: "kill" | "revert"
+		/**
+		 * any extra dependencies that should cause the animations to be re-created
+		 * (in addition to the ones passed in the deps array)
+		 *
+		 * useful because you can retain dependency linting while also including
+		 * extra dependencies
+		 */
 		extraDeps?: DependencyList
 	},
 ) => {
@@ -70,11 +89,13 @@ export const useAnimation = <InputFn extends Creation>(
 			setReturnValue(result as OutputType)
 		},
 		{
-			revertOnUpdate: !options?.killOnUpdate,
+			revertOnUpdate:
+				options?.updateBehavior === "revert" ||
+				options?.updateBehavior === undefined,
 			scope: options?.scope,
 			dependencies: [
 				useDeferredValue(initComplete),
-				useDeferredValue(resizeSignal),
+				useDeferredValue(options?.recreateOnResize ? resizeSignal : null),
 				...standardDeps,
 				...extraDeps,
 			],
