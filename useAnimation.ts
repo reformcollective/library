@@ -75,6 +75,7 @@ export const useAnimation = <InputFn extends Creation>(
 	const { initComplete, innerWidth } = use(ScreenContext)
 	const resizeSignal = Math.round(innerWidth)
 	const previousContext = useRef(gsap.context(() => {}))
+	const cleanups = useRef<(() => unknown)[]>([])
 
 	const { context, contextSafe } = useGSAP(
 		(context, contextSafe) => {
@@ -84,12 +85,17 @@ export const useAnimation = <InputFn extends Creation>(
 			if (options?.updateBehavior === "kill") {
 				previousContext.current.kill()
 				previousContext.current = gsap.context(() => {})
+				for (const cleanup of cleanups.current) {
+					cleanup()
+				}
+				cleanups.current = []
 			}
 
 			previousContext.current.add(() => {
 				const result = createAnimations({ context, contextSafe })
 
 				if (typeof result === "function") {
+					cleanups.current.push(result as () => unknown)
 					return result
 				}
 
