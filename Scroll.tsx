@@ -18,7 +18,9 @@ const styles = unresponsive(css`
 	}
 
 	.lenis.lenis-stopped {
-		overflow: clip;
+		body {
+			overflow: hidden;
+		}
 	}
 
 	.lenis.lenis-smooth iframe {
