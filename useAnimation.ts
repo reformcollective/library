@@ -3,6 +3,7 @@ import gsap from "gsap/all"
 import type { DependencyList } from "react"
 import { use, useDeferredValue, useState } from "react"
 import { ScreenContext } from "./ScreenContext"
+import { isBrowser } from "./deviceDetection"
 
 type Creation = (arg: {
 	context: gsap.Context
@@ -104,3 +105,15 @@ export const useAnimation = <InputFn extends Creation>(
 
 	return { context, contextSafe, result: returnValue }
 }
+
+declare global {
+	interface Window {
+		gsapVersions?: string[]
+	}
+}
+
+const versions = isBrowser ? (window.gsapVersions ?? []) : []
+if (versions.length > 1)
+	throw new Error(
+		"Multiple versions of gsap detected! This will cause MAJOR issues!",
+	)
