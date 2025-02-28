@@ -1,15 +1,26 @@
-import { type ContextSafeFunc, useGSAP } from "@gsap/react"
-import gsap from "gsap/all"
-import type { DependencyList } from "react"
-import { use, useDeferredValue, useState } from "react"
+import gsap from "gsap"
+import {
+	use,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+	useState,
+	type DependencyList,
+} from "react"
 import { ScreenContext } from "./ScreenContext"
+import { isBrowser } from "./deviceDetection"
 
+const useIsomorphicLayoutEffect =
+	typeof document !== "undefined" ? useLayoutEffect : useEffect
+
+// biome-ignore lint/complexity/noBannedTypes: gsap types go brrrrr
+type ContextSafeFunc = <T extends Function>(func: T) => T
 type Creation = (arg: {
 	context: gsap.Context
 	contextSafe: ContextSafeFunc
 }) => unknown
 
-gsap.registerPlugin(useGSAP)
 gsap.config({
 	nullTargetWarn: false,
 })
@@ -25,61 +36,154 @@ gsap.config({
  *   })
  * }, [wrapperEl])
  *  ```
- * @param createAnimations - function that creates the animation. you can return a cleanup function that will be called
- * or an object that will be returned by the hook
- * @param deps - any dependencies that should cause the animations to be re-created
- * @param options - options for the hook
- * @param options.scope - the scope of the animation for GSAP to use
- * @param options.killOnUpdate - whether to kill the animation when the component is unmounted, rather than reverting it
- * @param options.recreateOnResize - whether to re-create the animations when the window is resized
- * @param options.extraDeps - sany extra dependencies that should cause the animations to be re-created (in addition to the ones passed in the deps array)
  */
 export const useAnimation = <InputFn extends Creation>(
+	/**
+	 * function that creates the animation. you can return also cleanup function that will be called on revert/kill
+	 */
 	createAnimations: InputFn,
-	deps?: DependencyList,
+	/**
+	 * any dependencies that should cause the animations to be re-created
+	 */
+	deps: DependencyList,
+	/**
+	 * options for the hook
+	 */
 	options?: {
+		/**
+		 * the scope of the animation for GSAP to use
+		 */
 		scope?: React.RefObject<Element | null>
+		/**
+		 * whether to re-create the animations when the window is resized
+		 */
 		recreateOnResize?: boolean
-		killOnUpdate?: boolean
+		/**
+		 * when deps change, how should we handle currently running animations?
+		 * kill them, or revert them. when the component unmounts,
+		 * we'll always fully revert regardless of this setting
+		 */
+		updateBehavior?: "kill" | "revert" | "none"
+		/**
+		 * any extra dependencies that should cause the animations to be re-created
+		 * (in addition to the ones passed in the deps array)
+		 *
+		 * useful because you can retain dependency linting while also including
+		 * extra dependencies
+		 */
 		extraDeps?: DependencyList
 	},
 ) => {
-	const standardDeps = deps ?? []
-	const extraDeps = options?.extraDeps ?? []
-
 	type OutputType =
 		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
 		ReturnType<InputFn> extends Function ? undefined : ReturnType<InputFn>
 
-	const [returnValue, setReturnValue] = useState<OutputType>()
-
+	// inputs & options
+	const {
+		extraDeps = [],
+		recreateOnResize = false,
+		scope = { current: null },
+		updateBehavior = "revert",
+	} = options ?? {}
 	const { initComplete, innerWidth } = use(ScreenContext)
-	const resizeSignal = Math.round(innerWidth)
+	const dependencies = [...deps, ...extraDeps]
 
-	const { context, contextSafe } = useGSAP(
-		(context, contextSafe) => {
-			if (!contextSafe) return
+	// manually tracked cleanup functions
+	// gsap context will call cleanup functions when reverted, but not when killed
+	// so we'll track them ourselves to ensure they're run properly
+	const cleanups = useRef<(() => unknown)[]>([])
+	const runCleanups = () => {
+		for (const cleanup of cleanups.current) {
+			cleanup()
+		}
+		cleanups.current = []
+	}
+
+	// output state
+	const [returnValue, setReturnValue] = useState<OutputType>()
+	const [context, setContext] = useState<gsap.Context>(gsap.context(() => {}))
+	const contextSafe = useMemo(
+		() =>
+			((func) =>
+				context.add(null as unknown as string, func)) as ContextSafeFunc,
+		[context],
+	)
+
+	// final revert
+	const latestContext = useRef(context)
+	latestContext.current = context
+	useIsomorphicLayoutEffect(() => {
+		return () => {
+			if (!latestContext.current.isReverted) latestContext.current.revert()
+
+			// prevent memory leaks from the first context (which is useless but technically needs cleanup still)
+			if (!context.isReverted) context.revert()
+
+			// prevent memory leaks from i.e. event listeners (revert will clean up the most recent run, but not the ones before)
+			if (updateBehavior === "none") runCleanups()
+		}
+	}, [updateBehavior])
+
+	// actual animation creation
+	useIsomorphicLayoutEffect(() => {
+		const newContext = gsap.context((self) => {
 			if (!initComplete) return
 
-			const result = createAnimations({ context, contextSafe })
+			const result = createAnimations({
+				context: self,
+				contextSafe: ((func) =>
+					context.add(null as unknown as string, func)) as ContextSafeFunc,
+			})
 
 			if (typeof result === "function") {
+				cleanups.current.push(result as () => unknown)
 				return result
 			}
 
 			setReturnValue(result as OutputType)
-		},
-		{
-			revertOnUpdate: !options?.killOnUpdate,
-			scope: options?.scope,
-			dependencies: [
-				useDeferredValue(initComplete),
-				useDeferredValue(resizeSignal),
-				...standardDeps,
-				...extraDeps,
-			],
-		},
-	)
+		}, scope.current ?? undefined)
 
-	return { context, contextSafe, result: returnValue }
+		setContext(newContext)
+
+		return () => {
+			if (!newContext.isReverted)
+				switch (updateBehavior) {
+					case "kill":
+						newContext.kill()
+						runCleanups()
+						break
+					case "revert":
+						newContext.revert()
+						break
+					case "none":
+						break
+					default:
+						updateBehavior satisfies never
+				}
+		}
+	}, [
+		updateBehavior,
+		initComplete,
+		recreateOnResize ? innerWidth : null,
+		updateBehavior,
+		...dependencies,
+	])
+
+	return {
+		contextSafe,
+		result: returnValue,
+		context: context,
+	}
 }
+
+declare global {
+	interface Window {
+		gsapVersions?: string[]
+	}
+}
+
+const versions = isBrowser ? (window.gsapVersions ?? []) : []
+if (versions.length > 1)
+	throw new Error(
+		"Multiple versions of gsap detected! This will cause MAJOR issues!",
+	)
