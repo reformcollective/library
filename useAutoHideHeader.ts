@@ -1,8 +1,8 @@
 import { ScrollTrigger, gsap } from "gsap/all"
+import { usePathname } from "next/navigation"
 import type { RefObject } from "react"
 import { useIsSmooth } from "./Scroll"
 import { useAnimation } from "./useAnimation"
-import { usePathname } from "next/navigation"
 
 const isElementInViewport = (element: Element) => {
 	const rect = element?.getBoundingClientRect()
@@ -18,7 +18,7 @@ const isElementInViewport = (element: Element) => {
  * @param attribute the attribute to check for
  */
 const checkElementsByAttribute = (attribute: string) => {
-	const elements = document.querySelectorAll(`[${attribute}]`)
+	const elements = document.querySelectorAll(`[${attribute}="true"]`)
 	for (const element of elements) {
 		if (isElementInViewport(element)) {
 			return true
@@ -58,38 +58,42 @@ export default function useAutoHideHeader(
 
 			const yTo = gsap.quickTo(wrapper.current, "y", props)
 
-			ScrollTrigger.create({
-				onUpdate: () => {
-					const scroll = window.lenis?.scroll ?? 0
-					const delta = scroll - lastScroll
-					lastScroll = scroll
-					const height = wrapper.current?.offsetHeight ?? 0
-					if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
+			const onUpdate = () => {
+				const scroll = window.lenis?.scroll ?? 0
+				const delta = scroll - lastScroll
+				lastScroll = scroll
+				const height = wrapper.current?.offsetHeight ?? 0
+				if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
 
-					const forceHideHeader = checkElementsByAttribute("data-header-hide")
-					const forceShowHeader =
-						checkElementsByAttribute("data-header-stick") ||
-						scroll === 0 ||
-						window.scrollY <= 5
-					const showHeader = style === "snap" && delta < 0
-					const hideHeader = style === "snap" && delta > 0
+				const forceHideHeader = checkElementsByAttribute("data-header-hide")
+				const forceShowHeader =
+					checkElementsByAttribute("data-header-stick") ||
+					scroll === 0 ||
+					window.scrollY <= 5
+				const showHeader = style === "snap" && delta < 0
+				const hideHeader = style === "snap" && delta > 0
 
-					// if forced sticky
-					if (forceShowHeader || (showHeader && !forceHideHeader)) {
-						yTo(0)
-					}
-					// if forced not sticky
-					else if (forceHideHeader || hideHeader) {
-						yTo(-height)
-					}
-					// scrub behavior, if needed
-					else if (style === "scrub") {
-						const currentY = Number(gsap.getProperty(wrapper.current, "y"))
-						const newY = Math.min(0, Math.max(-height, currentY - delta))
-						yTo(newY, newY)
-					}
-				},
-			})
+				// if forced sticky
+				if (forceShowHeader || (showHeader && !forceHideHeader)) {
+					yTo(0)
+				}
+				// if forced not sticky
+				else if (forceHideHeader || hideHeader) {
+					yTo(-height)
+				}
+				// scrub behavior, if needed
+				else if (style === "scrub") {
+					const currentY = Number(gsap.getProperty(wrapper.current, "y"))
+					const newY = Math.min(0, Math.max(-height, currentY - delta))
+					yTo(newY, newY)
+				}
+			}
+
+			ScrollTrigger.create({ onUpdate })
+			const interval = setInterval(onUpdate, 100)
+			return () => {
+				clearInterval(interval)
+			}
 		},
 		[wrapper, style],
 		{
