@@ -9,6 +9,7 @@ import {
 	type DependencyList,
 } from "react"
 import { ScreenContext } from "./ScreenContext"
+import { isBrowser } from "./deviceDetection"
 
 const useIsomorphicLayoutEffect =
 	typeof document !== "undefined" ? useLayoutEffect : useEffect
@@ -77,7 +78,7 @@ export const useAnimation = <InputFn extends Creation>(
 		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
 		ReturnType<InputFn> extends Function ? undefined : ReturnType<InputFn>
 
-	// inputs
+	// inputs & options
 	const {
 		extraDeps = [],
 		recreateOnResize = false,
@@ -87,7 +88,7 @@ export const useAnimation = <InputFn extends Creation>(
 	const { initComplete, innerWidth } = use(ScreenContext)
 	const dependencies = [...deps, ...extraDeps]
 
-	// cleanup FNs
+	// manually tracked cleanup functions
 	// gsap context will call cleanup functions when reverted, but not when killed
 	// so we'll track them ourselves to ensure they're run properly
 	const cleanups = useRef<(() => unknown)[]>([])
@@ -114,6 +115,11 @@ export const useAnimation = <InputFn extends Creation>(
 	useIsomorphicLayoutEffect(() => {
 		return () => {
 			if (!latestContext.current.isReverted) latestContext.current.revert()
+
+			// prevent memory leaks from the first context (which is useless but technically needs cleanup still)
+			if (!context.isReverted) context.revert()
+
+			// prevent memory leaks from i.e. event listeners (revert will clean up the most recent run, but not the ones before)
 			if (updateBehavior === "none") runCleanups()
 		}
 	}, [updateBehavior])
@@ -169,3 +175,15 @@ export const useAnimation = <InputFn extends Creation>(
 		context: context,
 	}
 }
+
+declare global {
+	interface Window {
+		gsapVersions?: string[]
+	}
+}
+
+const versions = isBrowser ? (window.gsapVersions ?? []) : []
+if (versions.length > 1)
+	throw new Error(
+		"Multiple versions of gsap detected! This will cause MAJOR issues!",
+	)
