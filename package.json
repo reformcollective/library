@@ -4,7 +4,6 @@
 	"description": "collection of utilities and helpers for reform collective",
 	"//": "anything that the supermodule may also install should use the ^major syntax. this is so that pnpm can combine duplicate versions to prevent inflating the bundle. this doesn't apply to dev dependencies (e.g. biome)",
 	"dependencies": {
-		"@gsap/react": "^2",
 		"ahooks": "^3",
 		"lenis": "^1.1.20",
 		"minisearch": "^7",
