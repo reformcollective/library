@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type { Route, RouteLiteral } from "nextjs-routes"
 import { route } from "nextjs-routes"
-import type { ComponentProps } from "react"
+import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
 
 type CMSLink = {
@@ -30,7 +30,7 @@ type ButtonProps = {
 	href?: undefined
 	transition?: undefined
 	openInNewTab?: undefined
-} & Omit<ComponentProps<"button">, "type">
+} & Omit<ComponentProps<"button">, "type" | "ref">
 
 type AnchorProps = {
 	/**
@@ -49,9 +49,14 @@ type AnchorProps = {
 	openInNewTab?: boolean
 
 	type?: undefined
-} & Omit<ComponentProps<"a">, "href" | "onClick">
+} & Omit<ComponentProps<"a">, "href" | "onClick" | "ref">
 
-export type UniversalLinkProps = ButtonProps | AnchorProps
+export type UniversalLinkProps = (ButtonProps | AnchorProps) & {
+	ref?:
+		| Ref<HTMLButtonElement | null>
+		| Ref<HTMLAnchorElement | null>
+		| Ref<HTMLButtonElement | HTMLAnchorElement | null>
+}
 
 export const resolveRoute = (
 	link: AnchorProps["href"],
@@ -115,12 +120,14 @@ export const resolveRoute = (
  */
 export default function UniversalLink({
 	children,
+	ref,
 	...props
 }: UniversalLinkProps) {
 	if (props.type) {
 		return (
 			<button
 				{...props}
+				ref={ref as Ref<HTMLButtonElement>}
 				style={{
 					cursor: "pointer",
 				}}
@@ -152,11 +159,17 @@ export default function UniversalLink({
 			{...props}
 			// biome-ignore lint/suspicious/noExplicitAny: I am very intentionally disabling type checking here because a cast would not be backwards compatible
 			href={url as any}
+			ref={ref as Ref<HTMLAnchorElement>}
 		>
 			{children}
 		</Link>
 	) : (
-		<a onClick={handleClick} {...props} href={url ?? undefined}>
+		<a
+			onClick={handleClick}
+			{...props}
+			href={url ?? undefined}
+			ref={ref as Ref<HTMLAnchorElement>}
+		>
 			{children}
 		</a>
 	)
