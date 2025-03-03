@@ -1,4 +1,4 @@
-import UniversalLink from "library/Loader/UniversalLink"
+import UniversalLink from "library/loader/UniversalLink"
 import { styled } from "library/styled"
 import {
 	PortableText,

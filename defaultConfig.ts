@@ -1,4 +1,4 @@
-import type { Transitions } from "./Loader"
+import type { Transitions } from "./DeprecatedLoader"
 
 /**
  * config schema and config defaults for the reform util library

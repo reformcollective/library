@@ -1,11 +1,14 @@
 "use client"
 
+import libraryConfig from "libraryConfig"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import type { Route, RouteLiteral } from "nextjs-routes"
+import type { Route } from "nextjs-routes"
 import { route } from "nextjs-routes"
 import type { ComponentProps } from "react"
+import type { Transitions } from "."
 import { linkIsInternal } from "../functions"
+import { loadPage } from "./TransitionUtils"
 
 type CMSLink = {
 	_type: "link"
@@ -43,6 +46,10 @@ type AnchorProps = {
 		| undefined
 		| { href: `https://${string}` }
 		| CMSLink
+	/**
+	 * which transition should be used when navigating to this link?
+	 */
+	transition?: Transitions
 	/**
 	 * open this link in a new tab?
 	 */
@@ -115,6 +122,7 @@ export const resolveRoute = (
  */
 export default function UniversalLink({
 	children,
+	transition = libraryConfig.defaultTransition,
 	...props
 }: UniversalLinkProps) {
 	if (props.type) {
@@ -140,7 +148,11 @@ export default function UniversalLink({
 
 		if (internal && !newTab) {
 			router.prefetch(url)
-			router.push(url as RouteLiteral)
+			loadPage({
+				to: url,
+				transition,
+				routerNavigate: router.push as (url: string) => unknown,
+			})
 		}
 
 		window.open(url, newTab ? "_blank" : "_self")

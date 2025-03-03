@@ -1,8 +1,8 @@
 import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { loader } from "./Loader"
-import { loaderAwaitPromise } from "./Loader/promises"
+import { loader } from "./DeprecatedLoader"
+import { loaderAwaitPromise } from "./DeprecatedLoader/promises"
 import { styled } from "./styled"
 
 interface SequenceProps {
