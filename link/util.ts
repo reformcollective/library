@@ -20,7 +20,7 @@ export const getScrollOffset = (anchor: string) => {
 /**
  * scroll to a given anchor until the scroll position stops changing
  */
-export const scrollToAnchor = async (anchor: string) => {
+export const instantScrollToAnchor = async (anchor: string) => {
 	let scrollPosition = 0
 	let goodAttemptCount = 0
 	let missingAnchorCount = 0

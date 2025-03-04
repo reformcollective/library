@@ -1,11 +1,9 @@
-import type { Transitions } from "./DeprecatedLoader"
-
 /**
  * config schema and config defaults for the reform util library
  * see app/libraryConfig.ts for the actual config
  */
 
-export type Config = {
+export type Config<TransitionName extends string> = {
 	/**
 	 * if true, the fresponsive util will scale on fullWidth breakpoints
 	 */
@@ -20,9 +18,13 @@ export type Config = {
 	 */
 	extraLoaderDelay: number
 	/**
-	 * the default transition to use if none is specified
+	 * list of available view transitions
 	 */
-	defaultTransition: Transitions
+	viewTransitions: Record<TransitionName, () => unknown>
+	/**
+	 * which transition should be used by default?
+	 */
+	defaultViewTransition: NoInfer<TransitionName> | "instant" | "default"
 	/**
 	 * should the page preserve the scroll position when reloading or when clicking back/forward
 	 */
@@ -34,10 +36,11 @@ export type Config = {
 }
 
 export const defaultConfig = {
-	defaultTransition: "instant",
+	defaultViewTransition: "instant",
 	scaleFully: false,
 	getTimeNeeded: (startTime: number) => startTime + 1000,
 	scrollRestoration: true,
 	saveAnchorNames: true,
 	extraLoaderDelay: 0,
-} as const satisfies Partial<Config>
+	viewTransitions: {},
+} as const satisfies Partial<Config<never>>
