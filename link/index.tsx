@@ -5,7 +5,7 @@ import { route } from "nextjs-routes"
 import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
 import { useTransitioner } from "./transitioner"
-import type { Transitions } from "."
+import type { Transitions } from "./loader"
 import libraryConfig from "libraryConfig"
 import Link from "next/link"
 

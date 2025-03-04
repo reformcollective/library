@@ -5,7 +5,7 @@ import { useTransitionRouter } from "next-view-transitions"
 import { useRouter } from "next/navigation"
 import type { RouteLiteral } from "nextjs-routes"
 import { useCallback } from "react"
-import { loader, type Transitions } from "."
+import { loader, type Transitions } from "./loader"
 import { getScrollOffset } from "./util"
 import { ScrollTrigger } from "gsap/all"
 
