@@ -3,7 +3,7 @@
  * see app/libraryConfig.ts for the actual config
  */
 
-export type Config<TransitionName extends string> = {
+type Config<TransitionName extends string> = {
 	/**
 	 * if true, the fresponsive util will scale on fullWidth breakpoints
 	 */
@@ -35,7 +35,7 @@ export type Config<TransitionName extends string> = {
 	saveAnchorNames: boolean
 }
 
-export const defaultConfig = {
+const defaultConfig = {
 	defaultViewTransition: "instant",
 	scaleFully: false,
 	getTimeNeeded: (startTime: number) => startTime + 1000,
@@ -43,4 +43,11 @@ export const defaultConfig = {
 	saveAnchorNames: true,
 	extraLoaderDelay: 0,
 	viewTransitions: {},
-} as const satisfies Partial<Config<never>>
+} as const satisfies Config<never>
+
+export const defineLibraryConfig = <SetConfig extends Partial<Config<string>>>(
+	config: SetConfig,
+) => ({
+	...defaultConfig,
+	...config,
+})
