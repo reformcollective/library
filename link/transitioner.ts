@@ -83,7 +83,6 @@ export const useTransitioner = () => {
 			/**
 			 * NORMAL TRANSITION
 			 */
-			console.log("normal", transition)
 
 			// dispatch events
 			loader.dispatchEvent("start", transition)
