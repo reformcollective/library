@@ -69,11 +69,18 @@ export const useTransitioner = () => {
 						destination.hash) as unknown as RouteLiteral,
 				)
 
-				// check for href changes
-				while (window.location.href === existingHref) {
-					await sleep(5)
-				}
-
+				// check for href changes with a timeout
+				const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Navigation timeout")), 5000));
+				const urlChange = new Promise((resolve) => {
+					const checkUrlChange = () => {
+						if (window.location.href !== existingHref) {
+							resolve();
+							clearInterval(interval);
+						}
+					};
+					const interval = setInterval(checkUrlChange, 5);
+				});
+				await Promise.race([timeout, urlChange]);
 				loader.dispatchEvent("routeChange", "instant")
 				loader.dispatchEvent("end", "instant")
 
