@@ -1,14 +1,13 @@
 "use client"
 
-import libraryConfig from "libraryConfig"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
 import type { Route } from "nextjs-routes"
 import { route } from "nextjs-routes"
-import type { ComponentProps } from "react"
-import type { Transitions } from "."
+import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
-import { loadPage } from "./TransitionUtils"
+import { useTransitioner } from "./transitioner"
+import type { Transitions } from "./loader"
+import libraryConfig from "libraryConfig"
+import Link from "next/link"
 
 type CMSLink = {
 	_type: "link"
@@ -33,7 +32,7 @@ type ButtonProps = {
 	href?: undefined
 	transition?: undefined
 	openInNewTab?: undefined
-} & Omit<ComponentProps<"button">, "type">
+} & Omit<ComponentProps<"button">, "type" | "ref">
 
 type AnchorProps = {
 	/**
@@ -47,18 +46,20 @@ type AnchorProps = {
 		| { href: `https://${string}` }
 		| CMSLink
 	/**
-	 * which transition should be used when navigating to this link?
-	 */
-	transition?: Transitions
-	/**
 	 * open this link in a new tab?
 	 */
 	openInNewTab?: boolean
+	transition?: Transitions
 
 	type?: undefined
-} & Omit<ComponentProps<"a">, "href" | "onClick">
+} & Omit<ComponentProps<"a">, "href" | "onClick" | "ref">
 
-export type UniversalLinkProps = ButtonProps | AnchorProps
+export type UniversalLinkProps = (ButtonProps | AnchorProps) & {
+	ref?:
+		| Ref<HTMLButtonElement | null>
+		| Ref<HTMLAnchorElement | null>
+		| Ref<HTMLButtonElement | HTMLAnchorElement | null>
+}
 
 export const resolveRoute = (
 	link: AnchorProps["href"],
@@ -122,13 +123,17 @@ export const resolveRoute = (
  */
 export default function UniversalLink({
 	children,
-	transition = libraryConfig.defaultTransition,
+	ref,
+	transition = libraryConfig.defaultViewTransition,
 	...props
 }: UniversalLinkProps) {
+	const transitioner = useTransitioner()
+
 	if (props.type) {
 		return (
 			<button
 				{...props}
+				ref={ref as Ref<HTMLButtonElement>}
 				style={{
 					cursor: "pointer",
 				}}
@@ -140,35 +145,37 @@ export default function UniversalLink({
 
 	const { url, newTab } = resolveRoute(props.href)
 	const internal = url ? linkIsInternal(url) : false
-	const router = useRouter()
 
-	const handleClick: React.MouseEventHandler = (e) => {
-		e.preventDefault()
+	const onClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
 		if (!url) return
 
+		e.preventDefault()
 		if (internal && !newTab) {
-			router.prefetch(url)
-			loadPage({
-				to: url,
-				transition,
-				routerNavigate: router.push as (url: string) => unknown,
-			})
+			transitioner(url, transition)
+		} else {
+			window.open(url, newTab ? "_blank" : "_self")
 		}
-
-		window.open(url, newTab ? "_blank" : "_self")
 	}
 
 	return internal && url ? (
 		<Link
-			onClick={handleClick}
 			{...props}
 			// biome-ignore lint/suspicious/noExplicitAny: I am very intentionally disabling type checking here because a cast would not be backwards compatible
 			href={url as any}
+			ref={ref as Ref<HTMLAnchorElement>}
+			target={newTab ? "_blank" : undefined}
+			onClick={onClick}
 		>
 			{children}
 		</Link>
 	) : (
-		<a onClick={handleClick} {...props} href={url ?? undefined}>
+		<a
+			{...props}
+			href={url ?? undefined}
+			ref={ref as Ref<HTMLAnchorElement>}
+			target={newTab ? "_blank" : undefined}
+			onClick={onClick}
+		>
 			{children}
 		</a>
 	)

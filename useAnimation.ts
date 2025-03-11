@@ -167,6 +167,10 @@ export const useAnimation = <InputFn extends Creation>(
 		recreateOnResize ? innerWidth : null,
 		updateBehavior,
 		...dependencies,
+		/**
+		 * if we're in dev, also include the function contents so that we can rerun on fast refresh
+		 */
+		process.env.NODE_ENV === "development" ? createAnimations.toString() : null,
 	])
 
 	return {

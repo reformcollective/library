@@ -1,4 +1,4 @@
-import { isBrowser } from "./deviceDetection"
+import { siteURL } from "./siteURL"
 
 export const sleep = (ms: number) =>
 	new Promise((resolve) => {
@@ -18,21 +18,20 @@ const parseURL = (url: string, base?: string) => {
 }
 
 export function linkIsInternal(to: string) {
-	// if we're not in the browser, we can't parse URLs accurately
-	if (!isBrowser) return false
+	const site = new URL(siteURL)
 
 	// attempt to parse this as standalone, else try to parse it as relative
-	const parsed = parseURL(to) || parseURL(to, window.location.origin)
+	const parsed = parseURL(to) || parseURL(to, site.origin)
 
 	// if we can't parse it, assume it's external
 	if (!parsed) return false
 
 	// if the host matches, it's internal
 	return (
-		parsed.host === window.location.host ||
+		parsed.host === site.host ||
 		// www.origin.com and origin.com are both considered internal
-		`www.${parsed.host}` === window.location.host ||
-		parsed.host === `www.${window.location.host}`
+		`www.${parsed.host}` === site.host ||
+		parsed.host === `www.${site.host}`
 	)
 }
 

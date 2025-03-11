@@ -1,10 +1,11 @@
 "use client"
 
-import { ScrollTrigger, gsap } from "gsap/all"
-import { useEffect, useLayoutEffect, useState } from "react"
+import { gsap, ScrollTrigger } from "gsap/all"
+import Lenis, { type LenisOptions } from "lenis"
+import { useEffect, useState } from "react"
+import { useDeepCompareLayoutEffect } from "use-deep-compare"
 import TypedEventEmitter from "./TypedEventEmitter"
 import { isBrowser } from "./deviceDetection"
-import Lenis from "lenis"
 import { css, GlobalStyles, unresponsive } from "./styled"
 
 const styles = unresponsive(css`
@@ -153,15 +154,15 @@ ScrollTrigger.config({
 	ignoreMobileResize: true,
 })
 
-export const SmoothScrollStyle = () => {
-	useLayoutEffect(() => {
+export const SmoothScrollStyle = ({ ...config }: LenisOptions = {}) => {
+	useDeepCompareLayoutEffect(() => {
 		/**
 		 * create the smoother
 		 */
 		window.lenis?.destroy()
 
 		// Initialize a new Lenis instance for smooth scrolling
-		const lenis = new Lenis()
+		const lenis = new Lenis(config)
 		window.lenis = lenis
 
 		// Synchronize Lenis scrolling with GSAP's ScrollTrigger plugin
@@ -215,7 +216,7 @@ export const SmoothScrollStyle = () => {
 			locksChange.removeEventListener("change", onChange)
 			window.removeEventListener("resize", onResize)
 		}
-	}, [])
+	}, [config])
 
 	return <GlobalStyles>{styles}</GlobalStyles>
 }
