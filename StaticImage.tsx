@@ -79,7 +79,8 @@ export default function StaticImage({
 		)
 	}
 
-	const isSVG = src.src.endsWith(".svg")
+	const isSVG =
+		src.src.endsWith(".svg") || src.src.startsWith("data:image/svg+xml")
 	return (
 		<DefaultNextImage
 			placeholder={isSVG ? undefined : "blur"}
