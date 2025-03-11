@@ -1,12 +1,12 @@
 "use client"
 
-import { ScrollTrigger, gsap } from "gsap/all"
-import { useEffect, useLayoutEffect, useState } from "react"
+import { gsap, ScrollTrigger } from "gsap/all"
+import Lenis, { type LenisOptions } from "lenis"
+import { useEffect, useState } from "react"
+import { useDeepCompareLayoutEffect } from "use-deep-compare"
 import TypedEventEmitter from "./TypedEventEmitter"
 import { isBrowser } from "./deviceDetection"
-import Lenis, { type LenisOptions } from "lenis"
 import { css, GlobalStyles, unresponsive } from "./styled"
-import { useDeepCompareLayoutEffect } from "use-deep-compare"
 
 const styles = unresponsive(css`
 	html.lenis,

@@ -1,3 +1,4 @@
+import { ScrollTrigger } from "gsap/all"
 import { pathnameMatches, sleep } from "library/functions"
 import { createScrollLock } from "library/Scroll"
 import libraryConfig from "libraryConfig"
@@ -7,7 +8,6 @@ import type { RouteLiteral } from "nextjs-routes"
 import { useCallback } from "react"
 import { loader, type Transitions } from "./loader"
 import { getScrollOffset } from "./util"
-import { ScrollTrigger } from "gsap/all"
 
 export const useTransitioner = () => {
 	const plainRouter = useRouter()
@@ -70,17 +70,19 @@ export const useTransitioner = () => {
 				)
 
 				// check for href changes with a timeout
-				const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Navigation timeout")), 5000));
-				const urlChange = new Promise((resolve) => {
+				const timeout = new Promise((_, reject) =>
+					setTimeout(() => reject(new Error("Navigation timeout")), 5000),
+				)
+				const urlChange = new Promise<void>((resolve) => {
 					const checkUrlChange = () => {
 						if (window.location.href !== existingHref) {
-							resolve();
-							clearInterval(interval);
+							resolve()
+							clearInterval(interval)
 						}
-					};
-					const interval = setInterval(checkUrlChange, 5);
-				});
-				await Promise.race([timeout, urlChange]);
+					}
+					const interval = setInterval(checkUrlChange, 5)
+				})
+				await Promise.race([timeout, urlChange])
 				loader.dispatchEvent("routeChange", "instant")
 				loader.dispatchEvent("end", "instant")
 
