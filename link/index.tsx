@@ -36,7 +36,7 @@ type AnchorProps = {
 	/**
 	 * where should the link navigate to?
 	 */
-	href: string | null | undefined | { href: `https://${string}` } | CMSLink
+	href: string | null | undefined | CMSLink
 	/**
 	 * open this link in a new tab?
 	 */
@@ -65,12 +65,6 @@ export const resolveRoute = (
 		return {
 			url: undefined,
 			newTab: false,
-		}
-
-	if ("href" in link)
-		return {
-			url: link.href,
-			newTab: !linkIsInternal(link.href),
 		}
 
 	if (link.type === "internal" && link.internalSlug)
