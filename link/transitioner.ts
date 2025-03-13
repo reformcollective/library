@@ -13,10 +13,6 @@ export const useTransitioner = () => {
 	return useCallback(
 		async (to: string, transition?: Transitions) => {
 			const destination = new URL(to, window.location.origin)
-			const transitionFunction =
-				libraryConfig.viewTransitions[
-					transition as keyof typeof libraryConfig.viewTransitions
-				]
 
 			/**
 			 * ONLY SCROLLING
