@@ -1,7 +1,5 @@
 "use client"
 
-import type { Route } from "nextjs-routes"
-import { route } from "nextjs-routes"
 import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
 import { useTransitioner } from "./transitioner"
@@ -38,13 +36,7 @@ type AnchorProps = {
 	/**
 	 * where should the link navigate to?
 	 */
-	href:
-		| Route
-		| string
-		| null
-		| undefined
-		| { href: `https://${string}` }
-		| CMSLink
+	href: string | null | undefined | CMSLink
 	/**
 	 * open this link in a new tab?
 	 */
@@ -73,17 +65,6 @@ export const resolveRoute = (
 		return {
 			url: undefined,
 			newTab: false,
-		}
-
-	if ("href" in link)
-		return {
-			url: link.href,
-			newTab: !linkIsInternal(link.href),
-		}
-	if ("pathname" in link)
-		return {
-			url: route(link),
-			newTab: !linkIsInternal(link.pathname),
 		}
 
 	if (link.type === "internal" && link.internalSlug)

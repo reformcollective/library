@@ -281,7 +281,9 @@ export default function AutoAnimate({
 
 	return (
 		<Wrapper className={className}>
-			<div ref={sizer}>{getNodeFromKey(currentKey)}</div>
+			<div ref={sizer} style={{ display: "none" }}>
+				{getNodeFromKey(currentKey)}
+			</div>
 			<AnimationWrapper ref={wrapper} alignment={alignment}>
 				<div ref={wrapperA}>{getNodeFromKey(slotA)}</div>
 				<div ref={wrapperB}>{getNodeFromKey(slotB)}</div>

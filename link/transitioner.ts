@@ -2,24 +2,17 @@ import { ScrollTrigger } from "gsap/all"
 import { pathnameMatches, sleep } from "library/functions"
 import { createScrollLock } from "library/Scroll"
 import libraryConfig from "libraryConfig"
-import { useTransitionRouter } from "next-view-transitions"
 import { useRouter } from "next/navigation"
-import type { RouteLiteral } from "nextjs-routes"
 import { useCallback } from "react"
 import { loader, type Transitions } from "./loader"
 import { getScrollOffset } from "./util"
 
 export const useTransitioner = () => {
-	const plainRouter = useRouter()
-	const transitionRouter = useTransitionRouter()
+	const router = useRouter()
 
 	return useCallback(
 		async (to: string, transition?: Transitions) => {
 			const destination = new URL(to, window.location.origin)
-			const transitionFunction =
-				libraryConfig.viewTransitions[
-					transition as keyof typeof libraryConfig.viewTransitions
-				]
 
 			/**
 			 * ONLY SCROLLING
@@ -63,10 +56,8 @@ export const useTransitioner = () => {
 				loader.dispatchEvent("start", "instant")
 
 				const existingHref = window.location.href
-				plainRouter.push(
-					(destination.pathname +
-						destination.search +
-						destination.hash) as unknown as RouteLiteral,
+				router.push(
+					destination.pathname + destination.search + destination.hash,
 				)
 
 				// check for href changes with a timeout
@@ -98,14 +89,7 @@ export const useTransitioner = () => {
 
 			// actually navigate to the page
 			const existingHref = window.location.href
-			transitionRouter.push(
-				(destination.pathname +
-					destination.search +
-					destination.hash) as unknown as RouteLiteral,
-				{
-					onTransitionReady: transitionFunction,
-				},
-			)
+			router.push(destination.pathname + destination.search + destination.hash)
 
 			// check for href changes
 			while (window.location.href === existingHref) {
@@ -117,6 +101,6 @@ export const useTransitioner = () => {
 			loader.dispatchEvent("end", transition)
 			ScrollTrigger.refresh()
 		},
-		[plainRouter, transitionRouter],
+		[router],
 	)
 }
