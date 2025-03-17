@@ -156,11 +156,11 @@ export const usePreloader = ({
 		await recursiveAllSettled(globalPromises)
 
 		/**
-		 * wait our minimum duration, at least one frame
+		 * wait our specified minimum duration
 		 */
 		const timeSinceStart = performance.now()
 		const timeToWait = Math.max(0, minDuration - timeSinceStart)
-		await sleep(Math.min(timeToWait, 8))
+		await sleep(timeToWait)
 
 		// any animations caused by our state update must be part of the preloader!
 		// we can use this to determine the preloader out duration automatically
