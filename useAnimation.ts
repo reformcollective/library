@@ -85,7 +85,7 @@ export const useAnimation = <InputFn extends Creation>(
 		scope = { current: null },
 		updateBehavior = "revert",
 	} = options ?? {}
-	const { innerWidth, hydrateUtilities } = use(ScreenContext)
+	const { innerWidth, shouldHydrateUtilities } = use(ScreenContext)
 	const dependencies = [...deps, ...extraDeps]
 
 	// manually tracked cleanup functions
@@ -126,7 +126,7 @@ export const useAnimation = <InputFn extends Creation>(
 
 	// actual animation creation
 	useIsomorphicLayoutEffect(() => {
-		if (!hydrateUtilities) return
+		if (!shouldHydrateUtilities) return
 
 		const newContext = gsap.context((self) => {
 			const result = createAnimations({
@@ -163,7 +163,7 @@ export const useAnimation = <InputFn extends Creation>(
 		}
 	}, [
 		updateBehavior,
-		hydrateUtilities,
+		shouldHydrateUtilities,
 		recreateOnResize ? innerWidth : null,
 		updateBehavior,
 		...dependencies,

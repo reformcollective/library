@@ -20,12 +20,12 @@ function useHookify<P, T extends (input: P) => ReturnType<T>>(
 	arg: P,
 ): ReturnType<T> | undefined {
 	const [value, setValue] = useState<ReturnType<T>>()
-	const { hydrateUtilities } = use(ScreenContext)
+	const { shouldHydrateUtilities } = use(ScreenContext)
 
 	useDebouncedEventListener("resize", () => setValue(fn(arg)))
 	useEffect(() => {
-		if (hydrateUtilities) setValue(fn(arg))
-	}, [fn, arg, hydrateUtilities])
+		if (shouldHydrateUtilities) setValue(fn(arg))
+	}, [fn, arg, shouldHydrateUtilities])
 
 	return value
 }

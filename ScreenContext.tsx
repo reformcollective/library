@@ -34,7 +34,7 @@ export const ScreenContext = createContext({
 	 *
 	 * This will be set after initial hydration, so you don't need to worry about hydration errors
 	 */
-	hydrateUtilities: false,
+	shouldHydrateUtilities: false,
 	/**
 	 * initComplete will be set to true after
 	 * screen context has completed setup AND any state updates
@@ -112,7 +112,7 @@ export function ScreenProvider({ children }: Props) {
 				desktop: d,
 				tablet: t,
 				mobile: m,
-				hydrateUtilities:
+				shouldHydrateUtilities:
 					phase === "hydrating-utilities" || phase === "hydration-complete",
 				initComplete: phase === "hydration-complete",
 			}}

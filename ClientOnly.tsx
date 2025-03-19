@@ -8,9 +8,9 @@ export default function ClientOnly({
 }: {
 	children: React.ReactNode
 }) {
-	const { hydrateUtilities } = use(ScreenContext)
+	const { shouldHydrateUtilities } = use(ScreenContext)
 
-	if (!hydrateUtilities) return null
+	if (!shouldHydrateUtilities) return null
 
 	return <>{children}</>
 }
@@ -19,9 +19,9 @@ export const useClientOnly = <T, F = undefined>(
 	value: T,
 	fallbackValue?: F,
 ) => {
-	const { hydrateUtilities } = use(ScreenContext)
+	const { shouldHydrateUtilities } = use(ScreenContext)
 
-	if (!hydrateUtilities) return fallbackValue
+	if (!shouldHydrateUtilities) return fallbackValue
 
 	return value
 }
