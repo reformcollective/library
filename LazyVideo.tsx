@@ -7,16 +7,6 @@ import { useAnimation } from "./useAnimation"
 import useCombinedRefs from "./useCombinedRefs"
 import { useRafInterval } from "ahooks"
 
-type Props = {
-	poster?: string
-	className?: string
-	style?: React.CSSProperties
-	ref?: React.RefObject<HTMLVideoElement>
-	contextMenu?: boolean
-	loop?: boolean
-	autoPlay?: boolean
-}
-
 export function LazyVideo({
 	autoPlay,
 	loop,

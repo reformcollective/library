@@ -8,7 +8,6 @@ import {
 	useState,
 	useTransition,
 } from "react"
-import { flushSync } from "react-dom"
 import {
 	desktopBreakpoint,
 	mobileBreakpoint,
@@ -51,13 +50,6 @@ interface Props {
 }
 
 performance.mark("hydrating-react")
-const hydrationSleep = () => {
-	return new Promise<void>((resolve) => {
-		requestAnimationFrame(() => {
-			resolve()
-		})
-	})
-}
 
 export function ScreenProvider({ children }: Props) {
 	const [fw, setFw] = useState<boolean>(false)
