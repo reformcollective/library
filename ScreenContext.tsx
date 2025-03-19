@@ -79,6 +79,9 @@ export function ScreenProvider({ children }: Props) {
 	useEffect(() => {
 		if (isTransitioning) return
 		if (phase === "hydrating-react") {
+			/**
+			 * measure how long it takes to hydrate the page and fire this effect
+			 */
 			performance.measure("context: loading", "hydrating-react")
 
 			performance.mark("hydrating-utilities")
@@ -89,6 +92,9 @@ export function ScreenProvider({ children }: Props) {
 		}
 
 		if (phase === "hydrating-utilities") {
+			/**
+			 * measure how long it takes to hydrate utilities like useAnimation and useMedia
+			 */
 			performance.measure("context: hydrating utilities", "hydrating-utilities")
 
 			performance.mark("hydration-complete")
@@ -97,6 +103,9 @@ export function ScreenProvider({ children }: Props) {
 			})
 		}
 
+		/**
+		 * measure how long it takes to finish up any other work that depends on the screen context
+		 */
 		if (phase === "hydration-complete") {
 			performance.measure("context: hydration complete", "hydration-complete")
 		}
