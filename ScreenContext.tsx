@@ -1,5 +1,6 @@
 "use client"
 
+import { useAsyncEffect } from "ahooks"
 import { createContext, useCallback, useEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import {
@@ -54,6 +55,15 @@ interface Props {
 	children: React.ReactNode
 }
 
+performance.mark("context-loaded")
+const hydrationSleep = () => {
+	return new Promise<void>((resolve) => {
+		requestAnimationFrame(() => {
+			resolve()
+		})
+	})
+}
+
 export function ScreenProvider({ children }: Props) {
 	const [fw, setFw] = useState<boolean>(false)
 	const [d, setD] = useState<boolean>(false)
@@ -78,13 +88,28 @@ export function ScreenProvider({ children }: Props) {
 		setInnerWidth(window.innerWidth)
 	}, [])
 
-	useEffect(() => {
-		setTimeout(() => {
-			flushSync(() => setScreenContext())
-			flushSync(() => setPhase("hydrating-utilities"))
-			flushSync(() => setPhase("hydrating-animations"))
-			flushSync(() => setPhase("hydration-complete"))
-		}, 0)
+	useAsyncEffect(async () => {
+		performance.measure("context: loading", "context-loaded")
+
+		performance.mark("setting-context")
+		await hydrationSleep()
+		flushSync(() => setScreenContext())
+		performance.measure("context: setting", "setting-context")
+
+		performance.mark("hydrating-utilities")
+		await hydrationSleep()
+		flushSync(() => setPhase("hydrating-utilities"))
+		performance.measure("context: hydrating utilities", "hydrating-utilities")
+
+		performance.mark("hydrating-animations")
+		await hydrationSleep()
+		flushSync(() => setPhase("hydrating-animations"))
+		performance.measure("context: hydrating animations", "hydrating-animations")
+
+		performance.mark("hydration-complete")
+		await hydrationSleep()
+		flushSync(() => setPhase("hydration-complete"))
+		performance.mark("hydration-complete")
 	}, [setScreenContext])
 	useDebouncedEventListener("resize", setScreenContext)
 
