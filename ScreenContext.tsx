@@ -1,13 +1,12 @@
 "use client"
 
-import { useAsyncEffect } from "ahooks"
 import {
 	createContext,
-	startTransition,
 	useCallback,
 	useEffect,
 	useRef,
 	useState,
+	useTransition,
 } from "react"
 import { flushSync } from "react-dom"
 import {
@@ -68,6 +67,7 @@ export function ScreenProvider({ children }: Props) {
 	const [innerWidth, setInnerWidth] = useState(0)
 	const [innerHeight, setInnerHeight] = useState(0)
 	const [phase, setPhase] = useState<HydrationPhase>("hydrating-react")
+	const [isTransitioning, startTransition] = useTransition()
 
 	const setScreenContext = useCallback(() => {
 		setM(window.innerWidth <= mobileBreakpoint)
@@ -84,20 +84,21 @@ export function ScreenProvider({ children }: Props) {
 		setInnerWidth(window.innerWidth)
 	}, [])
 
-	useAsyncEffect(async () => {
+	useEffect(() => {
+		if (isTransitioning) return
 		if (phase === "hydrating-react") {
 			performance.measure("context: loading", "hydrating-react")
 
-			await hydrationSleep()
 			performance.mark("hydrating-utilities")
-			flushSync(() => setScreenContext())
-			flushSync(() => setPhase("hydrating-utilities"))
+			startTransition(() => {
+				setScreenContext()
+				setPhase("hydrating-utilities")
+			})
 		}
 
 		if (phase === "hydrating-utilities") {
 			performance.measure("context: hydrating utilities", "hydrating-utilities")
 
-			await hydrationSleep()
 			performance.mark("hydration-complete")
 			startTransition(() => {
 				setPhase("hydration-complete")
@@ -107,7 +108,7 @@ export function ScreenProvider({ children }: Props) {
 		if (phase === "hydration-complete") {
 			performance.measure("context: hydration complete", "hydration-complete")
 		}
-	}, [phase, setScreenContext])
+	}, [phase, isTransitioning, setScreenContext])
 	useDebouncedEventListener("resize", setScreenContext)
 
 	return (
