@@ -1,7 +1,14 @@
 "use client"
 
 import { useAsyncEffect } from "ahooks"
-import { createContext, useCallback, useEffect, useRef, useState } from "react"
+import {
+	createContext,
+	startTransition,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react"
 import { flushSync } from "react-dom"
 import {
 	desktopBreakpoint,
@@ -9,13 +16,9 @@ import {
 	tabletBreakpoint,
 } from "styles/media"
 
-/**
- * we can use flushSync to control the order things will hydrate in synchronously
- */
 type HydrationPhase =
 	| "hydrating-react"
 	| "hydrating-utilities"
-	| "hydrating-animations"
 	| "hydration-complete"
 
 /**
@@ -35,13 +38,6 @@ export const ScreenContext = createContext({
 	 */
 	hydrateUtilities: false,
 	/**
-	 * Should animations be created and run on the client?
-	 *
-	 * This will be set after initial hydration, so you don't need to worry about hydration errors
-	 * This will also be set after utilities like useMedia or useClientOnly are hydrated
-	 */
-	hydrateAnimations: false,
-	/**
 	 * initComplete will be set to true after
 	 * screen context has completed setup AND any state updates
 	 * triggered by screenContextReady have completed setup
@@ -55,7 +51,7 @@ interface Props {
 	children: React.ReactNode
 }
 
-performance.mark("context-loaded")
+performance.mark("hydrating-react")
 const hydrationSleep = () => {
 	return new Promise<void>((resolve) => {
 		requestAnimationFrame(() => {
@@ -89,28 +85,29 @@ export function ScreenProvider({ children }: Props) {
 	}, [])
 
 	useAsyncEffect(async () => {
-		performance.measure("context: loading", "context-loaded")
+		if (phase === "hydrating-react") {
+			performance.measure("context: loading", "hydrating-react")
 
-		performance.mark("setting-context")
-		await hydrationSleep()
-		flushSync(() => setScreenContext())
-		performance.measure("context: setting", "setting-context")
+			await hydrationSleep()
+			performance.mark("hydrating-utilities")
+			flushSync(() => setScreenContext())
+			flushSync(() => setPhase("hydrating-utilities"))
+		}
 
-		performance.mark("hydrating-utilities")
-		await hydrationSleep()
-		flushSync(() => setPhase("hydrating-utilities"))
-		performance.measure("context: hydrating utilities", "hydrating-utilities")
+		if (phase === "hydrating-utilities") {
+			performance.measure("context: hydrating utilities", "hydrating-utilities")
 
-		performance.mark("hydrating-animations")
-		await hydrationSleep()
-		flushSync(() => setPhase("hydrating-animations"))
-		performance.measure("context: hydrating animations", "hydrating-animations")
+			await hydrationSleep()
+			performance.mark("hydration-complete")
+			startTransition(() => {
+				setPhase("hydration-complete")
+			})
+		}
 
-		performance.mark("hydration-complete")
-		await hydrationSleep()
-		flushSync(() => setPhase("hydration-complete"))
-		performance.mark("hydration-complete")
-	}, [setScreenContext])
+		if (phase === "hydration-complete") {
+			performance.measure("context: hydration complete", "hydration-complete")
+		}
+	}, [phase, setScreenContext])
 	useDebouncedEventListener("resize", setScreenContext)
 
 	return (
@@ -123,11 +120,7 @@ export function ScreenProvider({ children }: Props) {
 				tablet: t,
 				mobile: m,
 				hydrateUtilities:
-					phase === "hydrating-utilities" ||
-					phase === "hydrating-animations" ||
-					phase === "hydration-complete",
-				hydrateAnimations:
-					phase === "hydrating-animations" || phase === "hydration-complete",
+					phase === "hydrating-utilities" || phase === "hydration-complete",
 				initComplete: phase === "hydration-complete",
 			}}
 		>

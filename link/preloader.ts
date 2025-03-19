@@ -84,9 +84,11 @@ export const usePreloader = ({
 	const { initComplete } = use(ScreenContext)
 	const [output, setOutput] = useState<{
 		ready: boolean
+		completed: boolean
 		isAtPageTop: boolean | null
 	}>({
 		ready: false,
+		completed: false,
 		isAtPageTop: null,
 	})
 
@@ -171,6 +173,7 @@ export const usePreloader = ({
 		flushSync(() => {
 			setOutput({
 				ready: true,
+				completed: false,
 				isAtPageTop: window.scrollY < window.innerHeight,
 			})
 		})
@@ -183,6 +186,11 @@ export const usePreloader = ({
 				ScrollTrigger.refresh()
 			})
 		}
+
+		setOutput((p) => ({
+			...p,
+			completed: true,
+		}))
 	}, [
 		initComplete,
 		output.ready,
