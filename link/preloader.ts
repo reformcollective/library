@@ -83,8 +83,17 @@ export const usePreloader = ({
 } = {}) => {
 	const { initComplete } = use(ScreenContext)
 	const [output, setOutput] = useState<{
+		/**
+		 * page has loaded and rendered, ready to animate away our preloader
+		 */
 		ready: boolean
+		/**
+		 * animation of the preloader has completed
+		 */
 		completed: boolean
+		/**
+		 * we loaded the page from the top
+		 */
 		isAtPageTop: boolean | null
 	}>({
 		ready: false,

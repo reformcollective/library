@@ -146,6 +146,7 @@ export default function UniversalLink({
 			ref={ref as Ref<HTMLAnchorElement>}
 			target={newTab ? "_blank" : undefined}
 			onClick={onClick}
+			suppressHydrationWarning
 		>
 			{children}
 		</Link>
