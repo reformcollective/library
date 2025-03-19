@@ -1,35 +1,14 @@
-import { useRef, useCallback, type Ref, type RefObject, useMemo } from "react"
+import { type Ref, useImperativeHandle, useRef } from "react"
 
-function useCombinedRefs<T>(externalRef?: Ref<T>): RefObject<T | null> {
+function useCombinedRefs<T>(externalRef?: Ref<T>) {
 	const internalRef = useRef<T>(null)
-	const combinedRef = useRef<T>(null)
 
-	const setRefs = useCallback(
-		(node: T | null) => {
-			internalRef.current = node
-
-			if (typeof externalRef === "function") {
-				externalRef(node)
-			} else if (externalRef) {
-				externalRef.current = node
-			}
-
-			combinedRef.current = node
-		},
-		[externalRef],
+	useImperativeHandle<T | null, T | null>(
+		externalRef,
+		() => internalRef.current,
 	)
 
-	return useMemo(
-		() => ({
-			get current() {
-				return combinedRef.current
-			},
-			set current(node: T | null) {
-				setRefs(node)
-			},
-		}),
-		[setRefs],
-	)
+	return internalRef
 }
 
 export default useCombinedRefs

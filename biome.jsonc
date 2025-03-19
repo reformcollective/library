@@ -1,6 +1,6 @@
 {
 	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
-	"organizeImports": { "enabled": false },
+	"organizeImports": { "enabled": true },
 	"linter": {
 		"enabled": true,
 		"rules": {
@@ -18,6 +18,11 @@
 						"hooks": [
 							{
 								"name": "useAnimation",
+								"closureIndex": 0,
+								"dependenciesIndex": 1
+							},
+							{
+								"name": "useAsyncEffect",
 								"closureIndex": 0,
 								"dependenciesIndex": 1
 							}

@@ -98,7 +98,9 @@ export const usePreloader = ({
 	}
 
 	useAsyncEffect(async () => {
-		if (initComplete) return
+		if (!initComplete) return
+		if (output.ready) return
+
 		if ((stopAnimations && !scope) || (slowAnimations && !scope))
 			throw new Error("scope is required in order to correctly stop animations")
 
@@ -181,7 +183,14 @@ export const usePreloader = ({
 				ScrollTrigger.refresh()
 			})
 		}
-	}, [])
+	}, [
+		initComplete,
+		output.ready,
+		minDuration,
+		scope,
+		slowAnimations,
+		stopAnimations,
+	])
 
 	return output
 }

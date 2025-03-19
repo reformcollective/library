@@ -161,8 +161,13 @@ export const SmoothScrollStyle = ({ ...config }: LenisOptions = {}) => {
 		 */
 		window.lenis?.destroy()
 
+		// allow scrolling in error modals, chrome extensions, sanity studio, etc.
+		// i'd like to clean this up a bit, but ok for now
+		const rootLayout = document.querySelector(".root-layout")
+		if (!rootLayout) throw new Error("root-layout not found")
+
 		// Initialize a new Lenis instance for smooth scrolling
-		const lenis = new Lenis(config)
+		const lenis = new Lenis({ ...config, eventsTarget: rootLayout })
 		window.lenis = lenis
 
 		// Synchronize Lenis scrolling with GSAP's ScrollTrigger plugin

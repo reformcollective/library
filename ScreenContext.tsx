@@ -1,18 +1,21 @@
 "use client"
 
-import {
-	createContext,
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-	useTransition,
-} from "react"
+import { createContext, useCallback, useEffect, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 import {
 	desktopBreakpoint,
 	mobileBreakpoint,
 	tabletBreakpoint,
 } from "styles/media"
+
+/**
+ * we can use flushSync to control the order things will hydrate in synchronously
+ */
+type HydrationPhase =
+	| "hydrating-react"
+	| "hydrating-utilities"
+	| "hydrating-animations"
+	| "hydration-complete"
 
 /**
  * Gives easy access to media queries
@@ -25,13 +28,18 @@ export const ScreenContext = createContext({
 	tablet: false,
 	mobile: false,
 	/**
-	 * screen context ready will be set to true
-	 * before animations are run - any state updates
-	 * it triggers will also delay initComplete
+	 * should utilities like useMedia or useClientOnly be client hydrated?
 	 *
-	 * use this for state updates, etc. that need to run during hydration
+	 * This will be set after initial hydration, so you don't need to worry about hydration errors
 	 */
-	screenContextReady: false,
+	hydrateUtilities: false,
+	/**
+	 * Should animations be created and run on the client?
+	 *
+	 * This will be set after initial hydration, so you don't need to worry about hydration errors
+	 * This will also be set after utilities like useMedia or useClientOnly are hydrated
+	 */
+	hydrateAnimations: false,
 	/**
 	 * initComplete will be set to true after
 	 * screen context has completed setup AND any state updates
@@ -53,8 +61,7 @@ export function ScreenProvider({ children }: Props) {
 	const [m, setM] = useState<boolean>(true)
 	const [innerWidth, setInnerWidth] = useState(0)
 	const [innerHeight, setInnerHeight] = useState(0)
-	const [needsInit, setNeedsInit] = useState(true)
-	const [initializing, startTransition] = useTransition()
+	const [phase, setPhase] = useState<HydrationPhase>("hydrating-react")
 
 	const setScreenContext = useCallback(() => {
 		setM(window.innerWidth <= mobileBreakpoint)
@@ -69,11 +76,15 @@ export function ScreenProvider({ children }: Props) {
 		setFw(window.innerWidth > desktopBreakpoint)
 		setInnerHeight(window.innerHeight)
 		setInnerWidth(window.innerWidth)
-		setNeedsInit(false)
 	}, [])
 
 	useEffect(() => {
-		startTransition(setScreenContext)
+		setTimeout(() => {
+			flushSync(() => setScreenContext())
+			flushSync(() => setPhase("hydrating-utilities"))
+			flushSync(() => setPhase("hydrating-animations"))
+			flushSync(() => setPhase("hydration-complete"))
+		}, 0)
 	}, [setScreenContext])
 	useDebouncedEventListener("resize", setScreenContext)
 
@@ -86,8 +97,13 @@ export function ScreenProvider({ children }: Props) {
 				desktop: d,
 				tablet: t,
 				mobile: m,
-				initComplete: !initializing && !needsInit,
-				screenContextReady: !needsInit,
+				hydrateUtilities:
+					phase === "hydrating-utilities" ||
+					phase === "hydrating-animations" ||
+					phase === "hydration-complete",
+				hydrateAnimations:
+					phase === "hydrating-animations" || phase === "hydration-complete",
+				initComplete: phase === "hydration-complete",
 			}}
 		>
 			{children}

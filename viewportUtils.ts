@@ -1,5 +1,5 @@
 import config from "libraryConfig"
-import { startTransition, use, useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -20,12 +20,12 @@ function useHookify<P, T extends (input: P) => ReturnType<T>>(
 	arg: P,
 ): ReturnType<T> | undefined {
 	const [value, setValue] = useState<ReturnType<T>>()
-	const { screenContextReady } = use(ScreenContext)
+	const { hydrateUtilities } = use(ScreenContext)
 
 	useDebouncedEventListener("resize", () => setValue(fn(arg)))
 	useEffect(() => {
-		if (screenContextReady) startTransition(() => setValue(fn(arg)))
-	}, [fn, arg, screenContextReady])
+		if (hydrateUtilities) setValue(fn(arg))
+	}, [fn, arg, hydrateUtilities])
 
 	return value
 }
