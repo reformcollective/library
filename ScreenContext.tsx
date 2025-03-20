@@ -14,6 +14,11 @@ import {
 	tabletBreakpoint,
 } from "styles/media"
 
+type HydrationPhase =
+	| "hydrating-react"
+	| "hydrating-utilities"
+	| "hydration-complete"
+
 /**
  * Gives easy access to media queries
  */
@@ -25,13 +30,11 @@ export const ScreenContext = createContext({
 	tablet: false,
 	mobile: false,
 	/**
-	 * screen context ready will be set to true
-	 * before animations are run - any state updates
-	 * it triggers will also delay initComplete
+	 * should utilities like useMedia or useClientOnly be client hydrated?
 	 *
-	 * use this for state updates, etc. that need to run during hydration
+	 * This will be set after initial hydration, so you don't need to worry about hydration errors
 	 */
-	screenContextReady: false,
+	shouldHydrateUtilities: false,
 	/**
 	 * initComplete will be set to true after
 	 * screen context has completed setup AND any state updates
@@ -46,6 +49,8 @@ interface Props {
 	children: React.ReactNode
 }
 
+performance.mark("hydrating-react")
+
 export function ScreenProvider({ children }: Props) {
 	const [fw, setFw] = useState<boolean>(false)
 	const [d, setD] = useState<boolean>(false)
@@ -53,8 +58,8 @@ export function ScreenProvider({ children }: Props) {
 	const [m, setM] = useState<boolean>(true)
 	const [innerWidth, setInnerWidth] = useState(0)
 	const [innerHeight, setInnerHeight] = useState(0)
-	const [needsInit, setNeedsInit] = useState(true)
-	const [initializing, startTransition] = useTransition()
+	const [phase, setPhase] = useState<HydrationPhase>("hydrating-react")
+	const [isTransitioning, startTransition] = useTransition()
 
 	const setScreenContext = useCallback(() => {
 		setM(window.innerWidth <= mobileBreakpoint)
@@ -69,12 +74,42 @@ export function ScreenProvider({ children }: Props) {
 		setFw(window.innerWidth > desktopBreakpoint)
 		setInnerHeight(window.innerHeight)
 		setInnerWidth(window.innerWidth)
-		setNeedsInit(false)
 	}, [])
 
 	useEffect(() => {
-		startTransition(setScreenContext)
-	}, [setScreenContext])
+		if (isTransitioning) return
+		if (phase === "hydrating-react") {
+			/**
+			 * measure how long it takes to hydrate the page and fire this effect
+			 */
+			performance.measure("context: loading", "hydrating-react")
+
+			performance.mark("hydrating-utilities")
+			startTransition(() => {
+				setScreenContext()
+				setPhase("hydrating-utilities")
+			})
+		}
+
+		if (phase === "hydrating-utilities") {
+			/**
+			 * measure how long it takes to hydrate utilities like useAnimation and useMedia
+			 */
+			performance.measure("context: hydrating utilities", "hydrating-utilities")
+
+			performance.mark("hydration-complete")
+			startTransition(() => {
+				setPhase("hydration-complete")
+			})
+		}
+
+		/**
+		 * measure how long it takes to finish up any other work that depends on the screen context
+		 */
+		if (phase === "hydration-complete") {
+			performance.measure("context: hydration complete", "hydration-complete")
+		}
+	}, [phase, isTransitioning, setScreenContext])
 	useDebouncedEventListener("resize", setScreenContext)
 
 	return (
@@ -86,8 +121,9 @@ export function ScreenProvider({ children }: Props) {
 				desktop: d,
 				tablet: t,
 				mobile: m,
-				initComplete: !initializing && !needsInit,
-				screenContextReady: !needsInit,
+				shouldHydrateUtilities:
+					phase === "hydrating-utilities" || phase === "hydration-complete",
+				initComplete: phase === "hydration-complete",
 			}}
 		>
 			{children}

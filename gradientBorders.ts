@@ -44,6 +44,7 @@ const gradientBorderPseudo =
 			inset: 0;
 			z-index: 1;
 			border-radius: inherit;
+			pointer-events: none;
 			${generateGradientBorder(gradient, borderSize)}
 		}
 	`
