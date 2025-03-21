@@ -2,7 +2,7 @@
 
 import libraryConfig from "libraryConfig"
 import Link from "next/link"
-import { type ComponentProps, type Ref } from "react"
+import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
 import type { Transitions } from "./loader"
 import { useTransitioner } from "./transitioner"
