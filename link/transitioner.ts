@@ -1,10 +1,10 @@
 import { ScrollTrigger } from "gsap/all"
-import { pathnameMatches, sleep } from "library/functions"
 import { createScrollLock } from "library/Scroll"
+import { pathnameMatches, sleep } from "library/functions"
 import libraryConfig from "libraryConfig"
 import { useRouter } from "next/navigation"
 import { useCallback } from "react"
-import { loader, type Transitions } from "./loader"
+import { type Transitions, loader } from "./loader"
 import { getScrollOffset } from "./util"
 
 export const useTransitioner = () => {
@@ -58,6 +58,8 @@ export const useTransitioner = () => {
 				const existingHref = window.location.href
 				router.push(
 					destination.pathname + destination.search + destination.hash,
+					// next can handle this, but it is too 'smart' and doesn't always scroll to 0, 0
+					{ scroll: false },
 				)
 
 				// check for href changes with a timeout
@@ -74,6 +76,8 @@ export const useTransitioner = () => {
 					const interval = setInterval(checkUrlChange, 5)
 				})
 				await Promise.race([timeout, urlChange])
+				window.lenis?.scrollTo(0, { immediate: true })
+
 				loader.dispatchEvent("routeChange", "instant")
 				loader.dispatchEvent("end", "instant")
 
@@ -100,6 +104,8 @@ export const useTransitioner = () => {
 			// dispatch finished events
 			loader.dispatchEvent("end", transition)
 			ScrollTrigger.refresh()
+
+			throw new Error("we haven't added support for this yet -robbie")
 		},
 		[router],
 	)

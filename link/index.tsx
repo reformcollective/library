@@ -1,11 +1,11 @@
 "use client"
 
-import type { ComponentProps, Ref } from "react"
-import { linkIsInternal } from "../functions"
-import { useTransitioner } from "./transitioner"
-import type { Transitions } from "./loader"
 import libraryConfig from "libraryConfig"
 import Link from "next/link"
+import { type ComponentProps, type Ref, startTransition } from "react"
+import { linkIsInternal } from "../functions"
+import type { Transitions } from "./loader"
+import { useTransitioner } from "./transitioner"
 
 type CMSLink = {
 	_type: "link"
@@ -132,7 +132,9 @@ export default function UniversalLink({
 
 		e.preventDefault()
 		if (internal && !newTab) {
-			transitioner(url, transition)
+			startTransition(() => {
+				transitioner(url, transition)
+			})
 		} else {
 			window.open(url, newTab ? "_blank" : "_self")
 		}

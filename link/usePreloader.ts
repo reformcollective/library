@@ -1,9 +1,9 @@
 import { useAsyncEffect } from "ahooks"
 import gsap, { ScrollTrigger } from "gsap/all"
+import { ScreenContext } from "library/ScreenContext"
 import { isBrowser } from "library/deviceDetection"
 import { sleep } from "library/functions"
-import { ScreenContext } from "library/ScreenContext"
-import { use, useState, type RefObject } from "react"
+import { type RefObject, use, useState } from "react"
 import { flushSync } from "react-dom"
 
 /**
@@ -16,6 +16,7 @@ const DEBUG_BLOCK_THREAD_FOR_SECONDS = 0
 let hasDoneBlock = false
 
 const globalPromises: Promise<unknown>[] = []
+let globalComplete = false
 
 /**
  * because multiple preloader hooks will:
@@ -95,11 +96,20 @@ export const usePreloader = ({
 		 * we loaded the page from the top
 		 */
 		isAtPageTop: boolean | null
-	}>({
-		ready: false,
-		completed: false,
-		isAtPageTop: null,
-	})
+	}>(
+		globalComplete
+			? {
+					// this is our default state after, e.g. a page transition
+					ready: true,
+					completed: true,
+					isAtPageTop: true,
+				}
+			: {
+					ready: false,
+					completed: false,
+					isAtPageTop: null,
+				},
+	)
 
 	// block the main thread for debugging
 	if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0 && !hasDoneBlock) {
@@ -191,10 +201,12 @@ export const usePreloader = ({
 			(a) => !beforeAnimations.includes(a),
 		)
 		for (const animation of newAnimations) {
-			animation.finished.then(() => {
-				ScrollTrigger.refresh()
-			})
+			globalPromises.push(animation.finished)
 		}
+
+		await recursiveAllSettled(globalPromises)
+		ScrollTrigger.refresh()
+		globalComplete = true
 
 		setOutput((p) => ({
 			...p,

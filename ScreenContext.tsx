@@ -52,12 +52,19 @@ interface Props {
 performance.mark("hydrating-react")
 
 export function ScreenProvider({ children }: Props) {
+	/**
+	 * screen size utilities
+	 */
 	const [fw, setFw] = useState<boolean>(false)
 	const [d, setD] = useState<boolean>(false)
 	const [t, setT] = useState<boolean>(false)
 	const [m, setM] = useState<boolean>(true)
 	const [innerWidth, setInnerWidth] = useState(0)
 	const [innerHeight, setInnerHeight] = useState(0)
+
+	/**
+	 * preloading utilities
+	 */
 	const [phase, setPhase] = useState<HydrationPhase>("hydrating-react")
 	const [isTransitioning, startTransition] = useTransition()
 
