@@ -51,6 +51,10 @@ export default function createSmoothPin({
 
 	const goop =
 		options.pin?.parentElement ?? options.trigger?.parentElement ?? null
+	const clampGoopLevel = (value: number) => {
+		const max = (trigger.end - trigger.start) / 2
+		return Math.min(max, value)
+	}
 
 	/**
 	 * goop at start
@@ -63,10 +67,10 @@ export default function createSmoothPin({
 					y: 0,
 				},
 				{
-					y: goopLevel / 4,
+					y: clampGoopLevel(goopLevel) / 4,
 					ease: "power1.in",
 					scrollTrigger: {
-						start: () => trigger.start - goopLevel,
+						start: () => trigger.start - clampGoopLevel(goopLevel),
 						end: () => trigger.start,
 						scrub: true,
 					},
@@ -75,14 +79,14 @@ export default function createSmoothPin({
 			gsap.fromTo(
 				goop,
 				{
-					y: goopLevel / 4,
+					y: clampGoopLevel(goopLevel) / 4,
 				},
 				{
 					y: 0,
 					ease: "power1.out",
 					scrollTrigger: {
 						start: () => trigger.start,
-						end: () => trigger.start + goopLevel,
+						end: () => trigger.start + clampGoopLevel(goopLevel),
 						scrub: true,
 					},
 				},
@@ -101,10 +105,10 @@ export default function createSmoothPin({
 					y: 0,
 				},
 				{
-					y: -goopLevel / 4,
+					y: -clampGoopLevel(goopLevel) / 4,
 					ease: "power1.in",
 					scrollTrigger: {
-						start: () => trigger.end - goopLevel,
+						start: () => trigger.end - clampGoopLevel(goopLevel),
 						end: () => trigger.end,
 						scrub: true,
 					},
@@ -113,14 +117,14 @@ export default function createSmoothPin({
 			gsap.fromTo(
 				goop,
 				{
-					y: -goopLevel / 4,
+					y: -clampGoopLevel(goopLevel) / 4,
 				},
 				{
 					y: 0,
 					ease: "power1.out",
 					scrollTrigger: {
 						start: () => trigger.end,
-						end: () => trigger.end + goopLevel,
+						end: () => trigger.end + clampGoopLevel(goopLevel),
 						scrub: true,
 					},
 				},
