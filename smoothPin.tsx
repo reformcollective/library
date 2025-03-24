@@ -49,91 +49,92 @@ export default function createSmoothPin({
 	if (options.pinType === "fixed") return trigger
 	if (goopLevel === 0) return trigger
 
-	// the dom element may not exist yet, so we need to wait for it to be created
-	gsap.delayedCall(0, () => {
-		const goop =
-			options.pin?.parentElement ?? options.trigger?.parentElement ?? null
+	const goop =
+		options.pin?.parentElement ?? options.trigger?.parentElement ?? null
 
-		/**
-		 * goop at start
-		 */
-		if (goopType === "in" || goopType === "both") {
-			tweens.push(
-				gsap.fromTo(
-					goop,
-					{
-						y: 0,
+	/**
+	 * goop at start
+	 */
+	if (goopType === "in" || goopType === "both") {
+		tweens.push(
+			gsap.fromTo(
+				goop,
+				{
+					y: 0,
+				},
+				{
+					y: goopLevel / 4,
+					ease: "power1.in",
+					scrollTrigger: {
+						start: () => trigger.start - goopLevel,
+						end: () => trigger.start,
+						scrub: true,
 					},
-					{
-						immediateRender: false,
-						y: goopLevel / 4,
-						ease: "power1.in",
-						scrollTrigger: {
-							start: () => trigger.start - goopLevel,
-							end: () => trigger.start,
-							scrub: true,
-						},
+				},
+			),
+			gsap.fromTo(
+				goop,
+				{
+					y: goopLevel / 4,
+				},
+				{
+					y: 0,
+					ease: "power1.out",
+					scrollTrigger: {
+						start: () => trigger.start,
+						end: () => trigger.start + goopLevel,
+						scrub: true,
 					},
-				),
-				gsap.fromTo(
-					goop,
-					{
-						y: goopLevel / 4,
-					},
-					{
-						immediateRender: false,
-						y: 0,
-						ease: "power1.out",
-						scrollTrigger: {
-							start: () => trigger.start,
-							end: () => trigger.start + goopLevel,
-							scrub: true,
-						},
-					},
-				),
-			)
-		}
+				},
+			),
+		)
+	}
 
-		/**
-		 * goop at end
-		 */
-		if (goopType === "out" || goopType === "both") {
-			tweens.push(
-				gsap.fromTo(
-					goop,
-					{
-						y: 0,
+	/**
+	 * goop at end
+	 */
+	if (goopType === "out" || goopType === "both") {
+		tweens.push(
+			gsap.fromTo(
+				goop,
+				{
+					y: 0,
+				},
+				{
+					y: -goopLevel / 4,
+					ease: "power1.in",
+					scrollTrigger: {
+						start: () => trigger.end - goopLevel,
+						end: () => trigger.end,
+						scrub: true,
 					},
-					{
-						immediateRender: false,
-						y: -goopLevel / 4,
-						ease: "power1.in",
-						scrollTrigger: {
-							start: () => trigger.end - goopLevel,
-							end: () => trigger.end,
-							scrub: true,
-						},
+				},
+			),
+			gsap.fromTo(
+				goop,
+				{
+					y: -goopLevel / 4,
+				},
+				{
+					y: 0,
+					ease: "power1.out",
+					scrollTrigger: {
+						start: () => trigger.end,
+						end: () => trigger.end + goopLevel,
+						scrub: true,
 					},
-				),
-				gsap.fromTo(
-					goop,
-					{
-						y: -goopLevel / 4,
-					},
-					{
-						immediateRender: false,
-						y: 0,
-						ease: "power1.out",
-						scrollTrigger: {
-							start: () => trigger.end,
-							end: () => trigger.end + goopLevel,
-							scrub: true,
-						},
-					},
-				),
-			)
-		}
-	})
+				},
+			),
+		)
+	}
+
+	/**
+	 * due to GSAP whims, these tweens may not render a value until after the scrolltrigger is reached
+	 * I'll force them to commit a value now, the actual value doesn't matter since it'll be immediately overwritten by the scrolltrigger
+	 */
+	for (const tween of tweens) {
+		tween.render(1)
+	}
 
 	return trigger
 }
