@@ -12,5 +12,15 @@ export function Transition({
 	const { completed } = usePreloader()
 
 	if (completed) return <ReactViewTransition>{children}</ReactViewTransition>
-	return <>{children}</>
+	return (
+		<ReactViewTransition
+			enter="none"
+			exit="none"
+			layout="none"
+			update="none"
+			share="none"
+		>
+			{children}
+		</ReactViewTransition>
+	)
 }
