@@ -64,7 +64,7 @@ export const useTransitioner = () => {
 
 				// check for href changes with a timeout
 				const timeout = new Promise((_, reject) =>
-					setTimeout(() => reject(new Error("Navigation timeout")), 5000),
+					setTimeout(() => reject(new Error("Navigation timeout")), 30_000),
 				)
 				const urlChange = new Promise<void>((resolve) => {
 					const checkUrlChange = () => {
