@@ -1,6 +1,7 @@
 import { useAsyncEffect } from "ahooks"
 import gsap, { ScrollTrigger } from "gsap/all"
 import { ScreenContext } from "library/ScreenContext"
+import { createScrollLock } from "library/Scroll"
 import { isBrowser } from "library/deviceDetection"
 import { sleep } from "library/functions"
 import { type RefObject, use, useState } from "react"
@@ -17,6 +18,12 @@ let hasDoneBlock = false
 
 const globalPromises: Promise<unknown>[] = []
 let globalComplete = false
+const lock = createScrollLock("lock")
+const setGlobalComplete = () => {
+	if (!globalComplete) ScrollTrigger.refresh()
+	lock.release()
+	globalComplete = true
+}
 
 /**
  * because multiple preloader hooks will:
@@ -205,8 +212,7 @@ export const usePreloader = ({
 		}
 
 		await recursiveAllSettled(globalPromises)
-		ScrollTrigger.refresh()
-		globalComplete = true
+		setGlobalComplete()
 
 		setOutput((p) => ({
 			...p,
