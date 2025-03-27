@@ -89,7 +89,17 @@ export function ScreenProvider({ children }: Props) {
 			/**
 			 * measure how long it takes to hydrate the page and fire this effect
 			 */
-			performance.measure("context: loading", "hydrating-react")
+			performance.measure("context: loading", {
+				start: "hydrating-react",
+				detail: {
+					devtools: {
+						dataType: "track-entry",
+						track: "Screen Context",
+						color: "tertiary-dark",
+						tooltipText: "React is hydrating",
+					},
+				},
+			})
 
 			performance.mark("hydrating-utilities")
 			startTransition(() => {
@@ -102,7 +112,18 @@ export function ScreenProvider({ children }: Props) {
 			/**
 			 * measure how long it takes to hydrate utilities like useAnimation and useMedia
 			 */
-			performance.measure("context: hydrating utilities", "hydrating-utilities")
+			performance.measure("context: hydrating utilities", {
+				start: "hydrating-utilities",
+				detail: {
+					devtools: {
+						dataType: "track-entry",
+						track: "Screen Context",
+						color: "secondary",
+						tooltipText:
+							"Utilities, like useAnimation and useMedia, are hydrating",
+					},
+				},
+			})
 
 			performance.mark("hydration-complete")
 			startTransition(() => {
@@ -114,7 +135,17 @@ export function ScreenProvider({ children }: Props) {
 		 * measure how long it takes to finish up any other work that depends on the screen context
 		 */
 		if (phase === "hydration-complete") {
-			performance.measure("context: hydration complete", "hydration-complete")
+			performance.measure("context: hydration complete", {
+				start: "hydration-complete",
+				detail: {
+					devtools: {
+						dataType: "track-entry",
+						track: "Screen Context",
+						color: "primary",
+						tooltipText: "Hydration is finishing up",
+					},
+				},
+			})
 		}
 	}, [phase, isTransitioning, setScreenContext])
 	useDebouncedEventListener("resize", setScreenContext)
