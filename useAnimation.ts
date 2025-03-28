@@ -1,12 +1,12 @@
 import gsap from "gsap"
 import {
+	type DependencyList,
 	use,
 	useEffect,
 	useLayoutEffect,
 	useMemo,
 	useRef,
 	useState,
-	type DependencyList,
 } from "react"
 import { ScreenContext } from "./ScreenContext"
 import { isBrowser } from "./deviceDetection"
@@ -65,6 +65,11 @@ export const useAnimation = <InputFn extends Creation>(
 		 */
 		updateBehavior?: "kill" | "revert" | "none"
 		/**
+		 * when component unmounts, how should we handle currently running animations?
+		 * kill them, or revert them.
+		 */
+		unmountBehavior?: "kill" | "revert" | "none"
+		/**
 		 * any extra dependencies that should cause the animations to be re-created
 		 * (in addition to the ones passed in the deps array)
 		 *
@@ -84,6 +89,7 @@ export const useAnimation = <InputFn extends Creation>(
 		recreateOnResize = false,
 		scope = { current: null },
 		updateBehavior = "revert",
+		unmountBehavior = "kill",
 	} = options ?? {}
 	const { innerWidth, shouldHydrateUtilities } = use(ScreenContext)
 	const dependencies = [...deps, ...extraDeps]
@@ -114,15 +120,29 @@ export const useAnimation = <InputFn extends Creation>(
 	latestContext.current = context
 	useIsomorphicLayoutEffect(() => {
 		return () => {
-			if (!latestContext.current.isReverted) latestContext.current.revert()
+			if (!latestContext.current.isReverted) {
+				if (unmountBehavior === "revert") {
+					latestContext.current.revert()
+				} else if (unmountBehavior === "kill") {
+					latestContext.current.kill()
+				}
+			}
 
 			// prevent memory leaks from the first context (which is useless but technically needs cleanup still)
-			if (!context.isReverted) context.revert()
+			if (!context.isReverted) {
+				if (unmountBehavior === "revert") {
+					context.revert()
+				} else if (unmountBehavior === "kill") {
+					context.kill()
+				}
+			}
 
+			// run cleanups for "kill" or "none"
 			// prevent memory leaks from i.e. event listeners (revert will clean up the most recent run, but not the ones before)
-			if (updateBehavior === "none") runCleanups()
+			// TODO: this might not be needed for 'kill' but I don't have time to investigate
+			if (unmountBehavior !== "revert") runCleanups()
 		}
-	}, [updateBehavior])
+	}, [unmountBehavior])
 
 	// actual animation creation
 	useIsomorphicLayoutEffect(() => {
