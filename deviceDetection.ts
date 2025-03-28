@@ -70,6 +70,10 @@ export const useIsMobileOS = () => {
 	return useHookify(isMobileOS)
 }
 
+export const useIsSafari = () => {
+	return useHookify(isSafari)
+}
+
 export const useIsDesktopSafari = () => {
 	return useHookify(isDesktopSafari)
 }

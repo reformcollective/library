@@ -1,31 +1,8 @@
 import { ScrollTrigger, gsap } from "gsap/all"
 import { usePathname } from "next/navigation"
-import type { RefObject } from "react"
+import { type RefObject, useEffect, useRef } from "react"
 import { useIsSmooth } from "./Scroll"
 import { useAnimation } from "./useAnimation"
-
-const isElementInViewport = (element: Element) => {
-	const rect = element?.getBoundingClientRect()
-	return (
-		rect &&
-		rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
-		rect.bottom >= 0
-	)
-}
-
-/**
- * check if any elements with the given attribute are in the viewport
- * @param attribute the attribute to check for
- */
-const checkElementsByAttribute = (attribute: string) => {
-	const elements = document.querySelectorAll(`[${attribute}="true"]`)
-	for (const element of elements) {
-		if (isElementInViewport(element)) {
-			return true
-		}
-	}
-	return false
-}
 
 /**
  * A custom hook that controls header visibility based on scroll position and specified elements.
@@ -46,6 +23,51 @@ export default function useAutoHideHeader(
 
 	const pathname = usePathname()
 
+	const dataHideAreOnScreen = useRef(false)
+	const dataStickAreOnScreen = useRef(false)
+
+	/**
+	 * use intersection observer to check if the elements are in view
+	 */
+	useEffect(() => {
+		const observer = new IntersectionObserver((entries) => {
+			if (entries.length > 0) {
+				dataStickAreOnScreen.current = entries
+					.filter(
+						(x) =>
+							x.target instanceof HTMLElement && x.target.dataset.headerStick,
+					)
+					.some((entry) => entry.isIntersecting)
+				dataHideAreOnScreen.current = entries
+					.filter(
+						(x) =>
+							x.target instanceof HTMLElement && x.target.dataset.headerHide,
+					)
+					.some((entry) => entry.isIntersecting)
+			} else {
+				dataStickAreOnScreen.current = false
+				dataHideAreOnScreen.current = false
+			}
+		})
+
+		const observe = () => {
+			const elements = document.querySelectorAll(
+				"[data-header-hide], [data-header-stick]",
+			)
+			for (const element of elements) {
+				observer.observe(element)
+			}
+		}
+
+		observe()
+		const interval = setInterval(observe, 10_000)
+
+		return () => {
+			observer.disconnect()
+			clearInterval(interval)
+		}
+	}, [])
+
 	useAnimation(
 		() => {
 			let lastScroll = 0
@@ -65,11 +87,9 @@ export default function useAutoHideHeader(
 				const height = wrapper.current?.offsetHeight ?? 0
 				if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
 
-				const forceHideHeader = checkElementsByAttribute("data-header-hide")
+				const forceHideHeader = dataHideAreOnScreen.current
 				const forceShowHeader =
-					checkElementsByAttribute("data-header-stick") ||
-					scroll === 0 ||
-					window.scrollY <= 5
+					dataStickAreOnScreen.current || scroll === 0 || window.scrollY <= 5
 				const showHeader = style === "snap" && delta < 0
 				const hideHeader = style === "snap" && delta > 0
 

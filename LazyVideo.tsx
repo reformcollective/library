@@ -1,11 +1,10 @@
 "use client"
 
 import { ScrollTrigger } from "gsap/all"
-import { useRef, useState, type ReactNode, type Ref } from "react"
-
+import { type ReactNode, type Ref, useRef, useState } from "react"
+import { usePreloader } from "./link/usePreloader"
 import { useAnimation } from "./useAnimation"
 import useCombinedRefs from "./useCombinedRefs"
-import { useRafInterval } from "ahooks"
 
 export function LazyVideo({
 	autoPlay,
@@ -46,24 +45,46 @@ export function LazyVideo({
 	const [showVideo, setShowVideo] = useState(false)
 	const videoRef = useCombinedRefs(ref)
 	const hasStartedLoading = useRef(false)
+	const { completed } = usePreloader()
 
-	const { result: trigger } = useAnimation(() => {
-		return ScrollTrigger.create({
-			trigger: videoRef.current,
-			start: "top-=200 bottom",
-			end: "bottom+=200 top",
-			onEnter: () => setShowVideo(true),
-			onEnterBack: () => setShowVideo(true),
-		})
-	}, [videoRef])
+	useAnimation(
+		() => {
+			if (!completed) return
+			if (showVideo) return
 
-	/**
-	 * if the video starts off screen and animates in, the trigger might not catch it
-	 * so we need to refresh the trigger every couple frames
-	 */
-	useRafInterval(() => {
-		if (!showVideo) trigger?.refresh()
-	}, 100)
+			const show = (self: ScrollTrigger) => {
+				if (!videoRef.current) return
+
+				if (self.start < 0 || self.end < 0) {
+					// video not loaded
+				} else {
+					setShowVideo(true)
+				}
+			}
+
+			// for whatever reason, gsap does a very bad job of tracking videos
+			// when the don't have a source. so I'm computing the values
+			// manually here, which is slightly less efficient but works much better
+			ScrollTrigger.create({
+				trigger: videoRef.current,
+				start: () => {
+					if (!videoRef.current) return Number.NEGATIVE_INFINITY
+					const bounds = videoRef.current.getBoundingClientRect()
+					const scroll = window.scrollY
+					return scroll - window.innerHeight + bounds.top - 200
+				},
+				end: () => {
+					if (!videoRef.current) return Number.NEGATIVE_INFINITY
+					const bounds = videoRef.current.getBoundingClientRect()
+					return `+=${bounds.height + 400}`
+				},
+				onEnter: show,
+				onEnterBack: show,
+			})
+		},
+		[videoRef, completed, showVideo],
+		{ recreateOnResize: true },
+	)
 
 	return (
 		<video

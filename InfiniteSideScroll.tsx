@@ -9,10 +9,10 @@ import {
 	useRef,
 	useState,
 } from "react"
+import { createDebouncedEventListener } from "./ScreenContext"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { css, fresponsive, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
-import { createDebouncedEventListener } from "./ScreenContext"
 
 gsap.registerPlugin(Observer)
 
