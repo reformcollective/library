@@ -114,8 +114,7 @@ export const useIsSmooth = () => {
 			setSmooth(true)
 		}
 		const disableSmooth = () => {
-			setSmooth(false)
-			gsap.set("#smooth-content", { clearProps: "transform" })
+			setSmooth(!!window.lenis?.options.syncTouch)
 		}
 
 		window.addEventListener("wheel", enableSmooth, { passive: true })
