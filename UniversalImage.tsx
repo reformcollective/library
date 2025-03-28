@@ -1,5 +1,5 @@
-import SanityImage, { type SanityImageProps } from "./sanity/SanityImage"
 import type { StaticImageProps } from "./StaticImage"
+import SanityImage, { type SanityImageProps } from "./sanity/SanityImage"
 
 export default SanityImage
 
