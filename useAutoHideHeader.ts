@@ -30,23 +30,21 @@ export default function useAutoHideHeader(
 	 * use intersection observer to check if the elements are in view
 	 */
 	useEffect(() => {
+		const onScreen: HTMLElement[] = []
+
 		const observer = new IntersectionObserver((entries) => {
-			if (entries.length > 0) {
-				dataStickAreOnScreen.current = entries
-					.filter(
-						(x) =>
-							x.target instanceof HTMLElement && x.target.dataset.headerStick,
-					)
-					.some((entry) => entry.isIntersecting)
-				dataHideAreOnScreen.current = entries
-					.filter(
-						(x) =>
-							x.target instanceof HTMLElement && x.target.dataset.headerHide,
-					)
-					.some((entry) => entry.isIntersecting)
-			} else {
-				dataStickAreOnScreen.current = false
-				dataHideAreOnScreen.current = false
+			for (const entry of entries) {
+				if (entry.isIntersecting) {
+					onScreen.push(entry.target as HTMLElement)
+				} else {
+					const index = onScreen.indexOf(entry.target as HTMLElement)
+					if (index >= 0) onScreen.splice(index, 1)
+				}
+
+				dataStickAreOnScreen.current =
+					onScreen.filter((x) => x.dataset.headerStick === "true").length > 0
+				dataHideAreOnScreen.current =
+					onScreen.filter((x) => x.dataset.headerHide === "true").length > 0
 			}
 		})
 
@@ -60,7 +58,7 @@ export default function useAutoHideHeader(
 		}
 
 		observe()
-		const interval = setInterval(observe, 10_000)
+		const interval = setInterval(observe, 1_000)
 
 		return () => {
 			observer.disconnect()
