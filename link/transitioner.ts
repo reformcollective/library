@@ -1,17 +1,22 @@
-import { ScrollTrigger } from "gsap/all"
 import { createScrollLock } from "library/Scroll"
-import { pathnameMatches, sleep } from "library/functions"
+import { pathnameMatches } from "library/functions"
 import libraryConfig from "libraryConfig"
-import { useRouter } from "next/navigation"
+import type { MouseEvent } from "react"
 import { useCallback } from "react"
-import { type Transitions, loader } from "./loader"
+import { loader } from "./loader"
 import { getScrollOffset } from "./util"
 
 export const useTransitioner = () => {
-	const router = useRouter()
-
 	return useCallback(
-		async (to: string, transition?: Transitions) => {
+		async ({
+			e,
+			to,
+			transition,
+		}: {
+			e: MouseEvent
+			to: string
+			transition?: unknown
+		}) => {
 			const destination = new URL(to, window.location.origin)
 
 			/**
@@ -23,6 +28,7 @@ export const useTransitioner = () => {
 				to.startsWith("#") ||
 				pathnameMatches(destination.pathname, window.location.pathname)
 			) {
+				e.preventDefault()
 				const scrollLock = createScrollLock("unlock")
 
 				// save the anchor to the URL
@@ -56,11 +62,6 @@ export const useTransitioner = () => {
 				loader.dispatchEvent("start", "instant")
 
 				const existingHref = window.location.href
-				router.push(
-					destination.pathname + destination.search + destination.hash,
-					// next can handle this, but it is too 'smart' and doesn't always scroll to 0, 0
-					{ scroll: false },
-				)
 
 				// check for href changes with a timeout
 				const timeout = new Promise((_, reject) =>
@@ -87,26 +88,8 @@ export const useTransitioner = () => {
 			/**
 			 * NORMAL TRANSITION
 			 */
-
-			// dispatch events
-			loader.dispatchEvent("start", transition)
-
-			// actually navigate to the page
-			const existingHref = window.location.href
-			router.push(destination.pathname + destination.search + destination.hash)
-
-			// check for href changes
-			while (window.location.href === existingHref) {
-				await sleep(5)
-			}
-			loader.dispatchEvent("routeChange", transition)
-
-			// dispatch finished events
-			loader.dispatchEvent("end", transition)
-			ScrollTrigger.refresh()
-
 			throw new Error("we haven't added support for this yet -robbie")
 		},
-		[router],
+		[],
 	)
 }

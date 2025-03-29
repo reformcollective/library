@@ -127,12 +127,11 @@ export default function UniversalLink({
 	const { url, newTab } = resolveRoute(props.href)
 	const internal = url ? linkIsInternal(url) : false
 
-	const onClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+	const onClick = (e: React.MouseEvent) => {
 		if (!url) return
 
-		e.preventDefault()
 		if (internal && !newTab) {
-			transitioner(url, transition)
+			transitioner({ e, to: url, transition })
 		} else {
 			window.open(url, newTab ? "_blank" : "_self")
 		}
