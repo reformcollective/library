@@ -2,7 +2,7 @@
 
 import libraryConfig from "libraryConfig"
 import Link from "next/link"
-import { type ComponentProps, type Ref, startTransition } from "react"
+import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
 import type { Transitions } from "./loader"
 import { useTransitioner } from "./transitioner"
@@ -127,14 +127,11 @@ export default function UniversalLink({
 	const { url, newTab } = resolveRoute(props.href)
 	const internal = url ? linkIsInternal(url) : false
 
-	const onClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+	const onClick = (e: React.MouseEvent) => {
 		if (!url) return
 
-		e.preventDefault()
 		if (internal && !newTab) {
-			startTransition(() => {
-				transitioner(url, transition)
-			})
+			transitioner({ e, to: url, transition })
 		} else {
 			window.open(url, newTab ? "_blank" : "_self")
 		}
