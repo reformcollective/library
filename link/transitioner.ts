@@ -1,5 +1,5 @@
 import { createScrollLock } from "library/Scroll"
-import { pathnameMatches } from "library/functions"
+import { pathnameMatches, sleep } from "library/functions"
 import libraryConfig from "libraryConfig"
 import type { MouseEvent } from "react"
 import { useCallback } from "react"
@@ -77,6 +77,7 @@ export const useTransitioner = () => {
 					const interval = setInterval(checkUrlChange, 5)
 				})
 				await Promise.race([timeout, urlChange])
+				await sleep(10)
 				window.lenis?.scrollTo(0, { immediate: true })
 
 				loader.dispatchEvent("routeChange", "instant")
