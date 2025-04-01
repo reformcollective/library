@@ -1,3 +1,4 @@
+import { ScrollTrigger } from "gsap/all"
 import { createScrollLock } from "library/Scroll"
 import { pathnameMatches, sleep } from "library/functions"
 import libraryConfig from "libraryConfig"
@@ -79,6 +80,7 @@ export const useTransitioner = () => {
 				await Promise.race([timeout, urlChange])
 				await sleep(10)
 				window.lenis?.scrollTo(0, { immediate: true })
+				ScrollTrigger.refresh()
 
 				loader.dispatchEvent("routeChange", "instant")
 				loader.dispatchEvent("end", "instant")
