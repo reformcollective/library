@@ -203,9 +203,6 @@ export const usePreloader = ({
 				isAtPageTop: window.scrollY < window.innerHeight,
 			})
 		})
-		await sleep(0) // TEMPORARY WORKAROUND! Patched version of react does not flush styles when flushSync is called,
-		// so wait for the callstack to clear before checking for new animations
-		// when https://github.com/facebook/react/issues/32806 is fixed, we should remove this
 		const afterAnimations = document.body.getAnimations({ subtree: true })
 		const newAnimations = afterAnimations.filter(
 			(a) => !beforeAnimations.includes(a),
