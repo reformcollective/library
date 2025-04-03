@@ -1,1201 +1,1400 @@
 diff --git a/dist/compiled/react-dom/cjs/react-dom-client.development.js b/dist/compiled/react-dom/cjs/react-dom-client.development.js
-index b9c75f2156c75d6ab171e09e0c58f5f9329aa4b8..06162bf09b80a5f4c61ac977b9729bfbd3dbb71f 100644
+index b9c75f2156c75d6ab171e09e0c58f5f9329aa4b8..c58a7960bb1625a6029bfb3e3a38c6824f22869d 100644
 --- a/dist/compiled/react-dom/cjs/react-dom-client.development.js
 +++ b/dist/compiled/react-dom/cjs/react-dom-client.development.js
-@@ -20042,34 +20042,99 @@
-     function getScriptSelectorFromKey(key) {
-       return "script[async]" + key;
+@@ -15411,6 +15411,7 @@
+             inProgressLanes = lanes;
+             inProgressRoot = root;
+             commitMutationEffectsOnFiber(finishedWork, root);
++flushStyleUpdates();
+             inProgressRoot = inProgressLanes = null;
+             lanes = selectionInformation;
+             var curFocusedElem = getActiveElementDeep(root.containerInfo),
+@@ -20137,27 +20138,110 @@
+           (resource.state.loading |= Inserted),
+           insertStylesheet(instance, props.precedence, hoistableRoot));
+       return resource.instance;
++    }// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
++}
++
++// --- Optimized insertStylesheet function with BOTH optimizations ---
++function insertStylesheet(instance, precedence, root) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
++  }
++
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
++    var node = nodes[i];
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
++    }
++  }
++
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
++    }
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
      }
-+    var insertedHrefs = new Set();
-+    var rulesByPrecedence = new Map();
-+    var precedenceOrder = [];
-+    var styleElement = null;
-+    
-+    function getOrCreateStyleElement() {
-+      if (!styleElement) {
-+        styleElement = document.createElement('style');
-+        document.head.appendChild(styleElement);
-+      }
-+      return styleElement;
+-    function insertStylesheet(instance, precedence, root) {
+-      for (
+-        var nodes = root.querySelectorAll(
+-            'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-          ),
+-          last = nodes.length ? nodes[nodes.length - 1] : null,
+-          prior = last,
+-          i = 0;
+-        i < nodes.length;
+-        i++
+-      ) {
+-        var node = nodes[i];
+-        if (node.dataset.precedence === precedence) prior = node;
+-        else if (prior !== last) break;
+-      }
+-      prior
+-        ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-        : ((precedence = 9 === root.nodeType ? root.head : root),
+-          precedence.insertBefore(instance, precedence.firstChild));
++
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
+     }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
++
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
++
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
 +    }
-+    
-+    function getInsertionIndex(sheet, precedence) {
-+      const precedenceIndex = precedenceOrder.indexOf(precedence);
-+      if (precedenceIndex === -1) {
-+        // New precedence goes at the end
-+        return sheet.cssRules.length;
-+      }
-+    
-+      // Find the first rule index of the next precedence level
-+      for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+        const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+        if (nextPrecedenceRules?.[0]) {
-+          return nextPrecedenceRules[0].ruleIndex;
-+        }
-+      }
-+    
-+      // If no next precedence found, insert at the end
-+      return sheet.cssRules.length;
-+    }
-+    
-+    function updateRuleIndices(startIndex, shift) {
-+      // Update all rule indices that come after the insertion point
-+      for (const rules of rulesByPrecedence.values()) {
-+        for (const rule of rules) {
-+          if (rule.ruleIndex >= startIndex) {
-+            rule.ruleIndex += shift;
-+          }
-+        }
-+      }
-+    }
-+    
-+    function insertStyleTag(el, props, hoistableRoot) {
-+      const sheet = el.sheet;
-+      const precedence = props['data-precedence'];
-+      const href = props['data-href'];
-+      const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+      try {
-+        // Insert the new rule at the calculated index
-+        const ruleIndex = sheet.insertRule(props.children, insertionIndex);
-+    
-+        // Update indices of subsequent rules
-+        updateRuleIndices(insertionIndex, 1);
-+    
-+        // Get or create array for this precedence
-+        const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+        rulesByPrecedence.set(precedence, rulesForPrecedence);
-+    
-+        // Add the new rule with its index
-+        rulesForPrecedence.push({ href, ruleIndex });
-+      } catch (error) {
-+        console.error('Error inserting CSS rule:', error);
-+      }
-+      performance.mark('Style_end', {
-+        detail: href
-+      });
-+    }
-     function acquireResource(hoistableRoot, resource, props) {
-       resource.count++;
-       if (null === resource.instance)
-         switch (resource.type) {
-           case "style":
--            var instance = hoistableRoot.querySelector(
--              'style[data-href~="' +
--                escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--                '"]'
--            );
--            if (instance)
--              return (
--                (resource.instance = instance),
--                markNodeAsHoistable(instance),
--                instance
--              );
-+            var instance = getOrCreateStyleElement();
-+            var hasHoistedHref = insertedHrefs.has(props.href);
-+            if (!precedenceOrder.includes(props.precedence)) {
-+              precedenceOrder.push(props.precedence);
-+            }
-+            if (hasHoistedHref) {
-+                return (
-+                  (resource.instance = instance),
-+                  markNodeAsHoistable(instance),
-+                  instance
-+                );
-+            }
-             var styleProps = assign({}, props, {
-               "data-href": props.href,
-               "data-precedence": props.precedence,
-               href: null,
-               precedence: null
-             });
--            instance = (
--              hoistableRoot.ownerDocument || hoistableRoot
--            ).createElement("style");
-             markNodeAsHoistable(instance);
--            setInitialProperties(instance, "style", styleProps);
--            insertStylesheet(instance, props.precedence, hoistableRoot);
-+            insertStyleTag(instance, styleProps, hoistableRoot);
-             return (resource.instance = instance);
-           case "stylesheet":
-             styleProps = getStyleKey(props.href);
++
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
++  }
++}
+     function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+       null == stylesheetProps.crossOrigin &&
+         (stylesheetProps.crossOrigin = preloadProps.crossOrigin);
 diff --git a/dist/compiled/react-dom/cjs/react-dom-client.production.js b/dist/compiled/react-dom/cjs/react-dom-client.production.js
-index c83517e72b4ab07823315383e151f4d43ac6b4fe..8c08fd3aa9f84b7a7a7f921d8a3065b1bccb0297 100644
+index c83517e72b4ab07823315383e151f4d43ac6b4fe..1001e3a14faf5fd6a9743791141f664bcb161485 100644
 --- a/dist/compiled/react-dom/cjs/react-dom-client.production.js
 +++ b/dist/compiled/react-dom/cjs/react-dom-client.production.js
-@@ -14233,34 +14233,99 @@ function getScriptKey(src) {
- function getScriptSelectorFromKey(key) {
-   return "script[async]" + key;
+@@ -11088,6 +11088,7 @@ function flushMutationEffects() {
+       executionContext |= 4;
+       try {
+         commitMutationEffectsOnFiber(finishedWork, root);
++flushStyleUpdates();
+         var priorSelectionInformation = selectionInformation,
+           curFocusedElem = getActiveElementDeep(root.containerInfo),
+           priorFocusedElem = priorSelectionInformation.focusedElem,
+@@ -14324,26 +14325,109 @@ function acquireResource(hoistableRoot, resource, props) {
+       (resource.state.loading |= 4),
+       insertStylesheet(instance, props.precedence, hoistableRoot));
+   return resource.instance;
++}// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
  }
-+var insertedHrefs = new Set();
-+var rulesByPrecedence = new Map();
-+var precedenceOrder = [];
-+var styleElement = null;
 +
-+function getOrCreateStyleElement() {
-+  if (!styleElement) {
-+    styleElement = document.createElement('style');
-+    document.head.appendChild(styleElement);
++// --- Optimized insertStylesheet function with BOTH optimizations ---
+ function insertStylesheet(instance, precedence, root) {
+-  for (
+-    var nodes = root.querySelectorAll(
+-        'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-      ),
+-      last = nodes.length ? nodes[nodes.length - 1] : null,
+-      prior = last,
+-      i = 0;
+-    i < nodes.length;
+-    i++
+-  ) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
 +  }
-+  return styleElement;
-+}
 +
-+function getInsertionIndex(sheet, precedence) {
-+  const precedenceIndex = precedenceOrder.indexOf(precedence);
-+  if (precedenceIndex === -1) {
-+    // New precedence goes at the end
-+    return sheet.cssRules.length;
-+  }
-+
-+  // Find the first rule index of the next precedence level
-+  for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+    const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+    if (nextPrecedenceRules?.[0]) {
-+      return nextPrecedenceRules[0].ruleIndex;
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
+     var node = nodes[i];
+-    if (node.dataset.precedence === precedence) prior = node;
+-    else if (prior !== last) break;
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
 +    }
 +  }
 +
-+  // If no next precedence found, insert at the end
-+  return sheet.cssRules.length;
-+}
-+
-+function updateRuleIndices(startIndex, shift) {
-+  // Update all rule indices that come after the insertion point
-+  for (const rules of rulesByPrecedence.values()) {
-+    for (const rule of rules) {
-+      if (rule.ruleIndex >= startIndex) {
-+        rule.ruleIndex += shift;
-+      }
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
 +    }
-+  }
-+}
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
++    }
 +
-+function insertStyleTag(el, props, hoistableRoot) {
-+  const sheet = el.sheet;
-+  const precedence = props['data-precedence'];
-+  const href = props['data-href'];
-+  const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+  try {
-+    // Insert the new rule at the calculated index
-+    const ruleIndex = sheet.insertRule(props.children, insertionIndex);
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
++    }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
 +
-+    // Update indices of subsequent rules
-+    updateRuleIndices(insertionIndex, 1);
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
 +
-+    // Get or create array for this precedence
-+    const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+    rulesByPrecedence.set(precedence, rulesForPrecedence);
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
++    }
 +
-+    // Add the new rule with its index
-+    rulesForPrecedence.push({ href, ruleIndex });
-+  } catch (error) {
-+    console.error('Error inserting CSS rule:', error);
-+  }
-+  performance.mark('Style_end', {
-+    detail: href
-+  });
-+}
- function acquireResource(hoistableRoot, resource, props) {
-   resource.count++;
-   if (null === resource.instance)
-     switch (resource.type) {
-       case "style":
--        var instance = hoistableRoot.querySelector(
--          'style[data-href~="' +
--            escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--            '"]'
--        );
--        if (instance)
--          return (
--            (resource.instance = instance),
--            markNodeAsHoistable(instance),
--            instance
--          );
-+        var instance = getOrCreateStyleElement();
-+        var hasHoistedHref = insertedHrefs.has(props.href);
-+        if (!precedenceOrder.includes(props.precedence)) {
-+          precedenceOrder.push(props.precedence);
-+        }
-+        if (hasHoistedHref) {
-+            return (
-+              (resource.instance = instance),
-+              markNodeAsHoistable(instance),
-+              instance
-+            );
-+        }
-         var styleProps = assign({}, props, {
-           "data-href": props.href,
-           "data-precedence": props.precedence,
-           href: null,
-           precedence: null
-         });
--        instance = (hoistableRoot.ownerDocument || hoistableRoot).createElement(
--          "style"
--        );
-         markNodeAsHoistable(instance);
--        setInitialProperties(instance, "style", styleProps);
--        insertStylesheet(instance, props.precedence, hoistableRoot);
-+        insertStyleTag(instance, styleProps, hoistableRoot);
-         return (resource.instance = instance);
-       case "stylesheet":
-         styleProps = getStyleKey(props.href);
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
+   }
+-  prior
+-    ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-    : ((precedence = 9 === root.nodeType ? root.head : root),
+-      precedence.insertBefore(instance, precedence.firstChild));
+ }
+ function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+   null == stylesheetProps.crossOrigin &&
 diff --git a/dist/compiled/react-dom/cjs/react-dom-profiling.development.js b/dist/compiled/react-dom/cjs/react-dom-profiling.development.js
-index 51f031a33573944e571e849185c317a9ac852e6d..ca206780800c3930fbbd382f920c246c74963c71 100644
+index 51f031a33573944e571e849185c317a9ac852e6d..5a8eb3399651211b42ed93360476ca6220a21224 100644
 --- a/dist/compiled/react-dom/cjs/react-dom-profiling.development.js
 +++ b/dist/compiled/react-dom/cjs/react-dom-profiling.development.js
-@@ -20054,34 +20054,99 @@
-     function getScriptSelectorFromKey(key) {
-       return "script[async]" + key;
+@@ -15423,6 +15423,7 @@
+             inProgressLanes = lanes;
+             inProgressRoot = root;
+             commitMutationEffectsOnFiber(finishedWork, root);
++flushStyleUpdates();
+             inProgressRoot = inProgressLanes = null;
+             lanes = selectionInformation;
+             var curFocusedElem = getActiveElementDeep(root.containerInfo),
+@@ -20149,27 +20150,110 @@
+           (resource.state.loading |= Inserted),
+           insertStylesheet(instance, props.precedence, hoistableRoot));
+       return resource.instance;
++    }// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
++}
++
++// --- Optimized insertStylesheet function with BOTH optimizations ---
++function insertStylesheet(instance, precedence, root) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
++  }
++
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
++    var node = nodes[i];
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
++    }
++  }
++
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
++    }
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
      }
-+    var insertedHrefs = new Set();
-+    var rulesByPrecedence = new Map();
-+    var precedenceOrder = [];
-+    var styleElement = null;
-+    
-+    function getOrCreateStyleElement() {
-+      if (!styleElement) {
-+        styleElement = document.createElement('style');
-+        document.head.appendChild(styleElement);
-+      }
-+      return styleElement;
+-    function insertStylesheet(instance, precedence, root) {
+-      for (
+-        var nodes = root.querySelectorAll(
+-            'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-          ),
+-          last = nodes.length ? nodes[nodes.length - 1] : null,
+-          prior = last,
+-          i = 0;
+-        i < nodes.length;
+-        i++
+-      ) {
+-        var node = nodes[i];
+-        if (node.dataset.precedence === precedence) prior = node;
+-        else if (prior !== last) break;
+-      }
+-      prior
+-        ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-        : ((precedence = 9 === root.nodeType ? root.head : root),
+-          precedence.insertBefore(instance, precedence.firstChild));
++
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
+     }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
++
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
++
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
 +    }
-+    
-+    function getInsertionIndex(sheet, precedence) {
-+      const precedenceIndex = precedenceOrder.indexOf(precedence);
-+      if (precedenceIndex === -1) {
-+        // New precedence goes at the end
-+        return sheet.cssRules.length;
-+      }
-+    
-+      // Find the first rule index of the next precedence level
-+      for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+        const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+        if (nextPrecedenceRules?.[0]) {
-+          return nextPrecedenceRules[0].ruleIndex;
-+        }
-+      }
-+    
-+      // If no next precedence found, insert at the end
-+      return sheet.cssRules.length;
-+    }
-+    
-+    function updateRuleIndices(startIndex, shift) {
-+      // Update all rule indices that come after the insertion point
-+      for (const rules of rulesByPrecedence.values()) {
-+        for (const rule of rules) {
-+          if (rule.ruleIndex >= startIndex) {
-+            rule.ruleIndex += shift;
-+          }
-+        }
-+      }
-+    }
-+    
-+    function insertStyleTag(el, props, hoistableRoot) {
-+      const sheet = el.sheet;
-+      const precedence = props['data-precedence'];
-+      const href = props['data-href'];
-+      const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+      try {
-+        // Insert the new rule at the calculated index
-+        const ruleIndex = sheet.insertRule(props.children, insertionIndex);
-+    
-+        // Update indices of subsequent rules
-+        updateRuleIndices(insertionIndex, 1);
-+    
-+        // Get or create array for this precedence
-+        const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+        rulesByPrecedence.set(precedence, rulesForPrecedence);
-+    
-+        // Add the new rule with its index
-+        rulesForPrecedence.push({ href, ruleIndex });
-+      } catch (error) {
-+        console.error('Error inserting CSS rule:', error);
-+      }
-+      performance.mark('Style_end', {
-+        detail: href
-+      });
-+    }
-     function acquireResource(hoistableRoot, resource, props) {
-       resource.count++;
-       if (null === resource.instance)
-         switch (resource.type) {
-           case "style":
--            var instance = hoistableRoot.querySelector(
--              'style[data-href~="' +
--                escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--                '"]'
--            );
--            if (instance)
--              return (
--                (resource.instance = instance),
--                markNodeAsHoistable(instance),
--                instance
--              );
-+            var instance = getOrCreateStyleElement();
-+            var hasHoistedHref = insertedHrefs.has(props.href);
-+            if (!precedenceOrder.includes(props.precedence)) {
-+              precedenceOrder.push(props.precedence);
-+            }
-+            if (hasHoistedHref) {
-+                return (
-+                  (resource.instance = instance),
-+                  markNodeAsHoistable(instance),
-+                  instance
-+                );
-+            }
-             var styleProps = assign({}, props, {
-               "data-href": props.href,
-               "data-precedence": props.precedence,
-               href: null,
-               precedence: null
-             });
--            instance = (
--              hoistableRoot.ownerDocument || hoistableRoot
--            ).createElement("style");
-             markNodeAsHoistable(instance);
--            setInitialProperties(instance, "style", styleProps);
--            insertStylesheet(instance, props.precedence, hoistableRoot);
-+            insertStyleTag(instance, styleProps, hoistableRoot);
-             return (resource.instance = instance);
-           case "stylesheet":
-             styleProps = getStyleKey(props.href);
++
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
++  }
++}
+     function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+       null == stylesheetProps.crossOrigin &&
+         (stylesheetProps.crossOrigin = preloadProps.crossOrigin);
 diff --git a/dist/compiled/react-dom/cjs/react-dom-profiling.profiling.js b/dist/compiled/react-dom/cjs/react-dom-profiling.profiling.js
-index ccad6c1dad229a2dc6d887a28f458409183dcfce..fe3937b595fd3537aaf44de9c2afd77632a90562 100644
+index ccad6c1dad229a2dc6d887a28f458409183dcfce..4a0dae1abe8e2b377c614a933097c4c0a86624b6 100644
 --- a/dist/compiled/react-dom/cjs/react-dom-profiling.profiling.js
 +++ b/dist/compiled/react-dom/cjs/react-dom-profiling.profiling.js
-@@ -14862,34 +14862,99 @@ function getScriptKey(src) {
- function getScriptSelectorFromKey(key) {
-   return "script[async]" + key;
+@@ -11664,6 +11664,7 @@ function flushMutationEffects() {
+         inProgressLanes = lanes;
+         inProgressRoot = root;
+         commitMutationEffectsOnFiber(finishedWork, root);
++flushStyleUpdates();
+         inProgressRoot = inProgressLanes = null;
+         lanes = selectionInformation;
+         var curFocusedElem = getActiveElementDeep(root.containerInfo),
+@@ -14953,26 +14954,109 @@ function acquireResource(hoistableRoot, resource, props) {
+       (resource.state.loading |= 4),
+       insertStylesheet(instance, props.precedence, hoistableRoot));
+   return resource.instance;
++}// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
  }
-+var insertedHrefs = new Set();
-+var rulesByPrecedence = new Map();
-+var precedenceOrder = [];
-+var styleElement = null;
 +
-+function getOrCreateStyleElement() {
-+  if (!styleElement) {
-+    styleElement = document.createElement('style');
-+    document.head.appendChild(styleElement);
++// --- Optimized insertStylesheet function with BOTH optimizations ---
+ function insertStylesheet(instance, precedence, root) {
+-  for (
+-    var nodes = root.querySelectorAll(
+-        'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-      ),
+-      last = nodes.length ? nodes[nodes.length - 1] : null,
+-      prior = last,
+-      i = 0;
+-    i < nodes.length;
+-    i++
+-  ) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
 +  }
-+  return styleElement;
-+}
 +
-+function getInsertionIndex(sheet, precedence) {
-+  const precedenceIndex = precedenceOrder.indexOf(precedence);
-+  if (precedenceIndex === -1) {
-+    // New precedence goes at the end
-+    return sheet.cssRules.length;
-+  }
-+
-+  // Find the first rule index of the next precedence level
-+  for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+    const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+    if (nextPrecedenceRules?.[0]) {
-+      return nextPrecedenceRules[0].ruleIndex;
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
+     var node = nodes[i];
+-    if (node.dataset.precedence === precedence) prior = node;
+-    else if (prior !== last) break;
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
 +    }
 +  }
 +
-+  // If no next precedence found, insert at the end
-+  return sheet.cssRules.length;
-+}
-+
-+function updateRuleIndices(startIndex, shift) {
-+  // Update all rule indices that come after the insertion point
-+  for (const rules of rulesByPrecedence.values()) {
-+    for (const rule of rules) {
-+      if (rule.ruleIndex >= startIndex) {
-+        rule.ruleIndex += shift;
-+      }
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
 +    }
-+  }
-+}
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
++    }
 +
-+function insertStyleTag(el, props, hoistableRoot) {
-+  const sheet = el.sheet;
-+  const precedence = props['data-precedence'];
-+  const href = props['data-href'];
-+  const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+  try {
-+    // Insert the new rule at the calculated index
-+    const ruleIndex = sheet.insertRule(props.children, insertionIndex);
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
++    }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
 +
-+    // Update indices of subsequent rules
-+    updateRuleIndices(insertionIndex, 1);
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
 +
-+    // Get or create array for this precedence
-+    const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+    rulesByPrecedence.set(precedence, rulesForPrecedence);
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
++    }
 +
-+    // Add the new rule with its index
-+    rulesForPrecedence.push({ href, ruleIndex });
-+  } catch (error) {
-+    console.error('Error inserting CSS rule:', error);
-+  }
-+  performance.mark('Style_end', {
-+    detail: href
-+  });
-+}
- function acquireResource(hoistableRoot, resource, props) {
-   resource.count++;
-   if (null === resource.instance)
-     switch (resource.type) {
-       case "style":
--        var instance = hoistableRoot.querySelector(
--          'style[data-href~="' +
--            escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--            '"]'
--        );
--        if (instance)
--          return (
--            (resource.instance = instance),
--            markNodeAsHoistable(instance),
--            instance
--          );
-+        var instance = getOrCreateStyleElement();
-+        var hasHoistedHref = insertedHrefs.has(props.href);
-+        if (!precedenceOrder.includes(props.precedence)) {
-+          precedenceOrder.push(props.precedence);
-+        }
-+        if (hasHoistedHref) {
-+            return (
-+              (resource.instance = instance),
-+              markNodeAsHoistable(instance),
-+              instance
-+            );
-+        }
-         var styleProps = assign({}, props, {
-           "data-href": props.href,
-           "data-precedence": props.precedence,
-           href: null,
-           precedence: null
-         });
--        instance = (hoistableRoot.ownerDocument || hoistableRoot).createElement(
--          "style"
--        );
-         markNodeAsHoistable(instance);
--        setInitialProperties(instance, "style", styleProps);
--        insertStylesheet(instance, props.precedence, hoistableRoot);
-+        insertStyleTag(instance, styleProps, hoistableRoot);
-         return (resource.instance = instance);
-       case "stylesheet":
-         styleProps = getStyleKey(props.href);
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
+   }
+-  prior
+-    ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-    : ((precedence = 9 === root.nodeType ? root.head : root),
+-      precedence.insertBefore(instance, precedence.firstChild));
+ }
+ function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+   null == stylesheetProps.crossOrigin &&
 diff --git a/dist/compiled/react-dom-experimental/cjs/react-dom-client.development.js b/dist/compiled/react-dom-experimental/cjs/react-dom-client.development.js
-index 4f33bd1fc9df4d7aab9a25a2a7f3ab98a2a21006..0061b3c2c5ee5470b9dad0ceeb3e26df81dac4f4 100644
+index 4f33bd1fc9df4d7aab9a25a2a7f3ab98a2a21006..1beb7d281367f83c386239552f57600e774179e7 100644
 --- a/dist/compiled/react-dom-experimental/cjs/react-dom-client.development.js
 +++ b/dist/compiled/react-dom-experimental/cjs/react-dom-client.development.js
-@@ -22852,34 +22852,99 @@
-     function getScriptSelectorFromKey(key) {
-       return "script[async]" + key;
+@@ -17508,6 +17508,7 @@
+             inProgressRoot = root;
+             resetComponentEffectTimers();
+             commitMutationEffectsOnFiber(finishedWork, root, lanes);
++flushStyleUpdates();
+             inProgressRoot = inProgressLanes = null;
+             lanes = selectionInformation;
+             var curFocusedElem = getActiveElementDeep(root.containerInfo),
+@@ -22947,27 +22948,110 @@
+           (resource.state.loading |= Inserted),
+           insertStylesheet(instance, props.precedence, hoistableRoot));
+       return resource.instance;
++    }// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
++}
++
++// --- Optimized insertStylesheet function with BOTH optimizations ---
++function insertStylesheet(instance, precedence, root) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
++  }
++
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
++    var node = nodes[i];
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
++    }
++  }
++
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
++    }
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
      }
-+    var insertedHrefs = new Set();
-+    var rulesByPrecedence = new Map();
-+    var precedenceOrder = [];
-+    var styleElement = null;
-+    
-+    function getOrCreateStyleElement() {
-+      if (!styleElement) {
-+        styleElement = document.createElement('style');
-+        document.head.appendChild(styleElement);
-+      }
-+      return styleElement;
+-    function insertStylesheet(instance, precedence, root) {
+-      for (
+-        var nodes = root.querySelectorAll(
+-            'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-          ),
+-          last = nodes.length ? nodes[nodes.length - 1] : null,
+-          prior = last,
+-          i = 0;
+-        i < nodes.length;
+-        i++
+-      ) {
+-        var node = nodes[i];
+-        if (node.dataset.precedence === precedence) prior = node;
+-        else if (prior !== last) break;
+-      }
+-      prior
+-        ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-        : ((precedence = 9 === root.nodeType ? root.head : root),
+-          precedence.insertBefore(instance, precedence.firstChild));
++
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
+     }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
++
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
++
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
 +    }
-+    
-+    function getInsertionIndex(sheet, precedence) {
-+      const precedenceIndex = precedenceOrder.indexOf(precedence);
-+      if (precedenceIndex === -1) {
-+        // New precedence goes at the end
-+        return sheet.cssRules.length;
-+      }
-+    
-+      // Find the first rule index of the next precedence level
-+      for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+        const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+        if (nextPrecedenceRules?.[0]) {
-+          return nextPrecedenceRules[0].ruleIndex;
-+        }
-+      }
-+    
-+      // If no next precedence found, insert at the end
-+      return sheet.cssRules.length;
-+    }
-+    
-+    function updateRuleIndices(startIndex, shift) {
-+      // Update all rule indices that come after the insertion point
-+      for (const rules of rulesByPrecedence.values()) {
-+        for (const rule of rules) {
-+          if (rule.ruleIndex >= startIndex) {
-+            rule.ruleIndex += shift;
-+          }
-+        }
-+      }
-+    }
-+    
-+    function insertStyleTag(el, props, hoistableRoot) {
-+      const sheet = el.sheet;
-+      const precedence = props['data-precedence'];
-+      const href = props['data-href'];
-+      const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+      try {
-+        // Insert the new rule at the calculated index
-+        const ruleIndex = sheet.insertRule(props.children, insertionIndex);
-+    
-+        // Update indices of subsequent rules
-+        updateRuleIndices(insertionIndex, 1);
-+    
-+        // Get or create array for this precedence
-+        const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+        rulesByPrecedence.set(precedence, rulesForPrecedence);
-+    
-+        // Add the new rule with its index
-+        rulesForPrecedence.push({ href, ruleIndex });
-+      } catch (error) {
-+        console.error('Error inserting CSS rule:', error);
-+      }
-+      performance.mark('Style_end', {
-+        detail: href
-+      });
-+    }
-     function acquireResource(hoistableRoot, resource, props) {
-       resource.count++;
-       if (null === resource.instance)
-         switch (resource.type) {
-           case "style":
--            var instance = hoistableRoot.querySelector(
--              'style[data-href~="' +
--                escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--                '"]'
--            );
--            if (instance)
--              return (
--                (resource.instance = instance),
--                markNodeAsHoistable(instance),
--                instance
--              );
-+            var instance = getOrCreateStyleElement();
-+            var hasHoistedHref = insertedHrefs.has(props.href);
-+            if (!precedenceOrder.includes(props.precedence)) {
-+              precedenceOrder.push(props.precedence);
-+            }
-+            if (hasHoistedHref) {
-+                return (
-+                  (resource.instance = instance),
-+                  markNodeAsHoistable(instance),
-+                  instance
-+                );
-+            }
-             var styleProps = assign({}, props, {
-               "data-href": props.href,
-               "data-precedence": props.precedence,
-               href: null,
-               precedence: null
-             });
--            instance = (
--              hoistableRoot.ownerDocument || hoistableRoot
--            ).createElement("style");
-             markNodeAsHoistable(instance);
--            setInitialProperties(instance, "style", styleProps);
--            insertStylesheet(instance, props.precedence, hoistableRoot);
-+            insertStyleTag(instance, styleProps, hoistableRoot);
-             return (resource.instance = instance);
-           case "stylesheet":
-             styleProps = getStyleKey(props.href);
++
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
++  }
++}
+     function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+       null == stylesheetProps.crossOrigin &&
+         (stylesheetProps.crossOrigin = preloadProps.crossOrigin);
 diff --git a/dist/compiled/react-dom-experimental/cjs/react-dom-client.production.js b/dist/compiled/react-dom-experimental/cjs/react-dom-client.production.js
-index ebb4594d5388ffb4361932658ea491dcd4acd8f8..80ac3f15ea6834c35220f5fc1dcfb88369ff344c 100644
+index ebb4594d5388ffb4361932658ea491dcd4acd8f8..afdcb5135cb4074f3e0add9451991f96ad3a3351 100644
 --- a/dist/compiled/react-dom-experimental/cjs/react-dom-client.production.js
 +++ b/dist/compiled/react-dom-experimental/cjs/react-dom-client.production.js
-@@ -16209,34 +16209,99 @@ function getScriptKey(src) {
- function getScriptSelectorFromKey(key) {
-   return "script[async]" + key;
+@@ -12398,6 +12398,7 @@ function flushMutationEffects() {
+       executionContext |= 4;
+       try {
+         commitMutationEffectsOnFiber(finishedWork, root, lanes);
++flushStyleUpdates();
+         lanes = selectionInformation;
+         var curFocusedElem = getActiveElementDeep(root.containerInfo),
+           priorFocusedElem = lanes.focusedElem,
+@@ -16300,26 +16301,109 @@ function acquireResource(hoistableRoot, resource, props) {
+       (resource.state.loading |= 4),
+       insertStylesheet(instance, props.precedence, hoistableRoot));
+   return resource.instance;
++}// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
  }
-+var insertedHrefs = new Set();
-+var rulesByPrecedence = new Map();
-+var precedenceOrder = [];
-+var styleElement = null;
 +
-+function getOrCreateStyleElement() {
-+  if (!styleElement) {
-+    styleElement = document.createElement('style');
-+    document.head.appendChild(styleElement);
++// --- Optimized insertStylesheet function with BOTH optimizations ---
+ function insertStylesheet(instance, precedence, root) {
+-  for (
+-    var nodes = root.querySelectorAll(
+-        'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-      ),
+-      last = nodes.length ? nodes[nodes.length - 1] : null,
+-      prior = last,
+-      i = 0;
+-    i < nodes.length;
+-    i++
+-  ) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
 +  }
-+  return styleElement;
-+}
 +
-+function getInsertionIndex(sheet, precedence) {
-+  const precedenceIndex = precedenceOrder.indexOf(precedence);
-+  if (precedenceIndex === -1) {
-+    // New precedence goes at the end
-+    return sheet.cssRules.length;
-+  }
-+
-+  // Find the first rule index of the next precedence level
-+  for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+    const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+    if (nextPrecedenceRules?.[0]) {
-+      return nextPrecedenceRules[0].ruleIndex;
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
+     var node = nodes[i];
+-    if (node.dataset.precedence === precedence) prior = node;
+-    else if (prior !== last) break;
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
 +    }
 +  }
 +
-+  // If no next precedence found, insert at the end
-+  return sheet.cssRules.length;
-+}
-+
-+function updateRuleIndices(startIndex, shift) {
-+  // Update all rule indices that come after the insertion point
-+  for (const rules of rulesByPrecedence.values()) {
-+    for (const rule of rules) {
-+      if (rule.ruleIndex >= startIndex) {
-+        rule.ruleIndex += shift;
-+      }
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
 +    }
-+  }
-+}
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
++    }
 +
-+function insertStyleTag(el, props, hoistableRoot) {
-+  const sheet = el.sheet;
-+  const precedence = props['data-precedence'];
-+  const href = props['data-href'];
-+  const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+  try {
-+    // Insert the new rule at the calculated index
-+    const ruleIndex = sheet.insertRule(props.children, insertionIndex);
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
++    }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
 +
-+    // Update indices of subsequent rules
-+    updateRuleIndices(insertionIndex, 1);
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
 +
-+    // Get or create array for this precedence
-+    const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+    rulesByPrecedence.set(precedence, rulesForPrecedence);
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
++    }
 +
-+    // Add the new rule with its index
-+    rulesForPrecedence.push({ href, ruleIndex });
-+  } catch (error) {
-+    console.error('Error inserting CSS rule:', error);
-+  }
-+  performance.mark('Style_end', {
-+    detail: href
-+  });
-+}
- function acquireResource(hoistableRoot, resource, props) {
-   resource.count++;
-   if (null === resource.instance)
-     switch (resource.type) {
-       case "style":
--        var instance = hoistableRoot.querySelector(
--          'style[data-href~="' +
--            escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--            '"]'
--        );
--        if (instance)
--          return (
--            (resource.instance = instance),
--            markNodeAsHoistable(instance),
--            instance
--          );
-+        var instance = getOrCreateStyleElement();
-+        var hasHoistedHref = insertedHrefs.has(props.href);
-+        if (!precedenceOrder.includes(props.precedence)) {
-+          precedenceOrder.push(props.precedence);
-+        }
-+        if (hasHoistedHref) {
-+            return (
-+              (resource.instance = instance),
-+              markNodeAsHoistable(instance),
-+              instance
-+            );
-+        }
-         var styleProps = assign({}, props, {
-           "data-href": props.href,
-           "data-precedence": props.precedence,
-           href: null,
-           precedence: null
-         });
--        instance = (hoistableRoot.ownerDocument || hoistableRoot).createElement(
--          "style"
--        );
-         markNodeAsHoistable(instance);
--        setInitialProperties(instance, "style", styleProps);
--        insertStylesheet(instance, props.precedence, hoistableRoot);
-+        insertStyleTag(instance, styleProps, hoistableRoot);
-         return (resource.instance = instance);
-       case "stylesheet":
-         styleProps = getStyleKey(props.href);
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
+   }
+-  prior
+-    ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-    : ((precedence = 9 === root.nodeType ? root.head : root),
+-      precedence.insertBefore(instance, precedence.firstChild));
+ }
+ function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+   null == stylesheetProps.crossOrigin &&
 diff --git a/dist/compiled/react-dom-experimental/cjs/react-dom-profiling.development.js b/dist/compiled/react-dom-experimental/cjs/react-dom-profiling.development.js
-index 0c9dd0fefa5edb404381ce2ca2fa713eab083fa3..73bbf47bedab6b1c1fee7f7a22a1c626429794c2 100644
+index 0c9dd0fefa5edb404381ce2ca2fa713eab083fa3..5def029dc63defef18be3aaa75bcf8bbcc8fcb75 100644
 --- a/dist/compiled/react-dom-experimental/cjs/react-dom-profiling.development.js
 +++ b/dist/compiled/react-dom-experimental/cjs/react-dom-profiling.development.js
-@@ -22860,34 +22860,99 @@
-     function getScriptSelectorFromKey(key) {
-       return "script[async]" + key;
+@@ -17516,6 +17516,7 @@
+             inProgressRoot = root;
+             resetComponentEffectTimers();
+             commitMutationEffectsOnFiber(finishedWork, root, lanes);
++flushStyleUpdates();
+             inProgressRoot = inProgressLanes = null;
+             lanes = selectionInformation;
+             var curFocusedElem = getActiveElementDeep(root.containerInfo),
+@@ -22955,27 +22956,110 @@
+           (resource.state.loading |= Inserted),
+           insertStylesheet(instance, props.precedence, hoistableRoot));
+       return resource.instance;
++    }// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
++}
++
++// --- Optimized insertStylesheet function with BOTH optimizations ---
++function insertStylesheet(instance, precedence, root) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
++  }
++
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
++    var node = nodes[i];
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
++    }
++  }
++
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
++    }
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
      }
-+    var insertedHrefs = new Set();
-+    var rulesByPrecedence = new Map();
-+    var precedenceOrder = [];
-+    var styleElement = null;
-+    
-+    function getOrCreateStyleElement() {
-+      if (!styleElement) {
-+        styleElement = document.createElement('style');
-+        document.head.appendChild(styleElement);
-+      }
-+      return styleElement;
+-    function insertStylesheet(instance, precedence, root) {
+-      for (
+-        var nodes = root.querySelectorAll(
+-            'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-          ),
+-          last = nodes.length ? nodes[nodes.length - 1] : null,
+-          prior = last,
+-          i = 0;
+-        i < nodes.length;
+-        i++
+-      ) {
+-        var node = nodes[i];
+-        if (node.dataset.precedence === precedence) prior = node;
+-        else if (prior !== last) break;
+-      }
+-      prior
+-        ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-        : ((precedence = 9 === root.nodeType ? root.head : root),
+-          precedence.insertBefore(instance, precedence.firstChild));
++
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
+     }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
++
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
++
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
 +    }
-+    
-+    function getInsertionIndex(sheet, precedence) {
-+      const precedenceIndex = precedenceOrder.indexOf(precedence);
-+      if (precedenceIndex === -1) {
-+        // New precedence goes at the end
-+        return sheet.cssRules.length;
-+      }
-+    
-+      // Find the first rule index of the next precedence level
-+      for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+        const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+        if (nextPrecedenceRules?.[0]) {
-+          return nextPrecedenceRules[0].ruleIndex;
-+        }
-+      }
-+    
-+      // If no next precedence found, insert at the end
-+      return sheet.cssRules.length;
-+    }
-+    
-+    function updateRuleIndices(startIndex, shift) {
-+      // Update all rule indices that come after the insertion point
-+      for (const rules of rulesByPrecedence.values()) {
-+        for (const rule of rules) {
-+          if (rule.ruleIndex >= startIndex) {
-+            rule.ruleIndex += shift;
-+          }
-+        }
-+      }
-+    }
-+    
-+    function insertStyleTag(el, props, hoistableRoot) {
-+      const sheet = el.sheet;
-+      const precedence = props['data-precedence'];
-+      const href = props['data-href'];
-+      const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+      try {
-+        // Insert the new rule at the calculated index
-+        const ruleIndex = sheet.insertRule(props.children, insertionIndex);
-+    
-+        // Update indices of subsequent rules
-+        updateRuleIndices(insertionIndex, 1);
-+    
-+        // Get or create array for this precedence
-+        const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+        rulesByPrecedence.set(precedence, rulesForPrecedence);
-+    
-+        // Add the new rule with its index
-+        rulesForPrecedence.push({ href, ruleIndex });
-+      } catch (error) {
-+        console.error('Error inserting CSS rule:', error);
-+      }
-+      performance.mark('Style_end', {
-+        detail: href
-+      });
-+    }
-     function acquireResource(hoistableRoot, resource, props) {
-       resource.count++;
-       if (null === resource.instance)
-         switch (resource.type) {
-           case "style":
--            var instance = hoistableRoot.querySelector(
--              'style[data-href~="' +
--                escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--                '"]'
--            );
--            if (instance)
--              return (
--                (resource.instance = instance),
--                markNodeAsHoistable(instance),
--                instance
--              );
-+            var instance = getOrCreateStyleElement();
-+            var hasHoistedHref = insertedHrefs.has(props.href);
-+            if (!precedenceOrder.includes(props.precedence)) {
-+              precedenceOrder.push(props.precedence);
-+            }
-+            if (hasHoistedHref) {
-+                return (
-+                  (resource.instance = instance),
-+                  markNodeAsHoistable(instance),
-+                  instance
-+                );
-+            }
-             var styleProps = assign({}, props, {
-               "data-href": props.href,
-               "data-precedence": props.precedence,
-               href: null,
-               precedence: null
-             });
--            instance = (
--              hoistableRoot.ownerDocument || hoistableRoot
--            ).createElement("style");
-             markNodeAsHoistable(instance);
--            setInitialProperties(instance, "style", styleProps);
--            insertStylesheet(instance, props.precedence, hoistableRoot);
-+            insertStyleTag(instance, styleProps, hoistableRoot);
-             return (resource.instance = instance);
-           case "stylesheet":
-             styleProps = getStyleKey(props.href);
++
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
++  }
++}
+     function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+       null == stylesheetProps.crossOrigin &&
+         (stylesheetProps.crossOrigin = preloadProps.crossOrigin);
 diff --git a/dist/compiled/react-dom-experimental/cjs/react-dom-profiling.profiling.js b/dist/compiled/react-dom-experimental/cjs/react-dom-profiling.profiling.js
-index 4e90e16312e628883467a5c1699d1a3f6a37659c..fd7b7c366e5fbd353856e85d0ac3797447043e9e 100644
+index 4e90e16312e628883467a5c1699d1a3f6a37659c..ac899d22be19b8a577de7c50d066d0d1a1596a0a 100644
 --- a/dist/compiled/react-dom-experimental/cjs/react-dom-profiling.profiling.js
 +++ b/dist/compiled/react-dom-experimental/cjs/react-dom-profiling.profiling.js
-@@ -17619,34 +17619,99 @@ function getScriptKey(src) {
- function getScriptSelectorFromKey(key) {
-   return "script[async]" + key;
+@@ -13690,6 +13690,7 @@ function flushMutationEffects() {
+         inProgressRoot = root;
+         resetComponentEffectTimers();
+         commitMutationEffectsOnFiber(finishedWork, root, lanes);
++flushStyleUpdates();
+         inProgressRoot = inProgressLanes = null;
+         lanes = selectionInformation;
+         var curFocusedElem = getActiveElementDeep(root.containerInfo),
+@@ -17710,26 +17711,109 @@ function acquireResource(hoistableRoot, resource, props) {
+       (resource.state.loading |= 4),
+       insertStylesheet(instance, props.precedence, hoistableRoot));
+   return resource.instance;
++}// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
  }
-+var insertedHrefs = new Set();
-+var rulesByPrecedence = new Map();
-+var precedenceOrder = [];
-+var styleElement = null;
 +
-+function getOrCreateStyleElement() {
-+  if (!styleElement) {
-+    styleElement = document.createElement('style');
-+    document.head.appendChild(styleElement);
++// --- Optimized insertStylesheet function with BOTH optimizations ---
+ function insertStylesheet(instance, precedence, root) {
+-  for (
+-    var nodes = root.querySelectorAll(
+-        'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-      ),
+-      last = nodes.length ? nodes[nodes.length - 1] : null,
+-      prior = last,
+-      i = 0;
+-    i < nodes.length;
+-    i++
+-  ) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
 +  }
-+  return styleElement;
-+}
 +
-+function getInsertionIndex(sheet, precedence) {
-+  const precedenceIndex = precedenceOrder.indexOf(precedence);
-+  if (precedenceIndex === -1) {
-+    // New precedence goes at the end
-+    return sheet.cssRules.length;
-+  }
-+
-+  // Find the first rule index of the next precedence level
-+  for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+    const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+    if (nextPrecedenceRules?.[0]) {
-+      return nextPrecedenceRules[0].ruleIndex;
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
+     var node = nodes[i];
+-    if (node.dataset.precedence === precedence) prior = node;
+-    else if (prior !== last) break;
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
 +    }
 +  }
 +
-+  // If no next precedence found, insert at the end
-+  return sheet.cssRules.length;
-+}
-+
-+function updateRuleIndices(startIndex, shift) {
-+  // Update all rule indices that come after the insertion point
-+  for (const rules of rulesByPrecedence.values()) {
-+    for (const rule of rules) {
-+      if (rule.ruleIndex >= startIndex) {
-+        rule.ruleIndex += shift;
-+      }
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
 +    }
-+  }
-+}
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
++    }
 +
-+function insertStyleTag(el, props, hoistableRoot) {
-+  const sheet = el.sheet;
-+  const precedence = props['data-precedence'];
-+  const href = props['data-href'];
-+  const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+  try {
-+    // Insert the new rule at the calculated index
-+    const ruleIndex = sheet.insertRule(props.children, insertionIndex);
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
++    }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
 +
-+    // Update indices of subsequent rules
-+    updateRuleIndices(insertionIndex, 1);
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
 +
-+    // Get or create array for this precedence
-+    const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+    rulesByPrecedence.set(precedence, rulesForPrecedence);
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
++    }
 +
-+    // Add the new rule with its index
-+    rulesForPrecedence.push({ href, ruleIndex });
-+  } catch (error) {
-+    console.error('Error inserting CSS rule:', error);
-+  }
-+  performance.mark('Style_end', {
-+    detail: href
-+  });
-+}
- function acquireResource(hoistableRoot, resource, props) {
-   resource.count++;
-   if (null === resource.instance)
-     switch (resource.type) {
-       case "style":
--        var instance = hoistableRoot.querySelector(
--          'style[data-href~="' +
--            escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--            '"]'
--        );
--        if (instance)
--          return (
--            (resource.instance = instance),
--            markNodeAsHoistable(instance),
--            instance
--          );
-+        var instance = getOrCreateStyleElement();
-+        var hasHoistedHref = insertedHrefs.has(props.href);
-+        if (!precedenceOrder.includes(props.precedence)) {
-+          precedenceOrder.push(props.precedence);
-+        }
-+        if (hasHoistedHref) {
-+            return (
-+              (resource.instance = instance),
-+              markNodeAsHoistable(instance),
-+              instance
-+            );
-+        }
-         var styleProps = assign({}, props, {
-           "data-href": props.href,
-           "data-precedence": props.precedence,
-           href: null,
-           precedence: null
-         });
--        instance = (hoistableRoot.ownerDocument || hoistableRoot).createElement(
--          "style"
--        );
-         markNodeAsHoistable(instance);
--        setInitialProperties(instance, "style", styleProps);
--        insertStylesheet(instance, props.precedence, hoistableRoot);
-+        insertStyleTag(instance, styleProps, hoistableRoot);
-         return (resource.instance = instance);
-       case "stylesheet":
-         styleProps = getStyleKey(props.href);
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
+   }
+-  prior
+-    ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-    : ((precedence = 9 === root.nodeType ? root.head : root),
+-      precedence.insertBefore(instance, precedence.firstChild));
+ }
+ function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+   null == stylesheetProps.crossOrigin &&
 diff --git a/dist/compiled/react-dom-experimental/cjs/react-dom-unstable_testing.development.js b/dist/compiled/react-dom-experimental/cjs/react-dom-unstable_testing.development.js
-index bf8d758663a56e4409d29b3abebdab127ef09a0e..014521651a8734d8b055c6ed6b2b22b783e497e3 100644
+index bf8d758663a56e4409d29b3abebdab127ef09a0e..5e2f716a8454efa5b9070ae26d85faba50c4e464 100644
 --- a/dist/compiled/react-dom-experimental/cjs/react-dom-unstable_testing.development.js
 +++ b/dist/compiled/react-dom-experimental/cjs/react-dom-unstable_testing.development.js
-@@ -23140,34 +23140,99 @@
-     function getScriptSelectorFromKey(key) {
-       return "script[async]" + key;
+@@ -17731,6 +17731,7 @@
+             inProgressRoot = root;
+             resetComponentEffectTimers();
+             commitMutationEffectsOnFiber(finishedWork, root, lanes);
++flushStyleUpdates();
+             inProgressRoot = inProgressLanes = null;
+             lanes = selectionInformation;
+             var curFocusedElem = getActiveElementDeep(root.containerInfo),
+@@ -23235,27 +23236,110 @@
+           (resource.state.loading |= Inserted),
+           insertStylesheet(instance, props.precedence, hoistableRoot));
+       return resource.instance;
++    }// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
++}
++
++// --- Optimized insertStylesheet function with BOTH optimizations ---
++function insertStylesheet(instance, precedence, root) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
++  }
++
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
++    var node = nodes[i];
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
++    }
++  }
++
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
++    }
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
      }
-+    var insertedHrefs = new Set();
-+    var rulesByPrecedence = new Map();
-+    var precedenceOrder = [];
-+    var styleElement = null;
-+    
-+    function getOrCreateStyleElement() {
-+      if (!styleElement) {
-+        styleElement = document.createElement('style');
-+        document.head.appendChild(styleElement);
-+      }
-+      return styleElement;
+-    function insertStylesheet(instance, precedence, root) {
+-      for (
+-        var nodes = root.querySelectorAll(
+-            'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-          ),
+-          last = nodes.length ? nodes[nodes.length - 1] : null,
+-          prior = last,
+-          i = 0;
+-        i < nodes.length;
+-        i++
+-      ) {
+-        var node = nodes[i];
+-        if (node.dataset.precedence === precedence) prior = node;
+-        else if (prior !== last) break;
+-      }
+-      prior
+-        ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-        : ((precedence = 9 === root.nodeType ? root.head : root),
+-          precedence.insertBefore(instance, precedence.firstChild));
++
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
+     }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
++
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
++
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
 +    }
-+    
-+    function getInsertionIndex(sheet, precedence) {
-+      const precedenceIndex = precedenceOrder.indexOf(precedence);
-+      if (precedenceIndex === -1) {
-+        // New precedence goes at the end
-+        return sheet.cssRules.length;
-+      }
-+    
-+      // Find the first rule index of the next precedence level
-+      for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+        const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+        if (nextPrecedenceRules?.[0]) {
-+          return nextPrecedenceRules[0].ruleIndex;
-+        }
-+      }
-+    
-+      // If no next precedence found, insert at the end
-+      return sheet.cssRules.length;
-+    }
-+    
-+    function updateRuleIndices(startIndex, shift) {
-+      // Update all rule indices that come after the insertion point
-+      for (const rules of rulesByPrecedence.values()) {
-+        for (const rule of rules) {
-+          if (rule.ruleIndex >= startIndex) {
-+            rule.ruleIndex += shift;
-+          }
-+        }
-+      }
-+    }
-+    
-+    function insertStyleTag(el, props, hoistableRoot) {
-+      const sheet = el.sheet;
-+      const precedence = props['data-precedence'];
-+      const href = props['data-href'];
-+      const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+      try {
-+        // Insert the new rule at the calculated index
-+        const ruleIndex = sheet.insertRule(props.children, insertionIndex);
-+    
-+        // Update indices of subsequent rules
-+        updateRuleIndices(insertionIndex, 1);
-+    
-+        // Get or create array for this precedence
-+        const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+        rulesByPrecedence.set(precedence, rulesForPrecedence);
-+    
-+        // Add the new rule with its index
-+        rulesForPrecedence.push({ href, ruleIndex });
-+      } catch (error) {
-+        console.error('Error inserting CSS rule:', error);
-+      }
-+      performance.mark('Style_end', {
-+        detail: href
-+      });
-+    }
-     function acquireResource(hoistableRoot, resource, props) {
-       resource.count++;
-       if (null === resource.instance)
-         switch (resource.type) {
-           case "style":
--            var instance = hoistableRoot.querySelector(
--              'style[data-href~="' +
--                escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--                '"]'
--            );
--            if (instance)
--              return (
--                (resource.instance = instance),
--                markNodeAsHoistable(instance),
--                instance
--              );
-+            var instance = getOrCreateStyleElement();
-+            var hasHoistedHref = insertedHrefs.has(props.href);
-+            if (!precedenceOrder.includes(props.precedence)) {
-+              precedenceOrder.push(props.precedence);
-+            }
-+            if (hasHoistedHref) {
-+                return (
-+                  (resource.instance = instance),
-+                  markNodeAsHoistable(instance),
-+                  instance
-+                );
-+            }
-             var styleProps = assign({}, props, {
-               "data-href": props.href,
-               "data-precedence": props.precedence,
-               href: null,
-               precedence: null
-             });
--            instance = (
--              hoistableRoot.ownerDocument || hoistableRoot
--            ).createElement("style");
-             markNodeAsHoistable(instance);
--            setInitialProperties(instance, "style", styleProps);
--            insertStylesheet(instance, props.precedence, hoistableRoot);
-+            insertStyleTag(instance, styleProps, hoistableRoot);
-             return (resource.instance = instance);
-           case "stylesheet":
-             styleProps = getStyleKey(props.href);
++
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
++  }
++}
+     function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+       null == stylesheetProps.crossOrigin &&
+         (stylesheetProps.crossOrigin = preloadProps.crossOrigin);
 diff --git a/dist/compiled/react-dom-experimental/cjs/react-dom-unstable_testing.production.js b/dist/compiled/react-dom-experimental/cjs/react-dom-unstable_testing.production.js
-index d6c120c966ea535e247ab0b8e5b67eb462bc2fd8..a5af1f1679564c842b4ed8a96b047169f3923fae 100644
+index d6c120c966ea535e247ab0b8e5b67eb462bc2fd8..eb05b20464d53f4854c4e1a2a917e5463c4ff255 100644
 --- a/dist/compiled/react-dom-experimental/cjs/react-dom-unstable_testing.production.js
 +++ b/dist/compiled/react-dom-experimental/cjs/react-dom-unstable_testing.production.js
-@@ -16538,34 +16538,100 @@ function getScriptKey(src) {
- function getScriptSelectorFromKey(key) {
-   return "script[async]" + key;
+@@ -12670,6 +12670,7 @@ function flushMutationEffects() {
+       executionContext |= 4;
+       try {
+         commitMutationEffectsOnFiber(finishedWork, root, lanes);
++flushStyleUpdates();
+         lanes = selectionInformation;
+         var curFocusedElem = getActiveElementDeep(root.containerInfo),
+           priorFocusedElem = lanes.focusedElem,
+@@ -16629,26 +16630,109 @@ function acquireResource(hoistableRoot, resource, props) {
+       (resource.state.loading |= 4),
+       insertStylesheet(instance, props.precedence, hoistableRoot));
+   return resource.instance;
++}// --- Shared State for Optimizations ---
++
++// Cache for querySelectorAll results per root element
++// Keys are root nodes (e.g., document.head, shadowRoot), values are the NodeList result.
++const styleNodeCache = new Map();
++
++// Queue for batching textContent updates (from previous optimization)
++let styleUpdateQueue = new Map(); // Map<HTMLStyleElement, { texts: string[], hrefs: string[] }>
++let updateScheduled = false;
++
++// --- Flush function for batched updates (remains the same) ---
++function flushStyleUpdates() {
++  for (const [styleElement, updates] of styleUpdateQueue.entries()) {
++    if (updates.texts.length > 0) {
++      // Append all collected text content at once
++      styleElement.textContent += '\n' + updates.texts.join('\n');
++    }
++    // Append hrefs if that logic is still needed
++    if (updates.hrefs.length > 0 && styleElement.dataset.href) {
++       styleElement.dataset.href += ' ' + updates.hrefs.join(' ');
++    }
++  }
++  // Clear the queue and reset the flag
++  styleUpdateQueue.clear();
++  updateScheduled = false;
  }
-+var insertedHrefs = new Set();
-+var rulesByPrecedence = new Map();
-+var precedenceOrder = [];
-+var styleElement = null;
 +
-+function getOrCreateStyleElement() {
-+  if (!styleElement) {
-+    styleElement = document.createElement('style');
-+    document.head.appendChild(styleElement);
++// --- Optimized insertStylesheet function with BOTH optimizations ---
+ function insertStylesheet(instance, precedence, root) {
+-  for (
+-    var nodes = root.querySelectorAll(
+-        'link[rel="stylesheet"][data-precedence],style[data-precedence]'
+-      ),
+-      last = nodes.length ? nodes[nodes.length - 1] : null,
+-      prior = last,
+-      i = 0;
+-    i < nodes.length;
+-    i++
+-  ) {
++
++  // 1. Get nodes: Try cache first, otherwise query DOM and cache result
++  let nodes = styleNodeCache.get(root);
++  if (!nodes) {
++    // Cache miss or invalidated: Query the DOM
++    // console.log(`Cache MISS for root: ${root.nodeName}. Querying DOM.`); // Optional debug log
++    nodes = root.querySelectorAll(
++      'link[rel="stylesheet"][data-precedence],style[data-precedence]'
++    );
++    // Store the fresh NodeList in the cache for this root
++    styleNodeCache.set(root, nodes);
++  } else {
++    // console.log(`Cache HIT for root: ${root.nodeName}`); // Optional debug log
 +  }
-+  return styleElement;
-+}
 +
-+function getInsertionIndex(sheet, precedence) {
-+  const precedenceIndex = precedenceOrder.indexOf(precedence);
-+  if (precedenceIndex === -1) {
-+    // New precedence goes at the end
-+    return sheet.cssRules.length;
-+  }
-+
-+  // Find the first rule index of the next precedence level
-+  for (let i = precedenceIndex + 1; i < precedenceOrder.length; i++) {
-+    const nextPrecedenceRules = rulesByPrecedence.get(precedenceOrder[i]);
-+    if (nextPrecedenceRules?.[0]) {
-+      return nextPrecedenceRules[0].ruleIndex;
++  // 2. Find the correct insertion point ('prior') by iterating over 'nodes'
++  //    This loop now iterates over the (potentially cached) NodeList.
++  var last = nodes.length ? nodes[nodes.length - 1] : null;
++  var prior = last;
++  var i = 0;
++  for (; i < nodes.length; i++) {
+     var node = nodes[i];
+-    if (node.dataset.precedence === precedence) prior = node;
+-    else if (prior !== last) break;
++    if (node.dataset.precedence === precedence) {
++        prior = node;
++    } else if (prior !== last) {
++         // Same optimization break as before
++         break;
 +    }
 +  }
 +
-+  // If no next precedence found, insert at the end
-+  return sheet.cssRules.length;
-+}
-+
-+function updateRuleIndices(startIndex, shift) {
-+  // Update all rule indices that come after the insertion point
-+  for (const rules of rulesByPrecedence.values()) {
-+    for (const rule of rules) {
-+      if (rule.ruleIndex >= startIndex) {
-+        rule.ruleIndex += shift;
-+      }
++  // 3. Check if we can MERGE the style content (Batching Logic)
++  if (
++    instance.nodeName === 'STYLE' &&
++    instance.textContent &&
++    prior &&
++    prior.nodeName === 'STYLE' &&
++    prior.textContent &&
++    prior.dataset.precedence === precedence
++  ) {
++    // --- BATCH THE TEXT UPDATE --- (Same as previous optimization step)
++    if (!styleUpdateQueue.has(prior)) {
++      styleUpdateQueue.set(prior, { texts: [], hrefs: [] });
 +    }
-+  }
-+}
++    const queueEntry = styleUpdateQueue.get(prior);
++    queueEntry.texts.push(instance.textContent);
++    if (instance.dataset.href) { // Still handling the href dataset if needed
++        queueEntry.hrefs.push(instance.dataset.href);
++    }
 +
-+function insertStyleTag(el, props, hoistableRoot) {
-+  const sheet = el.sheet;
-+  const precedence = props['data-precedence'];
-+  const href = props['data-href'];
-+  const insertionIndex = getInsertionIndex(el.sheet, precedence);
-+  try {
-+    // Insert the new rule at the calculated index
-+    const ruleIndex = sheet.insertRule(props.children, insertionIndex);
++    if (!updateScheduled) {
++      updateScheduled = true;
++      setTimeout(flushStyleUpdates, 0);
++    }
++    // --- MERGING DOES NOT INVALIDATE THE styleNodeCache ---
++    // We only modified textContent, not the node structure itself.
 +
-+    // Update indices of subsequent rules
-+    updateRuleIndices(insertionIndex, 1);
++  } else {
++    // 4. INSERT the instance node (No merge possible or needed)
++    var insertPos = prior ? prior.nextSibling : null;
++    // Use head for document node, otherwise use the root itself
++    var parent = prior ? prior.parentNode : (root.nodeType === 9 ? root.head : root);
 +
-+    // Get or create array for this precedence
-+    const rulesForPrecedence = rulesByPrecedence.get(precedence) || [];
-+    rulesByPrecedence.set(precedence, rulesForPrecedence);
++    // Perform the insertion
++    if (!prior) {
++        parent.insertBefore(instance, parent.firstChild);
++    } else {
++        parent.insertBefore(instance, insertPos);
++    }
 +
-+    // Add the new rule with its index
-+    rulesForPrecedence.push({ href, ruleIndex });
-+  } catch (error) {
-+    console.error('Error inserting CSS rule:', error);
-+  }
-+  performance.mark('Style_end', {
-+    detail: href
-+  });
-+}
-+
- function acquireResource(hoistableRoot, resource, props) {
-   resource.count++;
-   if (null === resource.instance)
-     switch (resource.type) {
-       case "style":
--        var instance = hoistableRoot.querySelector(
--          'style[data-href~="' +
--            escapeSelectorAttributeValueInsideDoubleQuotes(props.href) +
--            '"]'
--        );
--        if (instance)
--          return (
--            (resource.instance = instance),
--            markNodeAsHoistable(instance),
--            instance
--          );
-+        var instance = getOrCreateStyleElement();
-+        var hasHoistedHref = insertedHrefs.has(props.href);
-+        if (!precedenceOrder.includes(props.precedence)) {
-+          precedenceOrder.push(props.precedence);
-+        }
-+        if (hasHoistedHref) {
-+            return (
-+              (resource.instance = instance),
-+              markNodeAsHoistable(instance),
-+              instance
-+            );
-+        }
-         var styleProps = assign({}, props, {
-           "data-href": props.href,
-           "data-precedence": props.precedence,
-           href: null,
-           precedence: null
-         });
--        instance = (hoistableRoot.ownerDocument || hoistableRoot).createElement(
--          "style"
--        );
-         markNodeAsHoistable(instance);
--        setInitialProperties(instance, "style", styleProps);
--        insertStylesheet(instance, props.precedence, hoistableRoot);
-+        insertStyleTag(instance, styleProps, hoistableRoot);
-         return (resource.instance = instance);
-       case "stylesheet":
-         styleProps = getStyleKey(props.href);
++    // --- INVALIDATE THE CACHE ---
++    // Since we inserted a node, the cached NodeList for this 'root' is now outdated.
++    // console.log(`Cache INVALIDATED for root: ${root.nodeName} due to insertion.`); // Optional debug log
++    styleNodeCache.delete(root);
+   }
+-  prior
+-    ? prior.parentNode.insertBefore(instance, prior.nextSibling)
+-    : ((precedence = 9 === root.nodeType ? root.head : root),
+-      precedence.insertBefore(instance, precedence.firstChild));
+ }
+ function adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps) {
+   null == stylesheetProps.crossOrigin &&
