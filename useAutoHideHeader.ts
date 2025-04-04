@@ -69,6 +69,7 @@ export default function useAutoHideHeader(
 	useAnimation(
 		() => {
 			let lastScroll = 0
+			let isHovered = false
 			if (!wrapper) return
 
 			const props = {
@@ -99,6 +100,10 @@ export default function useAutoHideHeader(
 				else if (forceHideHeader || hideHeader) {
 					yTo(-height)
 				}
+				// if hovered
+				else if (isHovered) {
+					yTo(0)
+				}
 				// scrub behavior, if needed
 				else if (style === "scrub") {
 					const currentY = Number(gsap.getProperty(wrapper.current, "y"))
@@ -107,10 +112,22 @@ export default function useAutoHideHeader(
 				}
 			}
 
+			const onHover = () => {
+				isHovered = true
+			}
+			const onLeave = () => {
+				isHovered = false
+			}
+
+			wrapper.current?.addEventListener("pointerenter", onHover)
+			wrapper.current?.addEventListener("pointerleave", onLeave)
+
 			ScrollTrigger.create({ onUpdate })
 			const interval = setInterval(onUpdate, 100)
 			return () => {
 				clearInterval(interval)
+				wrapper.current?.removeEventListener("pointerenter", onHover)
+				wrapper.current?.removeEventListener("pointerleave", onLeave)
 			}
 		},
 		[wrapper, style],
