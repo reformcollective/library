@@ -429,6 +429,7 @@ export {
 	GlobalStyles,
 	type CSSObject,
 	type CSSValue,
+	css as createStyle,
 } from "restyle"
 export const fresponsive = (style: string, options?: Options) =>
 	convertToResponsive(convertCssToObject(style, hashCounter), {
