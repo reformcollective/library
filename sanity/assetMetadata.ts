@@ -1,5 +1,19 @@
 import { defineQuery } from "next-sanity"
 import { sanityFetch } from "sanity/lib/live"
+import * as v from "valibot"
+
+const assetSchema = v.object({
+	asset: v.object({
+		_ref: v.string(),
+	}),
+})
+
+const linkSchema = v.object({
+	_type: v.literal("link"),
+	internalLink: v.object({
+		_ref: v.string(),
+	}),
+})
 
 export type AssetMeta = {
 	lqip?: string
@@ -43,24 +57,26 @@ export const fetchAssetMeta = async <InputType>(
 	}
 
 	if (typeof input === "object" && input !== null) {
-		if (
-			"asset" in input &&
-			input.asset &&
-			typeof input.asset === "object" &&
-			input.asset !== null &&
-			"_ref" in input.asset &&
-			typeof input.asset._ref === "string"
-		) {
+		const { output: assetParse, success: isAsset } = v.safeParse(
+			assetSchema,
+			input,
+		)
+		const { output: linkParse, success: isLink } = v.safeParse(
+			linkSchema,
+			input,
+		)
+
+		if (isAsset) {
 			const { data: imageAsset } = await sanityFetch({
 				query: imageQuery,
 				params: {
-					asset: input.asset._ref,
+					asset: assetParse.asset._ref,
 				},
 			})
 			const { data: fileAsset } = await sanityFetch({
 				query: fileQuery,
 				params: {
-					asset: input.asset._ref,
+					asset: assetParse.asset._ref,
 				},
 			})
 
@@ -80,25 +96,15 @@ export const fetchAssetMeta = async <InputType>(
 			} as Output
 		}
 
-		if (
-			"_type" in input &&
-			input._type === "link" &&
-			"internalLink" in input &&
-			typeof input.internalLink === "object" &&
-			input.internalLink !== null &&
-			"_ref" in input.internalLink &&
-			typeof input.internalLink._ref === "string"
-		) {
+		if (isLink) {
 			const { data: link } = await sanityFetch({
 				query: linkQuery,
-				params: {
-					asset: input.internalLink._ref,
-				},
+				params: { asset: linkParse.internalLink._ref },
 			})
 
 			return {
 				...input,
-				slug: link?.slug?.current,
+				internalSlug: link?.slug?.current,
 			} as Output
 		}
 

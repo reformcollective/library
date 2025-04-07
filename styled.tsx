@@ -431,34 +431,66 @@ export {
 	type CSSValue,
 	css as createStyle,
 } from "restyle"
-export const fresponsive = (style: string, options?: Options) =>
-	convertToResponsive(convertCssToObject(style, hashCounter), {
-		...options,
-		selectorHash: hashCounter++,
-	})
-export const flarge = (style: string) => ({
-	...convertToResponsive(convertCssToObject(style, hashCounter), {
-		only: "fullWidth",
-		selectorHash: hashCounter++,
-	}),
-	...convertToResponsive(convertCssToObject(style, hashCounter), {
-		only: "desktop",
-		selectorHash: hashCounter++,
-	}),
-})
-export const ftablet = (style: string) =>
-	convertToResponsive(convertCssToObject(style, hashCounter), {
-		only: "tablet",
-		selectorHash: hashCounter++,
-	})
-export const fmobile = (style: string) =>
-	convertToResponsive(convertCssToObject(style, hashCounter), {
-		only: "mobile",
-		selectorHash: hashCounter++,
-	})
-export const unresponsive = (style: string) =>
-	convertCssToObject(style, hashCounter)
 export const keyframes = (...args: Parameters<typeof String.raw>) =>
 	restyleKeyframes(
 		convertCssToObject(String.raw(...args), 0, false) as KeyframesObject,
 	)
+
+export const f = {
+	/**
+	 * apply responsive styles to all breakpoints
+	 */
+	responsive: (style: string, options?: Options) =>
+		convertToResponsive(convertCssToObject(style, hashCounter), {
+			...options,
+			selectorHash: hashCounter++,
+		}),
+	/**
+	 * apply scaled responsive styles to all breakpoints
+	 */
+	scaledResponsive: (style: string) =>
+		f.responsive(style, { scaleFully: true }),
+
+	/**
+	 * apply responsive styles to desktop and full width breakpoints
+	 */
+	large: (style: string, options?: Options) => ({
+		...f.responsive(style, { only: "fullWidth", ...options }),
+		...f.responsive(style, { only: "desktop", ...options }),
+	}),
+	/**
+	 * apply responsive styles to tablet and mobile breakpoints
+	 */
+	small: (style: string) => ({
+		...f.responsive(style, { only: "tablet" }),
+		...f.responsive(style, { only: "mobile" }),
+	}),
+
+	/**
+	 * apply responsive styles to full width breakpoint
+	 */
+	fullWidth: (style: string, options?: Options) =>
+		f.responsive(style, { only: "fullWidth", ...options }),
+	/**
+	 * apply responsive styles to desktop breakpoint
+	 */
+	desktop: (style: string) => f.responsive(style, { only: "desktop" }),
+	/**
+	 * apply responsive styles to tablet breakpoint
+	 */
+	tablet: (style: string) => f.responsive(style, { only: "tablet" }),
+	/**
+	 * apply responsive styles to mobile breakpoint
+	 */
+	mobile: (style: string) => f.responsive(style, { only: "mobile" }),
+
+	/**
+	 * simply convert a css string to a CSSObject
+	 */
+	unresponsive: (style: string) => convertCssToObject(style, hashCounter),
+}
+
+export const fresponsive = f.responsive
+export const ftablet = f.tablet
+export const fmobile = f.mobile
+export const unresponsive = f.unresponsive

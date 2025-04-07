@@ -3,6 +3,7 @@
  */
 
 const overrideURL = process.env.NEXT_PUBLIC_SITE_OVERRIDE_URL
+const PORT = process.env.PORT || 3000
 
 // Helper to safely check environments
 const isVercel = process.env.VERCEL === "1"
@@ -49,10 +50,10 @@ if (isCI) {
 }
 
 export const siteURL =
-	overrideURL || vercelURL || netlifyURL || "http://localhost:3000"
+	overrideURL || vercelURL || netlifyURL || `http://localhost:${PORT}`
 
 // Only warn if we're in CI and can't determine the URL
-if (isCI && siteURL === "http://localhost:3000") {
+if (isCI && siteURL === `http://localhost:${PORT}`) {
 	console.warn(
 		"Warning: Unable to determine deployment URL in CI environment. Check platform environment variables.",
 	)
