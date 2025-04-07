@@ -71,7 +71,7 @@ jobs:
 
       - name: Serve
         if: github.event.action != 'closed'
-        run: pnpm run serve --port ${{ steps.port.outputs.port }} & exit 0
+        run: PORT=${{ steps.port.outputs.port }} pnpm run serve & exit 0
 
       - name: Wait for server...
         if: github.event.action != 'closed'
