@@ -17,6 +17,7 @@ type TransitionProps = Omit<
 }
 
 const wrapStyle = (style: CSSObject) =>
+	// we apply this style to the view transition for this component, rather than the component itself
 	createStyle({
 		"html::view-transition-group(&)": style,
 	})
