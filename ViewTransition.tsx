@@ -16,6 +16,11 @@ type TransitionProps = Omit<
 	[key in ClassProps]?: CSSObject
 }
 
+const wrapStyle = (style: CSSObject) =>
+	createStyle({
+		"html::view-transition-group(&)": style,
+	})
+
 export function Transition({
 	children,
 	default: defaultStyle,
@@ -27,12 +32,12 @@ export function Transition({
 }: TransitionProps) {
 	const { completed } = usePreloader()
 	const [defaultClass, DefaultStyle] = defaultStyle
-		? createStyle(defaultStyle)
+		? wrapStyle(defaultStyle)
 		: []
-	const [enterClass, EnterStyle] = enter ? createStyle(enter) : []
-	const [exitClass, ExitStyle] = exit ? createStyle(exit) : []
-	const [shareClass, ShareStyle] = share ? createStyle(share) : []
-	const [updateClass, UpdateStyle] = update ? createStyle(update) : []
+	const [enterClass, EnterStyle] = enter ? wrapStyle(enter) : []
+	const [exitClass, ExitStyle] = exit ? wrapStyle(exit) : []
+	const [shareClass, ShareStyle] = share ? wrapStyle(share) : []
+	const [updateClass, UpdateStyle] = update ? wrapStyle(update) : []
 
 	if (completed) {
 		return (
