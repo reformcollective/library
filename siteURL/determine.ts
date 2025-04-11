@@ -1,8 +1,10 @@
+if (typeof window !== "undefined")
+	throw new Error("This file should not be imported in the browser")
+
 /**
  * Support for NETLIFY and VERCEL deployments
  */
 
-const overrideURL = process.env.NEXT_PUBLIC_SITE_OVERRIDE_URL
 const PORT = process.env.PORT || 3000
 
 // Helper to safely check environments
@@ -95,8 +97,7 @@ if (isCI) {
 		)
 	}
 
-	const siteUrl =
-		overrideURL || vercelURL || netlifyURL || `http://localhost:${PORT}`
+	const siteUrl = vercelURL || netlifyURL || `http://localhost:${PORT}`
 	console.log(
 		`\n${colors.bright}Site URL:${colors.reset} ${colors.magenta}${siteUrl}${colors.reset}`,
 	)
@@ -105,12 +106,18 @@ if (isCI) {
 	)
 }
 
-export const siteURL =
-	overrideURL || vercelURL || netlifyURL || `http://localhost:${PORT}`
+export const serverSiteURL =
+	vercelURL || netlifyURL || `http://localhost:${PORT}`
 
 // Only warn if we're in CI and can't determine the URL
-if (isCI && siteURL === `http://localhost:${PORT}`) {
+if (isCI && serverSiteURL === `http://localhost:${PORT}`) {
 	console.warn(
 		`${colors.bright}${colors.red}Warning:${colors.reset} Unable to determine deployment URL in CI environment. Check platform environment variables.`,
+	)
+}
+
+if (serverSiteURL.includes("undefined")) {
+	console.warn(
+		`${colors.bright}${colors.red}Warning:${colors.reset} We tried to determine the deployment URL, but it may be undefined. Check platform environment variables.`,
 	)
 }
