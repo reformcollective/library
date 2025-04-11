@@ -270,7 +270,7 @@ function convertToResponsive(
 								: `${replacer(px, designSizes[only])}vw`,
 						),
 				}
-			} else if (String(value).match(regex)) {
+			} else {
 				/**
 				 * generate media queries for each breakpoint
 				 */
