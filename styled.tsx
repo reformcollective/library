@@ -383,42 +383,19 @@ export const mergeStyles = (styles: CSSObject) => {
 	return output
 }
 
-/**
- * Creates a JSX component that forwards a `className` prop with the generated
- * atomic class names to the provided `Component`. Additionally, a `css` prop can
- * be provided to override the initial `styles`.
- *
- * Note, the provided component must accept a `className` prop.
- */
-type ClassNameMessage = "Component must accept a `className` prop"
-type AcceptsClassName<T> = T extends keyof React.JSX.IntrinsicElements
-	? "className" extends keyof React.JSX.IntrinsicElements[T]
-		? T
-		: ClassNameMessage
-	: T extends React.ComponentType<infer P>
-		? "className" extends keyof P
-			? T
-			: ClassNameMessage
-		: ClassNameMessage
-
-export const styled = <ComponentType extends React.ElementType, StyleProps>(
-	component: AcceptsClassName<ComponentType>,
-	styles?: CSSObject | ((props: StyleProps) => CSSObject),
-) => {
+// biome-ignore lint/suspicious/noExplicitAny: don't care - types are elsewhere
+export const styled = ((component: any, styles: any) => {
 	hashCounter = 0
-	type Output = (
-		prop: React.ComponentProps<ComponentType> & StyleProps,
-	) => import("react/jsx-runtime").JSX.Element
 
-	if (styles === undefined) return restyled(component as "div") as Output
+	if (styles === undefined) return restyled(component)
 
 	return restyled(
 		component as "div",
 		typeof styles === "function"
 			? (props) => mergeStyles(styles(props))
 			: mergeStyles(styles),
-	) as Output
-}
+	)
+}) as typeof restyled
 
 /**
  * simple utility for composing styles as a string
