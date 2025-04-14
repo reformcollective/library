@@ -8,7 +8,7 @@
 		"browser-dtector": "4.1.0",
 		"lenis": "^1.2.3",
 		"minisearch": "^7",
-		"restyle": "github:RJWadley/restyle#adacf78931f4de83fe4aae1ad6c922c5a6ce0ab1",
+		"restyle": "3.2.2",
 		"sanity-image": "^1.0.0",
 		"sanity-plugin-link-field": "^1",
 		"sonner": "^2.0.3",
