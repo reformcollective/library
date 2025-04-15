@@ -1,7 +1,7 @@
 "use client"
 
 import libraryConfig from "libraryConfig"
-import Link from "next/link"
+import Link, { type LinkProps } from "next/link"
 import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
 import type { Transitions } from "./loader"
@@ -30,6 +30,7 @@ type ButtonProps = {
 	href?: undefined
 	transition?: undefined
 	openInNewTab?: undefined
+	onNavigate?: undefined
 } & Omit<ComponentProps<"button">, "type" | "ref">
 
 type AnchorProps = {
@@ -42,6 +43,11 @@ type AnchorProps = {
 	 */
 	openInNewTab?: boolean
 	transition?: Transitions
+	/**
+	 * take action during, or block, an internal navigation
+	 * this does not apply to external links
+	 */
+	onNavigate?: LinkProps["onNavigate"]
 
 	type?: undefined
 } & Omit<ComponentProps<"a">, "href" | "onClick" | "ref">
@@ -106,6 +112,7 @@ export default function UniversalLink({
 	children,
 	ref,
 	transition = libraryConfig.defaultViewTransition,
+	onNavigate,
 	...props
 }: UniversalLinkProps) {
 	const transitioner = useTransitioner()
@@ -146,6 +153,7 @@ export default function UniversalLink({
 			target={newTab ? "_blank" : undefined}
 			onClick={onClick}
 			suppressHydrationWarning
+			onNavigate={onNavigate}
 		>
 			{children}
 		</Link>

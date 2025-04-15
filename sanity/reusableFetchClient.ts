@@ -1,10 +1,10 @@
 "use client"
 
-import { isBrowser } from "library/deviceDetection"
 import { isCorsOriginError } from "next-sanity"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { studioUrl } from "../../../sanity/lib/api"
+import { usePathname } from "next/navigation"
 
 /**
  * if sanity live is initialized in the studio, the page
@@ -16,12 +16,14 @@ export default function LiveWrapper({
 }: {
 	children: React.ReactNode
 }) {
-	const [show, setShow] = useState(false)
+	const [isStudio, setIsStudio] = useState(true) // default to true during SSR
+	const pathname = usePathname()
 
-	const newShow = isBrowser && window.location.pathname.startsWith(studioUrl)
-	if (newShow !== show) setShow(newShow)
+	useEffect(() => {
+		setIsStudio(pathname.startsWith(studioUrl))
+	}, [pathname])
 
-	return show ? null : children
+	return isStudio ? null : children
 }
 
 export function handleError(error: unknown) {
