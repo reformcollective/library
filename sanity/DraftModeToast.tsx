@@ -8,15 +8,21 @@ import { useRouter } from "next/navigation"
 import { useEffect, useTransition } from "react"
 import { toast } from "sonner"
 import { disableDraftMode } from "./actions"
+import { VisualEditing } from "next-sanity"
+import { siteURL } from "library/siteURL"
 
-export default function DraftModeToast() {
+export default function DraftModeOverlay() {
 	const isPresentationTool = useIsPresentationTool()
 	const env = useDraftModeEnvironment()
 	const router = useRouter()
 	const [pending, startTransition] = useTransition()
+	const isDeployedSite = !siteURL.includes("localhost")
+
+	const showToast = isPresentationTool === false && env === "live"
+	const showOverlays = isDeployedSite || isPresentationTool
 
 	useEffect(() => {
-		if (isPresentationTool === false && env === "live") {
+		if (showToast) {
 			/**
 			 * We delay the toast in case we're inside Presentation Tool
 			 */
@@ -37,7 +43,7 @@ export default function DraftModeToast() {
 				toast.dismiss(toastId)
 			}
 		}
-	}, [router, isPresentationTool, env])
+	}, [router, showToast])
 
 	useEffect(() => {
 		if (pending) {
@@ -48,5 +54,5 @@ export default function DraftModeToast() {
 		}
 	}, [pending])
 
-	return null
+	return showOverlays ? <VisualEditing /> : null
 }

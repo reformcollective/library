@@ -1,8 +1,7 @@
 "use client"
 
-import { isBrowser } from "library/deviceDetection"
 import { isCorsOriginError } from "next-sanity"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { studioUrl } from "../../../sanity/lib/api"
 
@@ -16,12 +15,13 @@ export default function LiveWrapper({
 }: {
 	children: React.ReactNode
 }) {
-	const [show, setShow] = useState(false)
+	const [isStudio, setIsStudio] = useState(true)
 
-	const newShow = isBrowser && window.location.pathname.startsWith(studioUrl)
-	if (newShow !== show) setShow(newShow)
+	useEffect(() => {
+		setIsStudio(window.location.pathname.startsWith(studioUrl))
+	}, [])
 
-	return show ? null : children
+	return isStudio ? null : children
 }
 
 export function handleError(error: unknown) {

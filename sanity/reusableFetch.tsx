@@ -1,10 +1,9 @@
 import { client } from "@/sanity/lib/client"
 import { token } from "@/sanity/lib/token"
-import DraftModeToast from "library/sanity/DraftModeToast"
+import DraftModeOverlay from "library/sanity/DraftModeToast"
 import { fetchAssetMeta } from "library/sanity/assetMetadata"
 import {
 	defineLive,
-	VisualEditing,
 	type ClientPerspective,
 	type QueryParams,
 } from "next-sanity"
@@ -63,12 +62,7 @@ export const SanityLive = async () => {
 		<>
 			<LiveWrapper>
 				<Toaster />
-				{isDraftMode && (
-					<>
-						<DraftModeToast />
-						<VisualEditing />
-					</>
-				)}
+				{isDraftMode && <DraftModeOverlay />}
 				<InternalLive onError={handleError} refreshOnFocus={false} />
 			</LiveWrapper>
 		</>
