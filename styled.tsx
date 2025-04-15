@@ -381,18 +381,16 @@ export const mergeStyles = (styles: CSSObject) => {
 	return output
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: don't care - types are elsewhere
-export const styled = ((component: any, styles: any) => {
+export const styled = ((
+	component: Parameters<typeof restyled>[0],
+	style: Parameters<typeof restyled>[1],
+) => {
 	hashCounter = 0
 
-	if (styles === undefined) return restyled(component)
-
-	return restyled(
-		component as "div",
-		typeof styles === "function"
-			? (props) => mergeStyles(styles(props))
-			: mergeStyles(styles),
-	)
+	if (style === undefined) return restyled(component)
+	if (typeof style === "function")
+		return restyled(component, (...props) => mergeStyles(style(...props)))
+	return restyled(component, mergeStyles(style))
 }) as typeof restyled
 
 /**
