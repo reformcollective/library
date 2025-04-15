@@ -247,9 +247,7 @@ function convertToResponsive(
 		mobile: `${media.mobile}${" ".repeat(selectorHash)}`,
 	}
 
-	const output: CSSObject =
-		// when only is specified, styles are not top-level
-		only ? {} : { ...cssIn }
+	const output: CSSObject = {}
 
 	for (const [key, value] of Object.entries(cssIn)) {
 		if (typeof value !== "object") {
