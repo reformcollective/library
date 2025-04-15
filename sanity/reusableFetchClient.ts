@@ -4,6 +4,7 @@ import { isCorsOriginError } from "next-sanity"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { studioUrl } from "../../../sanity/lib/api"
+import { usePathname } from "next/navigation"
 
 /**
  * if sanity live is initialized in the studio, the page
@@ -15,11 +16,12 @@ export default function LiveWrapper({
 }: {
 	children: React.ReactNode
 }) {
-	const [isStudio, setIsStudio] = useState(true)
+	const [isStudio, setIsStudio] = useState(true) // default to true during SSR
+	const pathname = usePathname()
 
 	useEffect(() => {
-		setIsStudio(window.location.pathname.startsWith(studioUrl))
-	}, [])
+		setIsStudio(pathname.startsWith(studioUrl))
+	}, [pathname])
 
 	return isStudio ? null : children
 }
