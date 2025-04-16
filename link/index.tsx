@@ -124,6 +124,7 @@ export default function UniversalLink({
 				ref={ref as Ref<HTMLButtonElement>}
 				style={{
 					cursor: "pointer",
+					...props.style,
 				}}
 			>
 				{children}
