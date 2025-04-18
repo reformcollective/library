@@ -24,7 +24,6 @@ type HydrationPhase =
  */
 export const ScreenContext = createContext({
 	innerWidth: 0,
-	innerHeight: 0,
 	fullWidth: false,
 	desktop: false,
 	tablet: false,
@@ -60,7 +59,6 @@ export function ScreenProvider({ children }: Props) {
 	const [t, setT] = useState<boolean>(false)
 	const [m, setM] = useState<boolean>(true)
 	const [innerWidth, setInnerWidth] = useState(0)
-	const [innerHeight, setInnerHeight] = useState(0)
 
 	/**
 	 * preloading utilities
@@ -79,7 +77,6 @@ export function ScreenProvider({ children }: Props) {
 				window.innerWidth <= desktopBreakpoint,
 		)
 		setFw(window.innerWidth > desktopBreakpoint)
-		setInnerHeight(window.innerHeight)
 		setInnerWidth(window.innerWidth)
 	}, [])
 
@@ -153,7 +150,6 @@ export function ScreenProvider({ children }: Props) {
 	return (
 		<ScreenContext.Provider
 			value={{
-				innerHeight,
 				innerWidth,
 				fullWidth: fw,
 				desktop: d,
