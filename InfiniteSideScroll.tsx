@@ -54,7 +54,7 @@ export function InfiniteSideScroll({
 	 */
 	disableDrag?: boolean
 	/**
-	 * if true, the marquee will snap to the nearest index
+	 * if true, the marquee will not snap to the nearest index
 	 */
 	disableSnap?: boolean
 	/**
