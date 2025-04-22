@@ -230,7 +230,8 @@ export function horizontalLoop(items, config) {
 				console.warn(
 					"InertiaPlugin required for momentum-based scrolling and snapping. https://greensock.com/club",
 				)
-			draggable = Draggable.create(proxy, {
+
+			const draggableOptions = {
 				trigger: items[0].parentNode,
 				type: "x",
 				onPressInit() {
@@ -252,7 +253,19 @@ export function horizontalLoop(items, config) {
 				onThrowUpdate: align,
 				overshootTolerance: 0,
 				inertia: true,
-				snap(value) {
+				onRelease() {
+					syncIndex()
+					draggable.isThrowing && (indexIsDirty = true)
+					if (!hasMoved) wasPlaying && tl.play()
+				},
+				onThrowComplete: () => {
+					syncIndex()
+					wasPlaying && tl.play()
+				},
+			}
+
+			if (config.snap !== false) {
+				draggableOptions.snap = function (value) {
 					//note: if the user presses and releases in the middle of a throw, due to the sudden correction of proxy.x in the onPressInit(), the velocity could be very large, throwing off the snap. So sense that condition and adjust for it. We also need to set overshootTolerance to 0 to prevent the inertia from causing it to shoot past and come back
 					if (Math.abs(startProgress / -ratio - this.x) < 10) {
 						return lastSnap + initChangeX
@@ -265,17 +278,10 @@ export function horizontalLoop(items, config) {
 						(dif += dif < 0 ? tl.duration() : -tl.duration())
 					lastSnap = (time + dif) / tl.duration() / -ratio
 					return lastSnap
-				},
-				onRelease() {
-					syncIndex()
-					draggable.isThrowing && (indexIsDirty = true)
-					if (!hasMoved) wasPlaying && tl.play()
-				},
-				onThrowComplete: () => {
-					syncIndex()
-					wasPlaying && tl.play()
-				},
-			})[0]
+				}
+			}
+
+			draggable = Draggable.create(proxy, draggableOptions)[0]
 			tl.draggable = draggable
 		}
 		tl.scrollBy = (pixels) => {

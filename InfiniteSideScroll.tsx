@@ -26,6 +26,7 @@ export function InfiniteSideScroll({
 	marqueeSpeed = 0,
 	reversed = false,
 	disableDrag = false,
+	disableSnap = false,
 	scrollVelocity,
 	onChange,
 	loopRef,
@@ -52,6 +53,10 @@ export function InfiniteSideScroll({
 	 * if true, the marquee will not be draggable or scrollable manually (you can still use the buttons, if specified)
 	 */
 	disableDrag?: boolean
+	/**
+	 * if true, the marquee will not snap to the nearest index
+	 */
+	disableSnap?: boolean
 	/**
 	 * if specified, will scrub based on vertical scroll velocity
 	 * can also be negative to reverse the direction
@@ -105,6 +110,7 @@ export function InfiniteSideScroll({
 
 			const loop = horizontalLoop(rowRef.current.children, {
 				draggable,
+				snap: disableSnap ? false : 1,
 				paused: marqueeSpeed === 0,
 				center: true,
 				speed: marqueeSpeed === 0 ? 2 : marqueeSpeed,
@@ -189,6 +195,7 @@ export function InfiniteSideScroll({
 			marqueeSpeed,
 			reversed,
 			disableDrag,
+			disableSnap,
 			scrollVelocity,
 			numberNeeded,
 			loopRef,
