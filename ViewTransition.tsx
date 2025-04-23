@@ -35,16 +35,18 @@ export function Transition({
 	const [updateClass, UpdateStyle] = update ? createStyle(update) : []
 
 	if (completed) {
+		const viewTransitionProps = {
+			...props,
+			default: defaultClass,
+			enter: enterClass,
+			exit: exitClass,
+			share: shareClass,
+			update: updateClass,
+		}
+
 		return (
 			<>
-				<ReactViewTransition
-					{...props}
-					default={defaultClass}
-					enter={enterClass}
-					exit={exitClass}
-					share={shareClass}
-					update={updateClass}
-				>
+				<ReactViewTransition {...viewTransitionProps}>
 					{children}
 				</ReactViewTransition>
 				{DefaultStyle && <DefaultStyle />}
