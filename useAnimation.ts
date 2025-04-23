@@ -4,7 +4,6 @@ import {
 	use,
 	useEffect,
 	useLayoutEffect,
-	useMemo,
 	useRef,
 	useState,
 } from "react"
@@ -108,16 +107,13 @@ export const useAnimation = <InputFn extends Creation>(
 	// output state
 	const [returnValue, setReturnValue] = useState<OutputType>()
 	const [context, setContext] = useState<gsap.Context>(gsap.context(() => {}))
-	const contextSafe = useMemo(
-		() =>
-			((func) =>
-				context.add(null as unknown as string, func)) as ContextSafeFunc,
-		[context],
-	)
 
 	// final revert
 	const latestContext = useRef(context)
 	latestContext.current = context
+	useLayoutEffect(() => {
+		latestContext.current = context
+	}, [context])
 	useIsomorphicLayoutEffect(() => {
 		return () => {
 			if (!latestContext.current.isReverted) {
@@ -194,7 +190,6 @@ export const useAnimation = <InputFn extends Creation>(
 	])
 
 	return {
-		contextSafe,
 		result: returnValue,
 		context: context,
 	}

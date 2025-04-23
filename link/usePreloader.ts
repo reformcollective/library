@@ -4,7 +4,7 @@ import { ScreenContext } from "library/ScreenContext"
 import { createScrollLock } from "library/Scroll"
 import { isBrowser } from "library/deviceDetection"
 import { sleep } from "library/functions"
-import { type RefObject, use, useState } from "react"
+import { type RefObject, use, useMemo, useState } from "react"
 import { flushSync } from "react-dom"
 
 /**
@@ -15,6 +15,20 @@ import { flushSync } from "react-dom"
  */
 const DEBUG_BLOCK_THREAD_FOR_SECONDS = 0
 let hasDoneBlock = false
+
+// block the main thread for debugging
+const useBlockThread = () => {
+	useMemo(() => {
+		if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0 && !hasDoneBlock) {
+			const start = performance.now()
+			while (
+				performance.now() - start <
+				DEBUG_BLOCK_THREAD_FOR_SECONDS * 1000
+			) {}
+			hasDoneBlock = true
+		}
+	}, [])
+}
 
 const globalPromises: Promise<unknown>[] = []
 let globalComplete = false
@@ -118,12 +132,7 @@ export const usePreloader = ({
 				},
 	)
 
-	// block the main thread for debugging
-	if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0 && !hasDoneBlock) {
-		hasDoneBlock = true
-		const start = performance.now()
-		while (performance.now() - start < DEBUG_BLOCK_THREAD_FOR_SECONDS * 1000) {}
-	}
+	useBlockThread()
 
 	useAsyncEffect(async () => {
 		if (!initComplete) return

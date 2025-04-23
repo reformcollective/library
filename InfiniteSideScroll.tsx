@@ -6,6 +6,7 @@ import {
 	type ReactNode,
 	type RefObject,
 	useEffect,
+	useLayoutEffect,
 	useRef,
 	useState,
 } from "react"
@@ -13,6 +14,7 @@ import { createDebouncedEventListener } from "./ScreenContext"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { css, fresponsive, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
+import { useCombinedRefs } from "./useCombinedRefs"
 
 gsap.registerPlugin(Observer)
 
@@ -76,10 +78,13 @@ export function InfiniteSideScroll({
 	loopRef?: RefObject<InfiniteLoop | null>
 }) {
 	const rowRef = useRef<HTMLDivElement>(null)
+	const internalLoopRef = useCombinedRefs(loopRef, undefined)
 	const [numberNeeded, setNumberNeeded] = useState(1)
 
 	const latestOnChange = useRef(onChange)
-	latestOnChange.current = onChange
+	useLayoutEffect(() => {
+		latestOnChange.current = onChange
+	}, [onChange])
 
 	const { result: loop } = useAnimation(
 		() => {
@@ -122,7 +127,7 @@ export function InfiniteSideScroll({
 					latestOnChange.current?.(index)
 				},
 			})
-			if (loopRef) loopRef.current = loop
+			internalLoopRef(loop)
 
 			// start centered
 			if (marqueeSpeed === 0) {
@@ -198,7 +203,7 @@ export function InfiniteSideScroll({
 			disableSnap,
 			scrollVelocity,
 			numberNeeded,
-			loopRef,
+			internalLoopRef,
 		],
 		{ recreateOnResize: true },
 	)

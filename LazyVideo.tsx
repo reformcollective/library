@@ -4,7 +4,7 @@ import { ScrollTrigger } from "gsap/all"
 import { type ReactNode, type Ref, useRef, useState } from "react"
 import { usePreloader } from "./link/usePreloader"
 import { useAnimation } from "./useAnimation"
-import useCombinedRefs from "./useCombinedRefs"
+import { useCombinedRefs } from "./useCombinedRefs"
 
 export function LazyVideo({
 	autoPlay,
@@ -43,7 +43,7 @@ export function LazyVideo({
 	ref?: Ref<HTMLVideoElement>
 }) {
 	const [showVideo, setShowVideo] = useState(false)
-	const videoRef = useCombinedRefs(ref)
+	const videoRef = useRef<HTMLVideoElement>(null)
 	const hasStartedLoading = useRef(false)
 	const { completed } = usePreloader()
 
@@ -82,14 +82,14 @@ export function LazyVideo({
 				onEnterBack: show,
 			})
 		},
-		[videoRef, completed, showVideo],
+		[completed, showVideo],
 		{ recreateOnResize: true },
 	)
 
 	return (
 		<video
 			{...props}
-			ref={videoRef}
+			ref={useCombinedRefs(videoRef, ref)}
 			autoPlay={autoPlay}
 			muted={muted || autoPlay}
 			loop={loop}
