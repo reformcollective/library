@@ -1,6 +1,7 @@
 import { defineQuery } from "next-sanity"
 import { sanityFetch } from "sanity/lib/live"
 import * as v from "valibot"
+import { createBlurUp } from "@mux/blurup"
 
 const assetSchema = v.object({
 	asset: v.object({
@@ -23,6 +24,8 @@ export type AssetMeta = {
 	extension: string | undefined
 	url: string | undefined
 	playbackId: string | undefined
+	videoBlurUrl: string | undefined
+	videoAspectRatio: number | undefined
 }
 
 const imageQuery = defineQuery(`
@@ -92,6 +95,10 @@ export const fetchAssetMeta = async <InputType>(
 
 			const asset = imageAsset ?? fileAsset
 
+			const { blurDataURL, aspectRatio } = videoAsset?.playbackId
+				? await createBlurUp(videoAsset.playbackId, { time: 0, quality: 2 })
+				: {}
+
 			return {
 				...input,
 				data: {
@@ -102,6 +109,8 @@ export const fetchAssetMeta = async <InputType>(
 					extension: asset?.extension,
 					url: asset?.url,
 					playbackId: videoAsset?.playbackId,
+					videoBlurUrl: blurDataURL,
+					videoAspectRatio: aspectRatio,
 				} satisfies NonNullable<AssetMeta>,
 			} as Output
 		}
