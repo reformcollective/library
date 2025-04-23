@@ -1,6 +1,6 @@
 import { client } from "@/sanity/lib/client"
 import { token } from "@/sanity/lib/token"
-import DraftModeOverlay from "library/sanity/DraftModeToast"
+import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { fetchAssetMeta } from "library/sanity/assetMetadata"
 import {
 	defineLive,
@@ -10,6 +10,7 @@ import {
 import { draftMode } from "next/headers"
 import { Toaster } from "sonner"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
+import type { ComponentProps } from "react"
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
@@ -55,14 +56,16 @@ const sanityFetch = async <const QueryString extends string>({
 	}
 }
 
-export const SanityLive = async () => {
+export const SanityLive = async (
+	props: ComponentProps<typeof DraftModeOverlay>,
+) => {
 	const { isEnabled: isDraftMode } = await draftMode()
 
 	return (
 		<>
 			<LiveWrapper>
 				<Toaster />
-				{isDraftMode && <DraftModeOverlay />}
+				{isDraftMode && <DraftModeOverlay {...props} />}
 				<InternalLive onError={handleError} refreshOnFocus={false} />
 			</LiveWrapper>
 		</>

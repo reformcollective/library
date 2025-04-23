@@ -5,13 +5,15 @@ import {
 	useIsPresentationTool,
 } from "next-sanity/hooks"
 import { useRouter } from "next/navigation"
-import { useEffect, useTransition } from "react"
+import { useEffect, useTransition, type ComponentProps } from "react"
 import { toast } from "sonner"
 import { disableDraftMode } from "./actions"
 import { VisualEditing } from "next-sanity"
 import { siteURL } from "library/siteURL"
 
-export default function DraftModeOverlay() {
+export default function DraftModeOverlay(
+	props: ComponentProps<typeof VisualEditing>,
+) {
 	const isPresentationTool = useIsPresentationTool()
 	const env = useDraftModeEnvironment()
 	const router = useRouter()
@@ -54,5 +56,5 @@ export default function DraftModeOverlay() {
 		}
 	}, [pending])
 
-	return showOverlays ? <VisualEditing /> : null
+	return showOverlays ? <VisualEditing {...props} /> : null
 }
