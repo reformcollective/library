@@ -16,13 +16,13 @@ const linkSchema = v.object({
 })
 
 export type AssetMeta = {
-	lqip?: string
-	blurHash?: string
-	dominantColor?: string
-	originalFilename?: string
-	size?: number
-	extension?: string
-	url?: string
+	lqip: string | undefined
+	dominantColor: string | undefined
+	originalFilename: string | undefined
+	size: number | undefined
+	extension: string | undefined
+	url: string | undefined
+	playbackId: string | undefined
 }
 
 const imageQuery = defineQuery(`
@@ -31,6 +31,10 @@ const imageQuery = defineQuery(`
 
 const fileQuery = defineQuery(`
 	*[_id == $asset && _type == "sanity.fileAsset"][0]	
+`)
+
+const videoQuery = defineQuery(`
+	*[_id == $asset && _type == "mux.videoAsset"][0]
 `)
 
 const linkQuery = defineQuery(`
@@ -79,19 +83,25 @@ export const fetchAssetMeta = async <InputType>(
 					asset: assetParse.asset._ref,
 				},
 			})
+			const { data: videoAsset } = await sanityFetch({
+				query: videoQuery,
+				params: {
+					asset: assetParse.asset._ref,
+				},
+			})
 
 			const asset = imageAsset ?? fileAsset
 
 			return {
 				...input,
 				data: {
-					blurHash: imageAsset?.metadata?.blurHash,
 					lqip: imageAsset?.metadata?.lqip,
 					dominantColor: imageAsset?.metadata?.palette?.dominant?.background,
 					originalFilename: asset?.originalFilename,
 					size: asset?.size,
 					extension: asset?.extension,
 					url: asset?.url,
+					playbackId: videoAsset?.playbackId,
 				} satisfies NonNullable<AssetMeta>,
 			} as Output
 		}
