@@ -14,18 +14,16 @@ import { flushSync } from "react-dom"
  * is gpu-accelerated (FAST) or bound to the main thread (SLOW)
  */
 const DEBUG_BLOCK_THREAD_FOR_SECONDS = 0
-let hasDoneBlock = false
 
 // block the main thread for debugging
 const useBlockThread = () => {
 	useMemo(() => {
-		if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0 && !hasDoneBlock) {
+		if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0) {
 			const start = performance.now()
 			while (
 				performance.now() - start <
 				DEBUG_BLOCK_THREAD_FOR_SECONDS * 1000
 			) {}
-			hasDoneBlock = true
 		}
 	}, [])
 }

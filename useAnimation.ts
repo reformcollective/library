@@ -110,7 +110,6 @@ export const useAnimation = <InputFn extends Creation>(
 
 	// final revert
 	const latestContext = useRef(context)
-	latestContext.current = context
 	useLayoutEffect(() => {
 		latestContext.current = context
 	}, [context])
