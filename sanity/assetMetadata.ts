@@ -96,7 +96,13 @@ export const fetchAssetMeta = async <InputType>(
 			const asset = imageAsset ?? fileAsset
 
 			const { blurDataURL, aspectRatio } = videoAsset?.playbackId
-				? await createBlurUp(videoAsset.playbackId, { time: 0, quality: 2 })
+				? await createBlurUp(videoAsset.playbackId, {
+						time: 0,
+						quality: 2,
+					}).catch(() => ({
+						blurDataURL: undefined,
+						aspectRatio: undefined,
+					}))
 				: {}
 
 			return {
