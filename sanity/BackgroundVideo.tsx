@@ -7,12 +7,18 @@ import { useEffect, useRef, useState } from "react"
 
 export function BackgroundVideo({
 	data,
+	play = true,
 	...props
 }: {
 	/**
 	 * asset metadata from sanity
 	 */
 	data: AssetMeta | undefined
+	/**
+	 * should the video start playing immediately?
+	 * @default true
+	 */
+	play?: boolean
 	loop?: boolean
 	className?: string
 	ref?: React.Ref<HTMLVideoElement>
@@ -27,10 +33,12 @@ export function BackgroundVideo({
 		: playbackFailedAtWidth
 
 	useEffect(() => {
-		video.current
-			?.play()
-			.catch(() => setPlaybackFailedAtWidth(window.innerWidth))
-	}, [])
+		if (play)
+			video.current
+				?.play()
+				.catch(() => setPlaybackFailedAtWidth(window.innerWidth))
+		else video.current?.pause()
+	}, [play])
 
 	return (
 		<MuxVideo
