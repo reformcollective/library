@@ -1,19 +1,24 @@
 "use client"
 
 import MuxVideo from "@mux/mux-video-react"
-import type { AssetMeta } from "./assetMetadata"
 import { useCombinedRefs } from "library/useCombinedRefs"
 import { useEffect, useRef, useState } from "react"
 
 export function BackgroundVideo({
-	data,
+	playbackId,
+	videoBlurUrl,
+	videoAspectRatio,
+	videoDuration,
 	play = true,
 	...props
 }: {
 	/**
 	 * asset metadata from sanity
 	 */
-	data: AssetMeta | undefined
+	playbackId?: string
+	videoBlurUrl?: string
+	videoAspectRatio?: number
+	videoDuration?: number
 	/**
 	 * should the video start playing immediately?
 	 * @default true
@@ -23,39 +28,48 @@ export function BackgroundVideo({
 	className?: string
 	ref?: React.Ref<HTMLVideoElement>
 }) {
-	const [playbackFailedAtWidth, setPlaybackFailedAtWidth] = useState<
-		false | number
-	>(false)
 	const video = useRef<HTMLVideoElement>(null)
+	const videoPlayPromise = useRef(Promise.resolve())
+	const [playbackFailure, setPlaybackFailure] = useState<{
+		width: number
+		videoId: string
+	}>()
 
-	const roundedWidth = playbackFailedAtWidth
-		? Math.floor(playbackFailedAtWidth / 100) * 100
-		: playbackFailedAtWidth
+	if (playbackFailure && playbackFailure.videoId !== playbackId) {
+		setPlaybackFailure(undefined)
+	}
 
 	useEffect(() => {
-		if (play)
-			video.current
-				?.play()
-				.catch(() => setPlaybackFailedAtWidth(window.innerWidth))
+		if (playbackFailure) return
+
+		if (play && playbackId)
+			// we never want to interrupt a play call with another play call
+			// so wait for any previous play call to finish before starting a new one
+			videoPlayPromise.current.then(() => {
+				if (video.current)
+					videoPlayPromise.current = video.current?.play().catch(() => {
+						setPlaybackFailure({
+							videoId: playbackId,
+							width: Math.floor(window.innerWidth / 100) * 100,
+						})
+					})
+			})
 		else video.current?.pause()
-	}, [play])
+	}, [play, playbackFailure, playbackId])
 
 	return (
 		<MuxVideo
 			{...props}
 			ref={useCombinedRefs(video, props.ref)}
-			playbackId={
-				// once the video has failed, don't try to play it again
-				playbackFailedAtWidth ? undefined : data?.playbackId
-			}
+			playbackId={playbackFailure ? undefined : playbackId}
 			muted
 			playsInline
 			poster={
-				roundedWidth
-					? `https://image.mux.com/${data?.playbackId}/thumbnail.webp?time=${data?.videoDuration}&width=${roundedWidth}`
-					: data?.videoBlurUrl
+				playbackFailure
+					? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${playbackFailure.width}`
+					: videoBlurUrl
 			}
-			style={{ aspectRatio: data?.videoAspectRatio }}
+			style={{ aspectRatio: videoAspectRatio }}
 			streamType="on-demand"
 		/>
 	)
