@@ -78,7 +78,7 @@ export const usePreloader = ({
 	scope,
 }: {
 	/**
-	 * preloader will wait at least this long
+	 * preloader will wait at least this long in ms
 	 * (timed from page load, not affected by react load time)
 	 */
 	minDuration?: number
