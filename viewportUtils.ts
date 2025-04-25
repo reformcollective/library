@@ -15,17 +15,17 @@ import { getMedia } from "./useMedia"
 /**
  * hookify a get function to update on resize
  */
-function useHookify<P, T extends (input: P) => ReturnType<T>>(
+function useHookify<P extends any[], T extends (...args: P) => ReturnType<T>>(
 	fn: T,
-	arg: P,
+	...args: P
 ): ReturnType<T> | undefined {
 	const [value, setValue] = useState<ReturnType<T>>()
 	const { shouldHydrateUtilities } = use(ScreenContext)
 
-	useDebouncedEventListener("resize", () => setValue(fn(arg)))
+	useDebouncedEventListener("resize", () => setValue(fn(...args)))
 	useEffect(() => {
-		if (shouldHydrateUtilities) setValue(fn(arg))
-	}, [fn, arg, shouldHydrateUtilities])
+		if (shouldHydrateUtilities) setValue(fn(...args))
+	}, [fn, args, shouldHydrateUtilities])
 
 	return value
 }
@@ -94,7 +94,7 @@ export const getBreakpoint = () => {
  * for a one-shot calculation, use getBreakpoint
  */
 export const useBreakpoint = () => {
-	return useHookify(getBreakpoint, null)
+	return useHookify(getBreakpoint)
 }
 
 /**
@@ -168,10 +168,15 @@ export function useVwToPx(vw: number) {
  * for an updating value, use useResponsivePixels
  *
  * @param px the number of pixels to scale
+ * @param singleScaleFully if true, scale fully to the current viewport width
  * @returns the calculated px value
  */
-export function getResponsivePixels(px: number) {
+export function getResponsivePixels(px: number, singleScaleFully = false) {
 	const value = getVwToPx(getPxToVw(px))
+
+	if (singleScaleFully) {
+		return value
+	}
 
 	// short circuit if we're not using responsive pixels
 	const adjustedPx =
@@ -191,8 +196,9 @@ export function getResponsivePixels(px: number) {
  * for a one-shot calculation, use getResponsivePixels
  *
  * @param px the number of pixels to scale
+ * @param singleScaleFully if true, scale fully to the current viewport width
  * @returns the calculated px value
  */
-export function useResponsivePixels(px: number) {
-	return useHookify(getResponsivePixels, px)
+export function useResponsivePixels(px: number, singleScaleFully = false) {
+	return useHookify(getResponsivePixels, px, singleScaleFully)
 }
