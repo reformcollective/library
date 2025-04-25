@@ -1,6 +1,7 @@
 import { defineQuery } from "next-sanity"
 import { sanityFetch } from "sanity/lib/live"
 import * as v from "valibot"
+import { createBlurUp } from "@mux/blurup"
 
 const assetSchema = v.object({
 	asset: v.object({
@@ -16,13 +17,16 @@ const linkSchema = v.object({
 })
 
 export type AssetMeta = {
-	lqip?: string
-	blurHash?: string
-	dominantColor?: string
-	originalFilename?: string
-	size?: number
-	extension?: string
-	url?: string
+	lqip: string | undefined
+	dominantColor: string | undefined
+	originalFilename: string | undefined
+	size: number | undefined
+	extension: string | undefined
+	url: string | undefined
+	playbackId: string | undefined
+	videoBlurUrl: string | undefined
+	videoAspectRatio: number | undefined
+	videoDuration: number | undefined
 }
 
 const imageQuery = defineQuery(`
@@ -31,6 +35,10 @@ const imageQuery = defineQuery(`
 
 const fileQuery = defineQuery(`
 	*[_id == $asset && _type == "sanity.fileAsset"][0]	
+`)
+
+const videoQuery = defineQuery(`
+	*[_id == $asset && _type == "mux.videoAsset"][0]
 `)
 
 const linkQuery = defineQuery(`
@@ -79,19 +87,38 @@ export const fetchAssetMeta = async <InputType>(
 					asset: assetParse.asset._ref,
 				},
 			})
+			const { data: videoAsset } = await sanityFetch({
+				query: videoQuery,
+				params: {
+					asset: assetParse.asset._ref,
+				},
+			})
 
 			const asset = imageAsset ?? fileAsset
+
+			const { blurDataURL, aspectRatio } = videoAsset?.playbackId
+				? await createBlurUp(videoAsset.playbackId, {
+						time: 0,
+						quality: 2,
+					}).catch(() => ({
+						blurDataURL: undefined,
+						aspectRatio: undefined,
+					}))
+				: {}
 
 			return {
 				...input,
 				data: {
-					blurHash: imageAsset?.metadata?.blurHash,
 					lqip: imageAsset?.metadata?.lqip,
 					dominantColor: imageAsset?.metadata?.palette?.dominant?.background,
 					originalFilename: asset?.originalFilename,
 					size: asset?.size,
 					extension: asset?.extension,
 					url: asset?.url,
+					playbackId: videoAsset?.playbackId,
+					videoBlurUrl: blurDataURL,
+					videoAspectRatio: aspectRatio,
+					videoDuration: videoAsset?.data?.duration,
 				} satisfies NonNullable<AssetMeta>,
 			} as Output
 		}
