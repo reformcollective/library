@@ -26,6 +26,7 @@ export type AssetMeta = {
 	playbackId: string | undefined
 	videoBlurUrl: string | undefined
 	videoAspectRatio: number | undefined
+	videoDuration: number | undefined
 }
 
 const imageQuery = defineQuery(`
@@ -117,6 +118,7 @@ export const fetchAssetMeta = async <InputType>(
 					playbackId: videoAsset?.playbackId,
 					videoBlurUrl: blurDataURL,
 					videoAspectRatio: aspectRatio,
+					videoDuration: videoAsset?.data?.duration,
 				} satisfies NonNullable<AssetMeta>,
 			} as Output
 		}
