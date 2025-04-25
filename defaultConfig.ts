@@ -3,28 +3,11 @@
  * see app/libraryConfig.ts for the actual config
  */
 
-type Config<TransitionName extends string> = {
+type Config = {
 	/**
 	 * if true, the fresponsive util will scale on fullWidth breakpoints
 	 */
 	scaleFully: boolean
-	/**
-	 * get the amount of time needed to load the page
-	 * @param startTime the number of MS the page spent loading on the network so far
-	 */
-	getTimeNeeded: (startTime: number) => number
-	/**
-	 * extra delay to add to preloader
-	 */
-	extraLoaderDelay: number
-	/**
-	 * list of available view transitions
-	 */
-	viewTransitions: Record<TransitionName, () => unknown>
-	/**
-	 * which transition should be used by default?
-	 */
-	defaultViewTransition: NoInfer<TransitionName> | "instant" | "default"
 	/**
 	 * should the page preserve the scroll position when reloading or when clicking back/forward
 	 */
@@ -36,16 +19,12 @@ type Config<TransitionName extends string> = {
 }
 
 const defaultConfig = {
-	defaultViewTransition: "instant",
 	scaleFully: false,
-	getTimeNeeded: (startTime: number) => startTime + 1000,
 	scrollRestoration: true,
 	saveAnchorNames: true,
-	extraLoaderDelay: 0,
-	viewTransitions: {},
-} as const satisfies Config<never>
+} as const satisfies Config
 
-export const defineLibraryConfig = <SetConfig extends Partial<Config<string>>>(
+export const defineLibraryConfig = <SetConfig extends Partial<Config>>(
 	config: SetConfig,
 ) => ({
 	...defaultConfig,

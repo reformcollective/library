@@ -1,10 +1,8 @@
 "use client"
 
-import libraryConfig from "libraryConfig"
 import Link, { type LinkProps } from "next/link"
 import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
-import type { Transitions } from "./loader"
 import { useTransitioner } from "./transitioner"
 
 type CMSLink = {
@@ -42,7 +40,6 @@ type AnchorProps = {
 	 * open this link in a new tab?
 	 */
 	openInNewTab?: boolean
-	transition?: Transitions
 	/**
 	 * take action during, or block, an internal navigation
 	 * this does not apply to external links
@@ -111,7 +108,6 @@ export const resolveRoute = (
 export default function UniversalLink({
 	children,
 	ref,
-	transition = libraryConfig.defaultViewTransition,
 	onNavigate,
 	...props
 }: UniversalLinkProps) {
@@ -139,7 +135,7 @@ export default function UniversalLink({
 		if (!url) return
 
 		if (internal && !newTab) {
-			transitioner({ e, to: url, transition })
+			transitioner({ e, to: url })
 		} else {
 			window.open(url, newTab ? "_blank" : "_self")
 		}

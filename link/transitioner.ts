@@ -3,21 +3,21 @@ import { createScrollLock } from "library/Scroll"
 import { pathnameMatches, sleep } from "library/functions"
 import libraryConfig from "libraryConfig"
 import type { MouseEvent } from "react"
-import { useCallback } from "react"
+import { use, useCallback } from "react"
 import { loader } from "./loader"
 import { getScrollOffset } from "./util"
+import { TransitionsContext } from "./usePageTransition"
+import { useRouter } from "next/navigation"
+import { flushSync } from "react-dom"
+
+// at some point I might re-add support for different transitions (like on newform) but not really needed for now
 
 export const useTransitioner = () => {
+	const { animations, setIsAnimating } = use(TransitionsContext)
+	const router = useRouter()
+
 	return useCallback(
-		async ({
-			e,
-			to,
-			transition,
-		}: {
-			e: MouseEvent
-			to: string
-			transition?: unknown
-		}) => {
+		async ({ e, to }: { e: MouseEvent; to: string }) => {
 			const destination = new URL(to, window.location.origin)
 
 			/**
@@ -55,44 +55,67 @@ export const useTransitioner = () => {
 			}
 
 			/**
-			 * INSTANT TRANSITION
+			 * TRANSITION TO A NEW PAGE
 			 *
-			 * if no transition is specified, instantly transition pages
+			 * both instant and animated transitions
 			 */
-			if (transition === "instant" || !transition) {
-				loader.dispatchEvent("start", "instant")
+			const isInstant = animations.size === 0
+			const allAnimations = Array.from(animations)
+			if (!isInstant) e.preventDefault()
+			router.prefetch(to)
 
-				const existingHref = window.location.href
+			loader.dispatchEvent("start", isInstant ? "instant" : "animated")
 
-				// check for href changes with a timeout
-				const timeout = new Promise((_, reject) =>
-					setTimeout(() => reject(new Error("Navigation timeout")), 30_000),
-				)
-				const urlChange = new Promise<void>((resolve) => {
-					const checkUrlChange = () => {
-						if (window.location.href !== existingHref) {
-							resolve()
-							clearInterval(interval)
-						}
-					}
-					const interval = setInterval(checkUrlChange, 5)
-				})
-				await Promise.race([timeout, urlChange])
-				await sleep(10)
-				window.lenis?.scrollTo(0, { immediate: true })
-				ScrollTrigger.refresh()
+			flushSync(() => {
+				setIsAnimating(true)
+			})
 
-				loader.dispatchEvent("routeChange", "instant")
-				loader.dispatchEvent("end", "instant")
+			const beforeAnimations = allAnimations.map(({ animateBefore }) =>
+				animateBefore?.(),
+			)
+			await Promise.allSettled(beforeAnimations)
 
-				return
+			if (!isInstant) {
+				router.push(to)
 			}
 
-			/**
-			 * NORMAL TRANSITION
-			 */
-			throw new Error("we haven't added support for this yet -robbie")
+			// check for href changes with a timeout
+			const existingHref = window.location.href
+			const timeout = new Promise((_, reject) =>
+				setTimeout(() => reject(new Error("Navigation timeout")), 30_000),
+			)
+			const urlChange = new Promise<void>((resolve) => {
+				const checkUrlChange = () => {
+					if (window.location.href !== existingHref) {
+						resolve()
+						clearInterval(interval)
+					}
+				}
+				const interval = setInterval(checkUrlChange, 5)
+			})
+			await Promise.race([timeout, urlChange])
+			await sleep(10)
+			window.lenis?.scrollTo(0, { immediate: true })
+			ScrollTrigger.refresh()
+
+			loader.dispatchEvent("routeChange", isInstant ? "instant" : "animated")
+			document.body.inert = true // prevent navigation before we're done animating in
+
+			if (!isInstant) await sleep(10)
+			const afterAnimations = allAnimations.map(({ animateAfter }) =>
+				animateAfter?.(),
+			)
+			await Promise.allSettled(afterAnimations)
+
+			flushSync(() => {
+				setIsAnimating(false)
+			})
+
+			document.body.inert = false
+			loader.dispatchEvent("end", isInstant ? "instant" : "animated")
+
+			return
 		},
-		[],
+		[animations, setIsAnimating, router],
 	)
 }
