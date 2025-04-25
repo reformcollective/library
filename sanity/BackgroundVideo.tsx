@@ -42,19 +42,26 @@ export function BackgroundVideo({
 	useEffect(() => {
 		if (playbackFailure) return
 
-		if (play && playbackId)
+		if (playbackId)
 			// we never want to interrupt a play call with another play call
 			// so wait for any previous play call to finish before starting a new one
 			videoPlayPromise.current.then(() => {
 				if (video.current)
-					videoPlayPromise.current = video.current?.play().catch(() => {
-						setPlaybackFailure({
-							videoId: playbackId,
-							width: Math.floor(window.innerWidth / 100) * 100,
+					videoPlayPromise.current = video.current
+						?.play()
+						.then(() => {
+							// even if we don't want to play the video, we still want to try!
+							// if autoplay is unavailable we want to know about it ASAP
+							// even if we're not planning on playing the video
+							if (!play) video.current?.pause()
 						})
-					})
+						.catch(() => {
+							setPlaybackFailure({
+								videoId: playbackId,
+								width: Math.floor(window.innerWidth / 100) * 100,
+							})
+						})
 			})
-		else video.current?.pause()
 	}, [play, playbackFailure, playbackId])
 
 	return (
@@ -67,9 +74,12 @@ export function BackgroundVideo({
 			poster={
 				playbackFailure
 					? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${playbackFailure.width}`
-					: videoBlurUrl
+					: undefined
 			}
-			style={{ aspectRatio: videoAspectRatio }}
+			style={{
+				aspectRatio: videoAspectRatio,
+				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
+			}}
 			streamType="on-demand"
 		/>
 	)
