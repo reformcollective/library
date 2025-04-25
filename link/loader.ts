@@ -1,14 +1,10 @@
 import TypedEventEmitter from "library/TypedEventEmitter"
-import type libraryConfig from "libraryConfig"
 
 /**
  * transition names are configured in app/libraryConfig.ts
  * you should't need to edit this file
  */
-export type Transitions =
-	| keyof typeof libraryConfig.viewTransitions
-	| "instant"
-	| "default"
+export type Transitions = "animated" | "instant"
 
 export const loader = new TypedEventEmitter<{
 	/**
