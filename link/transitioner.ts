@@ -99,6 +99,7 @@ export const useTransitioner = () => {
 			ScrollTrigger.refresh()
 
 			loader.dispatchEvent("routeChange", isInstant ? "instant" : "animated")
+			document.body.inert = true // prevent navigation before we're done animating in
 
 			if (!isInstant) await sleep(10)
 			const afterAnimations = allAnimations.map(({ animateAfter }) =>
@@ -110,6 +111,7 @@ export const useTransitioner = () => {
 				setIsAnimating(false)
 			})
 
+			document.body.inert = false
 			loader.dispatchEvent("end", isInstant ? "instant" : "animated")
 
 			return
