@@ -15,11 +15,11 @@ import { getMedia } from "./useMedia"
 /**
  * hookify a get function to update on resize
  */
-function useHookify<P extends any[], T extends (...args: P) => ReturnType<T>>(
-	fn: T,
-	...args: P
-): ReturnType<T> | undefined {
-	const [value, setValue] = useState<ReturnType<T>>()
+function useHookify<Args extends unknown[], R>(
+	fn: (...args: Args) => R,
+	...args: Args
+): R | undefined {
+	const [value, setValue] = useState<R>()
 	const { shouldHydrateUtilities } = use(ScreenContext)
 
 	useDebouncedEventListener("resize", () => setValue(fn(...args)))
