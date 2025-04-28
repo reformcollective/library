@@ -41,7 +41,10 @@ export function BackgroundVideo({
 		videoId: string
 	}>()
 	const { innerWidth } = use(ScreenContext)
-	const posterSize = Math.round(innerWidth / 100) * 100
+	const posterSize = Math.min(
+		1920,
+		Math.max(300, Math.round(innerWidth / 100) * 100),
+	)
 	const [loadVideo, setLoadVideo] = useState(false)
 
 	if (playbackFailure && playbackFailure.videoId !== playbackId) {
