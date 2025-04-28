@@ -88,7 +88,7 @@ export const fetchAssetMeta = async <InputType>(
 				asset?._type === "mux.videoAsset" && asset.playbackId
 					? await Promise.race([
 							// this call may hang, so add a timeout
-							sleep(5000).then(() => ({
+							sleep(1000).then(() => ({
 								blurDataURL: undefined,
 								aspectRatio: undefined,
 							})),
