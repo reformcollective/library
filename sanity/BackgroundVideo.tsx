@@ -2,7 +2,13 @@
 
 import MuxVideo from "@mux/mux-video-react"
 import { useCombinedRefs } from "library/useCombinedRefs"
+import { useMedia } from "library/useMedia"
 import { useEffect, useRef, useState } from "react"
+import {
+	desktopBreakpoint,
+	mobileBreakpoint,
+	tabletBreakpoint,
+} from "styles/media"
 
 export function BackgroundVideo({
 	playbackId,
@@ -34,6 +40,12 @@ export function BackgroundVideo({
 		width: number
 		videoId: string
 	}>()
+	const posterSize = useMedia(
+		desktopBreakpoint,
+		desktopBreakpoint,
+		tabletBreakpoint,
+		mobileBreakpoint,
+	)
 
 	if (playbackFailure && playbackFailure.videoId !== playbackId) {
 		setPlaybackFailure(undefined)
@@ -74,7 +86,7 @@ export function BackgroundVideo({
 			poster={
 				playbackFailure
 					? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${playbackFailure.width}`
-					: undefined
+					: `https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize}`
 			}
 			style={{
 				aspectRatio: videoAspectRatio,
