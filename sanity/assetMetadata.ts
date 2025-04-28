@@ -1,6 +1,6 @@
 import { createBlurUp } from "@mux/blurup"
 import { sleep } from "library/functions"
-import { defineQuery } from "next-sanity"
+import { defineQuery, stegaClean } from "next-sanity"
 import { sanityFetch } from "sanity/lib/live"
 import * as v from "valibot"
 
@@ -92,7 +92,7 @@ export const fetchAssetMeta = async <InputType>(
 								blurDataURL: undefined,
 								aspectRatio: undefined,
 							})),
-							createBlurUp(asset.playbackId, {
+							createBlurUp(stegaClean(asset.playbackId), {
 								time: 0,
 								quality: 2,
 							}),
