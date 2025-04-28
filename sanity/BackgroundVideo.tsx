@@ -37,7 +37,6 @@ export function BackgroundVideo({
 	const video = useRef<HTMLVideoElement>(null)
 	const videoPlayPromise = useRef(Promise.resolve())
 	const [playbackFailure, setPlaybackFailure] = useState<{
-		width: number
 		videoId: string
 	}>()
 	const { innerWidth } = use(ScreenContext)
@@ -47,6 +46,9 @@ export function BackgroundVideo({
 	)
 	const [loadVideo, setLoadVideo] = useState(false)
 
+	/***
+	 * if our video id changes, clear the playback failure
+	 */
 	if (playbackFailure && playbackFailure.videoId !== playbackId) {
 		setPlaybackFailure(undefined)
 	}
@@ -71,10 +73,7 @@ export function BackgroundVideo({
 							if (!play) video.current?.pause()
 						})
 						.catch(() => {
-							setPlaybackFailure({
-								videoId: playbackId,
-								width: Math.floor(window.innerWidth / 100) * 100,
-							})
+							setPlaybackFailure({ videoId: playbackId })
 						})
 			})
 	}, [play, playbackFailure, playbackId, loadVideo])
@@ -99,19 +98,15 @@ export function BackgroundVideo({
 			{...props}
 			ref={useCombinedRefs(video, props.ref)}
 			src={
-				playbackFailure
+				playbackFailure || !playbackId
 					? undefined
-					: playbackId
-						? `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
-						: undefined
+					: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
 			}
 			muted
 			playsInline
-			poster={
-				playbackFailure
-					? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${playbackFailure.width}`
-					: `https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize}`
-			}
+			poster={`https://image.mux.com/${playbackId}/thumbnail.webp?time=${
+				playbackFailure ? videoDuration : 0
+			}&width=${posterSize}`}
 			style={{
 				aspectRatio: videoAspectRatio,
 				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
