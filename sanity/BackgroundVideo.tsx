@@ -51,6 +51,9 @@ export function BackgroundVideo({
 		setPlaybackFailure(undefined)
 	}
 
+	/**
+	 * autoplay
+	 */
 	useEffect(() => {
 		if (playbackFailure) return
 
@@ -76,11 +79,13 @@ export function BackgroundVideo({
 			})
 	}, [play, playbackFailure, playbackId, loadVideo])
 
+	/**
+	 * lazy load
+	 */
 	useEffect(() => {
 		// use an intersection observer to watch for when the element is on screen, and trigger the video load
 		const observer = new IntersectionObserver((entries) => {
 			if (entries[0]?.isIntersecting) {
-				console.log("video is on screen")
 				setLoadVideo(true)
 				observer.disconnect()
 			}
