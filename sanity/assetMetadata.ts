@@ -20,7 +20,7 @@ const linkSchema = v.object({
 type VideoAssetMeta = {
 	playbackId: string | undefined
 	videoBlurUrl: string | undefined
-	videoAspectRatio: number | undefined
+	videoAspectRatio: string | undefined
 	videoDuration: number | undefined
 }
 type ImageAssetMeta = {
@@ -84,7 +84,7 @@ export const fetchAssetMeta = async <InputType>(
 			})
 			if (!asset) return input as Output
 
-			const { blurDataURL, aspectRatio } =
+			const { blurDataURL } =
 				asset?._type === "mux.videoAsset" && asset.playbackId
 					? await Promise.race([
 							// this call may hang, so add a timeout
@@ -109,7 +109,7 @@ export const fetchAssetMeta = async <InputType>(
 					? ({
 							playbackId: asset?.playbackId,
 							videoBlurUrl: blurDataURL,
-							videoAspectRatio: aspectRatio,
+							videoAspectRatio: asset.data?.aspect_ratio?.replace(":", "/"),
 							videoDuration: asset?.data?.duration,
 						} satisfies VideoAssetMeta)
 					: ({

@@ -1,14 +1,9 @@
 "use client"
 
 import MuxVideo from "@mux/mux-video-react"
+import { ScreenContext } from "library/ScreenContext"
 import { useCombinedRefs } from "library/useCombinedRefs"
-import { useMedia } from "library/useMedia"
-import { useEffect, useRef, useState } from "react"
-import {
-	desktopBreakpoint,
-	mobileBreakpoint,
-	tabletBreakpoint,
-} from "styles/media"
+import { use, useEffect, useRef, useState } from "react"
 
 export function BackgroundVideo({
 	playbackId,
@@ -16,6 +11,7 @@ export function BackgroundVideo({
 	videoAspectRatio,
 	videoDuration,
 	play = true,
+	minResolution = "480p",
 	...props
 }: {
 	/**
@@ -23,13 +19,17 @@ export function BackgroundVideo({
 	 */
 	playbackId?: string
 	videoBlurUrl?: string
-	videoAspectRatio?: number
+	videoAspectRatio?: string
 	videoDuration?: number
 	/**
 	 * should the video start playing immediately?
 	 * @default true
 	 */
 	play?: boolean
+	/**
+	 * minimum resolution to play the video at
+	 */
+	minResolution?: "480p" | "540p" | "720p" | "1080p" | "1440p" | "2160p"
 	loop?: boolean
 	className?: string
 	ref?: React.Ref<HTMLVideoElement>
@@ -40,12 +40,9 @@ export function BackgroundVideo({
 		width: number
 		videoId: string
 	}>()
-	const posterSize = useMedia(
-		desktopBreakpoint,
-		desktopBreakpoint,
-		tabletBreakpoint,
-		mobileBreakpoint,
-	)
+	const { innerWidth } = use(ScreenContext)
+	const posterSize = Math.round(innerWidth / 100) * 100
+	const [loadVideo, setLoadVideo] = useState(false)
 
 	if (playbackFailure && playbackFailure.videoId !== playbackId) {
 		setPlaybackFailure(undefined)
@@ -54,7 +51,7 @@ export function BackgroundVideo({
 	useEffect(() => {
 		if (playbackFailure) return
 
-		if (playbackId)
+		if (playbackId && loadVideo)
 			// we never want to interrupt a play call with another play call
 			// so wait for any previous play call to finish before starting a new one
 			videoPlayPromise.current.then(() => {
@@ -74,13 +71,32 @@ export function BackgroundVideo({
 							})
 						})
 			})
-	}, [play, playbackFailure, playbackId])
+	}, [play, playbackFailure, playbackId, loadVideo])
+
+	useEffect(() => {
+		// use an intersection observer to watch for when the element is on screen, and trigger the video load
+		const observer = new IntersectionObserver((entries) => {
+			if (entries[0]?.isIntersecting) {
+				console.log("video is on screen")
+				setLoadVideo(true)
+				observer.disconnect()
+			}
+		})
+		if (video.current) observer.observe(video.current)
+		return () => observer.disconnect()
+	}, [])
 
 	return (
 		<MuxVideo
 			{...props}
 			ref={useCombinedRefs(video, props.ref)}
-			playbackId={playbackFailure ? undefined : playbackId}
+			src={
+				playbackFailure
+					? undefined
+					: playbackId
+						? `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
+						: undefined
+			}
 			muted
 			playsInline
 			poster={
