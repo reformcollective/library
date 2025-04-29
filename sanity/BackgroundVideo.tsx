@@ -79,7 +79,7 @@ export function BackgroundVideo({
 							setPlaybackFailure({ videoId: playbackId })
 						})
 			})
-	}, [play, playbackFailure, playbackId, loadVideo])
+	})
 
 	/**
 	 * lazy load
