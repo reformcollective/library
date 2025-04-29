@@ -19,6 +19,7 @@ type SanityImageData<CropType> = {
 	crop?: SanityImageCrop
 	hotspot?: SanityImageHotspot
 	data?: AssetMeta
+	alt?: string
 	cropType?: CropType
 }
 
@@ -77,6 +78,7 @@ export default function SanityUniversalImage(
 	return (
 		<DefaultSanityImage
 			{...rest}
+			alt={rest.alt ?? src.alt}
 			loading={prioritizedLoading}
 			preview={src.data?.lqip}
 			// @ts-expect-error library type mismatch

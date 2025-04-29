@@ -1,7 +1,8 @@
-import { defineQuery } from "next-sanity"
+import { createBlurUp } from "@mux/blurup"
+import { sleep } from "library/functions"
+import { defineQuery, stegaClean } from "next-sanity"
 import { sanityFetch } from "sanity/lib/live"
 import * as v from "valibot"
-import { createBlurUp } from "@mux/blurup"
 
 const assetSchema = v.object({
 	asset: v.object({
@@ -16,29 +17,29 @@ const linkSchema = v.object({
 	}),
 })
 
-export type AssetMeta = {
+type VideoAssetMeta = {
+	playbackId: string | undefined
+	videoBlurUrl: string | undefined
+	videoAspectRatio: string | undefined
+	videoDuration: number | undefined
+}
+type ImageAssetMeta = {
 	lqip: string | undefined
 	dominantColor: string | undefined
 	originalFilename: string | undefined
 	size: number | undefined
 	extension: string | undefined
 	url: string | undefined
-	playbackId: string | undefined
-	videoBlurUrl: string | undefined
-	videoAspectRatio: number | undefined
-	videoDuration: number | undefined
 }
 
-const imageQuery = defineQuery(`
-	*[_id == $asset && _type == "sanity.imageAsset"][0]
-`)
+export type AssetMeta = VideoAssetMeta & ImageAssetMeta
 
-const fileQuery = defineQuery(`
-	*[_id == $asset && _type == "sanity.fileAsset"][0]	
-`)
-
-const videoQuery = defineQuery(`
-	*[_id == $asset && _type == "mux.videoAsset"][0]
+const assetQuery = defineQuery(`
+	*[_id == $asset && _type in [
+		"sanity.imageAsset",
+		"sanity.fileAsset",
+		"mux.videoAsset"
+	]][0]
 `)
 
 const linkQuery = defineQuery(`
@@ -75,51 +76,54 @@ export const fetchAssetMeta = async <InputType>(
 		)
 
 		if (isAsset) {
-			const { data: imageAsset } = await sanityFetch({
-				query: imageQuery,
+			const { data: asset } = await sanityFetch({
+				query: assetQuery,
 				params: {
 					asset: assetParse.asset._ref,
 				},
 			})
-			const { data: fileAsset } = await sanityFetch({
-				query: fileQuery,
-				params: {
-					asset: assetParse.asset._ref,
-				},
-			})
-			const { data: videoAsset } = await sanityFetch({
-				query: videoQuery,
-				params: {
-					asset: assetParse.asset._ref,
-				},
-			})
+			if (!asset) return input as Output
 
-			const asset = imageAsset ?? fileAsset
+			const { blurDataURL } =
+				asset?._type === "mux.videoAsset" && asset.playbackId
+					? await Promise.race([
+							// this call may hang, so add a timeout
+							sleep(1000).then(() => ({
+								blurDataURL: undefined,
+								aspectRatio: undefined,
+							})),
+							createBlurUp(stegaClean(asset.playbackId), {
+								time: 0,
+								quality: 2,
+							}),
+						]).catch(() => ({
+							blurDataURL: undefined,
+							aspectRatio: undefined,
+						}))
+					: {}
 
-			const { blurDataURL, aspectRatio } = videoAsset?.playbackId
-				? await createBlurUp(videoAsset.playbackId, {
-						time: 0,
-						quality: 2,
-					}).catch(() => ({
-						blurDataURL: undefined,
-						aspectRatio: undefined,
-					}))
-				: {}
+			const meta = "metadata" in asset ? asset.metadata : null
+
+			const data =
+				asset._type === "mux.videoAsset"
+					? ({
+							playbackId: asset?.playbackId,
+							videoBlurUrl: blurDataURL,
+							videoAspectRatio: asset.data?.aspect_ratio?.replace(":", "/"),
+							videoDuration: asset?.data?.duration,
+						} satisfies VideoAssetMeta)
+					: ({
+							lqip: meta?.lqip,
+							dominantColor: meta?.palette?.dominant?.background,
+							originalFilename: asset?.originalFilename,
+							size: asset?.size,
+							extension: asset?.extension,
+							url: asset?.url,
+						} satisfies ImageAssetMeta)
 
 			return {
 				...input,
-				data: {
-					lqip: imageAsset?.metadata?.lqip,
-					dominantColor: imageAsset?.metadata?.palette?.dominant?.background,
-					originalFilename: asset?.originalFilename,
-					size: asset?.size,
-					extension: asset?.extension,
-					url: asset?.url,
-					playbackId: videoAsset?.playbackId,
-					videoBlurUrl: blurDataURL,
-					videoAspectRatio: aspectRatio,
-					videoDuration: videoAsset?.data?.duration,
-				} satisfies NonNullable<AssetMeta>,
+				data,
 			} as Output
 		}
 
