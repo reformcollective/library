@@ -2,7 +2,7 @@
 
 import MuxVideo from "@mux/mux-video-react"
 import { ScreenContext } from "library/ScreenContext"
-import { useCombinedRefs } from "library/useCombinedRefs"
+import { css, f, styled } from "library/styled"
 import { use, useEffect, useRef, useState } from "react"
 
 export function BackgroundVideo({
@@ -12,7 +12,9 @@ export function BackgroundVideo({
 	videoDuration,
 	play = true,
 	minResolution = "480p",
-	...props
+	className,
+	loop,
+	ref: containerRef,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -32,7 +34,7 @@ export function BackgroundVideo({
 	minResolution?: "480p" | "540p" | "720p" | "1080p" | "1440p" | "2160p"
 	loop?: boolean
 	className?: string
-	ref?: React.Ref<HTMLVideoElement>
+	ref?: React.Ref<HTMLDivElement>
 }) {
 	const video = useRef<HTMLVideoElement>(null)
 	const videoPlayPromise = useRef(Promise.resolve())
@@ -45,6 +47,7 @@ export function BackgroundVideo({
 		Math.max(300, Math.round(innerWidth / 100) * 100),
 	)
 	const [loadVideo, setLoadVideo] = useState(false)
+	const [videoCanPlay, setVideoCanPlay] = useState(true)
 
 	/***
 	 * if our video id changes, clear the playback failure
@@ -100,37 +103,77 @@ export function BackgroundVideo({
 	}, [])
 
 	return (
-		<MuxVideo
-			{...props}
-			ref={useCombinedRefs(video, props.ref)}
-			src={
-				// don't attempt to load a video if we don't have one, or if it already failed
-				playbackFailure || !playbackId
-					? undefined
-					: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
-			}
-			// a value of 'metadata' will load the first frame, but not the rest of the video
-			// auto will generally load the first few seconds
-			preload={loadVideo ? "auto" : "metadata"}
-			muted
-			playsInline
-			poster={
-				// mux thumbnails will have different colors than the video itself, so we can't seamlessly
-				// switch between the two without some extra effort. we'll rely on the first frame for this
-				// instead of using a thumbnail
-				playbackFailure
-					? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${
-							videoDuration
-						}&width=${posterSize}`
-					: undefined
-			}
+		<Container
+			ref={containerRef}
+			className={className}
 			style={{
 				aspectRatio: videoAspectRatio,
 				// we'll ideally only see this on really slow networks
 				// it's small and will have weird colors, but it's better than nothing
 				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
 			}}
-			streamType="on-demand"
-		/>
+		>
+			<PosterVideo
+				// mux thumbnails will have different colors than the video itself, so we can't seamlessly
+				// switch between the two without some extra effort. we'll rely on the first frame for this
+				// instead of using a thumbnail. This video is smaller so we get a fast poster load
+				data-poster
+				src={
+					playbackId
+						? `https://stream.mux.com/${playbackId}.m3u8?max_resolution=720p`
+						: undefined
+				}
+				preload="metadata"
+				muted
+				playsInline
+				style={{ opacity: videoCanPlay ? 1 : 0 }}
+			/>
+			<MainVideo
+				ref={video}
+				src={
+					// don't attempt to load a video if we don't have one, or if it already failed
+					playbackFailure || !playbackId
+						? undefined
+						: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
+				}
+				// a value of 'metadata' will load the first frame, but not the rest of the video
+				// auto will generally load the first few seconds
+				preload={loadVideo ? "auto" : "metadata"}
+				onCanPlay={() => setVideoCanPlay(false)}
+				muted
+				playsInline
+				loop={loop}
+				poster={
+					playbackFailure
+						? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${
+								videoDuration
+							}&width=${posterSize}`
+						: undefined
+				}
+				streamType="on-demand"
+			/>
+		</Container>
 	)
 }
+
+const Container = styled("div", {
+	...f.responsive(css`
+		isolation: isolate;
+		overflow: clip;
+	`),
+})
+
+const MainVideo = styled(MuxVideo, {
+	...f.responsive(css`
+		width: 100%;
+		height: 100%;
+		display: block;
+	`),
+})
+
+const PosterVideo = styled(MainVideo, {
+	...f.responsive(css`
+		position: absolute;
+		transition: opacity 0.5s ease-in-out;
+	`),
+})
