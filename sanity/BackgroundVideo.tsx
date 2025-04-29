@@ -83,12 +83,18 @@ export function BackgroundVideo({
 	 */
 	useEffect(() => {
 		// use an intersection observer to watch for when the element is on screen, and trigger the video load
-		const observer = new IntersectionObserver((entries) => {
-			if (entries[0]?.isIntersecting) {
-				setLoadVideo(true)
-				observer.disconnect()
-			}
-		})
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0]?.isIntersecting) {
+					setLoadVideo(true)
+					observer.disconnect()
+				}
+			},
+			{
+				// we don't want to wait until the video is on screen, but trigger when it's getting close
+				rootMargin: "400px",
+			},
+		)
 		if (video.current) observer.observe(video.current)
 		return () => observer.disconnect()
 	}, [])
@@ -98,17 +104,30 @@ export function BackgroundVideo({
 			{...props}
 			ref={useCombinedRefs(video, props.ref)}
 			src={
+				// don't attempt to load a video if we don't have one, or if it already failed
 				playbackFailure || !playbackId
 					? undefined
 					: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
 			}
+			// a value of 'metadata' will load the first frame, but not the rest of the video
+			// auto will generally load the first few seconds
+			preload={loadVideo ? "auto" : "metadata"}
 			muted
 			playsInline
-			poster={`https://image.mux.com/${playbackId}/thumbnail.webp?time=${
-				playbackFailure ? videoDuration : 0
-			}&width=${posterSize}`}
+			poster={
+				// mux thumbnails will have different colors than the video itself, so we can't seamlessly
+				// switch between the two without some extra effort. we'll rely on the first frame for this
+				// instead of using a thumbnail
+				playbackFailure
+					? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${
+							videoDuration
+						}&width=${posterSize}`
+					: undefined
+			}
 			style={{
 				aspectRatio: videoAspectRatio,
+				// we'll ideally only see this on really slow networks
+				// it's small and will have weird colors, but it's better than nothing
 				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
 			}}
 			streamType="on-demand"
