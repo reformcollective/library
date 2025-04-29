@@ -174,6 +174,6 @@ const MainVideo = styled(MuxVideo, {
 const PosterVideo = styled(MainVideo, {
 	...f.responsive(css`
 		position: absolute;
-		transition: opacity 0.5s ease-in-out;
+		transition: opacity 0.2s ease-in-out;
 	`),
 })
