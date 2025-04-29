@@ -79,7 +79,7 @@ export function BackgroundVideo({
 							setPlaybackFailure({ videoId: playbackId })
 						})
 			})
-	}, [play, playbackFailure, playbackId, loadVideo])
+	})
 
 	/**
 	 * lazy load
@@ -168,6 +168,8 @@ const MainVideo = styled(MuxVideo, {
 		width: 100%;
 		height: 100%;
 		display: block;
+		object-fit: cover;
+		object-position: center;
 	`),
 })
 
