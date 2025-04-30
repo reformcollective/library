@@ -61,7 +61,7 @@ export const useTransitioner = () => {
 			 */
 			const isInstant = animations.size === 0
 			const allAnimations = Array.from(animations)
-			if (!isInstant) e.preventDefault()
+			e.preventDefault()
 			router.prefetch(to)
 
 			loader.dispatchEvent("start", isInstant ? "instant" : "animated")
@@ -75,9 +75,7 @@ export const useTransitioner = () => {
 			)
 			await Promise.allSettled(beforeAnimations)
 
-			if (!isInstant) {
-				router.push(to)
-			}
+			router.push(to, { scroll: false })
 
 			// check for href changes with a timeout
 			const existingHref = window.location.href
