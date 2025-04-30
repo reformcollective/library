@@ -209,6 +209,7 @@ const convertCssToObject = (
 type Options = {
 	only?: "mobile" | "tablet" | "desktop" | "fullWidth"
 	scaleFully?: boolean
+	applyStylesToAllBreakpoints?: boolean
 }
 
 const PRECISION = 3
@@ -234,18 +235,26 @@ function convertToResponsive(
 		only,
 		scaleFully,
 		selectorHash,
+		applyStylesToAllBreakpoints,
 	}: Options & {
 		selectorHash: number
 	},
-): CSSObject {
+) {
 	const shouldScaleFully = scaleFully ?? config.scaleFully
 
-	const hashedMedia = {
-		fullWidth: `${media.fullWidth}${" ".repeat(selectorHash)}`,
-		desktop: `${media.desktop}${" ".repeat(selectorHash)}`,
-		tablet: `${media.tablet}${" ".repeat(selectorHash)}`,
-		mobile: `${media.mobile}${" ".repeat(selectorHash)}`,
-	}
+	const hashedMedia = applyStylesToAllBreakpoints
+		? {
+				fullWidth: "",
+				desktop: "",
+				tablet: "",
+				mobile: "",
+			}
+		: {
+				fullWidth: `${media.fullWidth}${" ".repeat(selectorHash)}` as const,
+				desktop: `${media.desktop}${" ".repeat(selectorHash)}` as const,
+				tablet: `${media.tablet}${" ".repeat(selectorHash)}` as const,
+				mobile: `${media.mobile}${" ".repeat(selectorHash)}` as const,
+			}
 
 	const output: CSSObject = {}
 
@@ -325,6 +334,7 @@ function convertToResponsive(
 				only,
 				scaleFully,
 				selectorHash: selectorHash,
+				applyStylesToAllBreakpoints,
 			})
 		}
 	}
@@ -456,6 +466,21 @@ export const f = {
 	 * apply responsive styles to mobile breakpoint
 	 */
 	mobile: (style: string) => f.responsive(style, { only: "mobile" }),
+
+	/**
+	 * apply responsively calculated styles to all breakpoints
+	 */
+	allFullWidth: (style: string) =>
+		f.responsive(style, {
+			only: "fullWidth",
+			applyStylesToAllBreakpoints: true,
+		}),
+	allDesktop: (style: string) =>
+		f.responsive(style, { only: "desktop", applyStylesToAllBreakpoints: true }),
+	allTablet: (style: string) =>
+		f.responsive(style, { only: "tablet", applyStylesToAllBreakpoints: true }),
+	allMobile: (style: string) =>
+		f.responsive(style, { only: "mobile", applyStylesToAllBreakpoints: true }),
 
 	/**
 	 * simply convert a css string to a CSSObject
