@@ -244,10 +244,10 @@ function convertToResponsive(
 
 	const hashedMedia = applyStylesToAllBreakpoints
 		? {
-				fullWidth: "",
-				desktop: "",
-				tablet: "",
-				mobile: "",
+				fullWidth: " ".repeat(selectorHash),
+				desktop: " ".repeat(selectorHash),
+				tablet: " ".repeat(selectorHash),
+				mobile: " ".repeat(selectorHash),
 			}
 		: {
 				fullWidth: `${media.fullWidth}${" ".repeat(selectorHash)}` as const,
