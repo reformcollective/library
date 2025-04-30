@@ -91,6 +91,9 @@ export const useAnimation = <InputFn extends Creation>(
 		unmountBehavior = "kill",
 	} = options ?? {}
 	const { innerWidth, shouldHydrateUtilities } = use(ScreenContext)
+	const fontsReady = !!use(
+		isBrowser ? document.fonts.ready : Promise.resolve(null),
+	)
 	const dependencies = [...deps, ...extraDeps]
 
 	// manually tracked cleanup functions
@@ -142,6 +145,7 @@ export const useAnimation = <InputFn extends Creation>(
 	// actual animation creation
 	useIsomorphicLayoutEffect(() => {
 		if (!shouldHydrateUtilities) return
+		if (!fontsReady) return
 
 		const newContext = gsap.context((self) => {
 			const result = createAnimations({
@@ -180,6 +184,7 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior,
 		shouldHydrateUtilities,
 		recreateOnResize ? innerWidth : null,
+		fontsReady,
 		updateBehavior,
 		...dependencies,
 		/**
