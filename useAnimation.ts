@@ -95,10 +95,14 @@ export const useAnimation = <InputFn extends Creation>(
 	// font loading
 	const [fontTrigger, setFontTrigger] = useState(0)
 	const fontsReady = useRef(false)
+	const isMounted = useRef(true)
 	useLayoutEffect(() => {
 		document.fonts.ready.then(() => {
 			fontsReady.current = true
 		})
+		return () => {
+			isMounted.current = false
+		}
 	}, [])
 
 	const dependencies = [...deps, ...extraDeps]
@@ -156,7 +160,7 @@ export const useAnimation = <InputFn extends Creation>(
 		// if our fonts haven't loaded yet, wait until they do
 		if (!fontsReady.current) {
 			document.fonts.ready.then(() => {
-				setFontTrigger(fontTrigger + 1)
+				if (isMounted.current) setFontTrigger(fontTrigger + 1)
 			})
 			return
 		}
