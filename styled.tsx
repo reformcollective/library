@@ -365,26 +365,23 @@ export function attrs<Props, usedKeys extends keyof Props>(
 let hashCounter = 0
 
 /**
- * fixes combined nested selectors
- * otherwise, visually has no effect, but produces smaller CSS files
+ * visually has no effect, but produces smaller CSS bundles by combining selectors
  */
 export const mergeStyles = (styles: CSSObject) => {
 	const output: CSSObject = {}
 
 	for (const [key, value] of Object.entries(styles)) {
-		const selectors = key.split(",").map((key) => key.trim())
-		for (const selector of selectors) {
-			const existing = output[selector]
-			if (typeof value === "object" && typeof existing === "object") {
-				output[selector] = mergeStyles({
-					...existing,
-					...value,
-				})
-			} else if (typeof value === "object") {
-				output[selector] = mergeStyles(value as CSSObject) // CSSProperties is deprecated and the type is bad
-			} else {
-				output[selector] = value
-			}
+		const selector = key.trim()
+		const existing = output[selector]
+		if (typeof value === "object" && typeof existing === "object") {
+			output[selector] = mergeStyles({
+				...existing,
+				...value,
+			})
+		} else if (typeof value === "object") {
+			output[selector] = mergeStyles(value as CSSObject)
+		} else {
+			output[selector] = value
 		}
 	}
 
