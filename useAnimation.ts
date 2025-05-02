@@ -91,6 +91,20 @@ export const useAnimation = <InputFn extends Creation>(
 		unmountBehavior = "kill",
 	} = options ?? {}
 	const { innerWidth, shouldHydrateUtilities } = use(ScreenContext)
+
+	// font loading
+	const [fontTrigger, setFontTrigger] = useState(0)
+	const fontsReady = useRef(false)
+	const isMounted = useRef(true)
+	useLayoutEffect(() => {
+		document.fonts.ready.then(() => {
+			fontsReady.current = true
+		})
+		return () => {
+			isMounted.current = false
+		}
+	}, [])
+
 	const dependencies = [...deps, ...extraDeps]
 
 	// manually tracked cleanup functions
@@ -143,6 +157,14 @@ export const useAnimation = <InputFn extends Creation>(
 	useIsomorphicLayoutEffect(() => {
 		if (!shouldHydrateUtilities) return
 
+		// if our fonts haven't loaded yet, wait until they do
+		if (!fontsReady.current) {
+			document.fonts.ready.then(() => {
+				if (isMounted.current) setFontTrigger(fontTrigger + 1)
+			})
+			return
+		}
+
 		const newContext = gsap.context((self) => {
 			const result = createAnimations({
 				context: self,
@@ -180,6 +202,7 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior,
 		shouldHydrateUtilities,
 		recreateOnResize ? innerWidth : null,
+		fontTrigger,
 		updateBehavior,
 		...dependencies,
 		/**

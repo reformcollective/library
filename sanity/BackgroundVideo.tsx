@@ -15,6 +15,7 @@ export function BackgroundVideo({
 	className,
 	loop,
 	ref: containerRef,
+	onEnded,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -25,6 +26,7 @@ export function BackgroundVideo({
 	videoDuration?: number
 	/**
 	 * should the video start playing immediately?
+	 * similar to autoplay, but can also be toggled to pause/play
 	 * @default true
 	 */
 	play?: boolean
@@ -35,6 +37,8 @@ export function BackgroundVideo({
 	loop?: boolean
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
+	// other video props
+	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 }) {
 	const video = useRef<HTMLVideoElement>(null)
 	const videoPlayPromise = useRef(Promise.resolve())
@@ -62,7 +66,9 @@ export function BackgroundVideo({
 	useEffect(() => {
 		if (playbackFailure) return
 
-		if (playbackId && loadVideo)
+		const videoHasFinished = video.current?.ended
+
+		if (playbackId && loadVideo && !videoHasFinished)
 			// we never want to interrupt a play call with another play call
 			// so wait for any previous play call to finish before starting a new one
 			videoPlayPromise.current.then(() => {
@@ -77,6 +83,7 @@ export function BackgroundVideo({
 						})
 						.catch(() => {
 							setPlaybackFailure({ videoId: playbackId })
+							onEnded?.()
 						})
 			})
 	})
@@ -151,6 +158,7 @@ export function BackgroundVideo({
 						: undefined
 				}
 				streamType="on-demand"
+				onEnded={onEnded}
 			/>
 		</Container>
 	)
@@ -177,5 +185,6 @@ const PosterVideo = styled(MainVideo, {
 	...f.responsive(css`
 		position: absolute;
 		transition: opacity 0.2s ease-in-out;
+		pointer-events: none;
 	`),
 })
