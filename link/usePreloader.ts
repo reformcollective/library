@@ -19,7 +19,7 @@ const DEBUG_BLOCK_THREAD_FOR_SECONDS = 0
  * force the preloader to remain in a certain state
  * useful for making the preloader
  */
-const FORCE_PRELOADER_STATE = undefined as "loading" | 'ready' | undefined
+const FORCE_PRELOADER_STATE = undefined as "loading" | "ready" | undefined
 
 // block the main thread for debugging
 const useBlockThread = (signal: unknown) => {
@@ -142,7 +142,7 @@ export const usePreloader = ({
 	useAsyncEffect(async () => {
 		if (!initComplete) return
 		if (output.ready) return
-		if (FORCE_PRELOADER_STATE === 'loading') return
+		if (FORCE_PRELOADER_STATE === "loading") return
 
 		if ((stopAnimations && !scope) || (slowAnimations && !scope))
 			throw new Error("scope is required in order to correctly stop animations")
@@ -233,8 +233,11 @@ export const usePreloader = ({
 			...p,
 			completed: true,
 		}))
-		if (FORCE_PRELOADER_STATE === 'ready') {
-			setTimeout(() => setOutput({ ready: false, completed: false, isAtPageTop: null }), 1000)
+		if (FORCE_PRELOADER_STATE === "ready") {
+			setTimeout(
+				() => setOutput({ ready: false, completed: false, isAtPageTop: null }),
+				1000,
+			)
 		}
 	}, [
 		initComplete,
@@ -245,10 +248,11 @@ export const usePreloader = ({
 		stopAnimations,
 	])
 
-	if (FORCE_PRELOADER_STATE === 'loading') return {
-		ready: false,
-		completed: false,
-		isAtPageTop: null,
-	}
+	if (FORCE_PRELOADER_STATE === "loading")
+		return {
+			ready: false,
+			completed: false,
+			isAtPageTop: null,
+		}
 	return output
 }
