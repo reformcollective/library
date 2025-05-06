@@ -73,7 +73,7 @@ export const useTransitioner = () => {
 			const beforeAnimations = allAnimations.map(({ animateBefore }) =>
 				animateBefore?.(),
 			)
-			await Promise.allSettled(beforeAnimations)
+			await Promise.all(beforeAnimations)
 
 			router.push(to, { scroll: false })
 
@@ -103,7 +103,7 @@ export const useTransitioner = () => {
 			const afterAnimations = allAnimations.map(({ animateAfter }) =>
 				animateAfter?.(),
 			)
-			await Promise.allSettled(afterAnimations)
+			await Promise.all(afterAnimations)
 
 			flushSync(() => {
 				setIsAnimating(false)
