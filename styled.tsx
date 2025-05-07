@@ -34,7 +34,6 @@ import {
 	DECLARATION,
 	type Element,
 	IMPORT,
-	MEDIA,
 	RULESET,
 	compile,
 } from "stylis"
@@ -106,8 +105,9 @@ const addToObj = ({
 			// each element will have a parent, which will have a parent, etc. until we get to a parentless element
 			const getParentSelectors = (element: Element | null): string[] => {
 				if (!element) return []
-				// media queries are hoisted to the top level
-				if (element.type === MEDIA) return getParentSelectors(element.parent)
+				// at-rules are hoisted to the top level
+				if (element.type.startsWith("@"))
+					return getParentSelectors(element.parent)
 				// i do not know why - but stylis adds a \f character to some selectors
 				const selectors = element.value.replaceAll("&\f", "&").split(",")
 				// nested selectors are passed as-is
