@@ -26,7 +26,7 @@ export const prioritizeLoading = (
 }
 
 export type StaticImageProps = DefaultImageProps & {
-	alt: string | undefined
+	alt: string
 	objectFit?: "contain" | "cover"
 	objectPosition?: string
 	loading?: LoadingType
@@ -47,7 +47,7 @@ export type StaticImageProps = DefaultImageProps & {
 
 export default function StaticImage({
 	src,
-	alt = "",
+	alt,
 	objectFit = "cover",
 	objectPosition,
 	loading,
