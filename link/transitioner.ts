@@ -75,7 +75,7 @@ export const useTransitioner = () => {
 			)
 			await Promise.all(beforeAnimations)
 
-			router.push(to, { scroll: false })
+			router.push(to)
 
 			// check for href changes with a timeout
 			const existingHref = window.location.href
@@ -92,14 +92,9 @@ export const useTransitioner = () => {
 				const interval = setInterval(checkUrlChange, 5)
 			})
 			await Promise.race([timeout, urlChange])
-			await sleep(10)
-
-			const unlock = createScrollLock("unlock")
-			scrollTo(0, 0)
-			window.lenis?.scrollTo(0, { immediate: true })
+			await sleep(10) // give the page a moment to render
 			ScrollTrigger.refresh()
-			unlock.release()
-
+			
 			loader.dispatchEvent("routeChange", isInstant ? "instant" : "animated")
 			document.body.inert = true // prevent navigation before we're done animating in
 
