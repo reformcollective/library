@@ -92,8 +92,10 @@ export const useTransitioner = () => {
 				const interval = setInterval(checkUrlChange, 5)
 			})
 			await Promise.race([timeout, urlChange])
-			await sleep(10)
+			await sleep(5)
+			window.scrollTo(0, 0)
 			window.lenis?.scrollTo(0, { immediate: true })
+			await sleep(5)
 			ScrollTrigger.refresh()
 
 			loader.dispatchEvent("routeChange", isInstant ? "instant" : "animated")
