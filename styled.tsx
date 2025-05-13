@@ -210,6 +210,7 @@ type Options = {
 	only?: "mobile" | "tablet" | "desktop" | "fullWidth"
 	scaleFully?: boolean
 	applyStylesToAllBreakpoints?: boolean
+	designSizeOverride?: number
 }
 
 const VW_PRECISION = 3
@@ -237,6 +238,7 @@ function convertToResponsive(
 		scaleFully,
 		selectorHash,
 		applyStylesToAllBreakpoints,
+		designSizeOverride,
 	}: Options & {
 		selectorHash: number
 	},
@@ -272,10 +274,13 @@ function convertToResponsive(
 						.replaceAll(regex, (_: unknown, px: string) =>
 							only === "fullWidth" && !shouldScaleFully
 								? `${(
-										(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
+										(Number.parseFloat(
+											replacer(px, designSizeOverride ?? desktopDesignSize),
+										) /
+											100) *
 										desktopBreakpoint
 									).toFixed(PIXEL_PRECISION)}px`.replace(".0px", "px")
-								: `${replacer(px, designSizes[only])}vw`,
+								: `${replacer(px, designSizeOverride ?? designSizes[only])}vw`,
 						),
 				}
 			} else {
@@ -288,9 +293,12 @@ function convertToResponsive(
 						?.toString()
 						.replaceAll(regex, (_: unknown, px: string) =>
 							shouldScaleFully
-								? `${replacer(px, desktopDesignSize)}vw`
+								? `${replacer(px, designSizeOverride ?? desktopDesignSize)}vw`
 								: `${(
-										(Number.parseFloat(replacer(px, desktopDesignSize)) / 100) *
+										(Number.parseFloat(
+											replacer(px, designSizeOverride ?? desktopDesignSize),
+										) /
+											100) *
 										desktopBreakpoint
 									).toFixed(PIXEL_PRECISION)}px`.replace(".0px", "px"),
 						),
@@ -304,7 +312,7 @@ function convertToResponsive(
 						.replaceAll(
 							regex,
 							(_: unknown, px: string) =>
-								`${replacer(px, desktopDesignSize)}vw`,
+								`${replacer(px, designSizeOverride ?? desktopDesignSize)}vw`,
 						),
 				}
 
@@ -315,7 +323,8 @@ function convertToResponsive(
 						?.toString()
 						.replaceAll(
 							regex,
-							(_: unknown, px: string) => `${replacer(px, tabletDesignSize)}vw`,
+							(_: unknown, px: string) =>
+								`${replacer(px, designSizeOverride ?? tabletDesignSize)}vw`,
 						),
 				}
 
@@ -326,7 +335,8 @@ function convertToResponsive(
 						?.toString()
 						.replaceAll(
 							regex,
-							(_: unknown, px: string) => `${replacer(px, mobileDesignSize)}vw`,
+							(_: unknown, px: string) =>
+								`${replacer(px, designSizeOverride ?? mobileDesignSize)}vw`,
 						),
 				}
 			}
@@ -426,59 +436,76 @@ export const f = {
 			...options,
 			selectorHash: hashCounter++,
 		}),
+
 	/**
 	 * apply scaled responsive styles to all breakpoints
 	 */
-	scaledResponsive: (style: string) =>
-		f.responsive(style, { scaleFully: true }),
+	scaledResponsive: (style: string, options?: Options) =>
+		f.responsive(style, { ...options, scaleFully: true }),
 
 	/**
 	 * apply responsive styles to desktop and full width breakpoints
 	 */
 	large: (style: string, options?: Options) => ({
-		...f.responsive(style, { only: "fullWidth", ...options }),
-		...f.responsive(style, { only: "desktop", ...options }),
+		...f.responsive(style, { ...options, only: "fullWidth" }),
+		...f.responsive(style, { ...options, only: "desktop" }),
 	}),
 	/**
 	 * apply responsive styles to tablet and mobile breakpoints
 	 */
-	small: (style: string) => ({
-		...f.responsive(style, { only: "tablet" }),
-		...f.responsive(style, { only: "mobile" }),
+	small: (style: string, options?: Options) => ({
+		...f.responsive(style, { ...options, only: "tablet" }),
+		...f.responsive(style, { ...options, only: "mobile" }),
 	}),
 
 	/**
 	 * apply responsive styles to full width breakpoint
 	 */
 	fullWidth: (style: string, options?: Options) =>
-		f.responsive(style, { only: "fullWidth", ...options }),
+		f.responsive(style, { ...options, only: "fullWidth" }),
 	/**
 	 * apply responsive styles to desktop breakpoint
 	 */
-	desktop: (style: string) => f.responsive(style, { only: "desktop" }),
+	desktop: (style: string, options?: Options) =>
+		f.responsive(style, { ...options, only: "desktop" }),
 	/**
 	 * apply responsive styles to tablet breakpoint
 	 */
-	tablet: (style: string) => f.responsive(style, { only: "tablet" }),
+	tablet: (style: string, options?: Options) =>
+		f.responsive(style, { ...options, only: "tablet" }),
 	/**
 	 * apply responsive styles to mobile breakpoint
 	 */
-	mobile: (style: string) => f.responsive(style, { only: "mobile" }),
+	mobile: (style: string, options?: Options) =>
+		f.responsive(style, { ...options, only: "mobile" }),
 
 	/**
 	 * apply responsively calculated styles to all breakpoints
 	 */
-	allFullWidth: (style: string) =>
+	allFullWidth: (style: string, options?: Options) =>
 		f.responsive(style, {
+			...options,
 			only: "fullWidth",
 			applyStylesToAllBreakpoints: true,
 		}),
-	allDesktop: (style: string) =>
-		f.responsive(style, { only: "desktop", applyStylesToAllBreakpoints: true }),
-	allTablet: (style: string) =>
-		f.responsive(style, { only: "tablet", applyStylesToAllBreakpoints: true }),
-	allMobile: (style: string) =>
-		f.responsive(style, { only: "mobile", applyStylesToAllBreakpoints: true }),
+	allDesktop: (style: string, options?: Options) =>
+		f.responsive(style, {
+			...options,
+			only: "desktop",
+			applyStylesToAllBreakpoints: true,
+		}),
+	allTablet: (style: string, options?: Options) =>
+		f.responsive(style, {
+			...options,
+			only: "tablet",
+			applyStylesToAllBreakpoints: true,
+		}),
+	allMobile: (style: string, options?: Options) =>
+		f.responsive(style, {
+			...options,
+			only: "mobile",
+			applyStylesToAllBreakpoints: true,
+		}),
 
 	/**
 	 * simply convert a css string to a CSSObject

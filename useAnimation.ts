@@ -97,6 +97,7 @@ export const useAnimation = <InputFn extends Creation>(
 	const fontsReady = useRef(false)
 	const isMounted = useRef(true)
 	useLayoutEffect(() => {
+		isMounted.current = true
 		document.fonts.ready.then(() => {
 			fontsReady.current = true
 		})
