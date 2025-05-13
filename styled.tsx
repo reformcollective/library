@@ -213,10 +213,11 @@ type Options = {
 	designSizeOverride?: number
 }
 
-const PRECISION = 3
+const VW_PRECISION = 3
+const PIXEL_PRECISION = 2
 const regex = /(\d+\.?\d*)px/g
 const replacer = (match: string, breakpoint: number) => {
-	return ((Number.parseFloat(match) / breakpoint) * 100).toFixed(PRECISION)
+	return ((Number.parseFloat(match) / breakpoint) * 100).toFixed(VW_PRECISION)
 }
 const designSizes = {
 	fullWidth: desktopDesignSize,
@@ -278,7 +279,7 @@ function convertToResponsive(
 										) /
 											100) *
 										desktopBreakpoint
-									).toFixed(1)}px`.replace(".0px", "px")
+									).toFixed(PIXEL_PRECISION)}px`.replace(".0px", "px")
 								: `${replacer(px, designSizeOverride ?? designSizes[only])}vw`,
 						),
 				}
@@ -299,7 +300,7 @@ function convertToResponsive(
 										) /
 											100) *
 										desktopBreakpoint
-									).toFixed(1)}px`.replace(".0px", "px"),
+									).toFixed(PIXEL_PRECISION)}px`.replace(".0px", "px"),
 						),
 				}
 
