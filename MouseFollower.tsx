@@ -1,9 +1,10 @@
 "use client"
 
 import gsap from "gsap/all"
-import { type ReactNode, useRef } from "react"
+import { type ReactNode, useRef, useState } from "react"
 import { styled } from "./styled"
 import { useAnimation } from "./useAnimation"
+import { useDeepCompareMemo } from "use-deep-compare"
 
 // Default animation values
 const DEFAULT_QUICK_TO_DURATION = 0.4
@@ -16,32 +17,32 @@ const HIDE_EASE = "power3.in"
 export const MouseFollower = ({
 	children,
 	hoverTargetRef,
+	animationVars = {
+		duration: DEFAULT_QUICK_TO_DURATION,
+		ease: DEFAULT_QUICK_TO_EASE,
+	},
 }: {
 	children: ReactNode
 	hoverTargetRef?: React.RefObject<HTMLElement | null>
+	animationVars?: gsap.TweenVars
 }) => {
 	const followerRef = useRef<HTMLDivElement | null>(null)
-	const mouseMoved = useRef(Promise.withResolvers<void>())
+	const [mouseMoved] = useState(() => Promise.withResolvers<void>())
+	const stableVars = useDeepCompareMemo(() => animationVars, [animationVars])
 
 	// --- Hook 1: Mouse Tracking (gsap.quickTo) ---
 	useAnimation(() => {
 		const follower = followerRef.current
 		if (!follower) return
 
-		const xTo = gsap.quickTo(follower, "x", {
-			duration: DEFAULT_QUICK_TO_DURATION,
-			ease: DEFAULT_QUICK_TO_EASE,
-		})
-		const yTo = gsap.quickTo(follower, "y", {
-			duration: DEFAULT_QUICK_TO_DURATION,
-			ease: DEFAULT_QUICK_TO_EASE,
-		})
+		const xTo = gsap.quickTo(follower, "x", stableVars)
+		const yTo = gsap.quickTo(follower, "y", stableVars)
 
 		const onMouseMove = (event: MouseEvent) => {
 			const { clientX, clientY } = event
 			if (!follower) return
 
-			mouseMoved.current.resolve()
+			mouseMoved.resolve()
 
 			const currentScale = gsap.getProperty(follower, "scale") as number
 			if (currentScale < 0.01) {
@@ -58,7 +59,7 @@ export const MouseFollower = ({
 		return () => {
 			window.removeEventListener("mousemove", onMouseMove)
 		}
-	}, [])
+	}, [stableVars, mouseMoved])
 
 	// --- Hook 2: Visibility Control & Event Listeners ---
 	useAnimation(() => {
@@ -69,7 +70,7 @@ export const MouseFollower = ({
 		const actualTargetElement = hoverTargetRef?.current || document.body
 
 		const showFollower = () => {
-			mouseMoved.current.promise.then(() => {
+			mouseMoved.promise.then(() => {
 				gsap.to(followerElement, {
 					scale: 1,
 					opacity: 1,
@@ -149,7 +150,7 @@ export const MouseFollower = ({
 				handleWindowFocusOrDocEnter,
 			)
 		}
-	}, [hoverTargetRef])
+	}, [mouseMoved, hoverTargetRef])
 
 	return <Wrapper ref={followerRef}>{children}</Wrapper>
 }
@@ -159,7 +160,6 @@ const Wrapper = styled("div", {
 	top: 0,
 	left: 0,
 	transform: "translate(-50%, -50%)",
-	pointerEvents: "none",
 	willChange: "transform, opacity",
 	opacity: 0,
 	scale: 0,
