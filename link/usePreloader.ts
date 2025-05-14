@@ -81,6 +81,7 @@ const processScroll = () => {
 export const usePreloader = ({
 	minDuration = 0,
 	stopAnimations,
+	stopNoWaitAnimations,
 	slowAnimations,
 	scope,
 }: {
@@ -98,6 +99,10 @@ export const usePreloader = ({
 	 * the final preloader animation
 	 */
 	stopAnimations?: string
+	/**
+	 * same as stopAnimations, but does not wait for the animations to finish
+	 */
+	stopNoWaitAnimations?: string
 	/**
 	 * if you just want the animation to slow to a stop, you can specify a selector here
 	 * and we'll stop all animations on that selector
@@ -122,6 +127,11 @@ export const usePreloader = ({
 		 * we loaded the page from the top
 		 */
 		isAtPageTop: boolean | null
+		/**
+		 * for debugging, a consistent key
+		 * use this to remount if you're debugging with FORCE_PRELOADER_STATE
+		 */
+		devKey: number
 	}>(
 		globalComplete
 			? {
@@ -129,11 +139,13 @@ export const usePreloader = ({
 					ready: true,
 					completed: true,
 					isAtPageTop: true,
+					devKey: Math.random(),
 				}
 			: {
 					ready: false,
 					completed: false,
 					isAtPageTop: null,
+					devKey: Math.random(),
 				},
 	)
 
@@ -178,8 +190,14 @@ export const usePreloader = ({
 		if (stopAnimations && scope) {
 			const animatedElements = Array.from(
 				scope.current?.querySelectorAll(stopAnimations) ?? [],
-			)
-			for (const element of animatedElements) {
+			).map((element) => ({ element, type: "wait" }))
+			const noWaitAnimatedElements = Array.from(
+				scope.current?.querySelectorAll(stopNoWaitAnimations ?? "") ?? [],
+			).map((element) => ({ element, type: "noWait" }))
+			for (const { element, type } of [
+				...animatedElements,
+				...noWaitAnimatedElements,
+			]) {
 				const animations = element.getAnimations()
 				for (const animation of animations) {
 					const totalDuration = Number(animation.effect?.getTiming().duration)
@@ -190,7 +208,7 @@ export const usePreloader = ({
 						iterations: completedIterations + 1,
 					})
 
-					globalPromises.push(animation.finished)
+					if (type === "wait") globalPromises.push(animation.finished)
 				}
 			}
 		}
@@ -212,11 +230,12 @@ export const usePreloader = ({
 		// and refresh when it's complete
 		const beforeAnimations = document.body.getAnimations({ subtree: true })
 		flushSync(() => {
-			setOutput({
+			setOutput((p) => ({
 				ready: true,
 				completed: false,
 				isAtPageTop: window.scrollY < window.innerHeight,
-			})
+				devKey: p.devKey,
+			}))
 		})
 		const afterAnimations = document.body.getAnimations({ subtree: true })
 		const newAnimations = afterAnimations.filter(
@@ -235,7 +254,13 @@ export const usePreloader = ({
 		}))
 		if (FORCE_PRELOADER_STATE === "ready") {
 			setTimeout(
-				() => setOutput({ ready: false, completed: false, isAtPageTop: null }),
+				() =>
+					setOutput({
+						ready: false,
+						completed: false,
+						isAtPageTop: null,
+						devKey: Math.random(),
+					}),
 				1000,
 			)
 		}
@@ -246,6 +271,7 @@ export const usePreloader = ({
 		scope,
 		slowAnimations,
 		stopAnimations,
+		stopNoWaitAnimations,
 	])
 
 	if (FORCE_PRELOADER_STATE === "loading")
@@ -253,6 +279,7 @@ export const usePreloader = ({
 			ready: false,
 			completed: false,
 			isAtPageTop: null,
+			devKey: 0,
 		}
 	return output
 }
