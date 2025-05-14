@@ -7,8 +7,8 @@ type PageTransition = {
 
 export const TransitionsContext = createContext({
 	animations: new Set<PageTransition>(),
-	isAnimating: false,
-	setIsAnimating: (_isAnimating: boolean) => {},
+	isAnimating: false as "before" | "after" | false,
+	setIsAnimating: (_isAnimating: false | "before" | "after") => {},
 })
 
 export const PageTransitionProvider = ({
@@ -16,7 +16,9 @@ export const PageTransitionProvider = ({
 }: {
 	children: React.ReactNode
 }) => {
-	const [isAnimating, setIsAnimating] = useState(false)
+	const [isAnimating, setIsAnimating] = useState<false | "before" | "after">(
+		false,
+	)
 	const animations = useMemo(() => new Set<PageTransition>(), [])
 
 	return (
