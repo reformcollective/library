@@ -1,10 +1,10 @@
 "use client"
 
 import gsap from "gsap/all"
-import { type ReactNode, useRef, useState } from "react"
+import { type ReactNode, useRef } from "react"
+import { useDeepCompareMemo } from "use-deep-compare"
 import { styled } from "./styled"
 import { useAnimation } from "./useAnimation"
-import { useDeepCompareMemo } from "use-deep-compare"
 
 // Default animation values
 const DEFAULT_QUICK_TO_DURATION = 0.4
@@ -27,50 +27,38 @@ export const MouseFollower = ({
 	animationVars?: gsap.TweenVars
 }) => {
 	const followerRef = useRef<HTMLDivElement | null>(null)
-	const [mouseMoved] = useState(() => Promise.withResolvers<void>())
 	const stableVars = useDeepCompareMemo(() => animationVars, [animationVars])
 
-	// --- Hook 1: Mouse Tracking (gsap.quickTo) ---
 	useAnimation(() => {
 		const follower = followerRef.current
-		if (!follower) return
+		const actualTargetElement = hoverTargetRef?.current || document.body
+		if (!follower || !actualTargetElement) return
+
+		let targetRectRef: DOMRect | null = null
+		const latestPosition = { clientX: 0, clientY: 0 }
+		let followerState: "visible" | "hidden" = "hidden"
+		const mouseMoved = Promise.withResolvers<void>()
 
 		const xTo = gsap.quickTo(follower, "x", stableVars)
 		const yTo = gsap.quickTo(follower, "y", stableVars)
 
-		const onMouseMove = (event: MouseEvent) => {
-			const { clientX, clientY } = event
-			if (!follower) return
-
-			mouseMoved.resolve()
-
-			const currentScale = gsap.getProperty(follower, "scale") as number
-			if (currentScale < 0.01) {
-				// if our scale is effectively 0, instantly update the position instead of animating
-				xTo(clientX, clientX)
-				yTo(clientY, clientY)
-			} else {
-				xTo(clientX)
-				yTo(clientY)
-			}
-		}
-
-		window.addEventListener("mousemove", onMouseMove)
-		return () => {
-			window.removeEventListener("mousemove", onMouseMove)
-		}
-	}, [stableVars, mouseMoved])
-
-	// --- Hook 2: Visibility Control & Event Listeners ---
-	useAnimation(() => {
-		const followerElement = followerRef.current
-		if (!followerElement) return
-
-		// Determine the actual hover target: specific ref or document.body
-		const actualTargetElement = hoverTargetRef?.current || document.body
+		// Initial Setup: Always start hidden
+		gsap.set(follower, {
+			scale: 0,
+			opacity: 0,
+			x: window.innerWidth / 2,
+			y: window.innerHeight / 2,
+			xPercent: -50,
+			yPercent: -50,
+		})
 
 		const showFollower = () => {
+			const followerElement = followerRef.current
+			if (!followerElement) return
+
 			mouseMoved.promise.then(() => {
+				if (followerState === "visible") return
+				followerState = "visible"
 				gsap.to(followerElement, {
 					scale: 1,
 					opacity: 1,
@@ -81,6 +69,11 @@ export const MouseFollower = ({
 		}
 
 		const hideFollower = () => {
+			const followerElement = followerRef.current
+			if (!followerElement) return
+			if (followerState === "hidden") return
+			followerState = "hidden"
+
 			gsap.to(followerElement, {
 				scale: 0,
 				opacity: 0,
@@ -89,68 +82,96 @@ export const MouseFollower = ({
 			})
 		}
 
-		// Initial Setup: Always start hidden
-		gsap.set(followerElement, {
-			scale: 0,
-			opacity: 0,
-			x: window.innerWidth / 2,
-			y: window.innerHeight / 2,
-			xPercent: -50,
-			yPercent: -50,
+		// showing and hiding the follower
+		gsap.context(() => {
+			actualTargetElement.addEventListener("mouseenter", showFollower)
+			actualTargetElement.addEventListener("mouseleave", hideFollower)
+			return () => {
+				actualTargetElement.removeEventListener("mouseenter", showFollower)
+				actualTargetElement.removeEventListener("mouseleave", hideFollower)
+			}
 		})
 
-		// Event listeners for the determined target (specific element or document.body)
-		actualTargetElement.addEventListener("mouseenter", showFollower)
-		actualTargetElement.addEventListener("mouseleave", hideFollower)
+		// track mouse movement
+		gsap.context(() => {
+			const onMouseMove = (event: MouseEvent) => {
+				const { clientX, clientY } = event
+				if (!follower) return
 
-		// Global event listeners for robustness (window blur/focus, document leave/enter)
-		const handleWindowBlurOrDocLeave = () => {
-			hideFollower()
-		}
+				mouseMoved.resolve()
+				latestPosition.clientX = clientX
+				latestPosition.clientY = clientY
 
-		const handleWindowFocusOrDocEnter = () => {
-			// Only auto-show if the target is document.body (always-on mode)
-			// and it was previously hidden.
-			if (actualTargetElement === document.body) {
-				const currentScale = gsap.getProperty(
-					followerElement,
-					"scale",
-				) as number
+				const currentScale = gsap.getProperty(follower, "scale") as number
 				if (currentScale < 0.01) {
+					// if our scale is effectively 0, instantly update the position instead of animating
+					xTo(clientX, clientX)
+					yTo(clientY, clientY)
+				} else {
+					xTo(clientX)
+					yTo(clientY)
+				}
+			}
+
+			window.addEventListener("mousemove", onMouseMove)
+			return () => {
+				window.removeEventListener("mousemove", onMouseMove)
+			}
+		})
+
+		// scroll handling (mostly for safari)
+		gsap.context(() => {
+			let lastScrollY = window.scrollY
+			const onScroll = () => {
+				const movedBy = window.scrollY - lastScrollY
+				lastScrollY = window.scrollY
+
+				if (!targetRectRef) return
+
+				targetRectRef.y -= movedBy
+
+				const isInBounds =
+					latestPosition.clientX >= targetRectRef.left &&
+					latestPosition.clientX <= targetRectRef.right &&
+					latestPosition.clientY >= targetRectRef.top &&
+					latestPosition.clientY <= targetRectRef.bottom
+
+				if (!isInBounds) {
+					hideFollower()
+				} else {
 					showFollower()
 				}
 			}
-			// If actualTargetElement is a specific ref, its own 'mouseenter'
-			// (already attached) is responsible for showing.
-		}
+			window.addEventListener("scroll", onScroll)
+			return () => {
+				window.removeEventListener("scroll", onScroll)
+			}
+		})
 
-		window.addEventListener("blur", handleWindowBlurOrDocLeave)
-		document.documentElement.addEventListener(
-			"mouseleave",
-			handleWindowBlurOrDocLeave,
-		)
-		window.addEventListener("focus", handleWindowFocusOrDocEnter)
-		document.documentElement.addEventListener(
-			"mouseenter",
-			handleWindowFocusOrDocEnter,
-		)
+		// update target rect on resize & enter viewport
+		gsap.context(() => {
+			const updateTargetRect = () => {
+				targetRectRef = actualTargetElement.getBoundingClientRect()
+			}
+			updateTargetRect()
 
-		return () => {
-			actualTargetElement.removeEventListener("mouseenter", showFollower)
-			actualTargetElement.removeEventListener("mouseleave", hideFollower)
+			const resizeObserver = new ResizeObserver(updateTargetRect)
+			resizeObserver.observe(actualTargetElement)
 
-			window.removeEventListener("blur", handleWindowBlurOrDocLeave)
-			document.documentElement.removeEventListener(
-				"mouseleave",
-				handleWindowBlurOrDocLeave,
-			)
-			window.removeEventListener("focus", handleWindowFocusOrDocEnter)
-			document.documentElement.removeEventListener(
-				"mouseenter",
-				handleWindowFocusOrDocEnter,
-			)
-		}
-	}, [mouseMoved, hoverTargetRef])
+			const intersectionObserver = new IntersectionObserver((entries) => {
+				if (entries[0]?.isIntersecting) updateTargetRect()
+			})
+			intersectionObserver.observe(actualTargetElement)
+
+			window.addEventListener("focus", updateTargetRect)
+
+			return () => {
+				resizeObserver.disconnect()
+				intersectionObserver.disconnect()
+				window.removeEventListener("focus", updateTargetRect)
+			}
+		})
+	}, [hoverTargetRef, stableVars])
 
 	return <Wrapper ref={followerRef}>{children}</Wrapper>
 }
@@ -161,7 +182,5 @@ const Wrapper = styled("div", {
 	left: 0,
 	transform: "translate(-50%, -50%)",
 	willChange: "transform, opacity",
-	opacity: 0,
-	scale: 0,
 	zIndex: 1000,
 })
