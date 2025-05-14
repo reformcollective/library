@@ -6,6 +6,7 @@ import { useDeepCompareMemo } from "use-deep-compare"
 import { styled } from "./styled"
 import { useAnimation } from "./useAnimation"
 import { useLatest } from "ahooks"
+import { useLoadState } from "./link/useLoadState"
 
 // Default animation values
 const DEFAULT_QUICK_TO_DURATION = 0.4
@@ -35,11 +36,13 @@ export const MouseFollower = ({
 	const stableVars = useDeepCompareMemo(() => animationVars, [animationVars])
 	const onShowLatest = useLatest(onShow)
 	const onHideLatest = useLatest(onHide)
+	const { entering } = useLoadState()
 
 	useAnimation(() => {
 		const follower = followerRef.current
 		const actualTargetElement = hoverTargetRef?.current || document.body
 		if (!follower || !actualTargetElement) return
+		if (entering) return
 
 		let targetRectRef: DOMRect | null = null
 		const latestPosition = { clientX: 0, clientY: 0 }
@@ -181,7 +184,7 @@ export const MouseFollower = ({
 				window.removeEventListener("focus", updateTargetRect)
 			}
 		})
-	}, [hoverTargetRef, stableVars, onHideLatest, onShowLatest])
+	}, [hoverTargetRef, stableVars, onHideLatest, onShowLatest, entering])
 
 	return <Wrapper ref={followerRef}>{children}</Wrapper>
 }
@@ -194,4 +197,6 @@ const Wrapper = styled("div", {
 	willChange: "transform, opacity",
 	zIndex: 1000,
 	pointerEvents: "none",
+	scale: 0,
+	opacity: 0,
 })
