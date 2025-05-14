@@ -5,6 +5,7 @@ import { type ReactNode, useRef } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
 import { styled } from "./styled"
 import { useAnimation } from "./useAnimation"
+import { useLatest } from "ahooks"
 
 // Default animation values
 const DEFAULT_QUICK_TO_DURATION = 0.4
@@ -21,13 +22,19 @@ export const MouseFollower = ({
 		duration: DEFAULT_QUICK_TO_DURATION,
 		ease: DEFAULT_QUICK_TO_EASE,
 	},
+	onShow,
+	onHide,
 }: {
 	children: ReactNode
 	hoverTargetRef?: React.RefObject<HTMLElement | null>
 	animationVars?: gsap.TweenVars
+	onShow?: () => void
+	onHide?: () => void
 }) => {
 	const followerRef = useRef<HTMLDivElement | null>(null)
 	const stableVars = useDeepCompareMemo(() => animationVars, [animationVars])
+	const onShowLatest = useLatest(onShow)
+	const onHideLatest = useLatest(onHide)
 
 	useAnimation(() => {
 		const follower = followerRef.current
@@ -59,6 +66,8 @@ export const MouseFollower = ({
 			mouseMoved.promise.then(() => {
 				if (followerState === "visible") return
 				followerState = "visible"
+				onShowLatest.current?.()
+
 				gsap.to(followerElement, {
 					scale: 1,
 					opacity: 1,
@@ -73,6 +82,7 @@ export const MouseFollower = ({
 			if (!followerElement) return
 			if (followerState === "hidden") return
 			followerState = "hidden"
+			onHideLatest.current?.()
 
 			gsap.to(followerElement, {
 				scale: 0,
@@ -171,7 +181,7 @@ export const MouseFollower = ({
 				window.removeEventListener("focus", updateTargetRect)
 			}
 		})
-	}, [hoverTargetRef, stableVars])
+	}, [hoverTargetRef, stableVars, onHideLatest, onShowLatest])
 
 	return <Wrapper ref={followerRef}>{children}</Wrapper>
 }
@@ -183,4 +193,5 @@ const Wrapper = styled("div", {
 	transform: "translate(-50%, -50%)",
 	willChange: "transform, opacity",
 	zIndex: 1000,
+	pointerEvents: "none",
 })
