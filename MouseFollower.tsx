@@ -9,6 +9,7 @@ import { useLatest } from "ahooks"
 import { useLoadState } from "./link/useLoadState"
 import { useIsSmooth } from "./Scroll"
 import { useClientOnly } from "./ClientOnly"
+import { subscribeToMousePosition } from "./mouse-position"
 
 // Default animation values
 const DEFAULT_QUICK_TO_DURATION = 0.4
@@ -47,10 +48,7 @@ export const MouseFollower = ({
 		if (!follower || !actualTargetElement) return
 		if (entering) return
 
-		let targetRectRef: DOMRect | null = null
-		const latestPosition = { clientX: 0, clientY: 0 }
 		let followerState: "visible" | "hidden" = "hidden"
-		const mouseMoved = Promise.withResolvers<void>()
 		let lastTween: gsap.core.Tween | null = null
 
 		const xTo = gsap.quickTo(follower, "x", stableVars)
@@ -70,18 +68,16 @@ export const MouseFollower = ({
 			const followerElement = followerRef.current
 			if (!followerElement) return
 
-			mouseMoved.promise.then(() => {
-				if (followerState === "visible") return
-				followerState = "visible"
-				onShowLatest.current?.()
+			if (followerState === "visible") return
+			followerState = "visible"
+			onShowLatest.current?.()
 
-				lastTween?.kill()
-				lastTween = gsap.to(followerElement, {
-					scale: 1,
-					opacity: 1,
-					duration: SHOW_DURATION,
-					ease: SHOW_EASE,
-				})
+			lastTween?.kill()
+			lastTween = gsap.to(followerElement, {
+				scale: 1,
+				opacity: 1,
+				duration: SHOW_DURATION,
+				ease: SHOW_EASE,
 			})
 		}
 
@@ -101,28 +97,8 @@ export const MouseFollower = ({
 			})
 		}
 
-		// showing and hiding the follower
-		gsap.context(() => {
-			actualTargetElement.addEventListener("mouseenter", showFollower)
-			actualTargetElement.addEventListener("mouseleave", hideFollower)
-			window.addEventListener("mouseleave", hideFollower)
-			return () => {
-				actualTargetElement.removeEventListener("mouseenter", showFollower)
-				actualTargetElement.removeEventListener("mouseleave", hideFollower)
-				window.removeEventListener("mouseleave", hideFollower)
-			}
-		})
-
-		// track mouse movement
-		gsap.context(() => {
-			const onMouseMove = (event: MouseEvent) => {
-				const { clientX, clientY } = event
-				if (!follower) return
-
-				mouseMoved.resolve()
-				latestPosition.clientX = clientX
-				latestPosition.clientY = clientY
-
+		const position = subscribeToMousePosition(
+			({ clientX, clientY, isWithinElement }) => {
 				const currentScale = gsap.getProperty(follower, "scale") as number
 				if (currentScale < 0.01) {
 					// if our scale is effectively 0, instantly update the position instead of animating
@@ -132,66 +108,16 @@ export const MouseFollower = ({
 					xTo(clientX)
 					yTo(clientY)
 				}
-			}
 
-			window.addEventListener("mousemove", onMouseMove)
-			return () => {
-				window.removeEventListener("mousemove", onMouseMove)
-			}
-		})
+				if (isWithinElement) showFollower()
+				else hideFollower()
+			},
+			hoverTargetRef?.current,
+		)
 
-		// scroll handling (mostly for safari)
-		gsap.context(() => {
-			let lastScrollY = window.scrollY
-			const onScroll = () => {
-				const movedBy = window.scrollY - lastScrollY
-				lastScrollY = window.scrollY
-
-				if (!targetRectRef) return
-
-				targetRectRef.y -= movedBy
-
-				const isInBounds =
-					latestPosition.clientX >= targetRectRef.left &&
-					latestPosition.clientX <= targetRectRef.right &&
-					latestPosition.clientY >= targetRectRef.top &&
-					latestPosition.clientY <= targetRectRef.bottom
-
-				if (!isInBounds) {
-					hideFollower()
-				} else {
-					showFollower()
-				}
-			}
-			window.addEventListener("scroll", onScroll)
-			return () => {
-				window.removeEventListener("scroll", onScroll)
-			}
-		})
-
-		// update target rect on resize & enter viewport
-		gsap.context(() => {
-			const updateTargetRect = () => {
-				targetRectRef = actualTargetElement.getBoundingClientRect()
-			}
-			updateTargetRect()
-
-			const resizeObserver = new ResizeObserver(updateTargetRect)
-			resizeObserver.observe(actualTargetElement)
-
-			const intersectionObserver = new IntersectionObserver((entries) => {
-				if (entries[0]?.isIntersecting) updateTargetRect()
-			})
-			intersectionObserver.observe(actualTargetElement)
-
-			window.addEventListener("focus", updateTargetRect)
-
-			return () => {
-				resizeObserver.disconnect()
-				intersectionObserver.disconnect()
-				window.removeEventListener("focus", updateTargetRect)
-			}
-		})
+		return () => {
+			position.unsubscribe()
+		}
 	}, [hoverTargetRef, stableVars, onHideLatest, onShowLatest, entering])
 
 	return <Wrapper ref={followerRef}>{isUsingMouse ? children : null}</Wrapper>
