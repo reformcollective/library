@@ -37,6 +37,7 @@ export const MouseFollower = ({
 	const onShowLatest = useLatest(onShow)
 	const onHideLatest = useLatest(onHide)
 	const { entering } = useLoadState()
+	const isUsingMouse = useIsSmooth()
 
 	useAnimation(() => {
 		const follower = followerRef.current
@@ -186,7 +187,7 @@ export const MouseFollower = ({
 		})
 	}, [hoverTargetRef, stableVars, onHideLatest, onShowLatest, entering])
 
-	return <Wrapper ref={followerRef}>{children}</Wrapper>
+	return <Wrapper ref={followerRef}>{isUsingMouse ? children : null}</Wrapper>
 }
 
 const Wrapper = styled("div", {
@@ -199,4 +200,8 @@ const Wrapper = styled("div", {
 	pointerEvents: "none",
 	scale: 0,
 	opacity: 0,
+
+	"@media (hover:none)": {
+		visibility: "hidden",
+	},
 })
