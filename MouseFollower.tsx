@@ -8,6 +8,7 @@ import { useAnimation } from "./useAnimation"
 import { useLatest } from "ahooks"
 import { useLoadState } from "./link/useLoadState"
 import { useIsSmooth } from "./Scroll"
+import { useClientOnly } from "./ClientOnly"
 
 // Default animation values
 const DEFAULT_QUICK_TO_DURATION = 0.4
@@ -38,7 +39,7 @@ export const MouseFollower = ({
 	const onShowLatest = useLatest(onShow)
 	const onHideLatest = useLatest(onHide)
 	const { entering } = useLoadState()
-	const isUsingMouse = useIsSmooth()
+	const isUsingMouse = useClientOnly(useIsSmooth(), false)
 
 	useAnimation(() => {
 		const follower = followerRef.current
@@ -50,6 +51,7 @@ export const MouseFollower = ({
 		const latestPosition = { clientX: 0, clientY: 0 }
 		let followerState: "visible" | "hidden" = "hidden"
 		const mouseMoved = Promise.withResolvers<void>()
+		let lastTween: gsap.core.Tween | null = null
 
 		const xTo = gsap.quickTo(follower, "x", stableVars)
 		const yTo = gsap.quickTo(follower, "y", stableVars)
@@ -73,7 +75,8 @@ export const MouseFollower = ({
 				followerState = "visible"
 				onShowLatest.current?.()
 
-				gsap.to(followerElement, {
+				lastTween?.kill()
+				lastTween = gsap.to(followerElement, {
 					scale: 1,
 					opacity: 1,
 					duration: SHOW_DURATION,
@@ -89,7 +92,8 @@ export const MouseFollower = ({
 			followerState = "hidden"
 			onHideLatest.current?.()
 
-			gsap.to(followerElement, {
+			lastTween?.kill()
+			lastTween = gsap.to(followerElement, {
 				scale: 0,
 				opacity: 0,
 				duration: HIDE_DURATION,
@@ -101,9 +105,11 @@ export const MouseFollower = ({
 		gsap.context(() => {
 			actualTargetElement.addEventListener("mouseenter", showFollower)
 			actualTargetElement.addEventListener("mouseleave", hideFollower)
+			window.addEventListener("mouseleave", hideFollower)
 			return () => {
 				actualTargetElement.removeEventListener("mouseenter", showFollower)
 				actualTargetElement.removeEventListener("mouseleave", hideFollower)
+				window.removeEventListener("mouseleave", hideFollower)
 			}
 		})
 
