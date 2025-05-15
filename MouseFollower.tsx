@@ -7,6 +7,7 @@ import { styled } from "./styled"
 import { useAnimation } from "./useAnimation"
 import { useLatest } from "ahooks"
 import { useLoadState } from "./link/useLoadState"
+import { useIsSmooth } from "./Scroll"
 
 // Default animation values
 const DEFAULT_QUICK_TO_DURATION = 0.4
