@@ -42,7 +42,7 @@
 		}
 	},
 	"files": {
-		"ignore": ["pnpm-lock.yaml", "gsapHelpers", "app/library/gsapHelpers"]
+		"ignore": ["pnpm-lock.yaml", "gsapHelpers"]
 	},
 	"vcs": {
 		"enabled": true,

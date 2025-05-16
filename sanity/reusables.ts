@@ -1,8 +1,8 @@
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
-import { defineField, type ImageDefinition } from "sanity"
-import UniversalImage from "./SanityImage"
+import { type ImageDefinition, defineArrayMember, defineField } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
+import UniversalImage from "./SanityImage"
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
@@ -66,6 +66,15 @@ export const universalImage = <
 				hidden: true,
 				readOnly: true,
 			}),
+			defineField({
+				type: "string",
+				name: "willHaveAlt",
+				options: {
+					list: [withAlt === false ? "false" : "true"],
+				},
+				hidden: true,
+				readOnly: true,
+			}),
 			...(schemaField.fields ?? []),
 		],
 		options: {
@@ -111,3 +120,27 @@ export const universalLink = ({
 			? (rule) => rule.custom((field) => requiredLinkField(field))
 			: undefined,
 	})
+
+export const redirect = defineArrayMember({
+	name: "redirect",
+	title: "Redirect",
+	type: "object",
+	fields: [
+		defineField({
+			name: "link",
+			type: "url",
+			description:
+				"If someone tries to navigate to this page in any way, they will be redirected to this URL.",
+		}),
+	],
+	preview: {
+		select: {
+			link: "link",
+		},
+		prepare({ link }) {
+			return {
+				title: `Redirect to "${link}"`,
+			}
+		},
+	},
+})

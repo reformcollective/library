@@ -67,15 +67,14 @@ export const useTransitioner = () => {
 			loader.dispatchEvent("start", isInstant ? "instant" : "animated")
 
 			flushSync(() => {
-				setIsAnimating(true)
+				setIsAnimating("before")
 			})
-
 			const beforeAnimations = allAnimations.map(({ animateBefore }) =>
 				animateBefore?.(),
 			)
 			await Promise.all(beforeAnimations)
 
-			router.push(to, { scroll: false })
+			router.push(to)
 
 			// check for href changes with a timeout
 			const existingHref = window.location.href
@@ -92,14 +91,16 @@ export const useTransitioner = () => {
 				const interval = setInterval(checkUrlChange, 5)
 			})
 			await Promise.race([timeout, urlChange])
-			await sleep(10)
-			window.lenis?.scrollTo(0, { immediate: true })
+			await sleep(10) // give the page a moment to render
 			ScrollTrigger.refresh()
 
 			loader.dispatchEvent("routeChange", isInstant ? "instant" : "animated")
 			document.body.inert = true // prevent navigation before we're done animating in
 
 			if (!isInstant) await sleep(10)
+			flushSync(() => {
+				setIsAnimating("after")
+			})
 			const afterAnimations = allAnimations.map(({ animateAfter }) =>
 				animateAfter?.(),
 			)

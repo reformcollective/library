@@ -29,13 +29,13 @@ export function horizontalLoop(items, config) {
 				repeat: config.repeat,
 				onUpdate:
 					onChange &&
-					(() => {
-						const i = tl.closestIndex()
+					function () {
+						let i = tl.closestIndex()
 						if (lastIndex !== i) {
 							lastIndex = i
 							onChange(items[i], i)
 						}
-					}),
+					},
 				paused: config.paused,
 				defaults: { ease: "none" },
 				onReverseComplete: () =>
@@ -66,15 +66,14 @@ export function horizontalLoop(items, config) {
 				spaceBefore[0] +
 				items[length - 1].offsetWidth *
 					gsap.getProperty(items[length - 1], "scaleX") +
-				(Number.parseFloat(config.paddingRight) || 0),
+				(parseFloat(config.paddingRight) || 0),
 			populateWidths = () => {
 				let b1 = container.getBoundingClientRect(),
 					b2
 				items.forEach((el, i) => {
-					widths[i] = Number.parseFloat(gsap.getProperty(el, "width", "px"))
+					widths[i] = parseFloat(gsap.getProperty(el, "width", "px"))
 					xPercents[i] = snap(
-						(Number.parseFloat(gsap.getProperty(el, "x", "px")) / widths[i]) *
-							100 +
+						(parseFloat(gsap.getProperty(el, "x", "px")) / widths[i]) * 100 +
 							gsap.getProperty(el, "xPercent"),
 					)
 					b2 = el.getBoundingClientRect()
@@ -156,12 +155,12 @@ export function horizontalLoop(items, config) {
 				timeWrap = gsap.utils.wrap(0, tl.duration())
 			},
 			refresh = (deep) => {
-				const progress = tl.progress()
+				let progress = tl.progress()
 				tl.progress(0, true)
 				populateWidths()
 				deep && populateTimeline()
 				populateOffsets()
-				deep && tl.draggable && config.paused
+				deep && tl.draggable && tl.paused()
 					? tl.time(times[curIndex], true)
 					: tl.progress(progress, true)
 			},
@@ -194,7 +193,7 @@ export function horizontalLoop(items, config) {
 		}
 		tl.toIndex = (index, vars) => toIndex(index, vars)
 		tl.closestIndex = (setCurrent) => {
-			const index = getClosest(times, tl.time(), tl.duration())
+			let index = getClosest(times, tl.time(), tl.duration())
 			if (setCurrent) {
 				curIndex = index
 				indexIsDirty = false
@@ -220,7 +219,6 @@ export function horizontalLoop(items, config) {
 				lastSnap,
 				initChangeX,
 				wasPlaying,
-				hasMoved,
 				align = () =>
 					tl.progress(
 						wrap(startProgress + (draggable.startX - draggable.x) * ratio),
@@ -230,15 +228,13 @@ export function horizontalLoop(items, config) {
 				console.warn(
 					"InertiaPlugin required for momentum-based scrolling and snapping. https://greensock.com/club",
 				)
-
-			const draggableOptions = {
+			draggable = Draggable.create(proxy, {
 				trigger: items[0].parentNode,
 				type: "x",
 				onPressInit() {
-					hasMoved = false
-					const x = this.x
+					let x = this.x
 					gsap.killTweensOf(tl)
-					wasPlaying = wasPlaying || !tl.paused()
+					wasPlaying = !tl.paused()
 					tl.pause()
 					startProgress = tl.progress()
 					refresh()
@@ -246,44 +242,39 @@ export function horizontalLoop(items, config) {
 					initChangeX = startProgress / -ratio - x
 					gsap.set(proxy, { x: startProgress / -ratio })
 				},
-				onDrag: () => {
-					hasMoved = true
-					align()
-				},
+				onDrag: align,
 				onThrowUpdate: align,
 				overshootTolerance: 0,
 				inertia: true,
+				// REFORM CHANGE: snap is optional
+				snap: !config.snap
+					? undefined
+					: function (value) {
+							//note: if the user presses and releases in the middle of a throw, due to the sudden correction of proxy.x in the onPressInit(), the velocity could be very large, throwing off the snap. So sense that condition and adjust for it. We also need to set overshootTolerance to 0 to prevent the inertia from causing it to shoot past and come back
+							if (Math.abs(startProgress / -ratio - this.x) < 10) {
+								return lastSnap + initChangeX
+							}
+							let time = -(value * ratio) * tl.duration(),
+								wrappedTime = timeWrap(time),
+								snapTime = times[getClosest(times, wrappedTime, tl.duration())],
+								dif = snapTime - wrappedTime
+							Math.abs(dif) > tl.duration() / 2 &&
+								(dif += dif < 0 ? tl.duration() : -tl.duration())
+							lastSnap = (time + dif) / tl.duration() / -ratio
+							return lastSnap
+						},
 				onRelease() {
 					syncIndex()
 					draggable.isThrowing && (indexIsDirty = true)
-					if (!hasMoved) wasPlaying && tl.play()
 				},
 				onThrowComplete: () => {
 					syncIndex()
 					wasPlaying && tl.play()
 				},
-			}
-
-			if (config.snap !== false) {
-				draggableOptions.snap = function (value) {
-					//note: if the user presses and releases in the middle of a throw, due to the sudden correction of proxy.x in the onPressInit(), the velocity could be very large, throwing off the snap. So sense that condition and adjust for it. We also need to set overshootTolerance to 0 to prevent the inertia from causing it to shoot past and come back
-					if (Math.abs(startProgress / -ratio - this.x) < 10) {
-						return lastSnap + initChangeX
-					}
-					let time = -(value * ratio) * tl.duration(),
-						wrappedTime = timeWrap(time),
-						snapTime = times[getClosest(times, wrappedTime, tl.duration())],
-						dif = snapTime - wrappedTime
-					Math.abs(dif) > tl.duration() / 2 &&
-						(dif += dif < 0 ? tl.duration() : -tl.duration())
-					lastSnap = (time + dif) / tl.duration() / -ratio
-					return lastSnap
-				}
-			}
-
-			draggable = Draggable.create(proxy, draggableOptions)[0]
+			})[0]
 			tl.draggable = draggable
 		}
+		// REFORM CHANGE: add scrollBy method
 		tl.scrollBy = (pixels) => {
 			const wrap = gsap.utils.wrap(0, 1),
 				progress = wrap(tl.progress() + pixels / totalWidth)
