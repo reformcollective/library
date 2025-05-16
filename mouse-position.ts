@@ -1,26 +1,3 @@
-import type { Target } from "ahooks/lib/useEventListener"
-import type { RefObject } from "react"
-
-// export const trackMousePosition = (
-// 	callback: (coordinates: {
-// 		screenX: number
-// 		screenY: number
-// 		clientX: number
-// 		clientY: number
-// 		pageX: number
-// 		pageY: number
-// 		elementX: number
-// 		elementY: number
-// 		elementH: number
-// 		elementW: number
-// 		elementPosX: number
-// 		elementPosY: number
-// 	}) => void,
-// 	target?: RefObject<HTMLElement | null>,
-// ) => {
-// 	useEffect(() => {}, [])
-// }
-
 type Output = {
 	screenX: number
 	screenY: number
