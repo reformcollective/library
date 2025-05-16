@@ -42,85 +42,94 @@ export const MouseFollower = ({
 	const { entering } = useLoadState()
 	const isUsingMouse = useClientOnly(useIsSmooth(), false)
 
-	useAnimation(() => {
-		const follower = followerRef.current
-		const actualTargetElement = hoverTargetRef?.current || document.body
-		if (!follower || !actualTargetElement) return
-		if (entering) return
+	useAnimation(
+		({ contextSafe }) => {
+			const follower = followerRef.current
+			const actualTargetElement = hoverTargetRef?.current || document.body
+			if (!follower || !actualTargetElement) return
+			if (entering) return
+			if (!isUsingMouse) return
 
-		let followerState: "visible" | "hidden" = "hidden"
-		let lastTween: gsap.core.Tween | null = null
+			let followerState: "visible" | "hidden" = "hidden"
+			let lastTween: gsap.core.Tween | null = null
 
-		const xTo = gsap.quickTo(follower, "x", stableVars)
-		const yTo = gsap.quickTo(follower, "y", stableVars)
-
-		// Initial Setup: Always start hidden
-		gsap.set(follower, {
-			scale: 0,
-			opacity: 0,
-			x: window.innerWidth / 2,
-			y: window.innerHeight / 2,
-			xPercent: -50,
-			yPercent: -50,
-		})
-
-		const showFollower = () => {
-			const followerElement = followerRef.current
-			if (!followerElement) return
-
-			if (followerState === "visible") return
-			followerState = "visible"
-			onShowLatest.current?.()
-
-			lastTween?.kill()
-			lastTween = gsap.to(followerElement, {
-				scale: 1,
-				opacity: 1,
-				duration: SHOW_DURATION,
-				ease: SHOW_EASE,
-			})
-		}
-
-		const hideFollower = () => {
-			const followerElement = followerRef.current
-			if (!followerElement) return
-			if (followerState === "hidden") return
-			followerState = "hidden"
-			onHideLatest.current?.()
-
-			lastTween?.kill()
-			lastTween = gsap.to(followerElement, {
+			gsap.set(follower, {
+				xPercent: -50,
+				yPercent: -50,
 				scale: 0,
-				opacity: 0,
-				duration: HIDE_DURATION,
-				ease: HIDE_EASE,
+				autoAlpha: 0,
 			})
-		}
 
-		const position = subscribeToMousePosition(
-			({ clientX, clientY, isWithinElement }) => {
-				const currentScale = gsap.getProperty(follower, "scale") as number
-				if (currentScale < 0.01) {
-					// if our scale is effectively 0, instantly update the position instead of animating
-					xTo(clientX, clientX)
-					yTo(clientY, clientY)
-				} else {
-					xTo(clientX)
-					yTo(clientY)
-				}
+			const xTo = gsap.quickTo(follower, "x", stableVars)
+			const yTo = gsap.quickTo(follower, "y", stableVars)
 
-				if (isWithinElement) showFollower()
-				else hideFollower()
-			},
-			hoverTargetRef?.current,
-		)
+			const showFollower = contextSafe(() => {
+				const followerElement = followerRef.current
+				if (!followerElement) return
 
-		return () => {
-			position.unsubscribe()
-		}
-	}, [hoverTargetRef, stableVars, onHideLatest, onShowLatest, entering])
+				if (followerState === "visible") return
+				followerState = "visible"
+				onShowLatest.current?.()
 
-	return <Wrapper ref={followerRef}>{isUsingMouse ? children : null}</Wrapper>
+				lastTween?.kill()
+				lastTween = gsap.to(followerElement, {
+					scale: 1,
+					autoAlpha: 1,
+					duration: SHOW_DURATION,
+					ease: SHOW_EASE,
+					delay: 0.1,
+				})
+			})
+
+			const hideFollower = contextSafe(() => {
+				const followerElement = followerRef.current
+				if (!followerElement) return
+				if (followerState === "hidden") return
+				followerState = "hidden"
+				onHideLatest.current?.()
+
+				lastTween?.kill()
+				lastTween = gsap.to(followerElement, {
+					scale: 0,
+					autoAlpha: 0,
+					duration: HIDE_DURATION,
+					ease: HIDE_EASE,
+				})
+			})
+
+			const position = subscribeToMousePosition(
+				({ clientX, clientY, isWithinElement }) => {
+					const currentScale = gsap.getProperty(follower, "scale") as number
+					if (currentScale < 0.01) {
+						// if our scale is effectively 0, instantly update the position instead of animating
+						xTo(clientX, clientX)
+						yTo(clientY, clientY)
+					} else {
+						xTo(clientX)
+						yTo(clientY)
+					}
+
+					if (isWithinElement) showFollower()
+					else hideFollower()
+				},
+				hoverTargetRef?.current,
+			)
+
+			return () => {
+				position.unsubscribe()
+			}
+		},
+		[
+			isUsingMouse,
+			hoverTargetRef,
+			stableVars,
+			onHideLatest,
+			onShowLatest,
+			entering,
+		],
+	)
+
+	return <Wrapper ref={followerRef}>{children}</Wrapper>
 }
 
 const Wrapper = styled("div", {

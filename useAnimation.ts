@@ -181,7 +181,6 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior,
 		shouldHydrateUtilities,
 		recreateOnResize ? innerWidth : null,
-		updateBehavior,
 		...dependencies,
 		/**
 		 * if we're in dev, also include the function contents so that we can rerun on fast refresh
