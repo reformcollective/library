@@ -32,6 +32,7 @@ export type StaticImageProps = DefaultImageProps & {
 	loading?: LoadingType
 	sizes?: string
 	priority?: boolean
+	emptyPlaceholder?: boolean
 } & (
 		| {
 				src: StaticImageData
@@ -52,6 +53,7 @@ export default function StaticImage({
 	objectPosition,
 	loading,
 	sizes = "100vw",
+	emptyPlaceholder = false,
 	...otherProps
 }: StaticImageProps) {
 	if (!src) return null
@@ -81,9 +83,12 @@ export default function StaticImage({
 
 	const isSVG =
 		src.src.endsWith(".svg") || src.src.startsWith("data:image/svg+xml")
+	const removeBlurredPlaceholder = emptyPlaceholder
 	return (
 		<DefaultNextImage
-			placeholder={isSVG ? undefined : "blur"}
+			placeholder={
+				isSVG ? undefined : removeBlurredPlaceholder ? "empty" : "blur"
+			}
 			{...props}
 			src={src}
 			sizes={sizes}
