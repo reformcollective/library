@@ -400,12 +400,16 @@ export const mergeStyles = (styles: CSSObject) => {
 		const selector = key.trim()
 		const existing = output[selector]
 		if (typeof value === "object" && typeof existing === "object") {
-			output[selector] = mergeStyles({
+			const style = mergeStyles({
 				...existing,
 				...value,
 			})
+			if (selector) output[selector] = style
+			else Object.assign(output, style)
 		} else if (typeof value === "object") {
-			output[selector] = mergeStyles(value as CSSObject)
+			const style = mergeStyles(value as CSSObject)
+			if (selector) output[selector] = style
+			else Object.assign(output, style)
 		} else {
 			output[selector] = value
 		}
