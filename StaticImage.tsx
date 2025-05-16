@@ -1,6 +1,7 @@
 "use client"
 
 import { styled } from "library/styled"
+import type { PlaceholderValue } from "next/dist/shared/lib/get-img-props"
 import type { StaticImageData } from "next/image"
 import Image from "next/image"
 import { createContext, use, type ImgHTMLAttributes } from "react"
@@ -32,7 +33,7 @@ export type StaticImageProps = DefaultImageProps & {
 	loading?: LoadingType
 	sizes?: string
 	priority?: boolean
-	emptyPlaceholder?: boolean
+	placeholder?: PlaceholderValue
 } & (
 		| {
 				src: StaticImageData
@@ -53,7 +54,7 @@ export default function StaticImage({
 	objectPosition,
 	loading,
 	sizes = "100vw",
-	emptyPlaceholder = false,
+	placeholder = "blur",
 	...otherProps
 }: StaticImageProps) {
 	if (!src) return null
@@ -83,12 +84,9 @@ export default function StaticImage({
 
 	const isSVG =
 		src.src.endsWith(".svg") || src.src.startsWith("data:image/svg+xml")
-	const removeBlurredPlaceholder = emptyPlaceholder
 	return (
 		<DefaultNextImage
-			placeholder={
-				isSVG ? undefined : removeBlurredPlaceholder ? "empty" : "blur"
-			}
+			placeholder={isSVG ? undefined : placeholder}
 			{...props}
 			src={src}
 			sizes={sizes}

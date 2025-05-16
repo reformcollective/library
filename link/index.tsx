@@ -141,7 +141,8 @@ export default function UniversalLink({
 		}
 	}
 
-	return internal && url ? (
+	if (!url) return null
+	return internal ? (
 		<Link
 			{...props}
 			// biome-ignore lint/suspicious/noExplicitAny: I am very intentionally disabling type checking here because a cast would not be backwards compatible

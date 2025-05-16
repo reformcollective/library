@@ -210,7 +210,11 @@ type Options = {
 	only?: "mobile" | "tablet" | "desktop" | "fullWidth"
 	scaleFully?: boolean
 	applyStylesToAllBreakpoints?: boolean
-	designSizeOverride?: number
+	designSizeOverride?: {
+		desktop?: number
+		tablet?: number
+		mobile?: number
+	}
 }
 
 const VW_PRECISION = 3
@@ -275,12 +279,20 @@ function convertToResponsive(
 							only === "fullWidth" && !shouldScaleFully
 								? `${(
 										(Number.parseFloat(
-											replacer(px, designSizeOverride ?? desktopDesignSize),
+											replacer(
+												px,
+												designSizeOverride?.desktop ?? desktopDesignSize,
+											),
 										) /
 											100) *
 										desktopBreakpoint
 									).toFixed(PIXEL_PRECISION)}px`.replace(".0px", "px")
-								: `${replacer(px, designSizeOverride ?? designSizes[only])}vw`,
+								: `${replacer(
+										px,
+										designSizeOverride?.[
+											only === "fullWidth" ? "desktop" : only
+										] ?? designSizes[only],
+									)}vw`,
 						),
 				}
 			} else {
@@ -293,10 +305,13 @@ function convertToResponsive(
 						?.toString()
 						.replaceAll(regex, (_: unknown, px: string) =>
 							shouldScaleFully
-								? `${replacer(px, designSizeOverride ?? desktopDesignSize)}vw`
+								? `${replacer(px, designSizeOverride?.desktop ?? desktopDesignSize)}vw`
 								: `${(
 										(Number.parseFloat(
-											replacer(px, designSizeOverride ?? desktopDesignSize),
+											replacer(
+												px,
+												designSizeOverride?.desktop ?? desktopDesignSize,
+											),
 										) /
 											100) *
 										desktopBreakpoint
@@ -312,7 +327,7 @@ function convertToResponsive(
 						.replaceAll(
 							regex,
 							(_: unknown, px: string) =>
-								`${replacer(px, designSizeOverride ?? desktopDesignSize)}vw`,
+								`${replacer(px, designSizeOverride?.desktop ?? desktopDesignSize)}vw`,
 						),
 				}
 
@@ -324,7 +339,7 @@ function convertToResponsive(
 						.replaceAll(
 							regex,
 							(_: unknown, px: string) =>
-								`${replacer(px, designSizeOverride ?? tabletDesignSize)}vw`,
+								`${replacer(px, designSizeOverride?.tablet ?? tabletDesignSize)}vw`,
 						),
 				}
 
@@ -336,7 +351,7 @@ function convertToResponsive(
 						.replaceAll(
 							regex,
 							(_: unknown, px: string) =>
-								`${replacer(px, designSizeOverride ?? mobileDesignSize)}vw`,
+								`${replacer(px, designSizeOverride?.tablet ?? mobileDesignSize)}vw`,
 						),
 				}
 			}
@@ -385,12 +400,16 @@ export const mergeStyles = (styles: CSSObject) => {
 		const selector = key.trim()
 		const existing = output[selector]
 		if (typeof value === "object" && typeof existing === "object") {
-			output[selector] = mergeStyles({
+			const style = mergeStyles({
 				...existing,
 				...value,
 			})
+			if (selector) output[selector] = style
+			else Object.assign(output, style)
 		} else if (typeof value === "object") {
-			output[selector] = mergeStyles(value as CSSObject)
+			const style = mergeStyles(value as CSSObject)
+			if (selector) output[selector] = style
+			else Object.assign(output, style)
 		} else {
 			output[selector] = value
 		}
