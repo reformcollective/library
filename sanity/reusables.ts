@@ -116,9 +116,20 @@ export const universalLink = ({
 		...props,
 		type: "link",
 		options: { enableText: withText },
-		validation: required
-			? (rule) => rule.custom((field) => requiredLinkField(field))
-			: undefined,
+		validation: (rule) =>
+			rule.custom((field?: { type?: string; url?: string }) => {
+				if (
+					field?.type === "external" &&
+					field?.url &&
+					!field?.url.startsWith("http")
+				)
+					return {
+						message: "External links must start with https://",
+						path: ["url"],
+					}
+				if (required) return requiredLinkField(field)
+				return true
+			}),
 	})
 
 export const redirect = defineArrayMember({
