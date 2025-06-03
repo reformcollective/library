@@ -20,7 +20,7 @@ const styles = unresponsive(css`
 
 	.lenis.lenis-stopped {
 		body {
-			overflow: hidden;
+			overflow: clip;
 		}
 	}
 
