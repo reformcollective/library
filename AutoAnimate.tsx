@@ -103,6 +103,8 @@ export default function AutoAnimate({
 	 */
 	className?: string
 }) {
+	// Todo resolve this in a better way moving forward
+	"use no memo"
 	const wrapperA = useRef<HTMLDivElement | null>(null)
 	const wrapperB = useRef<HTMLDivElement | null>(null)
 	const sizer = useRef<HTMLDivElement | null>(null)
@@ -116,6 +118,7 @@ export default function AutoAnimate({
 	 */
 	const childKey = extractKey(children)
 	const keyBasedCache = useRef<Record<string, ReactNode>>({})
+
 	keyBasedCache.current[childKey] = children
 	const currentKey = useBetterThrottle(childKey, duration * 1000 + 100)
 
