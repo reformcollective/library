@@ -11,6 +11,7 @@ export function DisplayDate({
 	options?: Intl.DateTimeFormatOptions
 	replacers?: Record<string, string>
 }) {
+	"use no memo"
 	const UTCformatter = new Intl.DateTimeFormat("en-US", {
 		...options,
 		timeZone: "UTC",

@@ -7,6 +7,7 @@ export const useSearchResults = <T extends { id: string }>(
 	items: T[],
 	indexableFields: (keyof T)[],
 ) => {
+	"use no memo"
 	/**
 	 * create our search indexes
 	 */
