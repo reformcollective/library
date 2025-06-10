@@ -1,11 +1,12 @@
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
-import { defineField, type ImageDefinition } from "sanity"
+import { defineArrayMember, defineField, type ImageDefinition } from "sanity"
 import UniversalImage from "./SanityImage"
 import { requiredLinkField } from "sanity-plugin-link-field"
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
+		// @ts-ignore potential styled type mismatch
 		styled(UniversalImage, {
 			width: 160,
 			height: 90,
@@ -106,7 +107,42 @@ export const universalLink = ({
 		...props,
 		type: "link",
 		options: { enableText: withText },
-		validation: required
-			? (rule) => rule.custom((field) => requiredLinkField(field))
-			: undefined,
+		validation: (rule) =>
+			rule.custom((field?: { type?: string; url?: string }) => {
+				if (
+					field?.type === "external" &&
+					field?.url &&
+					!field?.url.startsWith("http")
+				)
+					return {
+						message: "External links must start with https://",
+						path: ["url"],
+					}
+				if (required) return requiredLinkField(field)
+				return true
+			}),
 	})
+
+export const redirect = defineArrayMember({
+	name: "redirect",
+	title: "Redirect",
+	type: "object",
+	fields: [
+		defineField({
+			name: "link",
+			type: "url",
+			description:
+				"If someone tries to navigate to this page in any way, they will be redirected to this URL.",
+		}),
+	],
+	preview: {
+		select: {
+			link: "link",
+		},
+		prepare({ link }) {
+			return {
+				title: `Redirect to "${link}"`,
+			}
+		},
+	},
+})

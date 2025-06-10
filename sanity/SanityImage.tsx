@@ -13,37 +13,47 @@ import { use } from "react"
 import { styled } from "library/styled"
 import { SanityImage } from "sanity-image"
 import { dataset, projectId } from "@/sanity/lib/api"
+import { stegaClean } from "next-sanity"
 
-type SanityImageData<CropType> = {
+type SanityImageData<CropType, WithAlt extends "true" | "false"> = {
 	asset?: { _ref: string }
 	crop?: SanityImageCrop
 	hotspot?: SanityImageHotspot
 	data?: AssetMeta
+	alt?: string
 	cropType?: CropType
+	willHaveAlt?: WithAlt
 }
 
+type SanityProps<CropType> =
+	| {
+			src: SanityImageData<CropType, "false"> | null | undefined
+			alt: string | undefined
+	  }
+	| {
+			src: SanityImageData<CropType, "true"> | null | undefined
+			// the alt should be provided by sanity
+			alt?: undefined
+	  }
+
+type Test = SanityProps<"test">
+
 export type SanityImageProps =
-	| ({
-			src: SanityImageData<"sanity"> | null | undefined
-			alt?: string
+	| (SanityProps<"sanity"> & {
 			objectFit?: "contain" | "cover"
 			objectPosition?: undefined
 			loading?: "eager" | "lazy" | "default"
 			width: number
 			height: number
 	  } & DefaultImageProps)
-	| ({
-			src: SanityImageData<"uncropped"> | null | undefined
-			alt?: string
+	| (SanityProps<"uncropped"> & {
 			objectFit?: undefined
 			objectPosition?: undefined
 			loading?: "eager" | "lazy" | "default"
 			width?: undefined
 			height?: undefined
 	  } & DefaultImageProps)
-	| ({
-			src: SanityImageData<"css"> | null | undefined
-			alt?: string
+	| (SanityProps<"css"> & {
 			objectFit?: "contain" | "cover"
 			objectPosition?: string
 			loading?: "eager" | "lazy" | "default"
@@ -77,6 +87,7 @@ export default function SanityUniversalImage(
 	return (
 		<DefaultSanityImage
 			{...rest}
+			alt={stegaClean(rest.alt ?? src.alt)}
 			loading={prioritizedLoading}
 			preview={src.data?.lqip}
 			// @ts-expect-error library type mismatch
