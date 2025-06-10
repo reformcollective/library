@@ -1,3 +1,5 @@
+"use client"
+
 import MiniSearch from "minisearch"
 import { useEffect, useMemo } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
@@ -7,7 +9,6 @@ export const useSearchResults = <T extends { id: string }>(
 	items: T[],
 	indexableFields: (keyof T)[],
 ) => {
-	"use no memo"
 	/**
 	 * create our search indexes
 	 */
@@ -44,12 +45,14 @@ export const useSearchResults = <T extends { id: string }>(
 	/**
 	 * search for items based on the search term
 	 */
-	const results = useMemo(
-		() => fuzzyMatcher.search(query),
-		[fuzzyMatcher, query],
-	)
-		.map((result) => items.find((item) => item.id === result.id))
-		.filter(Boolean)
+	const results = useMemo(() => {
+		if (!query) return items
 
-	return query ? results : items
+		return fuzzyMatcher
+			.search(query)
+			.map((result) => items.find((item) => item.id === result.id))
+			.filter(Boolean)
+	}, [fuzzyMatcher, query, items])
+
+	return results
 }
