@@ -43,12 +43,14 @@ export const useSearchResults = <T extends { id: string }>(
 	/**
 	 * search for items based on the search term
 	 */
-	const results = useMemo(
-		() => fuzzyMatcher.search(query),
-		[fuzzyMatcher, query],
-	)
-		.map((result) => items.find((item) => item.id === result.id))
-		.filter(Boolean)
+	const results = useMemo(() => {
+		if (!query) return items
 
-	return query ? results : items
+		return fuzzyMatcher
+			.search(query)
+			.map((result) => items.find((item) => item.id === result.id))
+			.filter(Boolean)
+	}, [fuzzyMatcher, query, items])
+
+	return results
 }

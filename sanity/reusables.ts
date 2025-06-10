@@ -1,8 +1,8 @@
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
-import { type ImageDefinition, defineArrayMember, defineField } from "sanity"
-import { requiredLinkField } from "sanity-plugin-link-field"
+import { defineArrayMember, defineField, type ImageDefinition } from "sanity"
 import UniversalImage from "./SanityImage"
+import { requiredLinkField } from "sanity-plugin-link-field"
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
@@ -75,6 +75,7 @@ export const universalImage = <
 				hidden: true,
 				readOnly: true,
 			}),
+
 			...(schemaField.fields ?? []),
 		],
 		options: {

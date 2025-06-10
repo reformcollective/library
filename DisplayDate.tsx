@@ -22,14 +22,13 @@ export function DisplayDate({
 
 	const fallback = <>{UTCformatted}</>
 
+	// always call useClientOnly unconditionally, but determine the content based on replacers
+	let clientContent = formatted
 	if (replacers) {
-		let withReplacers = formatted
-
 		for (const [from, to] of Object.entries(replacers)) {
-			withReplacers = withReplacers.replace(from, to)
+			clientContent = clientContent.replace(from, to)
 		}
-		return useClientOnly(withReplacers, fallback)
 	}
 
-	return useClientOnly(formatted, fallback)
+	return useClientOnly(clientContent, fallback)
 }

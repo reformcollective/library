@@ -1,3 +1,5 @@
+"use client"
+
 import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
 import type { ReactNode, RefObject } from "react"
@@ -115,13 +117,25 @@ export default function AutoAnimate({
 	 * so we'll keep track of the latest UI for each key, and render based on the key
 	 */
 	const childKey = extractKey(children)
-	const keyBasedCache = useRef<Record<string, ReactNode>>({})
-	keyBasedCache.current[childKey] = children
+
+	// Use state instead of ref since this needs to be accessed during render
+	const [keyBasedCache, setKeyBasedCache] = useState<Record<string, ReactNode>>(
+		{},
+	)
+
+	// Update the cache when children change
+	useEffect(() => {
+		setKeyBasedCache((prev) => ({
+			...prev,
+			[childKey]: children,
+		}))
+	}, [childKey, children])
+
 	const currentKey = useBetterThrottle(childKey, duration * 1000 + 100)
 
 	const getNodeFromKey = (key: string | null) => {
 		if (key === null) return null
-		return keyBasedCache.current[key] ?? null
+		return keyBasedCache[key] ?? null
 	}
 
 	/**
