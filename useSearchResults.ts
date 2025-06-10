@@ -1,5 +1,3 @@
-"use client"
-
 import MiniSearch from "minisearch"
 import { useEffect, useMemo } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"

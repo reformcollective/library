@@ -66,6 +66,16 @@ export const universalImage = <
 				hidden: true,
 				readOnly: true,
 			}),
+			defineField({
+				type: "string",
+				name: "willHaveAlt",
+				options: {
+					list: [withAlt === false ? "false" : "true"],
+				},
+				hidden: true,
+				readOnly: true,
+			}),
+
 			...(schemaField.fields ?? []),
 		],
 		options: {
