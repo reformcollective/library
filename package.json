@@ -4,11 +4,11 @@
 	"description": "collection of utilities and helpers for reform collective",
 	"//": "anything that the supermodule may also install should use the ^major syntax. this is so that pnpm can combine duplicate versions to prevent inflating the bundle. this doesn't apply to dev dependencies (e.g. biome)",
 	"dependencies": {
-		"@mux/blurup": "1.0.1",
+		"@mux/blurup": "1.0.2",
 		"@mux/mux-video-react": "0.25.2",
 		"ahooks": "^3",
 		"browser-dtector": "4.1.0",
-		"lenis": "1.3.1",
+		"lenis": "1.3.4",
 		"minisearch": "^7",
 		"restyle": "3.4.2",
 		"sonner": "^2",
@@ -19,7 +19,7 @@
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@types/stylis": "^4.2.7",
-		"@types/three": "^0.176",
+		"@types/three": "^0.177",
 		"typescript": "^5.8.3"
 	},
 	"scripts": {
@@ -27,7 +27,7 @@
 		"format": "biome check --write"
 	},
 	"preinstall": "npx only-allow pnpm",
-	"packageManager": "pnpm@10.10.0",
+	"packageManager": "pnpm@10.12.1",
 	"engines": {
 		"node": "22.x"
 	}
