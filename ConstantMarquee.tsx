@@ -1,149 +1,178 @@
-import gsap from "gsap"
-import type React from "react"
-import { useEffect, useRef, useState } from "react"
-import styled from "styled-components"
+import gsap from "gsap";
+import React from "react";
+import type { ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 
-import { addDebouncedEventListener } from "./functions"
-import useAnimation from "./useAnimation"
+import { addDebouncedEventListener } from "./functions";
+import useAnimation from "./useAnimation";
+import useMedia from "./useMedia";
 
 interface MarqueeProps {
-	children: React.ReactNode
-	className?: string
-	/**
-	 * how many seconds should it take to loop once?
-	 */
-	timing?: number
-	/**
-	 * if true, reverses direction
-	 */
-	reversed?: boolean
-	/**
-	 * How much extra buffer (in pixels) should be maintained offscreen?
-	 *
-	 * useful for when you need a marquee wider than the screen (eg an animated one)
-	 */
-	buffer?: number
+  children: ReactNode;
+  className?: string;
+  /**
+   * how many seconds should it take to loop once?
+   */
+  timing?: number;
+  /**
+   * if true, reverses direction
+   */
+  reversed?: boolean;
+  /**
+   * How much extra buffer (in pixels) should be maintained offscreen?
+   *
+   * useful for when you need a marquee wider than the screen (eg an animated one)
+   */
+  buffer?: number;
 }
 
-export default function ConstantMarquee({
-	children,
-	className,
-	timing = 20,
-	buffer = 0,
-	reversed = false,
+function ConstantMarquee({
+  children,
+  className,
+  timing = 20,
+  buffer = 0,
+  reversed = false,
 }: MarqueeProps) {
-	const marquee = useRef<HTMLDivElement>(null)
-	const [array, setArray] = useState<null[]>([null])
-	const offset = useRef(0)
+  const marquee = useRef<HTMLDivElement>(null);
+  const [array, setArray] = useState<null[]>([null]);
+  const offset = useRef(0);
 
-	useAnimation(
-		() => {
-			if (!marquee.current) return
+  // Only recreate on resize for non-mobile devices
+  const recreateOnResize = useMedia(true, true, true, false);
+  const isMobile = !recreateOnResize;
 
-			/**
-			 * give each child an initial x position
-			 */
-			const first = marquee.current.children[0]
-			const width = first?.clientWidth ?? 0
-			offset.current = Math.min(0, offset.current)
-			gsap.set(marquee.current.children, {
-				x: (i) => i * width + offset.current,
-			})
+  useAnimation(
+    () => {
+      if (!marquee.current) return;
 
-			/**
-			 * animate each child on the x axis
-			 */
-			const tween = gsap.to(marquee.current.children, {
-				duration: timing,
-				ease: "none",
-				x: reversed ? `+=${width}` : `-=${width}`,
-				// pause when the marquee is offscreen (for performance)
-				scrollTrigger: {
-					trigger: marquee.current,
-					start: "top bottom",
-					end: "bottom top",
-					toggleActions: "play pause resume pause",
-				},
-				// when each child goes offscreen, move it to the other side
-				modifiers: {
-					x: gsap.utils.unitize((x: number) => {
-						if (reversed) {
-							if (x > width) {
-								return x - width * array.length
-							}
-						} else {
-							if (x < -width) {
-								return x + width * array.length
-							}
-						}
-						return x
-					}),
-				},
-				onComplete: () => {
-					tween.invalidate()
-					tween.restart()
-				},
-			})
+      /**
+       * give each child an initial x position
+       */
+      const first = marquee.current.children[0];
+      const width = first?.clientWidth ?? 0;
+      offset.current = Math.min(0, offset.current);
+      gsap.set(marquee.current.children, {
+        x: (i) => i * width + offset.current,
+      });
 
-			return () => {
-				// when we refresh, keep the position constant to minimize jumps
-				if (first instanceof HTMLElement)
-					offset.current = parseInt(gsap.getProperty(first, "x").toString(), 10)
-			}
-		},
-		[array, timing, reversed],
-		{
-			kill: true,
-			recreateOnResize: true,
-		},
-	)
+      /**
+       * animate each child on the x axis
+       */
+      let tween: gsap.core.Tween;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: we want specific control of when this refreshes
-	useEffect(() => {
-		/**
-		 * calculate how many children we need to fill the screen
-		 */
-		const update = () => {
-			if (marquee.current) {
-				const width = Math.max(
-					...[...marquee.current.children].map((child) => child.clientWidth),
-				)
+      const tweenConfig: any = {
+        duration: timing,
+        ease: "none",
+        x: reversed ? `+=${width}` : `-=${width}`,
+        // when each child goes offscreen, move it to the other side
+        modifiers: {
+          x: gsap.utils.unitize((x: number) => {
+            if (reversed) {
+              if (x > width) {
+                return x - width * array.length;
+              }
+            } else {
+              if (x < -width) {
+                return x + width * array.length;
+              }
+            }
+            return x;
+          }),
+        },
+        onComplete: () => {
+          tween.invalidate();
+          tween.restart();
+        },
+      };
 
-				// number needed to fill width plus some buffer
-				const newNumber = Math.ceil((window.innerWidth + buffer) / width) + 1
-				if (Number.isFinite(newNumber) && newNumber > 0)
-					setArray(Array.from({ length: newNumber }, () => null))
-			}
-		}
+      // Only add scrollTrigger for non-mobile devices
+      if (!isMobile) {
+        tweenConfig.scrollTrigger = {
+          trigger: marquee.current,
+          start: "top bottom",
+          end: "bottom top",
+          toggleActions: "play pause resume pause",
+        };
+      }
 
-		update()
+      tween = gsap.to(marquee.current.children, tweenConfig);
 
-		// update when the marquee children change size
-		const elementsToObserve = marquee.current?.querySelectorAll("*") ?? []
-		const observer = new ResizeObserver(update)
-		for (const element of elementsToObserve) {
-			observer.observe(element)
-		}
+      return () => {
+        // when we refresh, keep the position constant to minimize jumps
+        if (first instanceof HTMLElement)
+          offset.current = parseInt(
+            gsap.getProperty(first, "x").toString(),
+            10
+          );
+      };
+    },
+    [array, timing, reversed],
+    {
+      kill: true,
+      recreateOnResize: recreateOnResize,
+    }
+  );
 
-		// update when the screen size changes
-		const remove = addDebouncedEventListener(window, "resize", update, 100)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we want specific control of when this refreshes
+  useEffect(() => {
+    /**
+     * calculate how many children we need to fill the screen
+     */
+    const update = () => {
+      if (marquee.current) {
+        const width = Math.max(
+          ...[...marquee.current.children].map((child) => child.clientWidth)
+        );
 
-		return () => {
-			remove()
-			observer.disconnect()
-		}
-	}, [buffer, children])
+        // number needed to fill width plus some buffer
+        const newNumber = Math.ceil((window.innerWidth + buffer) / width) + 1;
+        if (
+          Number.isFinite(newNumber) &&
+          newNumber > 0 &&
+          newNumber !== array.length
+        )
+          setArray(Array.from({ length: newNumber }, () => null));
+      }
+    };
 
-	return (
-		<StyledMarquee ref={marquee} $number={array.length} className={className}>
-			{/* repeat children NUMBER times */}
-			{array.map((_, index) => {
-				// biome-ignore lint/suspicious/noArrayIndexKey: index is the only unique identifier here, since all children are identical
-				return <div key={index}>{children}</div>
-			})}
-		</StyledMarquee>
-	)
+    update();
+
+    // update when the marquee children change size
+    const firstChild = marquee.current?.children[0];
+    const observer = new ResizeObserver(update);
+    if (firstChild) {
+      observer.observe(firstChild);
+    }
+
+    // update when the screen size changes
+    const remove = addDebouncedEventListener(window, "resize", update, 100);
+
+    return () => {
+      remove();
+      observer.disconnect();
+    };
+  }, [buffer]);
+
+  return (
+    <StyledMarquee ref={marquee} $number={array.length} className={className}>
+      {/* repeat children NUMBER times */}
+      {array.map((_, index) => {
+        // biome-ignore lint/suspicious/noArrayIndexKey: index is the only unique identifier here, since all children are identical
+        return <div key={index}>{children}</div>;
+      })}
+    </StyledMarquee>
+  );
 }
+
+export default React.memo(ConstantMarquee, (prevProps, nextProps) => {
+  return (
+    prevProps.timing === nextProps.timing &&
+    prevProps.buffer === nextProps.buffer &&
+    prevProps.reversed === nextProps.reversed &&
+    prevProps.className === nextProps.className
+  );
+});
 
 const StyledMarquee = styled.div<{ $number: number }>`
   position: relative;
@@ -164,4 +193,4 @@ const StyledMarquee = styled.div<{ $number: number }>`
   & > div:first-child {
     position: relative;
   }
-`
+`;
