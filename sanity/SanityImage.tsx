@@ -36,8 +36,6 @@ type SanityProps<CropType> =
 			alt?: undefined
 	  }
 
-type Test = SanityProps<"test">
-
 export type SanityImageProps =
 	| (SanityProps<"sanity"> & {
 			objectFit?: "contain" | "cover"

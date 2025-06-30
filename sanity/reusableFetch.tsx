@@ -59,13 +59,11 @@ export const SanityLive = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
 
 	return (
-		<>
-			<LiveWrapper>
-				<Toaster />
-				{isDraftMode && <DraftModeOverlay />}
-				<InternalLive onError={handleError} refreshOnFocus={false} />
-			</LiveWrapper>
-		</>
+		<LiveWrapper>
+			<Toaster />
+			{isDraftMode && <DraftModeOverlay />}
+			<InternalLive onError={handleError} refreshOnFocus={false} />
+		</LiveWrapper>
 	)
 }
 

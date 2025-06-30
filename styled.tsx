@@ -20,7 +20,11 @@
  */
 
 import config from "libraryConfig"
-import { type CSSObject, styled as restyled, keyframes as restyleKeyframes } from "restyle"
+import {
+	type CSSObject,
+	styled as restyled,
+	keyframes as restyleKeyframes,
+} from "restyle"
 import type { KeyframesObject } from "restyle/keyframes"
 import media, {
 	desktopBreakpoint,
