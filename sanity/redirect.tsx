@@ -2,8 +2,6 @@ import { css, f, styled } from "library/styled"
 import { draftMode } from "next/headers"
 import { redirect } from "next/navigation"
 import type { GetSectionType } from "page"
-import colors from "styles/colors"
-import textStyles from "styles/text"
 
 export async function Redirect({ link }: GetSectionType<"redirect">) {
 	const isDraft = await (await draftMode()).isEnabled
