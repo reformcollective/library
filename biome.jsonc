@@ -29,8 +29,7 @@
 							}
 						]
 					}
-				},
-				"noUnusedImports": "info"
+				}
 			}
 		}
 	},
