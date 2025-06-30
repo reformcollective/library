@@ -11,7 +11,7 @@ export const singletonPlugin = definePlugin((types: string[]) => {
 		document: {
 			// Hide 'Singletons (such as Settings)' from new document options
 			// https://user-images.githubusercontent.com/81981/195728798-e0c6cf7e-d442-4e58-af3a-8cd99d7fcc28.png
-			newDocumentOptions: (prev, { creationContext, ...rest }) => {
+			newDocumentOptions: (prev, { creationContext }) => {
 				if (creationContext.type === "global") {
 					return prev.filter(
 						(templateItem) => !types.includes(templateItem.templateId),

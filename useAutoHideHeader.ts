@@ -1,4 +1,4 @@
-import { ScrollTrigger, gsap } from "gsap/all"
+import { gsap, ScrollTrigger } from "gsap/all"
 import { usePathname } from "next/navigation"
 import { type RefObject, useEffect, useRef } from "react"
 import { useIsSmooth } from "./Scroll"

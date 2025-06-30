@@ -1,6 +1,6 @@
 "use client"
 
-import { Observer, ScrollTrigger, gsap } from "gsap/all"
+import { gsap, Observer, ScrollTrigger } from "gsap/all"
 import {
 	Fragment,
 	type ReactNode,
@@ -10,8 +10,8 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { createDebouncedEventListener } from "./ScreenContext"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
+import { createDebouncedEventListener } from "./ScreenContext"
 import { css, fresponsive, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
 import { useCombinedRefs } from "./useCombinedRefs"

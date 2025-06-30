@@ -26,7 +26,7 @@ const defaultConfig = {
 
 export const defineLibraryConfig = <SetConfig extends Partial<Config>>(
 	config: SetConfig,
-) => ({
+): Config => ({
 	...defaultConfig,
 	...config,
 })

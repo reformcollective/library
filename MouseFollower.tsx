@@ -1,15 +1,15 @@
 "use client"
 
+import { useLatest } from "ahooks"
 import gsap from "gsap/all"
 import { type ReactNode, useRef } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
+import { useClientOnly } from "./ClientOnly"
+import { useLoadState } from "./link/useLoadState"
+import { subscribeToMousePosition } from "./mouse-position"
+import { useIsSmooth } from "./Scroll"
 import { styled } from "./styled"
 import { useAnimation } from "./useAnimation"
-import { useLatest } from "ahooks"
-import { useLoadState } from "./link/useLoadState"
-import { useIsSmooth } from "./Scroll"
-import { useClientOnly } from "./ClientOnly"
-import { subscribeToMousePosition } from "./mouse-position"
 
 // Default animation values
 const DEFAULT_QUICK_TO_DURATION = 0.4

@@ -5,7 +5,7 @@
 	"//": "anything that the supermodule may also install should use the ^major syntax. this is so that pnpm can combine duplicate versions to prevent inflating the bundle. this doesn't apply to dev dependencies (e.g. biome)",
 	"dependencies": {
 		"@mux/blurup": "1.0.2",
-		"@mux/mux-video-react": "0.25.2",
+		"@mux/mux-video-react": "0.26.0",
 		"ahooks": "^3",
 		"browser-dtector": "4.1.0",
 		"lenis": "1.3.4",
@@ -17,17 +17,21 @@
 		"valibot": "^1"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
+		"@biomejs/biome": "^2.0.6",
 		"@types/stylis": "^4.2.7",
 		"@types/three": "^0.177",
 		"typescript": "^5.8.3"
 	},
 	"scripts": {
+		"prelint": "mv biome-shared.jsonc biome.jsonc",
 		"lint": "biome lint",
-		"format": "biome check --write"
+		"postlint": "mv biome.jsonc biome-shared.jsonc",
+		"preformat": "mv biome-shared.jsonc biome.jsonc",
+		"format": "biome check --write",
+		"postformat": "mv biome.jsonc biome-shared.jsonc"
 	},
 	"preinstall": "npx only-allow pnpm",
-	"packageManager": "pnpm@10.12.1",
+	"packageManager": "pnpm@10.12.4",
 	"engines": {
 		"node": "22.x"
 	}

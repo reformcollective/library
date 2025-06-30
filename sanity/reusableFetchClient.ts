@@ -1,10 +1,10 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { isCorsOriginError } from "next-sanity"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { studioUrl } from "../../../sanity/lib/api"
-import { usePathname } from "next/navigation"
 
 /**
  * if sanity live is initialized in the studio, the page
