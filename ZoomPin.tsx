@@ -1,8 +1,8 @@
 import { Flip, gsap } from "gsap/all"
 import {
 	type ComponentProps,
-	type ReactNode,
 	createContext,
+	type ReactNode,
 	use,
 	useEffect,
 	useState,

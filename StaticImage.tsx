@@ -4,7 +4,7 @@ import { styled } from "library/styled"
 import type { PlaceholderValue } from "next/dist/shared/lib/get-img-props"
 import type { StaticImageData } from "next/image"
 import Image from "next/image"
-import { createContext, use, type ImgHTMLAttributes } from "react"
+import { createContext, type ImgHTMLAttributes, use } from "react"
 
 export const EagerContext = createContext(false)
 export const EagerImages = ({ children }: { children: React.ReactNode }) => (

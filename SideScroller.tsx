@@ -1,6 +1,6 @@
 import gsap from "gsap/all"
-import { usePinType } from "library/Scroll"
 import useCanHover from "library/canHover"
+import { usePinType } from "library/Scroll"
 import { useAnimation } from "library/useAnimation"
 import { useEffect, useState } from "react"
 

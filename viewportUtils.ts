@@ -8,8 +8,8 @@ import {
 	tabletBreakpoint,
 	tabletDesignSize,
 } from "styles/media"
-import { ScreenContext, useDebouncedEventListener } from "./ScreenContext"
 import { isBrowser } from "./deviceDetection"
+import { ScreenContext, useDebouncedEventListener } from "./ScreenContext"
 import { getMedia } from "./useMedia"
 
 /**

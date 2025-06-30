@@ -1,14 +1,14 @@
-import { client } from "@/sanity/lib/client"
-import { token } from "@/sanity/lib/token"
-import DraftModeOverlay from "library/sanity/DraftModeToast"
 import { fetchAssetMeta } from "library/sanity/assetMetadata"
+import DraftModeOverlay from "library/sanity/DraftModeToast"
+import { draftMode } from "next/headers"
 import {
-	defineLive,
 	type ClientPerspective,
+	defineLive,
 	type QueryParams,
 } from "next-sanity"
-import { draftMode } from "next/headers"
 import { Toaster } from "sonner"
+import { client } from "@/sanity/lib/client"
+import { token } from "@/sanity/lib/token"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
 
 /**

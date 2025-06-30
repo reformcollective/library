@@ -1,9 +1,9 @@
 import UniversalLink from "library/link"
 import { styled } from "library/styled"
 import {
-	PortableText,
 	type ListNestMode,
 	type MissingComponentHandler,
+	PortableText,
 	type PortableTextComponents,
 } from "next-sanity"
 import type { ReactNode } from "react"

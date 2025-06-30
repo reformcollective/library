@@ -1,19 +1,19 @@
 "use client"
 
-import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import type { AssetMeta } from "library/sanity/assetMetadata"
+import { styled } from "library/styled"
+import { stegaClean } from "next-sanity"
+import { use } from "react"
+import { SanityImage } from "sanity-image"
+import { dataset, projectId } from "@/sanity/lib/api"
+import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import StaticImage, {
+	type DefaultImageProps,
 	defaultImageStyles,
 	EagerContext,
 	prioritizeLoading,
-	type DefaultImageProps,
 	type StaticImageProps,
 } from "../StaticImage"
-import { use } from "react"
-import { styled } from "library/styled"
-import { SanityImage } from "sanity-image"
-import { dataset, projectId } from "@/sanity/lib/api"
-import { stegaClean } from "next-sanity"
 
 type SanityImageData<CropType, WithAlt extends "true" | "false"> = {
 	asset?: { _ref: string }

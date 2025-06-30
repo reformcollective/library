@@ -1,14 +1,14 @@
-import { ScrollTrigger } from "gsap/all"
-import { createScrollLock } from "library/Scroll"
-import { pathnameMatches, sleep } from "library/functions"
 import libraryConfig from "libraryConfig"
+import { ScrollTrigger } from "gsap/all"
+import { pathnameMatches, sleep } from "library/functions"
+import { createScrollLock } from "library/Scroll"
+import { useRouter } from "next/navigation"
 import type { MouseEvent } from "react"
 import { use, useCallback } from "react"
-import { loader } from "./loader"
-import { getScrollOffset } from "./util"
-import { TransitionsContext } from "./usePageTransition"
-import { useRouter } from "next/navigation"
 import { flushSync } from "react-dom"
+import { loader } from "./loader"
+import { TransitionsContext } from "./usePageTransition"
+import { getScrollOffset } from "./util"
 
 // at some point I might re-add support for different transitions (like on newform) but not really needed for now
 
