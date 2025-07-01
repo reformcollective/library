@@ -34,7 +34,7 @@ try {
 			// Replace the old hash with the new one
 			const updatedContent = content.replace(
 				submoduleRegex,
-				(match, fileName, oldHash) => {
+				(_match, fileName, _oldHash) => {
 					return `${fileName}.yml@${latestHash}`
 				},
 			)

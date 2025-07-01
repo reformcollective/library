@@ -20,8 +20,11 @@
  */
 
 import config from "libraryConfig"
-import { type CSSObject, keyframes as restyleKeyframes } from "restyle"
-import { styled as restyled } from "restyle"
+import {
+	type CSSObject,
+	styled as restyled,
+	keyframes as restyleKeyframes,
+} from "restyle"
 import type { KeyframesObject } from "restyle/keyframes"
 import media, {
 	desktopBreakpoint,
@@ -31,11 +34,11 @@ import media, {
 } from "styles/media"
 import {
 	COMMENT,
+	compile,
 	DECLARATION,
 	type Element,
 	IMPORT,
 	RULESET,
-	compile,
 } from "stylis"
 
 /**
@@ -435,11 +438,11 @@ export const styled = ((
  */
 export const css = String.raw
 export {
-	media as mediaBuilder,
-	GlobalStyles,
 	type CSSObject,
 	type CSSValue,
 	css as createStyle,
+	GlobalStyles,
+	media as mediaBuilder,
 } from "restyle"
 export const keyframes = (...args: Parameters<typeof String.raw>) =>
 	restyleKeyframes(

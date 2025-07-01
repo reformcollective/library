@@ -1,9 +1,9 @@
 import { useAsyncEffect } from "ahooks"
 import gsap, { ScrollTrigger } from "gsap/all"
-import { ScreenContext } from "library/ScreenContext"
-import { createScrollLock } from "library/Scroll"
 import { isBrowser } from "library/deviceDetection"
 import { sleep } from "library/functions"
+import { ScreenContext } from "library/ScreenContext"
+import { createScrollLock } from "library/Scroll"
 import { type RefObject, use, useMemo, useState } from "react"
 import { flushSync } from "react-dom"
 
