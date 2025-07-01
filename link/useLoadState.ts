@@ -12,10 +12,12 @@ export const useLoadState = () => {
 
 	const entering = !preloaderFinished || pageTransitionInProgress === "after"
 	const leaving = pageTransitionInProgress === "before"
+	const completed = preloaderFinished
 
 	return {
 		entering,
 		leaving,
+		completed,
 		idle: !entering && !leaving,
 	}
 }

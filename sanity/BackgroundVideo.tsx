@@ -16,6 +16,8 @@ export function BackgroundVideo({
 	loop,
 	ref: containerRef,
 	onEnded,
+	onTimeUpdate,
+	onLoadedMetadata,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -39,6 +41,8 @@ export function BackgroundVideo({
 	ref?: React.Ref<HTMLDivElement>
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
+	onTimeUpdate?: (currentTime: number, duration: number) => void
+	onLoadedMetadata?: (duration: number) => void
 }) {
 	const video = useRef<HTMLVideoElement>(null)
 	const videoPlayPromise = useRef(Promise.resolve())
@@ -109,6 +113,20 @@ export function BackgroundVideo({
 		return () => observer.disconnect()
 	}, [])
 
+	const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+		const videoElement = e.currentTarget
+		if (onTimeUpdate && videoElement.duration) {
+			onTimeUpdate(videoElement.currentTime, videoElement.duration)
+		}
+	}
+
+	const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+		const videoElement = e.currentTarget
+		if (onLoadedMetadata && videoElement.duration) {
+			onLoadedMetadata(videoElement.duration)
+		}
+	}
+
 	return (
 		<Container
 			ref={containerRef}
@@ -159,6 +177,8 @@ export function BackgroundVideo({
 				}
 				streamType="on-demand"
 				onEnded={onEnded}
+				onTimeUpdate={handleTimeUpdate}
+				onLoadedMetadata={handleLoadedMetadata}
 			/>
 		</Container>
 	)
