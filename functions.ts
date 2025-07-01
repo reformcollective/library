@@ -12,7 +12,7 @@ export function pathnameMatches(pathA: string, pathB: string) {
 const parseURL = (url: string, base?: string) => {
 	try {
 		return new URL(url, base)
-	} catch (error) {
+	} catch {
 		return undefined
 	}
 }

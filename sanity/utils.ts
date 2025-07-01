@@ -1,11 +1,10 @@
 import createImageUrlBuilder from "@sanity/image-url"
-
+import { dataset, projectId } from "@/sanity/lib/api"
 import type {
+	internalGroqTypeReferenceTo,
 	SanityImageCrop,
 	SanityImageHotspot,
-	internalGroqTypeReferenceTo,
 } from "@/sanity.types"
-import { dataset, projectId } from "@/sanity/lib/api"
 
 export type MainImage = NonNullable<Parameters<typeof urlForImage>[0]>
 

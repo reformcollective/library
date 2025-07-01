@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react"
 export function useBetterThrottle<T>(value: T, msWait: number): T {
 	const [throttledValue, setThrottledValue] = useState(value)
 
-	const throttledUntil = useRef(new Date().getTime() + msWait)
+	const throttledUntil = useRef(Date.now() + msWait)
 	const isWaiting = useRef(false)
 	const [refreshSignal, setRefreshSignal] = useState(0)
 
@@ -18,12 +18,12 @@ export function useBetterThrottle<T>(value: T, msWait: number): T {
 		/**
 		 * if we're currently throttling, schedule a refresh for when the throttle is over
 		 */
-		if (new Date().getTime() < throttledUntil.current) {
+		if (Date.now() < throttledUntil.current) {
 			isWaiting.current = true
 			setTimeout(() => {
 				isWaiting.current = false
 				setRefreshSignal(refreshSignal + 1)
-			}, throttledUntil.current - new Date().getTime())
+			}, throttledUntil.current - Date.now())
 			return
 		}
 
@@ -31,7 +31,7 @@ export function useBetterThrottle<T>(value: T, msWait: number): T {
 		 * if we're not throttling, update the value and set the next throttling time
 		 */
 		setThrottledValue(value)
-		throttledUntil.current = new Date().getTime() + msWait
+		throttledUntil.current = Date.now() + msWait
 	}, [msWait, refreshSignal, value])
 
 	/**
@@ -41,7 +41,7 @@ export function useBetterThrottle<T>(value: T, msWait: number): T {
 		if (document.visibilityState === "hidden") {
 			throttledUntil.current = Number.POSITIVE_INFINITY
 		} else {
-			throttledUntil.current = new Date().getTime() + msWait
+			throttledUntil.current = Date.now() + msWait
 		}
 	})
 

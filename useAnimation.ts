@@ -7,8 +7,8 @@ import {
 	useRef,
 	useState,
 } from "react"
-import { ScreenContext } from "./ScreenContext"
 import { isBrowser } from "./deviceDetection"
+import { ScreenContext } from "./ScreenContext"
 
 const useIsomorphicLayoutEffect =
 	typeof document !== "undefined" ? useLayoutEffect : useEffect
