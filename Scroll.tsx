@@ -153,7 +153,10 @@ ScrollTrigger.config({
 	ignoreMobileResize: true,
 })
 
-export const SmoothScrollStyle = ({ ...config }: LenisOptions = {}) => {
+export const SmoothScrollStyle = ({
+	infinite,
+	...config
+}: LenisOptions & { infinite?: boolean } = {}) => {
 	useDeepCompareLayoutEffect(() => {
 		/**
 		 * create the smoother
@@ -166,7 +169,11 @@ export const SmoothScrollStyle = ({ ...config }: LenisOptions = {}) => {
 		if (!rootLayout) throw new Error("root-layout not found")
 
 		// Initialize a new Lenis instance for smooth scrolling
-		const lenis = new Lenis({ ...config, eventsTarget: rootLayout })
+		const lenis = new Lenis({
+			...config,
+			eventsTarget: rootLayout,
+			infinite: infinite || false,
+		})
 		window.lenis = lenis
 
 		// Synchronize Lenis scrolling with GSAP's ScrollTrigger plugin
