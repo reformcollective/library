@@ -32,6 +32,7 @@ export function InfiniteSideScroll({
 	scrollVelocity,
 	onChange,
 	loopRef,
+	centerMode = true,
 }: {
 	children: React.ReactNode
 	className?: string
@@ -76,6 +77,10 @@ export function InfiniteSideScroll({
 	 * you can access the loop via a ref
 	 */
 	loopRef?: RefObject<InfiniteLoop | null>
+	/**
+	 * if true (default), the first item will be positioned in the center. If false, the first item will appear on the left side.
+	 */
+	centerMode?: boolean
 }) {
 	const rowRef = useRef<HTMLDivElement>(null)
 	const internalLoopRef = useCombinedRefs(loopRef, undefined)
@@ -117,7 +122,7 @@ export function InfiniteSideScroll({
 				draggable,
 				snap: disableSnap ? false : 1,
 				paused: marqueeSpeed === 0,
-				center: true,
+				center: centerMode,
 				speed: marqueeSpeed === 0 ? 2 : marqueeSpeed,
 				reversed,
 				repeat: -1,
@@ -204,6 +209,7 @@ export function InfiniteSideScroll({
 			scrollVelocity,
 			numberNeeded,
 			internalLoopRef,
+			centerMode
 		],
 		{ recreateOnResize: true },
 	)
