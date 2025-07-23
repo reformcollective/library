@@ -59,6 +59,7 @@ export default function AutoAnimate({
 	parameters,
 	fromParameters,
 	toParameters,
+	fromToParameters,
 	alignment = "start",
 	className = "",
 }: {
@@ -89,6 +90,10 @@ export default function AutoAnimate({
 	 * Any additional parameters to pass to the tween that animates old content out
 	 */
 	toParameters?: GSAPTweenVars
+	/**
+	 * Any additional parameters to pass to the tween that animates new content in and old content out
+	 */
+	fromToParameters?: GSAPTweenVars
 	/**
 	 * if the size changes, how should we align the content?
 	 *
@@ -273,6 +278,16 @@ export default function AutoAnimate({
 				})
 			},
 		})
+
+		if (fromToParameters) {
+			console.log("aimating fromTo parameters", fromToParameters)
+			gsap.to(animateSlotIn.current, {
+				ease: "power3.inOut",
+				duration,
+				...parameters,
+				...fromToParameters,
+			})
+		}
 
 		return cleanup
 	}, [currentKey])

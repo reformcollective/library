@@ -51,11 +51,9 @@ if (isCI) {
 		? colors.cyan
 		: isNetlify
 			? colors.green
-			: colors.yellow
-
-	console.log(
-		`\n${colors.bright}${colors.blue}⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯${colors.reset}`,
-	)
+			: colors.yellow(
+					`\n${colors.bright}${colors.blue}⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯${colors.reset}`,
+				)
 	console.log(
 		`${colors.bright}Deploy Environment:${colors.reset} ${platformColor}${platform}${colors.reset}`,
 	)
