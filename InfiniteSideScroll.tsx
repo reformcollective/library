@@ -209,7 +209,7 @@ export function InfiniteSideScroll({
 			scrollVelocity,
 			numberNeeded,
 			internalLoopRef,
-			centerMode
+			centerMode,
 		],
 		{ recreateOnResize: true },
 	)
