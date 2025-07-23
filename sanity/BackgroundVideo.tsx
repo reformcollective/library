@@ -11,7 +11,7 @@ export function BackgroundVideo({
 	videoAspectRatio,
 	videoDuration,
 	play = true,
-	playAudio = false,
+	muted = true,
 	minResolution = "480p",
 	className,
 	loop,
@@ -34,11 +34,11 @@ export function BackgroundVideo({
 	 */
 	play?: boolean
 	/**
-	 * should the video play audio?
+	 * should the video be muted?
 	 * can be toggled to mute/unmuted
-	 * @default false
+	 * @default true
 	 */
-	playAudio?: boolean
+	muted?: boolean
 	/**
 	 * minimum resolution to play the video at
 	 */
@@ -156,7 +156,7 @@ export function BackgroundVideo({
 						: undefined
 				}
 				preload="metadata"
-				muted={!playAudio}
+				muted={muted}
 				playsInline
 				style={{ opacity: videoCanPlay ? 1 : 0 }}
 			/>
@@ -172,7 +172,7 @@ export function BackgroundVideo({
 				// auto will generally load the first few seconds
 				preload={loadVideo ? "auto" : "metadata"}
 				onCanPlay={() => setVideoCanPlay(false)}
-				muted={!playAudio}
+				muted={muted}
 				playsInline
 				loop={loop}
 				poster={
