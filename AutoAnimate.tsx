@@ -280,7 +280,6 @@ export default function AutoAnimate({
 		})
 
 		if (fromToParameters) {
-			console.log("aimating fromTo parameters", fromToParameters)
 			gsap.to(animateSlotIn.current, {
 				ease: "power3.inOut",
 				duration,
