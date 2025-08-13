@@ -1,66 +1,59 @@
 "use client"
 
 import {
-	type ComponentProps,
 	unstable_ViewTransition as ReactViewTransition,
+	type ComponentProps,
 } from "react"
 import { usePreloader } from "./link/usePreloader"
-import { type CSSObject, createStyle } from "./styled"
+import { createStyle, type CSSObject } from "./styled"
 
 type ClassProps = "default" | "enter" | "exit" | "share" | "update"
 
-type TransitionProps = Omit<
-	ComponentProps<typeof ReactViewTransition>,
-	ClassProps
-> & {
-	[key in ClassProps]?: CSSObject
+type TransitionProps = {
+	[key in ClassProps]?: CSSObject | "auto" | "none"
+} & Omit<ComponentProps<typeof ReactViewTransition>, ClassProps>
+
+const makeStyle = (style: CSSObject | "none" | "auto") => {
+	if (style === "none") return ["none"]
+	if (style === "auto") return ["auto"]
+	return createStyle(style)
 }
 
 export function Transition({
 	children,
-	default: defaultStyle,
-	enter,
-	exit,
-	share,
-	update,
+	default: defaultStyle = "auto",
+	enter = "auto",
+	exit = "auto",
+	share = "auto",
+	update = "auto",
 	...props
 }: TransitionProps) {
 	const { completed } = usePreloader()
-	const [defaultClass, DefaultStyle] = defaultStyle
-		? createStyle(defaultStyle)
-		: []
-	const [enterClass, EnterStyle] = enter ? createStyle(enter) : []
-	const [exitClass, ExitStyle] = exit ? createStyle(exit) : []
-	const [shareClass, ShareStyle] = share ? createStyle(share) : []
-	const [updateClass, UpdateStyle] = update ? createStyle(update) : []
+	const [defaultClass, DefaultStyle] = makeStyle(defaultStyle)
+	const [enterClass, EnterStyle] = makeStyle(enter)
+	const [exitClass, ExitStyle] = makeStyle(exit)
+	const [shareClass, ShareStyle] = makeStyle(share)
+	const [updateClass, UpdateStyle] = makeStyle(update)
 
-	if (completed) {
-		const viewTransitionProps = {
-			...props,
-			default: defaultClass,
-			enter: enterClass,
-			exit: exitClass,
-			share: shareClass,
-			update: updateClass,
-		}
-
-		return (
-			<>
-				<ReactViewTransition {...viewTransitionProps}>
-					{children}
-				</ReactViewTransition>
-				{DefaultStyle && <DefaultStyle />}
-				{EnterStyle && <EnterStyle />}
-				{ExitStyle && <ExitStyle />}
-				{ShareStyle && <ShareStyle />}
-				{UpdateStyle && <UpdateStyle />}
-			</>
-		)
+	const viewTransitionProps = {
+		...props,
+		default: completed ? defaultClass : "none",
+		enter: completed ? enterClass : "none",
+		exit: completed ? exitClass : "none",
+		share: completed ? shareClass : "none",
+		update: completed ? updateClass : "none",
 	}
 
 	return (
-		<ReactViewTransition enter="none" exit="none" update="none" share="none">
-			{children}
-		</ReactViewTransition>
+		<>
+			<ReactViewTransition {...viewTransitionProps}>
+				{children}
+			</ReactViewTransition>
+			{DefaultStyle && <DefaultStyle />}
+			{EnterStyle && <EnterStyle />}
+			{ExitStyle && <ExitStyle />}
+			{ShareStyle && <ShareStyle />}
+			{UpdateStyle && <UpdateStyle />}
+		</>
 	)
 }
