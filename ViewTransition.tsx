@@ -13,19 +13,19 @@ type TransitionProps = {
 	[key in ClassProps]?: CSSObject | "auto" | "none"
 } & Omit<ComponentProps<typeof ReactViewTransition>, ClassProps>
 
-const makeStyle = (style: CSSObject | "none" | "auto") => {
+const makeStyle = (style: CSSObject | "none" | "auto" | undefined) => {
 	if (style === "none") return ["none"]
 	if (style === "auto") return ["auto"]
-	return createStyle(style)
+	return style ? createStyle(style) : [style]
 }
 
 export function Transition({
 	children,
-	default: defaultStyle = "auto",
-	enter = "auto",
-	exit = "auto",
-	share = "auto",
-	update = "auto",
+	default: defaultStyle,
+	enter,
+	exit,
+	share,
+	update,
 	...props
 }: TransitionProps) {
 	const { completed } = usePreloader()
