@@ -1,11 +1,11 @@
 "use client"
 
 import {
-	unstable_ViewTransition as ReactViewTransition,
 	type ComponentProps,
+	unstable_ViewTransition as ReactViewTransition,
 } from "react"
 import { usePreloader } from "./link/usePreloader"
-import { createStyle, type CSSObject } from "./styled"
+import { type CSSObject, createStyle } from "./styled"
 
 type ClassProps = "default" | "enter" | "exit" | "share" | "update"
 
