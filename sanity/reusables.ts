@@ -6,7 +6,6 @@ import UniversalImage from "./SanityImage"
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
-		// @ts-ignore potential styled type mismatch
 		styled(UniversalImage, {
 			width: 160,
 			height: 90,
