@@ -160,33 +160,48 @@ export function BackgroundVideo({
 				playsInline
 				style={{ opacity: videoCanPlay ? 1 : 0 }}
 			/>
-			<MainVideo
-				ref={video}
-				src={
-					// don't attempt to load a video if we don't have one, or if it already failed
-					playbackFailure || !playbackId
-						? undefined
-						: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
-				}
-				// a value of 'metadata' will load the first frame, but not the rest of the video
-				// auto will generally load the first few seconds
-				preload={loadVideo ? "auto" : "metadata"}
-				onCanPlay={() => setVideoCanPlay(false)}
-				muted={muted}
-				playsInline
-				loop={loop}
-				poster={
-					playbackFailure
-						? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${
-								videoDuration
-							}&width=${posterSize}`
-						: undefined
-				}
-				streamType="on-demand"
-				onEnded={onEnded}
-				onTimeUpdate={handleTimeUpdate}
-				onLoadedMetadata={handleLoadedMetadata}
-			/>
+			{/* this is to combat a safari rendering bug where the video doesn't render properly if being lazy loaded or dynamically loaded. */}
+			{loadVideo ? (
+				<MainVideo
+					key={`${playbackId}-loaded`}
+					ref={video}
+					src={
+						playbackFailure || !playbackId
+							? undefined
+							: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
+					}
+					preload="auto"
+					onCanPlay={() => setVideoCanPlay(false)}
+					muted={muted}
+					playsInline
+					loop={loop}
+					poster={
+						playbackFailure
+							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${
+									videoDuration
+								}&width=${posterSize}`
+							: undefined
+					}
+					streamType="on-demand"
+					onEnded={onEnded}
+					onTimeUpdate={handleTimeUpdate}
+					onLoadedMetadata={handleLoadedMetadata}
+				/>
+			) : (
+				<MainVideo
+					key={`${playbackId}-placeholder`}
+					ref={video}
+					preload="metadata"
+					onCanPlay={() => setVideoCanPlay(false)}
+					muted={muted}
+					playsInline
+					loop={loop}
+					streamType="on-demand"
+					onEnded={onEnded}
+					onTimeUpdate={handleTimeUpdate}
+					onLoadedMetadata={handleLoadedMetadata}
+				/>
+			)}
 		</Container>
 	)
 }
