@@ -13,10 +13,10 @@ module.exports = function (source) {
 	const rawHeight = source.match(/height="(\d+)"/)?.[1]
 	const rawViewBox = source.match(/viewBox="(\d+ \d+ \d+ \d+)"/)?.[1]
 
-	const width = Number.parseInt(rawWidth) || 0
-	const fallbackWidth = Number.parseInt(rawViewBox?.split(" ")[2]) || 0
-	const height = Number.parseInt(rawHeight) || 0
-	const fallbackHeight = Number.parseInt(rawViewBox?.split(" ")[3]) || 0
+	const width = Number.parseInt(rawWidth, 10) || 0
+	const fallbackWidth = Number.parseInt(rawViewBox?.split(" ")[2], 10) || 0
+	const height = Number.parseInt(rawHeight, 10) || 0
+	const fallbackHeight = Number.parseInt(rawViewBox?.split(" ")[3], 10) || 0
 
 	const result = {
 		src: `data:image/svg+xml;base64,${data}`,
