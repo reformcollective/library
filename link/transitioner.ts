@@ -10,14 +10,48 @@ import { loader } from "./loader"
 import { TransitionsContext } from "./usePageTransition"
 import { getScrollOffset } from "./util"
 
-// at some point I might re-add support for different transitions (like on newform) but not really needed for now
+const waitForViewTransition = async () => {
+	try {
+		// @ts-expect-error react internals
+		await document.__reactViewTransition.finished
+	} catch {
+		return Promise.resolve()
+	}
+}
 
 export const useTransitioner = () => {
 	const { animations, setIsAnimating } = use(TransitionsContext)
 	const router = useRouter()
 
 	return useCallback(
-		async ({ e, to }: { e: MouseEvent; to: string }) => {
+		async ({
+			e,
+			to,
+			signal,
+			transitionName,
+		}: {
+			/**
+			 * the mouse event that triggered the navigation
+			 * necessary for preventing default behavior
+			 */
+			e: MouseEvent | null
+			/**
+			 * the route to navigate to
+			 */
+			to: string
+			/**
+			 * if you want to cancel the navigation, pass an AbortSignal
+			 * calling abort will immediately stop execution of the transition
+			 * and cancel the next.js navigation without performing any cleanup
+			 */
+			signal?: AbortSignal
+			/**
+			 * if applicable, the name of the transition you want to use
+			 * this will be passed back to you in the loader events
+			 * TODO pass this to usePageTransition
+			 */
+			transitionName?: (typeof libraryConfig.transitionNames)[number]
+		}) => {
 			const destination = new URL(to, window.location.origin)
 
 			/**
@@ -29,7 +63,7 @@ export const useTransitioner = () => {
 				to.startsWith("#") ||
 				pathnameMatches(destination.pathname, window.location.pathname)
 			) {
-				e.preventDefault()
+				e?.preventDefault()
 				const scrollLock = createScrollLock("unlock")
 
 				// save the anchor to the URL
@@ -61,10 +95,19 @@ export const useTransitioner = () => {
 			 */
 			const isInstant = animations.size === 0
 			const allAnimations = Array.from(animations)
-			e.preventDefault()
+			e?.preventDefault()
 			router.prefetch(to)
+			const onAbort = () => {
+				// cancel the in-progress navigation
+				window.history.pushState(null, document.title, window.location.href)
+			}
+			signal?.addEventListener("abort", onAbort)
 
-			loader.dispatchEvent("start", isInstant ? "instant" : "animated")
+			const eventPayload = {
+				type: isInstant ? "instant" : "animated",
+				name: transitionName,
+			} as const
+			loader.dispatchEvent("start", eventPayload)
 
 			flushSync(() => {
 				setIsAnimating("before")
@@ -73,13 +116,16 @@ export const useTransitioner = () => {
 				animateBefore?.(),
 			)
 			await Promise.all(beforeAnimations)
+			if (signal?.aborted) return
 
 			router.push(to)
 
 			// check for href changes with a timeout
 			const existingHref = window.location.href
 			const timeout = new Promise((_, reject) =>
-				setTimeout(() => reject(new Error("Navigation timeout")), 30_000),
+				setTimeout(() => {
+					if (!signal?.aborted) reject(new Error("Navigation timeout"))
+				}, 30_000),
 			)
 			const urlChange = new Promise<void>((resolve) => {
 				const checkUrlChange = () => {
@@ -92,9 +138,13 @@ export const useTransitioner = () => {
 			})
 			await Promise.race([timeout, urlChange])
 			await sleep(10) // give the page a moment to render
+
+			// after the page has changed, an abort does nothing
+			if (signal?.aborted) return
+			signal?.removeEventListener("abort", onAbort)
 			ScrollTrigger.refresh()
 
-			loader.dispatchEvent("routeChange", isInstant ? "instant" : "animated")
+			loader.dispatchEvent("routeChange", eventPayload)
 			document.body.inert = true // prevent navigation before we're done animating in
 
 			if (!isInstant) await sleep(10)
@@ -110,8 +160,9 @@ export const useTransitioner = () => {
 				setIsAnimating(false)
 			})
 
+			await waitForViewTransition()
 			document.body.inert = false
-			loader.dispatchEvent("end", isInstant ? "instant" : "animated")
+			loader.dispatchEvent("end", eventPayload)
 
 			return
 		},

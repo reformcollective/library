@@ -3,7 +3,7 @@
  * see app/libraryConfig.ts for the actual config
  */
 
-type Config = {
+type Config<TransitionNames = never> = {
 	/**
 	 * if true, the fresponsive util will scale on fullWidth breakpoints
 	 */
@@ -16,17 +16,22 @@ type Config = {
 	 * should anchor names be saved to the URL? when e.g. scrolling to a section
 	 */
 	saveAnchorNames: boolean
+	/**
+	 * transition names, if applicable
+	 */
+	transitionNames: TransitionNames[]
 }
 
 const defaultConfig = {
 	scaleFully: false,
 	scrollRestoration: true,
 	saveAnchorNames: true,
+	transitionNames: [],
 } as const satisfies Config
 
-export const defineLibraryConfig = <SetConfig extends Partial<Config>>(
-	config: SetConfig,
-): Config => ({
+export const defineLibraryConfig = <const TransitionNames>(
+	config: Partial<Config<TransitionNames>>,
+): Config<TransitionNames> => ({
 	...defaultConfig,
 	...config,
 })
