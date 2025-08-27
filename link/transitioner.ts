@@ -29,6 +29,7 @@ export const useTransitioner = () => {
 			to,
 			signal,
 			transitionName,
+			disableViewTransitionNames,
 		}: {
 			/**
 			 * the mouse event that triggered the navigation
@@ -51,6 +52,12 @@ export const useTransitioner = () => {
 			 * TODO pass this to usePageTransition
 			 */
 			transitionName?: (typeof libraryConfig.transitionNames)[number]
+			/**
+			 * view transition names or selectors to disable during navigation
+			 * can be an array of selectors or view-transition-names
+			 * e.g. ["[data-page-bg]", ".hero-panel", "page-header"]
+			 */
+			disableViewTransitionNames?: string[]
 		}) => {
 			const destination = new URL(to, window.location.origin)
 
@@ -109,13 +116,25 @@ export const useTransitioner = () => {
 			} as const
 			loader.dispatchEvent("start", eventPayload)
 
-			// disable all view transitions for instant navigation
-			let instantTransitionOverride: HTMLStyleElement | null = null
-			if (transitionName === "instant") {
-				instantTransitionOverride = document.createElement("style")
-				instantTransitionOverride.id = "instant-transition-override"
-				instantTransitionOverride.innerHTML = `* { view-transition-name: none !important; }`
-				document.head.appendChild(instantTransitionOverride)
+			// disable specified view transitions if provided
+			let viewTransitionOverride: HTMLStyleElement | null = null
+			if (disableViewTransitionNames && disableViewTransitionNames.length > 0) {
+				viewTransitionOverride = document.createElement("style")
+				viewTransitionOverride.id = "view-transition-override"
+				// create css rules for each selector/name
+				const rules = disableViewTransitionNames
+					.map((selector) => {
+						// if it looks like a css selector (contains . # [ or space), use as-is
+						// otherwise treat it as a view-transition-name to target
+						if (/[.\[\]# ]/.test(selector)) {
+							return `${selector} { view-transition-name: none !important; }`
+						}
+						// target elements with this specific view-transition-name
+						return `[style*="view-transition-name: ${selector}"] { view-transition-name: none !important; }`
+					})
+					.join("\n")
+				viewTransitionOverride.innerHTML = rules
+				document.head.appendChild(viewTransitionOverride)
 			}
 
 			flushSync(() => {
@@ -127,8 +146,8 @@ export const useTransitioner = () => {
 			await Promise.all(beforeAnimations)
 			if (signal?.aborted) {
 				// cleanup on abort
-				if (instantTransitionOverride) {
-					instantTransitionOverride.remove()
+				if (viewTransitionOverride) {
+					viewTransitionOverride.remove()
 				}
 				return
 			}
@@ -157,8 +176,8 @@ export const useTransitioner = () => {
 			// after the page has changed, an abort does nothing
 			if (signal?.aborted) {
 				// cleanup on abort
-				if (instantTransitionOverride) {
-					instantTransitionOverride.remove()
+				if (viewTransitionOverride) {
+					viewTransitionOverride.remove()
 				}
 				return
 			}
@@ -184,8 +203,8 @@ export const useTransitioner = () => {
 			await waitForViewTransition()
 
 			// remove the view transition override after react's transition completes
-			if (instantTransitionOverride) {
-				instantTransitionOverride.remove()
+			if (viewTransitionOverride) {
+				viewTransitionOverride.remove()
 			}
 
 			document.body.inert = false
