@@ -93,7 +93,7 @@ export const useTransitioner = () => {
 			 *
 			 * both instant and animated transitions
 			 */
-			const isInstant = animations.size === 0
+			const isInstant = animations.size === 0 || transitionName === "instant"
 			const allAnimations = Array.from(animations)
 			e?.preventDefault()
 			router.prefetch(to)
