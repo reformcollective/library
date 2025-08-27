@@ -109,6 +109,15 @@ export const useTransitioner = () => {
 			} as const
 			loader.dispatchEvent("start", eventPayload)
 
+			// disable all view transitions for instant navigation
+			let instantTransitionOverride: HTMLStyleElement | null = null
+			if (transitionName === "instant") {
+				instantTransitionOverride = document.createElement("style")
+				instantTransitionOverride.id = "instant-transition-override"
+				instantTransitionOverride.innerHTML = `* { view-transition-name: none !important; }`
+				document.head.appendChild(instantTransitionOverride)
+			}
+
 			flushSync(() => {
 				setIsAnimating("before")
 			})
@@ -116,7 +125,13 @@ export const useTransitioner = () => {
 				animateBefore?.(),
 			)
 			await Promise.all(beforeAnimations)
-			if (signal?.aborted) return
+			if (signal?.aborted) {
+				// cleanup on abort
+				if (instantTransitionOverride) {
+					instantTransitionOverride.remove()
+				}
+				return
+			}
 
 			router.push(to)
 
@@ -140,7 +155,13 @@ export const useTransitioner = () => {
 			await sleep(10) // give the page a moment to render
 
 			// after the page has changed, an abort does nothing
-			if (signal?.aborted) return
+			if (signal?.aborted) {
+				// cleanup on abort
+				if (instantTransitionOverride) {
+					instantTransitionOverride.remove()
+				}
+				return
+			}
 			signal?.removeEventListener("abort", onAbort)
 			ScrollTrigger.refresh()
 
@@ -161,6 +182,12 @@ export const useTransitioner = () => {
 			})
 
 			await waitForViewTransition()
+
+			// remove the view transition override after react's transition completes
+			if (instantTransitionOverride) {
+				instantTransitionOverride.remove()
+			}
+
 			document.body.inert = false
 			loader.dispatchEvent("end", eventPayload)
 
