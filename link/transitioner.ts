@@ -126,7 +126,7 @@ export const useTransitioner = () => {
 					.map((selector) => {
 						// if it looks like a css selector (contains . # [ or space), use as-is
 						// otherwise treat it as a view-transition-name to target
-						if (/[.\[\]# ]/.test(selector)) {
+						if (/[.[\]# ]/.test(selector)) {
 							return `${selector} { view-transition-name: none !important; }`
 						}
 						// target elements with this specific view-transition-name
