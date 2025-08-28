@@ -71,7 +71,12 @@ export function CarouselBackgroundVideo({
 	)
 	const [loadVideo, setLoadVideo] = useState(false)
 
-	const useSafariOptimization = safariOptimized && browserData.isSafari
+	const [isSafari, setIsSafari] = useState(false)
+
+	useEffect(() => {
+		setIsSafari(browserData.isSafari === true)
+	}, [])
+	const useSafariOptimization = safariOptimized && isSafari
 
 	/***
 	 * if our video id changes, clear the playback failure
@@ -112,10 +117,10 @@ export function CarouselBackgroundVideo({
 	 * lazy load
 	 */
 	useEffect(() => {
-		if (useSafariOptimization) {
-			setLoadVideo(true)
-			return
-		}
+		// if (useSafariOptimization) {
+		// 	setLoadVideo(true)
+		// 	return
+		// }
 
 		// use an intersection observer to watch for when the element is on screen, and trigger the video load
 		const observer = new IntersectionObserver(
@@ -132,7 +137,7 @@ export function CarouselBackgroundVideo({
 		)
 		if (video.current) observer.observe(video.current)
 		return () => observer.disconnect()
-	}, [useSafariOptimization])
+	}, [])
 
 	const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
 		const videoElement = e.currentTarget
