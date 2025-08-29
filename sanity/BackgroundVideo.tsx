@@ -10,6 +10,7 @@ export function BackgroundVideo({
 	videoBlurUrl,
 	videoAspectRatio,
 	videoDuration,
+	eager,
 	play = true,
 	muted = true,
 	minResolution = "480p",
@@ -27,6 +28,13 @@ export function BackgroundVideo({
 	videoBlurUrl?: string
 	videoAspectRatio?: string
 	videoDuration?: number
+	/**
+	 * should the video not show a blur at all if possible? (this is more aggressive than lazy loading)
+	 * @default false
+	 */
+
+	eager?: boolean
+
 	/**
 	 * should the video start playing immediately?
 	 * similar to autoplay, but can also be toggled to pause/play
@@ -103,6 +111,10 @@ export function BackgroundVideo({
 	 * lazy load
 	 */
 	useEffect(() => {
+		if (eager) {
+			setLoadVideo(true)
+			return
+		}
 		// use an intersection observer to watch for when the element is on screen, and trigger the video load
 		const observer = new IntersectionObserver(
 			(entries) => {
@@ -118,7 +130,7 @@ export function BackgroundVideo({
 		)
 		if (video.current) observer.observe(video.current)
 		return () => observer.disconnect()
-	}, [])
+	}, [eager])
 
 	const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
 		const videoElement = e.currentTarget
