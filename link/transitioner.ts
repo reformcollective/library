@@ -139,6 +139,8 @@ export const useTransitioner = () => {
 			await Promise.race([timeout, urlChange])
 			await sleep(10) // give the page a moment to render
 
+			window.lenis?.scrollTo(0, { immediate: true })
+
 			// after the page has changed, an abort does nothing
 			if (signal?.aborted) return
 			signal?.removeEventListener("abort", onAbort)
