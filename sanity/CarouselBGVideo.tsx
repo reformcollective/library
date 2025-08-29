@@ -50,6 +50,7 @@ export function CarouselBackgroundVideo({
 	ref?: React.Ref<HTMLDivElement>
 	/**
 	 * use safari-optimized loading strategy (immediate load with metadata preload)
+	 * @default false
 	 * recommended for carousel/preview videos
 	 */
 	safariOptimized?: boolean
@@ -69,14 +70,16 @@ export function CarouselBackgroundVideo({
 		1920,
 		Math.max(300, Math.round(innerWidth / 100) * 100),
 	)
-	const [loadVideo, setLoadVideo] = useState(false)
-
 	const [isSafari, setIsSafari] = useState(false)
-
 	useEffect(() => {
 		setIsSafari(browserData.isSafari === true)
 	}, [])
 	const useSafariOptimization = safariOptimized && isSafari
+
+	// This state now ONLY controls if the <MainVideo> component is rendered.
+	const [shouldRenderVideo, setShouldRenderVideo] = useState(
+		useSafariOptimization,
+	)
 
 	/***
 	 * if our video id changes, clear the playback failure
@@ -85,48 +88,39 @@ export function CarouselBackgroundVideo({
 		setPlaybackFailure(undefined)
 	}
 
-	/**
-	 * autoplay
-	 */
+	// This effect ONLY handles playing and pausing the video.
 	useEffect(() => {
-		if (playbackFailure) return
+		if (!shouldRenderVideo || !video.current || playbackFailure) {
+			return
+		}
 
-		const videoHasFinished = video.current?.ended
-
-		if (playbackId && loadVideo && !videoHasFinished)
-			// we never want to interrupt a play call with another play call
-			// so wait for any previous play call to finish before starting a new one
-			videoPlayPromise.current.then(() => {
-				if (video.current)
-					videoPlayPromise.current = video.current
-						?.play()
-						.then(() => {
-							// even if we don't want to play the video, we still want to try!
-							// if autoplay is unavailable we want to know about it ASAP
-							// even if we're not planning on playing the video
-							if (!play) video.current?.pause()
-						})
-						.catch(() => {
-							setPlaybackFailure({ videoId: playbackId })
-							onEnded?.()
-						})
+		if (play) {
+			video.current.play().catch(() => {
+				if (playbackId) {
+					setPlaybackFailure({ videoId: playbackId })
+				}
+				onEnded?.()
 			})
-	})
+		} else {
+			video.current.pause()
+		}
+	}, [play, shouldRenderVideo, playbackId, playbackFailure, onEnded])
 
 	/**
-	 * lazy load
+	 * This effect handles rendering the video component,
+	 * either immediately on Safari or lazily on others.
 	 */
 	useEffect(() => {
-		// if (useSafariOptimization) {
-		// 	setLoadVideo(true)
-		// 	return
-		// }
+		if (useSafariOptimization) {
+			setShouldRenderVideo(true)
+			return
+		}
 
 		// use an intersection observer to watch for when the element is on screen, and trigger the video load
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0]?.isIntersecting) {
-					setLoadVideo(true)
+					setShouldRenderVideo(true)
 					observer.disconnect()
 				}
 			},
@@ -135,9 +129,10 @@ export function CarouselBackgroundVideo({
 				rootMargin: "400px",
 			},
 		)
-		if (video.current) observer.observe(video.current)
+		const elementToObserve = placeholderRef.current
+		if (elementToObserve) observer.observe(elementToObserve)
 		return () => observer.disconnect()
-	}, [])
+	}, [useSafariOptimization])
 
 	const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
 		const videoElement = e.currentTarget
@@ -164,7 +159,7 @@ export function CarouselBackgroundVideo({
 				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
 			}}
 		>
-			{useSafariOptimization && !loadVideo ? (
+			{!shouldRenderVideo ? (
 				<PlaceholderDiv
 					ref={placeholderRef}
 					style={{
@@ -181,9 +176,7 @@ export function CarouselBackgroundVideo({
 							? undefined
 							: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
 					}
-					preload={
-						useSafariOptimization ? "metadata" : loadVideo ? "auto" : "metadata"
-					}
+					preload="auto"
 					muted={muted}
 					playsInline
 					loop={loop}
