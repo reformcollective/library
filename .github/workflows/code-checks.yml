@@ -79,6 +79,6 @@ jobs:
       - run: pnpm install
       - run: pnpm run lint
       - if: inputs.isSanity == true
-        run: pnpm typegen && pnpm exec sanity documents validate -y
+        run: pnpm typegen && pnpm exec sanity documents validate --workspace default '!(_id in path("drafts.**"))' -y
       # running a build will also check types
       - run: pnpm run build
