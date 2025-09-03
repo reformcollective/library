@@ -222,7 +222,7 @@ export function BackgroundVideo({
 		)
 	}
 
-	// Original "video-as-poster" logic for backward compatibility
+	// original "video-as-poster" logic for backward compatibility
 	return (
 		<Container
 			ref={containerRef}
