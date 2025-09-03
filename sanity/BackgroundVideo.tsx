@@ -1,11 +1,32 @@
 "use client"
 
+import type {
+	internalGroqTypeReferenceTo,
+	SanityImageCrop,
+	SanityImageHotspot,
+} from "@/sanity.types"
 import MuxVideo from "@mux/mux-video-react"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
 import SanityUniversalImage from "library/UniversalImage"
 import { use, useEffect, useRef, useState } from "react"
-import type { Image } from "sanity"
+import type { AssetMeta } from "./assetMetadata"
+
+type SanityPosterImage = {
+	asset?: {
+		_ref: string
+		_type: "reference"
+		_weak?: boolean
+		[internalGroqTypeReferenceTo]?: "sanity.imageAsset"
+	}
+	media: unknown
+	hotspot?: SanityImageHotspot
+	crop?: SanityImageCrop
+	alt?: string
+	cropType?: "sanity"
+	willHaveAlt?: "true"
+	data?: AssetMeta
+}
 
 export function BackgroundVideo({
 	playbackId,
@@ -61,7 +82,7 @@ export function BackgroundVideo({
 	 * a Sanity Image object. If provided, this will override the default
 	 * "video-as-poster" behavior and use a simpler, more robust image poster. useful for slower networks.
 	 */
-	posterOverride?: Image
+	posterOverride?: SanityPosterImage
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
