@@ -20,6 +20,7 @@ export function BackgroundVideo({
 	onEnded,
 	onTimeUpdate,
 	onLoadedMetadata,
+	posterOverride,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -54,12 +55,18 @@ export function BackgroundVideo({
 	loop?: boolean
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
+	/**
+	 * A URL for a custom poster image. If provided, this will override the default
+	 * "video-as-poster" behavior and use a simpler, more robust image poster.
+	 */
+	posterOverride?: string
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
 	onLoadedMetadata?: (duration: number) => void
 }) {
 	const video = useRef<HTMLVideoElement>(null)
+	const placeholderRef = useRef<HTMLDivElement>(null)
 	const videoPlayPromise = useRef(Promise.resolve())
 	const [playbackFailure, setPlaybackFailure] = useState<{
 		videoId: string
@@ -69,7 +76,7 @@ export function BackgroundVideo({
 		1920,
 		Math.max(300, Math.round(innerWidth / 100) * 100),
 	)
-	const [loadVideo, setLoadVideo] = useState(false)
+	const [loadVideo, setLoadVideo] = useState(eager ?? false)
 	const [videoCanPlay, setVideoCanPlay] = useState(true)
 
 	/***
@@ -83,11 +90,11 @@ export function BackgroundVideo({
 	 * autoplay
 	 */
 	useEffect(() => {
-		if (playbackFailure) return
+		if (playbackFailure || !loadVideo) return
 
 		const videoHasFinished = video.current?.ended
 
-		if (playbackId && loadVideo && !videoHasFinished)
+		if (playbackId && !videoHasFinished)
 			// we never want to interrupt a play call with another play call
 			// so wait for any previous play call to finish before starting a new one
 			videoPlayPromise.current.then(() => {
@@ -95,17 +102,16 @@ export function BackgroundVideo({
 					videoPlayPromise.current = video.current
 						?.play()
 						.then(() => {
-							// even if we don't want to play the video, we still want to try!
-							// if autoplay is unavailable we want to know about it ASAP
-							// even if we're not planning on playing the video
 							if (!play) video.current?.pause()
 						})
 						.catch(() => {
-							setPlaybackFailure({ videoId: playbackId })
+							if (playbackId) {
+								setPlaybackFailure({ videoId: playbackId })
+							}
 							onEnded?.()
 						})
 			})
-	})
+	}, [play, loadVideo, playbackId, playbackFailure, onEnded])
 
 	/**
 	 * lazy load
@@ -128,7 +134,8 @@ export function BackgroundVideo({
 				rootMargin: "400px",
 			},
 		)
-		if (video.current) observer.observe(video.current)
+		const elementToObserve = placeholderRef.current ?? video.current
+		if (elementToObserve) observer.observe(elementToObserve)
 		return () => observer.disconnect()
 	}, [eager])
 
@@ -146,6 +153,45 @@ export function BackgroundVideo({
 		}
 	}
 
+	// New, simpler path for when a custom poster is provided
+	if (posterOverride) {
+		return (
+			<Container
+				ref={containerRef}
+				className={className}
+				style={{
+					aspectRatio: videoAspectRatio,
+					backgroundImage: `url('${posterOverride}')`,
+					backgroundSize: "cover",
+					backgroundPosition: "center",
+				}}
+			>
+				{loadVideo && (
+					<MainVideo
+						ref={video}
+						src={
+							playbackFailure || !playbackId
+								? undefined
+								: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
+						}
+						preload="auto"
+						muted={muted}
+						playsInline
+						loop={loop}
+						poster={posterOverride}
+						streamType="on-demand"
+						onEnded={onEnded}
+						onTimeUpdate={handleTimeUpdate}
+						onLoadedMetadata={handleLoadedMetadata}
+					/>
+				)}
+				{/* This ref is used by the IntersectionObserver when no video is loaded yet */}
+				{!loadVideo && <div ref={placeholderRef} style={{ height: "1px" }} />}
+			</Container>
+		)
+	}
+
+	// Original "video-as-poster" logic for backward compatibility
 	return (
 		<Container
 			ref={containerRef}
@@ -189,9 +235,7 @@ export function BackgroundVideo({
 					loop={loop}
 					poster={
 						playbackFailure
-							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${
-									videoDuration
-								}&width=${posterSize}`
+							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${posterSize}`
 							: undefined
 					}
 					streamType="on-demand"
