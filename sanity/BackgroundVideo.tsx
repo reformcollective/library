@@ -4,6 +4,8 @@ import MuxVideo from "@mux/mux-video-react"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
 import { use, useEffect, useRef, useState } from "react"
+import type { Image } from "sanity"
+import SanityUniversalImage from "library/UniversalImage"
 
 export function BackgroundVideo({
 	playbackId,
@@ -56,10 +58,10 @@ export function BackgroundVideo({
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
 	/**
-	 * A URL for a custom poster image. If provided, this will override the default
-	 * "video-as-poster" behavior and use a simpler, more robust image poster.
+	 * a Sanity Image object. If provided, this will override the default
+	 * "video-as-poster" behavior and use a simpler, more robust image poster. useful for slower networks.
 	 */
-	posterOverride?: string
+	posterOverride?: Image
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
@@ -153,19 +155,27 @@ export function BackgroundVideo({
 		}
 	}
 
-	// New, simpler path for when a custom poster is provided
-	if (posterOverride) {
+	// new, simpler path for when a custom poster is provided (optional)
+	if (posterOverride?.asset) {
 		return (
 			<Container
 				ref={containerRef}
 				className={className}
 				style={{
 					aspectRatio: videoAspectRatio,
-					backgroundImage: `url('${posterOverride}')`,
-					backgroundSize: "cover",
-					backgroundPosition: "center",
 				}}
 			>
+				<PosterImage
+					style={{ opacity: videoCanPlay ? 1 : 0 }}
+					src={{
+						asset: { _ref: posterOverride.asset._ref },
+						alt: posterOverride.alt as string,
+					}}
+					alt={posterOverride.alt as string}
+					width={1920}
+					height={1080}
+					loading="eager"
+				/>
 				{loadVideo && (
 					<MainVideo
 						ref={video}
@@ -178,14 +188,14 @@ export function BackgroundVideo({
 						muted={muted}
 						playsInline
 						loop={loop}
-						poster={posterOverride}
 						streamType="on-demand"
+						onCanPlay={() => setVideoCanPlay(false)}
 						onEnded={onEnded}
 						onTimeUpdate={handleTimeUpdate}
 						onLoadedMetadata={handleLoadedMetadata}
 					/>
 				)}
-				{/* This ref is used by the IntersectionObserver when no video is loaded yet */}
+
 				{!loadVideo && <div ref={placeholderRef} style={{ height: "1px" }} />}
 			</Container>
 		)
@@ -284,5 +294,16 @@ const PosterVideo = styled(MainVideo, {
 		position: absolute;
 		transition: opacity 0.2s ease-in-out;
 		pointer-events: none;
+	`),
+})
+
+const PosterImage = styled(SanityUniversalImage, {
+	...f.responsive(css`
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
 	`),
 })
