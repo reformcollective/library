@@ -3,9 +3,9 @@
 import MuxVideo from "@mux/mux-video-react"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
+import SanityUniversalImage from "library/UniversalImage"
 import { use, useEffect, useRef, useState } from "react"
 import type { Image } from "sanity"
-import SanityUniversalImage from "library/UniversalImage"
 
 export function BackgroundVideo({
 	playbackId,
