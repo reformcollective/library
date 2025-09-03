@@ -1,15 +1,15 @@
 "use client"
 
-import type {
-	internalGroqTypeReferenceTo,
-	SanityImageCrop,
-	SanityImageHotspot,
-} from "@/sanity.types"
 import MuxVideo from "@mux/mux-video-react"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
 import SanityUniversalImage from "library/UniversalImage"
 import { use, useEffect, useRef, useState } from "react"
+import type {
+	internalGroqTypeReferenceTo,
+	SanityImageCrop,
+	SanityImageHotspot,
+} from "@/sanity.types"
 import type { AssetMeta } from "./assetMetadata"
 
 type SanityPosterImage = {
