@@ -19,7 +19,7 @@ type SanityPosterImage = {
 		_weak?: boolean
 		[internalGroqTypeReferenceTo]?: "sanity.imageAsset"
 	}
-	media: unknown
+	media?: unknown
 	hotspot?: SanityImageHotspot
 	crop?: SanityImageCrop
 	alt?: string
