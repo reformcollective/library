@@ -4,6 +4,7 @@ import MuxVideo from "@mux/mux-video-react"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
 import SanityUniversalImage from "library/UniversalImage"
+import { browserData } from "library/deviceDetection"
 import { use, useEffect, useRef, useState } from "react"
 import type {
 	internalGroqTypeReferenceTo,
@@ -101,6 +102,12 @@ export function BackgroundVideo({
 	)
 	const [loadVideo, setLoadVideo] = useState(eager ?? false)
 	const [videoCanPlay, setVideoCanPlay] = useState(true)
+
+	useEffect(() => {
+		if (loadVideo && video.current && browserData.isSafari) {
+			video.current.load()
+		}
+	}, [loadVideo])
 
 	/***
 	 * if our video id changes, clear the playback failure
