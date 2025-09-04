@@ -1,10 +1,10 @@
 "use client"
 
 import MuxVideo from "@mux/mux-video-react"
+import { browserData } from "library/deviceDetection"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
 import SanityUniversalImage from "library/UniversalImage"
-import { browserData } from "library/deviceDetection"
 import { use, useEffect, useRef, useState } from "react"
 import type {
 	internalGroqTypeReferenceTo,
