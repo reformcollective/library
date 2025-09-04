@@ -3,38 +3,13 @@
 import MuxVideo from "@mux/mux-video-react"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
-import SanityUniversalImage from "library/UniversalImage"
-import { browserData } from "library/deviceDetection"
 import { use, useEffect, useRef, useState } from "react"
-import type {
-	internalGroqTypeReferenceTo,
-	SanityImageCrop,
-	SanityImageHotspot,
-} from "@/sanity.types"
-import type { AssetMeta } from "./assetMetadata"
-
-type SanityPosterImage = {
-	asset?: {
-		_ref: string
-		_type: "reference"
-		_weak?: boolean
-		[internalGroqTypeReferenceTo]?: "sanity.imageAsset"
-	}
-	media?: unknown
-	hotspot?: SanityImageHotspot
-	crop?: SanityImageCrop
-	alt?: string
-	cropType?: "sanity"
-	willHaveAlt?: "true"
-	data?: AssetMeta
-}
 
 export function BackgroundVideo({
 	playbackId,
 	videoBlurUrl,
 	videoAspectRatio,
 	videoDuration,
-	eager,
 	play = true,
 	muted = true,
 	minResolution = "480p",
@@ -44,7 +19,6 @@ export function BackgroundVideo({
 	onEnded,
 	onTimeUpdate,
 	onLoadedMetadata,
-	posterOverride,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -53,13 +27,6 @@ export function BackgroundVideo({
 	videoBlurUrl?: string
 	videoAspectRatio?: string
 	videoDuration?: number
-	/**
-	 * should the video not show a blur at all if possible? (this is more aggressive than lazy loading)
-	 * @default false
-	 */
-
-	eager?: boolean
-
 	/**
 	 * should the video start playing immediately?
 	 * similar to autoplay, but can also be toggled to pause/play
@@ -79,18 +46,12 @@ export function BackgroundVideo({
 	loop?: boolean
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
-	/**
-	 * a Sanity Image object. If provided, this will override the default
-	 * "video-as-poster" behavior and use a simpler, more robust image poster. useful for slower networks.
-	 */
-	posterOverride?: SanityPosterImage
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
 	onLoadedMetadata?: (duration: number) => void
 }) {
 	const video = useRef<HTMLVideoElement>(null)
-	const placeholderRef = useRef<HTMLDivElement>(null)
 	const videoPlayPromise = useRef(Promise.resolve())
 	const [playbackFailure, setPlaybackFailure] = useState<{
 		videoId: string
@@ -100,14 +61,8 @@ export function BackgroundVideo({
 		1920,
 		Math.max(300, Math.round(innerWidth / 100) * 100),
 	)
-	const [loadVideo, setLoadVideo] = useState(eager ?? false)
+	const [loadVideo, setLoadVideo] = useState(false)
 	const [videoCanPlay, setVideoCanPlay] = useState(true)
-
-	useEffect(() => {
-		if (loadVideo && video.current && browserData.isSafari) {
-			video.current.load()
-		}
-	}, [loadVideo])
 
 	/***
 	 * if our video id changes, clear the playback failure
@@ -120,11 +75,11 @@ export function BackgroundVideo({
 	 * autoplay
 	 */
 	useEffect(() => {
-		if (playbackFailure || !loadVideo) return
+		if (playbackFailure) return
 
 		const videoHasFinished = video.current?.ended
 
-		if (playbackId && !videoHasFinished)
+		if (playbackId && loadVideo && !videoHasFinished)
 			// we never want to interrupt a play call with another play call
 			// so wait for any previous play call to finish before starting a new one
 			videoPlayPromise.current.then(() => {
@@ -132,25 +87,22 @@ export function BackgroundVideo({
 					videoPlayPromise.current = video.current
 						?.play()
 						.then(() => {
+							// even if we don't want to play the video, we still want to try!
+							// if autoplay is unavailable we want to know about it ASAP
+							// even if we're not planning on playing the video
 							if (!play) video.current?.pause()
 						})
 						.catch(() => {
-							if (playbackId) {
-								setPlaybackFailure({ videoId: playbackId })
-							}
+							setPlaybackFailure({ videoId: playbackId })
 							onEnded?.()
 						})
 			})
-	}, [play, loadVideo, playbackId, playbackFailure, onEnded])
+	})
 
 	/**
 	 * lazy load
 	 */
 	useEffect(() => {
-		if (eager) {
-			setLoadVideo(true)
-			return
-		}
 		// use an intersection observer to watch for when the element is on screen, and trigger the video load
 		const observer = new IntersectionObserver(
 			(entries) => {
@@ -164,10 +116,9 @@ export function BackgroundVideo({
 				rootMargin: "400px",
 			},
 		)
-		const elementToObserve = placeholderRef.current ?? video.current
-		if (elementToObserve) observer.observe(elementToObserve)
+		if (video.current) observer.observe(video.current)
 		return () => observer.disconnect()
-	}, [eager])
+	}, [])
 
 	const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
 		const videoElement = e.currentTarget
@@ -183,53 +134,6 @@ export function BackgroundVideo({
 		}
 	}
 
-	// new, simpler path for when a custom poster is provided (optional)
-	if (posterOverride?.asset) {
-		return (
-			<Container
-				ref={containerRef}
-				className={className}
-				style={{
-					aspectRatio: videoAspectRatio,
-				}}
-			>
-				<PosterImage
-					style={{ opacity: videoCanPlay ? 1 : 0 }}
-					src={{
-						asset: { _ref: posterOverride.asset._ref },
-						alt: posterOverride.alt as string,
-					}}
-					alt={posterOverride.alt as string}
-					width={1920}
-					height={1080}
-					loading="eager"
-				/>
-				{loadVideo && (
-					<MainVideo
-						ref={video}
-						src={
-							playbackFailure || !playbackId
-								? undefined
-								: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
-						}
-						preload="auto"
-						muted={muted}
-						playsInline
-						loop={loop}
-						streamType="on-demand"
-						onCanPlay={() => setVideoCanPlay(false)}
-						onEnded={onEnded}
-						onTimeUpdate={handleTimeUpdate}
-						onLoadedMetadata={handleLoadedMetadata}
-					/>
-				)}
-
-				{!loadVideo && <div ref={placeholderRef} style={{ height: "1px" }} />}
-			</Container>
-		)
-	}
-
-	// original "video-as-poster" logic for backward compatibility
 	return (
 		<Container
 			ref={containerRef}
@@ -273,7 +177,9 @@ export function BackgroundVideo({
 					loop={loop}
 					poster={
 						playbackFailure
-							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${posterSize}`
+							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${
+									videoDuration
+								}&width=${posterSize}`
 							: undefined
 					}
 					streamType="on-demand"
@@ -322,16 +228,5 @@ const PosterVideo = styled(MainVideo, {
 		position: absolute;
 		transition: opacity 0.2s ease-in-out;
 		pointer-events: none;
-	`),
-})
-
-const PosterImage = styled(SanityUniversalImage, {
-	...f.responsive(css`
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		object-position: center;
 	`),
 })
