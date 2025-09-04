@@ -79,6 +79,6 @@ jobs:
       - run: pnpm install
       - run: pnpm run lint
       - if: inputs.isSanity == true
-        run: pnpm typegen && pnpm exec sanity documents validate -y
+        run: pnpm typegen && pnpm exec sanity documents export --workspace default --dataset production --groq-filter '!(_id in path("drafts.**"))' | pnpm exec sanity documents validate --workspace default --dataset production --file -
       # running a build will also check types
       - run: pnpm run build

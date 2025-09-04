@@ -1,16 +1,16 @@
 "use client"
 
 import MuxVideo from "@mux/mux-video-react"
+import { browserData } from "library/deviceDetection"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
 import { use, useEffect, useRef, useState } from "react"
 
-export function BackgroundVideo({
+export function CarouselBackgroundVideo({
 	playbackId,
 	videoBlurUrl,
 	videoAspectRatio,
 	videoDuration,
-	eager,
 	play = true,
 	muted = true,
 	minResolution = "480p",
@@ -20,6 +20,7 @@ export function BackgroundVideo({
 	onEnded,
 	onTimeUpdate,
 	onLoadedMetadata,
+	safariOptimized = false,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -28,13 +29,6 @@ export function BackgroundVideo({
 	videoBlurUrl?: string
 	videoAspectRatio?: string
 	videoDuration?: number
-	/**
-	 * should the video not show a blur at all if possible? (this is more aggressive than lazy loading)
-	 * @default false
-	 */
-
-	eager?: boolean
-
 	/**
 	 * should the video start playing immediately?
 	 * similar to autoplay, but can also be toggled to pause/play
@@ -54,12 +48,19 @@ export function BackgroundVideo({
 	loop?: boolean
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
+	/**
+	 * use safari-optimized loading strategy (immediate load with metadata preload)
+	 * @default false
+	 * recommended for carousel/preview videos
+	 */
+	safariOptimized?: boolean
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
 	onLoadedMetadata?: (duration: number) => void
 }) {
 	const video = useRef<HTMLVideoElement>(null)
+	const placeholderRef = useRef<HTMLDivElement>(null)
 	const videoPlayPromise = useRef(Promise.resolve())
 	const [playbackFailure, setPlaybackFailure] = useState<{
 		videoId: string
@@ -69,8 +70,16 @@ export function BackgroundVideo({
 		1920,
 		Math.max(300, Math.round(innerWidth / 100) * 100),
 	)
-	const [loadVideo, setLoadVideo] = useState(false)
-	const [videoCanPlay, setVideoCanPlay] = useState(true)
+	const [isSafari, setIsSafari] = useState(false)
+	useEffect(() => {
+		setIsSafari(browserData.isSafari === true)
+	}, [])
+	const useSafariOptimization = safariOptimized && isSafari
+
+	// This state now ONLY controls if the <MainVideo> component is rendered.
+	const [shouldRenderVideo, setShouldRenderVideo] = useState(
+		useSafariOptimization,
+	)
 
 	/***
 	 * if our video id changes, clear the playback failure
@@ -79,47 +88,39 @@ export function BackgroundVideo({
 		setPlaybackFailure(undefined)
 	}
 
-	/**
-	 * autoplay
-	 */
+	// This effect ONLY handles playing and pausing the video.
 	useEffect(() => {
-		if (playbackFailure) return
-
-		const videoHasFinished = video.current?.ended
-
-		if (playbackId && loadVideo && !videoHasFinished)
-			// we never want to interrupt a play call with another play call
-			// so wait for any previous play call to finish before starting a new one
-			videoPlayPromise.current.then(() => {
-				if (video.current)
-					videoPlayPromise.current = video.current
-						?.play()
-						.then(() => {
-							// even if we don't want to play the video, we still want to try!
-							// if autoplay is unavailable we want to know about it ASAP
-							// even if we're not planning on playing the video
-							if (!play) video.current?.pause()
-						})
-						.catch(() => {
-							setPlaybackFailure({ videoId: playbackId })
-							onEnded?.()
-						})
-			})
-	})
-
-	/**
-	 * lazy load
-	 */
-	useEffect(() => {
-		if (eager) {
-			setLoadVideo(true)
+		if (!shouldRenderVideo || !video.current || playbackFailure) {
 			return
 		}
+
+		if (play) {
+			video.current.play().catch(() => {
+				if (playbackId) {
+					setPlaybackFailure({ videoId: playbackId })
+				}
+				onEnded?.()
+			})
+		} else {
+			video.current.pause()
+		}
+	}, [play, shouldRenderVideo, playbackId, playbackFailure, onEnded])
+
+	/**
+	 * This effect handles rendering the video component,
+	 * either immediately on Safari or lazily on others.
+	 */
+	useEffect(() => {
+		if (useSafariOptimization) {
+			setShouldRenderVideo(true)
+			return
+		}
+
 		// use an intersection observer to watch for when the element is on screen, and trigger the video load
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0]?.isIntersecting) {
-					setLoadVideo(true)
+					setShouldRenderVideo(true)
 					observer.disconnect()
 				}
 			},
@@ -128,9 +129,10 @@ export function BackgroundVideo({
 				rootMargin: "400px",
 			},
 		)
-		if (video.current) observer.observe(video.current)
+		const elementToObserve = placeholderRef.current
+		if (elementToObserve) observer.observe(elementToObserve)
 		return () => observer.disconnect()
-	}, [eager])
+	}, [useSafariOptimization])
 
 	const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
 		const videoElement = e.currentTarget
@@ -157,25 +159,17 @@ export function BackgroundVideo({
 				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
 			}}
 		>
-			<PosterVideo
-				// mux thumbnails will have different colors than the video itself, so we can't seamlessly
-				// switch between the two without some extra effort. we'll rely on the first frame for this
-				// instead of using a thumbnail. This video is smaller so we get a fast poster load
-				data-poster
-				src={
-					playbackId
-						? `https://stream.mux.com/${playbackId}.m3u8?max_resolution=720p`
-						: undefined
-				}
-				preload="metadata"
-				muted={muted}
-				playsInline
-				style={{ opacity: videoCanPlay ? 1 : 0 }}
-			/>
-			{/* this is to combat a safari rendering bug where the video doesn't render properly if being lazy loaded or dynamically loaded. */}
-			{loadVideo ? (
+			{!shouldRenderVideo ? (
+				<PlaceholderDiv
+					ref={placeholderRef}
+					style={{
+						backgroundImage: playbackId
+							? `url(https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize})`
+							: undefined,
+					}}
+				/>
+			) : (
 				<MainVideo
-					key={`${playbackId}-loaded`}
 					ref={video}
 					src={
 						playbackFailure || !playbackId
@@ -183,31 +177,14 @@ export function BackgroundVideo({
 							: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
 					}
 					preload="auto"
-					onCanPlay={() => setVideoCanPlay(false)}
 					muted={muted}
 					playsInline
 					loop={loop}
 					poster={
 						playbackFailure
-							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${
-									videoDuration
-								}&width=${posterSize}`
-							: undefined
+							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${posterSize}`
+							: `https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize}`
 					}
-					streamType="on-demand"
-					onEnded={onEnded}
-					onTimeUpdate={handleTimeUpdate}
-					onLoadedMetadata={handleLoadedMetadata}
-				/>
-			) : (
-				<MainVideo
-					key={`${playbackId}-placeholder`}
-					ref={video}
-					preload="metadata"
-					onCanPlay={() => setVideoCanPlay(false)}
-					muted={muted}
-					playsInline
-					loop={loop}
 					streamType="on-demand"
 					onEnded={onEnded}
 					onTimeUpdate={handleTimeUpdate}
@@ -235,10 +212,11 @@ const MainVideo = styled(MuxVideo, {
 	`),
 })
 
-const PosterVideo = styled(MainVideo, {
+const PlaceholderDiv = styled("div", {
 	...f.responsive(css`
-		position: absolute;
-		transition: opacity 0.2s ease-in-out;
-		pointer-events: none;
+		width: 100%;
+		height: 100%;
+		background-size: cover;
+		background-position: center;
 	`),
 })
