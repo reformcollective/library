@@ -89,14 +89,13 @@ export const universalImage = <
 		preview: {
 			select: {
 				alt: "alt",
-				image: "asset.url",
-				title: "asset.title",
+				media: "asset",
 				fallback: "asset.originalFilename",
 			},
-			prepare({ image, alt, fallback, title }) {
+			prepare({ alt, media, fallback }) {
 				return {
-					imageUrl: image,
-					title: alt || title || fallback,
+					media,
+					title: alt || fallback,
 				}
 			},
 		},
