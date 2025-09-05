@@ -31,7 +31,7 @@
 		"postformat": "mv biome.jsonc biome-shared.jsonc"
 	},
 	"preinstall": "npx only-allow pnpm",
-	"packageManager": "pnpm@10.14.0",
+	"packageManager": "pnpm@10.15.0",
 	"engines": {
 		"node": "22.x"
 	}
