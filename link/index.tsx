@@ -44,7 +44,7 @@ type AnchorProps = {
 	 * take action during, or block, an internal navigation
 	 * this does not apply to external links
 	 */
-	onNavigate?: LinkProps["onNavigate"]
+	onNavigate?: LinkProps<string>["onNavigate"]
 
 	type?: undefined
 } & Omit<ComponentProps<"a">, "href" | "onClick" | "ref">
