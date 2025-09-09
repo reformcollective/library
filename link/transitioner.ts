@@ -96,7 +96,7 @@ export const useTransitioner = () => {
 			const isInstant = animations.size === 0
 			const allAnimations = Array.from(animations)
 			e?.preventDefault()
-			router.prefetch(to)
+			router.prefetch(to as Parameters<typeof router.prefetch>[0])
 			const onAbort = () => {
 				// cancel the in-progress navigation
 				window.history.pushState(null, document.title, window.location.href)
@@ -118,7 +118,7 @@ export const useTransitioner = () => {
 			await Promise.all(beforeAnimations)
 			if (signal?.aborted) return
 
-			router.push(to)
+			router.push(to as Parameters<typeof router.prefetch>[0])
 
 			// check for href changes with a timeout
 			const existingHref = window.location.href
