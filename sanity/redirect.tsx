@@ -21,7 +21,7 @@ export async function Redirect({ link }: GetSectionType<"redirect">) {
 	}
 
 	if (!link) return null
-	redirect(link)
+	redirect(link as Parameters<typeof redirect>[0])
 }
 
 const Wrapper = styled("div", {
