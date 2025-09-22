@@ -61,7 +61,6 @@ export function CarouselBackgroundVideo({
 }) {
 	const video = useRef<HTMLVideoElement>(null)
 	const placeholderRef = useRef<HTMLDivElement>(null)
-	const videoPlayPromise = useRef(Promise.resolve())
 	const [playbackFailure, setPlaybackFailure] = useState<{
 		videoId: string
 	}>()
