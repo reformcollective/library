@@ -32,7 +32,7 @@ export function handleError(error: unknown) {
 		const { addOriginUrl } = error
 		toast.error(`Sanity Live couldn't connect`, {
 			description: "Your origin is blocked by CORS policy",
-			duration: Number.POSITIVE_INFINITY,
+			duration: 3000,
 			dismissible: true,
 			action: addOriginUrl
 				? {
@@ -45,13 +45,13 @@ export function handleError(error: unknown) {
 		console.error(error)
 		toast.error(error.name, {
 			description: error.message,
-			duration: Number.POSITIVE_INFINITY,
+			duration: 10_000,
 		})
 	} else {
 		console.error(error)
 		toast.error("Unknown error", {
 			description: "Check the console for more details",
-			duration: Number.POSITIVE_INFINITY,
+			duration: 10_000,
 		})
 	}
 }
