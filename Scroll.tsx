@@ -84,8 +84,7 @@ export const usePinType = () => {
  */
 export const useIsSmooth = () => {
 	const [smooth, setSmooth] = useState(
-		typeof window !== "undefined" &&
-			window.matchMedia("(hover: hover)").matches,
+		globalThis?.matchMedia("(hover: hover)").matches,
 	)
 
 	useEffect(() => {

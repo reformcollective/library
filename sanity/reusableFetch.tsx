@@ -1,11 +1,8 @@
 import { fetchAssetMeta } from "library/sanity/assetMetadata"
-import DraftModeOverlay from "library/sanity/DraftModeToast"
+import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
-import {
-	type ClientPerspective,
-	defineLive,
-	type QueryParams,
-} from "next-sanity"
+import type { ClientPerspective, QueryParams } from "next-sanity"
+import { defineLive } from "next-sanity/live"
 import { Toaster } from "sonner"
 import { client } from "@/sanity/lib/client"
 import { token } from "@/sanity/lib/token"
