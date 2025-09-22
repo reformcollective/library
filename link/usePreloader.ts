@@ -84,6 +84,7 @@ export const usePreloader = ({
 	stopNoWaitAnimations,
 	slowAnimations,
 	scope,
+	customAnimationComplete,
 }: {
 	/**
 	 * preloader will wait at least this long in ms
@@ -112,6 +113,11 @@ export const usePreloader = ({
 	 */
 	slowAnimations?: string
 	scope?: RefObject<HTMLElement | null>
+	/**
+	 * if you're using a custom animation with javascript,
+	 * you'll need to manually signal to the preloader system that it has completed
+	 */
+	customAnimationComplete?: Promise<unknown>
 } = {}) => {
 	const { initComplete } = use(ScreenContext)
 	const [output, setOutput] = useState<{
@@ -245,6 +251,7 @@ export const usePreloader = ({
 			globalPromises.push(animation.finished)
 		}
 
+		if (customAnimationComplete) globalPromises.push(customAnimationComplete)
 		await recursiveAllSettled(globalPromises)
 		setGlobalComplete()
 
@@ -272,6 +279,7 @@ export const usePreloader = ({
 		slowAnimations,
 		stopAnimations,
 		stopNoWaitAnimations,
+		customAnimationComplete,
 	])
 
 	if (FORCE_PRELOADER_STATE === "loading")
