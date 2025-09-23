@@ -1,3 +1,4 @@
+import type libraryConfig from "libraryConfig"
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
 import type {
@@ -171,6 +172,7 @@ export function definePageSection<
 >(
 	{
 		group,
+		icon,
 		...options
 	}: Omit<
 		Parameters<
@@ -190,11 +192,11 @@ export function definePageSection<
 		 *
 		 * will be filterable based on this category in the studio
 		 */
-		group: string
+		group: (typeof libraryConfig)["pageSectionGroups"][number]
 		/**
 		 * use browser devtools to capture an image of the section (ideally 1600x900 but can be any size)
 		 */
-		icon: ReturnType<typeof createSectionPreview>
+		icon: StaticImageData
 	},
 	secondary?: Parameters<
 		typeof defineArrayMember<
@@ -209,7 +211,11 @@ export function definePageSection<
 ) {
 	return defineArrayMember(
 		// @ts-expect-error doesn't match due to narrowing constraints
-		{ ...options, groups: [{ name: "Designed for Home page" }] },
+		{
+			...options,
+			groups: [{ name: "Designed for Home page" }],
+			icon: createSectionPreview(icon),
+		},
 		secondary,
 	)
 }
