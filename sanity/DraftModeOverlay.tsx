@@ -29,7 +29,7 @@ export default function DraftModeOverlay(
 			 * We delay the toast in case we're inside Presentation Tool
 			 */
 			const toastId = toast("Previewing Drafted Content", {
-				duration: Number.POSITIVE_INFINITY,
+				duration: 10_000,
 				action: {
 					label: "Disable",
 					onClick: async () => {
