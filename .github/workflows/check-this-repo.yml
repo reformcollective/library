@@ -12,9 +12,9 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
-      - name: Enable corepack
-        run: npm i -g corepack@latest && corepack enable
-      - name: Install dependencies
-        run: corepack pnpm install
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: true
       - name: Lint
         run: pnpm run lint
