@@ -12,10 +12,6 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
-      - name: Install Node
-        uses: useblacksmith/setup-node@v5
-        with:
-          node-version-file: .nvmrc
       - name: Enable corepack
         run: npm i -g corepack@latest && corepack enable
       - name: Install dependencies
