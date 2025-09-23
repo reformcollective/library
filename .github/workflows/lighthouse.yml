@@ -61,19 +61,11 @@ jobs:
         if: github.event.action != 'closed'
         run: sleep 5
 
-      - name: Install unlighthouse-ci
-        if: github.event.action != 'closed'
-        run: pnpm add unlighthouse-ci
-
       - name: Run Unlighthouse
-        id: unlighthouse
         if: github.event.action != 'closed'
-        continue-on-error: true
         run: |
-          set -o pipefail
-          mkdir -p ./report
-          pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report 2> ./report/unlighthouse.stderr | tee ./report/unlighthouse.json
-          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+          pnpm add unlighthouse-ci
+          pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
 
       - name: kill the server
         # don't skip if unlighthouse fails
@@ -85,32 +77,9 @@ jobs:
         id: deployment
         # don't skip if unlighthouse fails
         if: always()
-        continue-on-error: true
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: ./report/
           umbrella-dir: ${{ github.repository }}
           deploy-repository: reformcollective/lighthouse
           token: ${{ env.LIGHTHOUSE_PAT }}
-
-      - name: Determine Lighthouse result
-        if: always()
-        run: |
-          EXIT_CODE="${{ steps.unlighthouse.outputs.exit_code }}"
-          if [ -z "$EXIT_CODE" ]; then
-            EXIT_CODE=1
-          fi
-
-          if [ "$EXIT_CODE" -eq 0 ]; then
-            echo "Unlighthouse passed thresholds."
-            exit 0
-          fi
-
-          if [ -s ./report/unlighthouse.json ] && node -e "JSON.parse(require('fs').readFileSync('./report/unlighthouse.json','utf8'))" 2>/dev/null; then
-            echo "Unlighthouse completed but budget thresholds not met. Marking neutral."
-            exit 78
-          fi
-
-          echo "Unlighthouse crashed or did not produce valid report. Failing."
-          test -f ./report/unlighthouse.stderr && tail -n 200 ./report/unlighthouse.stderr || true
-          exit 1
