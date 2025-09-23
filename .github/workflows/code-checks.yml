@@ -29,10 +29,6 @@ jobs:
         name: Install pnpm
         with:
           run_install: false
-      - uses: useblacksmith/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: "pnpm"
       - name: Install dependencies
         run: pnpm install || echo 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
       - run: pnpm run lint
@@ -72,13 +68,9 @@ jobs:
         name: Install pnpm
         with:
           run_install: false
-      - uses: useblacksmith/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: "pnpm"
       - run: pnpm install
       - run: pnpm run lint
       - if: inputs.isSanity == true
-        run: pnpm typegen && pnpm exec sanity documents export --workspace default --dataset production --groq-filter '!(_id in path("drafts.**"))' | pnpm exec sanity documents validate --workspace default --dataset production --file -
+        run: pnpm typegen && pnpm exec sanity documents validate -y
       # running a build will also check types
       - run: pnpm run build

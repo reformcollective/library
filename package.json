@@ -33,6 +33,18 @@
 	"preinstall": "npx only-allow pnpm",
 	"packageManager": "pnpm@10.17.1",
 	"engines": {
-		"node": "22.x"
+		"node": ">=22.x"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "24.x",
+			"onFail": "download"
+		},
+		"packageManager": {
+			"name": "pnpm",
+			"version": "10.17.1",
+			"onFail": "download"
+		}
 	}
 }
