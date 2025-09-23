@@ -68,7 +68,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p ./report
-          pnpm add unlighthouse-ci --no-frozen-lockfile
+          pnpm add unlighthouse-ci
           pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report 2> ./report/unlighthouse.stderr | tee ./report/unlighthouse.json
           echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
 
