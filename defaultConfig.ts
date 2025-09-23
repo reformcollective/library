@@ -20,6 +20,10 @@ type Config<TransitionNames = never> = {
 	 * transition names, if applicable
 	 */
 	transitionNames: TransitionNames[]
+	/**
+	 * choose between a tablet breakpoint or a large mobile breakpoint
+	 */
+	tabletBreakpoint: "tablet" | "largeMobile"
 }
 
 const defaultConfig = {
@@ -27,6 +31,7 @@ const defaultConfig = {
 	scrollRestoration: true,
 	saveAnchorNames: true,
 	transitionNames: [],
+	tabletBreakpoint: "tablet",
 } as const satisfies Config
 
 export const defineLibraryConfig = <const TransitionNames>(
