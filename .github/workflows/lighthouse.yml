@@ -38,7 +38,7 @@ jobs:
           run_install: false
       - name: Install dependencies
         if: github.event.action != 'closed'
-        run: corepack pnpm install
+        run: pnpm install
       - uses: useblacksmith/cache@v5
         with:
           path: |
