@@ -14,5 +14,7 @@ jobs:
           submodules: recursive
       - uses: pnpm/action-setup@v4
         name: Install pnpm
+        with:
+          run_install: true
       - name: Lint
         run: pnpm run lint
