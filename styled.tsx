@@ -19,6 +19,7 @@
  *
  */
 
+import libraryConfig from "libraryConfig"
 import config from "libraryConfig"
 import {
 	type CSSObject,
@@ -29,6 +30,7 @@ import type { KeyframesObject } from "restyle/keyframes"
 import media, {
 	desktopBreakpoint,
 	desktopDesignSize,
+	mobileBreakpoint,
 	mobileDesignSize,
 	tabletDesignSize,
 } from "styles/media"
@@ -289,13 +291,25 @@ function convertToResponsive(
 										) /
 											100) *
 										desktopBreakpoint
-									).toFixed(PIXEL_PRECISION)}px`.replace(".0px", "px")
-								: `${replacer(
-										px,
-										designSizeOverride?.[
-											only === "fullWidth" ? "desktop" : only
-										] ?? designSizes[only],
-									)}vw`,
+									).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
+								: only === "tablet" &&
+									  libraryConfig.tabletBreakpoint === "largeMobile"
+									? `${(
+											(Number.parseFloat(
+												replacer(
+													px,
+													designSizeOverride?.mobile ?? mobileDesignSize,
+												),
+											) /
+												100) *
+											mobileBreakpoint
+										).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
+									: `${replacer(
+											px,
+											designSizeOverride?.[
+												only === "fullWidth" ? "desktop" : only
+											] ?? designSizes[only],
+										)}vw`,
 						),
 				}
 			} else {
@@ -318,7 +332,7 @@ function convertToResponsive(
 										) /
 											100) *
 										desktopBreakpoint
-									).toFixed(PIXEL_PRECISION)}px`.replace(".0px", "px"),
+									).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px"),
 						),
 				}
 
@@ -339,10 +353,22 @@ function convertToResponsive(
 					...((output[hashedMedia.tablet] ?? {}) as Record<string, string>),
 					[key]: value
 						?.toString()
-						.replaceAll(
-							regex,
-							(_: unknown, px: string) =>
-								`${replacer(px, designSizeOverride?.tablet ?? tabletDesignSize)}vw`,
+						.replaceAll(regex, (_: unknown, px: string) =>
+							libraryConfig.tabletBreakpoint === "tablet"
+								? `${replacer(px, designSizeOverride?.tablet ?? tabletDesignSize)}vw`
+								: `${(
+										(Number.parseFloat(
+											replacer(
+												px,
+												designSizeOverride?.mobile ?? mobileDesignSize,
+											),
+										) /
+											100) *
+										mobileBreakpoint
+									).toFixed(PIXEL_PRECISION)}px /* ${px} */`.replace(
+										".00px",
+										"px",
+									),
 						),
 				}
 
