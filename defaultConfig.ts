@@ -3,7 +3,7 @@
  * see app/libraryConfig.ts for the actual config
  */
 
-type Config = {
+type Config<TransitionNames = never, GroupNames = never> = {
 	/**
 	 * if true, the fresponsive util will scale on fullWidth breakpoints
 	 */
@@ -16,17 +16,33 @@ type Config = {
 	 * should anchor names be saved to the URL? when e.g. scrolling to a section
 	 */
 	saveAnchorNames: boolean
+	/**
+	 * transition names, if applicable
+	 */
+	transitionNames: TransitionNames[]
+	/**
+	 * choose between a tablet breakpoint or a large mobile breakpoint
+	 */
+	tabletBreakpoint: "tablet" | "largeMobile"
+	/**
+	 * page section group names for sanity studio, if applicable
+	 * this is only used for autocomplete & checking during development
+	 */
+	pageSectionGroups: GroupNames[]
 }
 
 const defaultConfig = {
 	scaleFully: false,
 	scrollRestoration: true,
 	saveAnchorNames: true,
+	transitionNames: [],
+	tabletBreakpoint: "tablet",
+	pageSectionGroups: [],
 } as const satisfies Config
 
-export const defineLibraryConfig = <SetConfig extends Partial<Config>>(
-	config: SetConfig,
-): Config => ({
+export const defineLibraryConfig = <const TransitionNames, const GroupNames>(
+	config: Partial<Config<TransitionNames, GroupNames>>,
+): Config<TransitionNames, GroupNames> => ({
 	...defaultConfig,
 	...config,
 })

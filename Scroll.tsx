@@ -5,29 +5,8 @@ import Lenis, { type LenisOptions } from "lenis"
 import { useEffect, useState } from "react"
 import { useDeepCompareLayoutEffect } from "use-deep-compare"
 import { isBrowser } from "./deviceDetection"
-import { css, GlobalStyles, unresponsive } from "./styled"
 import TypedEventEmitter from "./TypedEventEmitter"
-
-const styles = unresponsive(css`
-	html.lenis,
-	html.lenis body {
-		height: auto;
-	}
-
-	.lenis.lenis-smooth [data-lenis-prevent] {
-		overscroll-behavior: contain;
-	}
-
-	.lenis.lenis-stopped {
-		body {
-			overflow: clip;
-		}
-	}
-
-	.lenis.lenis-smooth iframe {
-		pointer-events: none;
-	}
-`)
+import "lenis/dist/lenis.css"
 
 const locks: symbol[] = []
 const locksChange = new TypedEventEmitter<{ change: [] }>()
@@ -105,6 +84,7 @@ export const usePinType = () => {
  */
 export const useIsSmooth = () => {
 	const [smooth, setSmooth] = useState(
+		// biome-ignore lint/complexity/useOptionalChain: window cannot be chained
 		typeof window !== "undefined" &&
 			window.matchMedia("(hover: hover)").matches,
 	)
@@ -229,5 +209,5 @@ export const SmoothScrollStyle = ({
 		}
 	}, [config])
 
-	return <GlobalStyles>{styles}</GlobalStyles>
+	return null
 }

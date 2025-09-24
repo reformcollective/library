@@ -1,12 +1,13 @@
-import libraryConfig from "libraryConfig"
-import { desktopDesignSize } from "styles/media"
-
 export const makeResponsiveGrid = ({
+	sourceDesignWidth,
 	columnCount,
 	gutter,
 	margin,
-	scaleFully,
 }: {
+	/**
+	 * how wide is the frame this grid is inside?
+	 */
+	sourceDesignWidth: number
 	/**
 	 * how many columns to generate
 	 */
@@ -19,10 +20,6 @@ export const makeResponsiveGrid = ({
 	 * space between columns
 	 */
 	gutter: string
-	/**
-	 * scale fully override
-	 */
-	scaleFully?: boolean
 }) => {
 	if (columnCount < 2) throw new Error("Column count must be at least 2")
 
@@ -50,20 +47,15 @@ export const makeResponsiveGrid = ({
 			}`,
 	)
 
-	const maxWidth =
-		(scaleFully ?? libraryConfig.scaleFully)
-			? "100vw"
-			: `${desktopDesignSize}px`
-
 	return `
 		[fullbleed-start]
 		${margin}
 		[scaled-main-start]
-		calc(calc(100vw - ${maxWidth}) / 2)
+		calc(calc(100vw - ${sourceDesignWidth}px) / 2)
 		[main-start] 0
 		${columns.join("\n")}
 		0 [main-end]
-		calc(calc(100vw - ${maxWidth}) / 2)
+		calc(calc(100vw - ${sourceDesignWidth}px) / 2)
 		[scaled-main-end]
 		${margin}
 		[fullbleed-end]

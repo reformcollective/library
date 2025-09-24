@@ -1,8 +1,26 @@
 import { createBlurUp } from "@mux/blurup"
 import { sleep } from "library/functions"
 import { defineQuery, stegaClean } from "next-sanity"
+import { cache } from "react"
 import { sanityFetch } from "sanity/lib/live"
 import * as v from "valibot"
+
+export const getBlurUp = cache(async (playbackId: string) =>
+	Promise.race([
+		// this call may hang, so add a timeout
+		sleep(1000).then(() => ({
+			blurDataURL: undefined,
+			aspectRatio: undefined,
+		})),
+		createBlurUp(playbackId, {
+			time: 0,
+			quality: 2,
+		}),
+	]).catch(() => ({
+		blurDataURL: undefined,
+		aspectRatio: undefined,
+	})),
+)
 
 const assetSchema = v.object({
 	asset: v.object({
@@ -86,20 +104,7 @@ export const fetchAssetMeta = async <InputType>(
 
 			const { blurDataURL } =
 				asset?._type === "mux.videoAsset" && asset.playbackId
-					? await Promise.race([
-							// this call may hang, so add a timeout
-							sleep(1000).then(() => ({
-								blurDataURL: undefined,
-								aspectRatio: undefined,
-							})),
-							createBlurUp(stegaClean(asset.playbackId), {
-								time: 0,
-								quality: 2,
-							}),
-						]).catch(() => ({
-							blurDataURL: undefined,
-							aspectRatio: undefined,
-						}))
+					? await getBlurUp(stegaClean(asset.playbackId))
 					: {}
 
 			const meta = "metadata" in asset ? asset.metadata : null

@@ -2,11 +2,11 @@
 
 import { siteURL } from "library/siteURL"
 import { useRouter } from "next/navigation"
-import { VisualEditing } from "next-sanity"
 import {
 	useDraftModeEnvironment,
 	useIsPresentationTool,
 } from "next-sanity/hooks"
+import { VisualEditing } from "next-sanity/visual-editing"
 import { type ComponentProps, useEffect, useTransition } from "react"
 import { toast } from "sonner"
 import { disableDraftMode } from "./actions"
@@ -29,7 +29,7 @@ export default function DraftModeOverlay(
 			 * We delay the toast in case we're inside Presentation Tool
 			 */
 			const toastId = toast("Previewing Drafted Content", {
-				duration: Number.POSITIVE_INFINITY,
+				duration: 10_000,
 				action: {
 					label: "Disable",
 					onClick: async () => {
