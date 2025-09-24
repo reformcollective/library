@@ -1,0 +1,8 @@
+`$fn` where {
+    $fn <:  or { `useMemo`, `useCallback` },
+    register_diagnostic(
+        span = $fn,
+        message = "React Compiler automatically adds useMemo and useCallback",
+        severity = "warn"
+    )
+}

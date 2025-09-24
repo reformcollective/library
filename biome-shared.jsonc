@@ -2,6 +2,7 @@
 	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
 	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"root": true,
+	"plugins": ["./app/library/memoization.grit"],
 	"linter": {
 		"enabled": true,
 		"rules": {
