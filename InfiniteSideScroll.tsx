@@ -85,6 +85,7 @@ export function InfiniteSideScroll({
 	const rowRef = useRef<HTMLDivElement>(null)
 	const internalLoopRef = useCombinedRefs(loopRef, undefined)
 	const [numberNeeded, setNumberNeeded] = useState(1)
+	const [refreshSignal, setRefreshSignal] = useState(0)
 
 	const latestOnChange = useRef(onChange)
 	useLayoutEffect(() => {
@@ -211,7 +212,7 @@ export function InfiniteSideScroll({
 			internalLoopRef,
 			centerMode,
 		],
-		{ recreateOnResize: true },
+		{ recreateOnResize: true, extraDeps: [refreshSignal] },
 	)
 
 	useEffect(() => {
@@ -232,6 +233,7 @@ export function InfiniteSideScroll({
 						? newNumber
 						: oldNumber
 				})
+				setRefreshSignal((s) => s + 1) // trigger a refresh of the animation
 			}
 		}
 
