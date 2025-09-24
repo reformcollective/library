@@ -1,5 +1,11 @@
+import type libraryConfig from "libraryConfig"
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
+import type {
+	AutocompleteString,
+	IntrinsicTypeName,
+	StrictDefinition,
+} from "sanity"
 import { defineArrayMember, defineField, type ImageDefinition } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
 import UniversalImage from "./SanityImage"
@@ -154,3 +160,62 @@ export const redirect = defineArrayMember({
 		},
 	},
 })
+
+export function definePageSection<
+	const TType extends IntrinsicTypeName | AutocompleteString,
+	const TName extends string,
+	TSelect extends Record<string, string> | undefined,
+	// biome-ignore lint/suspicious/noExplicitAny: intentional behavior
+	TPrepareValue extends Record<keyof TSelect, any> | undefined,
+	TAlias extends IntrinsicTypeName | undefined,
+	TStrict extends StrictDefinition,
+>(
+	{
+		group,
+		icon,
+		...options
+	}: Omit<
+		Parameters<
+			typeof defineArrayMember<
+				TType,
+				TName,
+				TSelect,
+				TPrepareValue,
+				TAlias,
+				TStrict
+			>
+		>[0],
+		"groups" | "icon"
+	> & {
+		/**
+		 * for example, "Designed for Home"
+		 *
+		 * will be filterable based on this category in the studio
+		 */
+		group: (typeof libraryConfig)["pageSectionGroups"][number]
+		/**
+		 * use browser devtools to capture an image of the section (ideally 1600x900 but can be any size)
+		 */
+		icon: StaticImageData
+	},
+	secondary?: Parameters<
+		typeof defineArrayMember<
+			TType,
+			TName,
+			TSelect,
+			TPrepareValue,
+			TAlias,
+			TStrict
+		>
+	>[1],
+) {
+	return defineArrayMember(
+		// @ts-expect-error doesn't match due to narrowing constraints
+		{
+			...options,
+			groups: [{ name: "Designed for Home page" }],
+			icon: createSectionPreview(icon),
+		},
+		secondary,
+	)
+}

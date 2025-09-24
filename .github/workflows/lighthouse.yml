@@ -36,14 +36,11 @@ jobs:
         name: Install pnpm
         with:
           run_install: false
-      - name: Use Node
-        uses: useblacksmith/setup-node@v5
-        with:
-          node-version-file: .nvmrc
-          cache: "pnpm"
       - name: Install dependencies
         if: github.event.action != 'closed'
-        run: corepack pnpm install
+        run: |
+          pnpm install
+          pnpm add @unlighthouse/cli puppeteer
       - uses: useblacksmith/cache@v5
         with:
           path: |
@@ -68,7 +65,7 @@ jobs:
 
       - name: Run Unlighthouse
         if: github.event.action != 'closed'
-        run: pnpm dlx unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
+        run: pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
 
       - name: kill the server
         # don't skip if unlighthouse fails

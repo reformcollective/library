@@ -1,11 +1,8 @@
 import { fetchAssetMeta } from "library/sanity/assetMetadata"
-import DraftModeOverlay from "library/sanity/DraftModeToast"
+import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
-import {
-	type ClientPerspective,
-	defineLive,
-	type QueryParams,
-} from "next-sanity"
+import type { ClientPerspective, QueryParams } from "next-sanity"
+import { defineLive } from "next-sanity/live"
 import { Toaster } from "sonner"
 import { client } from "@/sanity/lib/client"
 import { token } from "@/sanity/lib/token"
@@ -22,6 +19,7 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	serverToken: token,
 	// Required for stand-alone live previews, the token is only shared to the browser if it's a valid Next.js Draft Mode session
 	browserToken: token,
+	fetchOptions: { revalidate: 60 },
 })
 
 /**
@@ -30,7 +28,7 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
  * and will also fetch from the CDN.
  * When using the "drafts" perspective then the data is fetched from the live API and isn't cached, it will also fetch draft content that isn't published yet.
  */
-const sanityFetch = async <const QueryString extends string>({
+export const libraryFetch = async <const QueryString extends string>({
 	query,
 	params = {},
 	perspective,
@@ -55,7 +53,7 @@ const sanityFetch = async <const QueryString extends string>({
 	}
 }
 
-export const SanityLive = async () => {
+export const LibraryLive = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
 
 	return (
@@ -66,5 +64,3 @@ export const SanityLive = async () => {
 		</LiveWrapper>
 	)
 }
-
-export { sanityFetch }
