@@ -24,12 +24,8 @@
 		"typescript": "^5.9.2"
 	},
 	"scripts": {
-		"prelint": "mv biome-shared.jsonc biome.jsonc",
 		"lint": "biome lint",
-		"postlint": "mv biome.jsonc biome-shared.jsonc",
-		"preformat": "mv biome-shared.jsonc biome.jsonc",
 		"format": "biome check --write",
-		"postformat": "mv biome.jsonc biome-shared.jsonc"
 	},
 	"preinstall": "npx only-allow pnpm",
 	"packageManager": "pnpm@10.17.1",
