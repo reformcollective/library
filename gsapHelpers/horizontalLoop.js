@@ -285,7 +285,13 @@ export function horizontalLoop(items, config) {
 		lastIndex = curIndex
 		onChange && onChange(items[curIndex], curIndex)
 		timeline = tl
-		return () => window.removeEventListener("resize", onResize) // cleanup
+		// REFORM CHANGE: better cleanup
+		return () => {
+			window.removeEventListener("resize", onResize)
+			try {
+				timeline && timeline.destroy && timeline.destroy()
+			} catch {}
+		}
 	})
 	return timeline
 }
