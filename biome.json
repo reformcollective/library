@@ -1,0 +1,3 @@
+{
+	"extends": ["./biome/biome-library.jsonc"]
+}
