@@ -25,7 +25,7 @@
 	},
 	"scripts": {
 		"lint": "biome lint",
-		"format": "biome check --write",
+		"format": "biome check --write"
 	},
 	"preinstall": "npx only-allow pnpm",
 	"packageManager": "pnpm@10.17.1",
