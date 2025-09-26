@@ -110,12 +110,16 @@ export const universalImage = <
 export const universalLink = ({
 	withText = true,
 	required,
+	defaultType = "internal",
+	defaultToNewTab,
 	...props
 }: {
 	name: string
 	title?: string
 	withText?: boolean
 	required?: boolean
+	defaultType?: "external" | "internal" | "email" | "phone"
+	defaultToNewTab?: boolean
 }) =>
 	defineField({
 		...props,
@@ -135,6 +139,10 @@ export const universalLink = ({
 				if (required) return requiredLinkField(field)
 				return true
 			}),
+		initialValue: {
+			type: defaultType,
+			toNewTab: defaultToNewTab ?? defaultType === "external",
+		},
 	})
 
 export const redirect = defineArrayMember({
