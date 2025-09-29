@@ -219,6 +219,8 @@ export function horizontalLoop(items, config) {
 				lastSnap,
 				initChangeX,
 				wasPlaying,
+				// REFORM CHANGE: track reversed direction to resume correctly
+				wasReversed,
 				align = () =>
 					tl.progress(
 						wrap(startProgress + (draggable.startX - draggable.x) * ratio),
@@ -234,7 +236,10 @@ export function horizontalLoop(items, config) {
 				onPressInit() {
 					let x = this.x
 					gsap.killTweensOf(tl)
-					wasPlaying = !tl.paused()
+					// REFORM CHANGE: preserve resume intent across interrupted drags
+					wasPlaying = wasPlaying || !tl.paused()
+					// REFORM CHANGE: capture direction for resume
+					wasReversed = wasReversed || tl.reversed()
 					tl.pause()
 					startProgress = tl.progress()
 					refresh()
@@ -265,11 +270,25 @@ export function horizontalLoop(items, config) {
 						},
 				onRelease() {
 					syncIndex()
-					draggable.isThrowing && (indexIsDirty = true)
+					if (draggable.isThrowing) {
+						indexIsDirty = true
+					} else if (wasPlaying) {
+						// REFORM CHANGE: resume marquee when no throw, preserving direction
+						wasReversed ? tl.reverse() : tl.play()
+						// REFORM CHANGE: clear resume intent flags
+						wasPlaying = false
+						wasReversed = false
+					}
 				},
 				onThrowComplete: () => {
 					syncIndex()
-					wasPlaying && tl.play()
+					if (wasPlaying) {
+						// REFORM CHANGE: resume marquee after throw, preserving direction
+						wasReversed ? tl.reverse() : tl.play()
+						// REFORM CHANGE: clear resume intent flags
+						wasPlaying = false
+						wasReversed = false
+					}
 				},
 			})[0]
 			tl.draggable = draggable
