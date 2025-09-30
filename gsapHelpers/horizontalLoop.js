@@ -258,12 +258,14 @@ export function horizontalLoop(items, config) {
 					? (value) => {
 						let current = draggable.x
 						const diff = current - value
+						if (Math.abs(diff) > 10_000) return current // stop immediately if velocity is ridiculous
 						const clampedDiff = gsap.utils.clamp(-1000, 1000, diff)
 						return current - clampedDiff
 					}
 					: function (value) {
 							let current = draggable.x
 							const diff = current - value
+							if (Math.abs(diff) > 10_000) return current // stop immediately if velocity is ridiculous
 							const clampedDiff = gsap.utils.clamp(-1000, 1000, diff)
 							const clampedValue = current - clampedDiff
 
