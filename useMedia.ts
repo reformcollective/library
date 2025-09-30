@@ -32,4 +32,6 @@ export function getMedia<A, B, C, D>(fw: A, d: B, t: C, m: D) {
 	)
 		return d
 	if (window.innerWidth > desktopBreakpoint) return fw
+
+	return m
 }

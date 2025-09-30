@@ -1,5 +1,6 @@
 "use client"
 
+import { useDebounceFn } from "ahooks"
 import { gsap, Observer, ScrollTrigger } from "gsap/all"
 import {
 	Fragment,
@@ -86,6 +87,12 @@ export function InfiniteSideScroll({
 	const internalLoopRef = useCombinedRefs(loopRef, undefined)
 	const [numberNeeded, setNumberNeeded] = useState(1)
 	const [refreshSignal, setRefreshSignal] = useState(0)
+
+	// debounce refreshSignal updates to prevent rapid re-creations
+	const { run: debouncedRefresh } = useDebounceFn(
+		() => setRefreshSignal((s) => s + 1),
+		{ wait: 150 },
+	)
 
 	const latestOnChange = useRef(onChange)
 	useLayoutEffect(() => {
@@ -212,7 +219,10 @@ export function InfiniteSideScroll({
 			internalLoopRef,
 			centerMode,
 		],
-		{ recreateOnResize: true, extraDeps: [refreshSignal] },
+		{
+			recreateOnResize: true,
+			extraDeps: [refreshSignal],
+		},
 	)
 
 	useEffect(() => {
@@ -233,7 +243,6 @@ export function InfiniteSideScroll({
 						? newNumber
 						: oldNumber
 				})
-				setRefreshSignal((s) => s + 1) // trigger a refresh of the animation
 			}
 		}
 
@@ -243,7 +252,10 @@ export function InfiniteSideScroll({
 		const elementsToObserve = Array.from(
 			rowRef.current?.querySelectorAll("*") ?? [],
 		)
-		const observer = new ResizeObserver(update)
+		const observer = new ResizeObserver(() => {
+			update()
+			debouncedRefresh()
+		})
 		for (const element of elementsToObserve) {
 			observer.observe(element)
 		}
@@ -255,7 +267,7 @@ export function InfiniteSideScroll({
 			listener.cleanup()
 			observer.disconnect()
 		}
-	}, [])
+	}, [debouncedRefresh])
 
 	/**
 	 * some logic to determine which buttons to show, and if we need to flip the back button

@@ -38,9 +38,7 @@ jobs:
           run_install: false
       - name: Install dependencies
         if: github.event.action != 'closed'
-        run: |
-          pnpm install
-          pnpm add @unlighthouse/cli puppeteer
+        run: pnpm install
       - uses: useblacksmith/cache@v5
         with:
           path: |

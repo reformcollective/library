@@ -1,7 +1,8 @@
 {
-	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+	"$schema": "../node_modules/@biomejs/biome/configuration_schema.json",
 	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"root": true,
+	"plugins": ["./biome/memoization.grit"],
 	"linter": {
 		"enabled": true,
 		"rules": {
@@ -40,7 +41,7 @@
 		}
 	},
 	"files": {
-		"includes": ["**", "!**/pnpm-lock.yaml", "!**/gsapHelpers"]
+		"includes": ["**", "!pnpm-lock.yaml", "!gsapHelpers"]
 	},
 	"vcs": {
 		"enabled": true,
