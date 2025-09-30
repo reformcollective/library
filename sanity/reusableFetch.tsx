@@ -19,7 +19,7 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	serverToken: token,
 	// Required for stand-alone live previews, the token is only shared to the browser if it's a valid Next.js Draft Mode session
 	browserToken: token,
-	fetchOptions: { revalidate: 60 },
+	// fetchOptions: { revalidate: 60 }, // Immediate fix for high APICDN usage.
 })
 
 /**
