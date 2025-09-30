@@ -21,6 +21,8 @@ export function horizontalLoop(items, config) {
 	let timeline
 	items = gsap.utils.toArray(items)
 	config = config || {}
+    // REFORM CHANGE: allow callers to opt out of internal window resize handling
+    const manageResize = config.manageResize !== false
 	gsap.context(() => {
 		// use a context so that if this is called from within another context or a gsap.matchMedia(), we can perform proper cleanup like the "resize" event handler on the window
 		let onChange = config.onChange,
@@ -164,13 +166,13 @@ export function horizontalLoop(items, config) {
 					? tl.time(times[curIndex], true)
 					: tl.progress(progress, true)
 			},
-			onResize = () => refresh(true),
+            onResize = () => refresh(true),
 			proxy
 		gsap.set(items, { x: 0 })
 		populateWidths()
 		populateTimeline()
 		populateOffsets()
-		window.addEventListener("resize", onResize)
+        if (manageResize) window.addEventListener("resize", onResize)
 		function toIndex(index, vars) {
 			vars = vars || {}
 			Math.abs(index - curIndex) > length / 2 &&
@@ -219,6 +221,8 @@ export function horizontalLoop(items, config) {
 				lastSnap,
 				initChangeX,
 				wasPlaying,
+				// REFORM CHANGE: track reversed direction to resume correctly
+				wasReversed,
 				align = () =>
 					tl.progress(
 						wrap(startProgress + (draggable.startX - draggable.x) * ratio),
@@ -234,7 +238,10 @@ export function horizontalLoop(items, config) {
 				onPressInit() {
 					let x = this.x
 					gsap.killTweensOf(tl)
-					wasPlaying = !tl.paused()
+					// REFORM CHANGE: preserve resume intent across interrupted drags
+					wasPlaying = wasPlaying || !tl.paused()
+					// REFORM CHANGE: capture direction for resume
+					wasReversed = wasReversed || tl.reversed()
 					tl.pause()
 					startProgress = tl.progress()
 					refresh()
@@ -265,11 +272,25 @@ export function horizontalLoop(items, config) {
 						},
 				onRelease() {
 					syncIndex()
-					draggable.isThrowing && (indexIsDirty = true)
+					if (draggable.isThrowing) {
+						indexIsDirty = true
+					} else if (wasPlaying) {
+						// REFORM CHANGE: resume marquee when no throw, preserving direction
+						wasReversed ? tl.reverse() : tl.play()
+						// REFORM CHANGE: clear resume intent flags
+						wasPlaying = false
+						wasReversed = false
+					}
 				},
 				onThrowComplete: () => {
 					syncIndex()
-					wasPlaying && tl.play()
+					if (wasPlaying) {
+						// REFORM CHANGE: resume marquee after throw, preserving direction
+						wasReversed ? tl.reverse() : tl.play()
+						// REFORM CHANGE: clear resume intent flags
+						wasPlaying = false
+						wasReversed = false
+					}
 				},
 			})[0]
 			tl.draggable = draggable
@@ -286,8 +307,8 @@ export function horizontalLoop(items, config) {
 		onChange && onChange(items[curIndex], curIndex)
 		timeline = tl
 		// REFORM CHANGE: better cleanup
-		return () => {
-			window.removeEventListener("resize", onResize)
+        return () => {
+            if (manageResize) window.removeEventListener("resize", onResize)
 			try {
 				timeline && timeline.destroy && timeline.destroy()
 			} catch {}

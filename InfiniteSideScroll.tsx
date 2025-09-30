@@ -17,7 +17,7 @@ import { css, fresponsive, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
 import { useCombinedRefs } from "./useCombinedRefs"
 
-gsap.registerPlugin(Observer)
+gsap.registerPlugin(Observer, ScrollTrigger)
 
 export type InfiniteLoop = ReturnType<typeof horizontalLoop>
 
@@ -134,6 +134,8 @@ export function InfiniteSideScroll({
 				speed: marqueeSpeed === 0 ? 2 : marqueeSpeed,
 				reversed,
 				repeat: -1,
+				// external code manages teardown on width changes
+				manageResize: false,
 				// padding right should match the calculated gap
 				paddingRight: gap,
 				onChange: (_, index) => {
