@@ -2,12 +2,12 @@ import { fetchAssetMeta } from "library/sanity/assetMetadata"
 import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
 import type { ClientPerspective, QueryParams } from "next-sanity"
+import { createClient } from "next-sanity"
 import { defineLive } from "next-sanity/live"
 import { Toaster } from "sonner"
 import { apiVersion, dataset, projectId, studioUrl } from "@/sanity/lib/api"
 import { token } from "@/sanity/lib/token"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
-import { createClient } from "next-sanity"
 
 export const client = createClient({
 	projectId: projectId,
@@ -52,12 +52,12 @@ export const libraryFetch = async <const QueryString extends string>({
 	 *
 	 * otherwise, stega should be true
 	 */
-	stega: boolean
+	stega?: false | undefined
 }) => {
 	const { data, sourceMap, tags } = await internalFetch({
 		query,
 		params,
-		stega,
+		stega: stega ?? true,
 		perspective,
 	})
 
