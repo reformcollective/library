@@ -12,6 +12,12 @@ interface HorizontalLoopConfig {
 	draggable?: boolean
 	center?: boolean
 	onChange?: (items: unknown, index: number) => void
+    /**
+     * When false, the helper will not attach a window resize listener.
+     * Use this if the caller is responsible for tearing down and recreating
+     * the loop on width changes.
+     */
+    manageResize?: boolean
 }
 
 interface HorizontalLoopTimeline extends gsap.core.Timeline {
