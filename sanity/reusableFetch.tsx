@@ -4,22 +4,27 @@ import { draftMode } from "next/headers"
 import type { ClientPerspective, QueryParams } from "next-sanity"
 import { defineLive } from "next-sanity/live"
 import { Toaster } from "sonner"
-import { client } from "@/sanity/lib/client"
+import { apiVersion, dataset, projectId, studioUrl } from "@/sanity/lib/api"
 import { token } from "@/sanity/lib/token"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
+import { createClient } from "next-sanity"
+
+const client = createClient({
+	projectId: projectId,
+	dataset: dataset,
+	useCdn: false,
+	apiVersion: apiVersion,
+	stega: { studioUrl },
+})
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
  * Learn more: https://github.com/sanity-io/next-sanity?tab=readme-ov-file#1-configure-definelive
  */
-
 const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	client,
-	// Required for showing draft content when the Sanity Presentation Tool is used, or to enable the Vercel Toolbar Edit Mode
 	serverToken: token,
-	// Required for stand-alone live previews, the token is only shared to the browser if it's a valid Next.js Draft Mode session
 	browserToken: token,
-	// fetchOptions: { revalidate: 60 }, // Immediate fix for high APICDN usage.
 })
 
 /**
@@ -37,7 +42,17 @@ export const libraryFetch = async <const QueryString extends string>({
 	query: QueryString
 	params?: QueryParams | Promise<QueryParams>
 	perspective?: Exclude<ClientPerspective, "raw">
-	stega?: boolean
+	/**
+	 * Good to know: Always set stega: false when calling sanityFetch within these:
+	 *
+	 * generateMetadata
+	 * generateViewport
+	 * generateSitemaps
+	 * generateImageMetadata
+	 *
+	 * otherwise, stega should be true
+	 */
+	stega: boolean
 }) => {
 	const { data, sourceMap, tags } = await internalFetch({
 		query,
