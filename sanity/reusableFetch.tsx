@@ -9,7 +9,7 @@ import { token } from "@/sanity/lib/token"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
 import { createClient } from "next-sanity"
 
-const client = createClient({
+export const client = createClient({
 	projectId: projectId,
 	dataset: dataset,
 	useCdn: false,
