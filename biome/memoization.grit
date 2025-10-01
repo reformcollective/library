@@ -3,5 +3,5 @@
 		`useMemo`,
 		`useCallback`
 	},
-	register_diagnostic(span=$fn, message="React Compiler automatically adds useMemo and useCallback, manual memoization is not necessary.", severity="warn")
+	register_diagnostic(span=$fn, message="React Compiler automatically adds useMemo and useCallback, manual memoization is not necessary.", severity="info")
 }
