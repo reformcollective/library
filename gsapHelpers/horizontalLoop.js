@@ -253,15 +253,27 @@ export function horizontalLoop(items, config) {
 				onThrowUpdate: align,
 				overshootTolerance: 0,
 				inertia: true,
-				// REFORM CHANGE: snap is optional
+				// REFORM CHANGE: snap is optional, value is clamped
 				snap: !config.snap
-					? undefined
+					? (value) => {
+						let current = draggable.x
+						const diff = current - value
+						if (Math.abs(diff) > 10_000) return current // stop immediately if velocity is ridiculous
+						const clampedDiff = gsap.utils.clamp(-1000, 1000, diff)
+						return current - clampedDiff
+					}
 					: function (value) {
+							let current = draggable.x
+							const diff = current - value
+							if (Math.abs(diff) > 10_000) return current // stop immediately if velocity is ridiculous
+							const clampedDiff = gsap.utils.clamp(-1000, 1000, diff)
+							const clampedValue = current - clampedDiff
+
 							//note: if the user presses and releases in the middle of a throw, due to the sudden correction of proxy.x in the onPressInit(), the velocity could be very large, throwing off the snap. So sense that condition and adjust for it. We also need to set overshootTolerance to 0 to prevent the inertia from causing it to shoot past and come back
 							if (Math.abs(startProgress / -ratio - this.x) < 10) {
 								return lastSnap + initChangeX
 							}
-							let time = -(value * ratio) * tl.duration(),
+							let time = -(clampedValue * ratio) * tl.duration(),
 								wrappedTime = timeWrap(time),
 								snapTime = times[getClosest(times, wrappedTime, tl.duration())],
 								dif = snapTime - wrappedTime
