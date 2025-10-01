@@ -16,6 +16,7 @@ import { useAnimation } from "./useAnimation"
 export default function useAutoHideHeader(
 	wrapper: RefObject<HTMLDivElement | null> | null | undefined,
 	styleIn: "scrub" | "snap" = "scrub",
+	reverse = false,
 ) {
 	// scrub style only really works if we're using a smoother
 	const isSmooth = useIsSmooth()
@@ -98,7 +99,7 @@ export default function useAutoHideHeader(
 				}
 				// if forced not sticky
 				else if (forceHideHeader || hideHeader) {
-					yTo(-height)
+					yTo(reverse ? height : -height)
 				}
 				// if hovered
 				else if (isHovered) {
@@ -108,7 +109,8 @@ export default function useAutoHideHeader(
 				else if (style === "scrub") {
 					const currentY = Number(gsap.getProperty(wrapper.current, "y"))
 					const newY = Math.min(0, Math.max(-height, currentY - delta))
-					yTo(newY, newY)
+					const newPotentiallyReversedY = reverse ? -newY : newY
+					yTo(newPotentiallyReversedY, newPotentiallyReversedY)
 				}
 			}
 
@@ -130,7 +132,7 @@ export default function useAutoHideHeader(
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
 			}
 		},
-		[wrapper, style],
+		[wrapper, style, reverse],
 		{
 			// reset to top when pathname changes
 			extraDeps: [pathname],
