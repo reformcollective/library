@@ -29,10 +29,19 @@ const assetSchema = v.object({
 })
 
 const linkSchema = v.object({
-	_type: v.literal("link"),
 	internalLink: v.object({
 		_ref: v.string(),
 	}),
+	_type: v.string(),
+	text: v.optional(v.string()),
+	type: v.optional(v.string()),
+	url: v.optional(v.string()),
+	email: v.optional(v.string()),
+	phone: v.optional(v.string()),
+	value: v.optional(v.string()),
+	blank: v.optional(v.boolean()),
+	parameters: v.optional(v.string()),
+	anchor: v.optional(v.string()),
 })
 
 type VideoAssetMeta = {
