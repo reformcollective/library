@@ -6,12 +6,31 @@ import { refreshScrollLocks } from "library/Scroll"
  * this allows fine-tuning of the anchor scroll position
  */
 export const getScrollOffset = (anchor: string) => {
-	let scrollOffset = 100
+	const scrollOffset = 0
 
 	if (anchor) {
 		const anchorEl = document.querySelector(anchor)
+		if (!anchorEl) return 0
+
 		const anchorOffset = anchorEl?.getAttribute("data-anchor-offset")
-		scrollOffset += Number.parseFloat(anchorOffset ?? "0")
+		if (!anchorOffset) return 0
+
+		const startTrigger = ScrollTrigger.create({
+			trigger: anchorEl,
+			start: "top top",
+		})
+		const endTrigger = ScrollTrigger.create({
+			trigger: anchorEl,
+			start: anchorOffset,
+		})
+
+		const absoluteStart = startTrigger.start
+		const absoluteEnd = endTrigger.start
+
+		startTrigger.kill()
+		endTrigger.kill()
+
+		return absoluteEnd - absoluteStart
 	}
 
 	return scrollOffset
@@ -39,10 +58,10 @@ export const instantScrollToAnchor = async (anchor: string) => {
 
 			const scrollOffset = getScrollOffset(anchor)
 			ScrollTrigger.refresh()
-			// in order to properly scroll to the anchor, we need to unpause the smoother
 			window.lenis?.scrollTo(anchor, {
 				offset: scrollOffset,
 				immediate: true,
+				force: true,
 			})
 			const newPosition = window.scrollY
 
