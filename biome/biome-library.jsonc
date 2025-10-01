@@ -36,8 +36,8 @@
 	},
 	"javascript": {
 		"formatter": {
-			// using prettier instead of biome's formatter until biome formats css
-			"enabled": false
+			// library can use regardless due to general lack of css
+			"semicolons": "asNeeded"
 		}
 	},
 	"files": {

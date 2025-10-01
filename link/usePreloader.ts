@@ -6,6 +6,7 @@ import { ScreenContext } from "library/ScreenContext"
 import { createScrollLock } from "library/Scroll"
 import { type RefObject, use, useMemo, useState } from "react"
 import { flushSync } from "react-dom"
+import { instantScrollToAnchor } from "./util"
 
 /**
  * if you're making a preloader, set this to a number of seconds to manually block the main thread for debugging
@@ -69,11 +70,15 @@ const recursiveAllSettled = async (
  * we only ever want to do this once!
  */
 let hasProcessedScroll = false
-const processScroll = () => {
+const processScroll = async () => {
 	if (!isBrowser) return
 	if (hasProcessedScroll) return
 
-	if (window.scrollY < window.innerHeight) window.scrollTo(0, 0)
+	// if there's an anchor in the URL, scroll to it instead of resetting scroll
+	const hash = window.location.hash
+	if (hash && document.querySelector(hash)) {
+		await instantScrollToAnchor(hash)
+	} else if (window.scrollY < window.innerHeight) window.scrollTo(0, 0)
 
 	hasProcessedScroll = true
 }
