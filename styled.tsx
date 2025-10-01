@@ -290,10 +290,10 @@ function convertToResponsive(
 											),
 										) /
 											100) *
-										desktopBreakpoint
+											desktopBreakpoint
 									).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
 								: only === "tablet" &&
-									  libraryConfig.tabletBreakpoint === "largeMobile"
+										libraryConfig.tabletBreakpoint === "largeMobile"
 									? `${(
 											(Number.parseFloat(
 												replacer(
@@ -302,7 +302,7 @@ function convertToResponsive(
 												),
 											) /
 												100) *
-											mobileBreakpoint
+												mobileBreakpoint
 										).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
 									: `${replacer(
 											px,
@@ -331,7 +331,7 @@ function convertToResponsive(
 											),
 										) /
 											100) *
-										desktopBreakpoint
+											desktopBreakpoint
 									).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px"),
 						),
 				}
@@ -364,7 +364,7 @@ function convertToResponsive(
 											),
 										) /
 											100) *
-										mobileBreakpoint
+											mobileBreakpoint
 									).toFixed(PIXEL_PRECISION)}px /* ${px} */`.replace(
 										".00px",
 										"px",
