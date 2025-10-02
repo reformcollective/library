@@ -1,7 +1,7 @@
+import crypto from "node:crypto"
+import path from "node:path"
 import { type Compiler, createCompiler } from "@vanilla-extract/compiler"
-import crypto from "crypto"
 import fs from "fs-extra"
-import path from "path"
 import type { LoaderContext } from "webpack"
 
 // --- Part 1: Compiler Management Logic (Merged) ---

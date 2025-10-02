@@ -1,6 +1,6 @@
+import path from "node:path"
 import { babelTransform } from "@macaron-css/integration"
 import fs from "fs-extra"
-import path from "path"
 import type { LoaderContext } from "webpack"
 
 export default async function macaronLoader(
