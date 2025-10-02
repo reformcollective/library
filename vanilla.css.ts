@@ -1,14 +1,14 @@
-import { createVar, globalStyle, type StyleRule } from "@vanilla-extract/css"
-import { COMMENT, DECLARATION, RULESET, compile, type Element } from "stylis"
 import config from "libraryConfig"
+import { createVar, globalStyle, type StyleRule } from "@vanilla-extract/css"
 import {
-	desktopDesignSize,
-	mobileDesignSize,
-	tabletDesignSize,
 	desktopBreakpoint,
+	desktopDesignSize,
 	mobileBreakpoint,
+	mobileDesignSize,
 	tabletBreakpoint,
+	tabletDesignSize,
 } from "styles/media"
+import { COMMENT, compile, DECLARATION, type Element, RULESET } from "stylis"
 
 export const isMobile = createVar()
 export const isTablet = createVar()
@@ -115,7 +115,7 @@ export const css = (
 }
 
 const isTemplate = (v: unknown): v is TemplateStringsArray =>
-	Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, "raw")
+	Array.isArray(v) && Object.hasOwn(v, "raw")
 
 export function unresponsive(
 	tpl: TemplateStringsArray | StyleRule,
