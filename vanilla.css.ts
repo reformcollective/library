@@ -49,7 +49,9 @@ export const switchValue4 = (
 // ---- merged logic from vanilla.tsx ----
 
 const toCamel = (prop: string) =>
-	prop.startsWith("--") ? prop : prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+	prop.startsWith("--")
+		? prop
+		: prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
 
 type MutableStyle = Record<string, unknown> & {
 	selectors?: Record<string, MutableStyle>
@@ -129,12 +131,17 @@ const VW_PRECISION = 3
 const PIXEL_PRECISION = 2
 const pxRegex = /(-?\d*\.?\d+)px\b/g
 
-const toVw = (px: number, design: number) => `${((px / design) * 100).toFixed(VW_PRECISION)}vw`
+const toVw = (px: number, design: number) =>
+	`${((px / design) * 100).toFixed(VW_PRECISION)}vw`
 const toPxString = (val: number) => {
 	const out = val.toFixed(PIXEL_PRECISION)
 	return `${out}px`.replace(".00px", "px")
 }
-const toFull = (px: number, desktopSize: number, overrideScaleFully?: boolean) => {
+const toFull = (
+	px: number,
+	desktopSize: number,
+	overrideScaleFully?: boolean,
+) => {
 	const useScale = overrideScaleFully ?? config.scaleFully
 	if (useScale) return toVw(px, desktopSize)
 	const val = (px * desktopBreakpoint) / desktopSize
@@ -176,7 +183,7 @@ const computeTerms = (px: number, mode: FMode, options?: FOptions) => {
 	const mobileSize = options?.designSizeOverride?.mobile ?? mobileDesignSize
 	const tabletSize = options?.designSizeOverride?.tablet ?? tabletDesignSize
 	const desktopSize = options?.designSizeOverride?.desktop ?? desktopDesignSize
-	const forceScaleFully = options?.scaleFully ?? (mode === "scaledResponsive")
+	const forceScaleFully = options?.scaleFully ?? mode === "scaledResponsive"
 
 	const m = toVw(px, mobileSize)
 	const t =
@@ -188,7 +195,11 @@ const computeTerms = (px: number, mode: FMode, options?: FOptions) => {
 	return { original, m, t, d, f }
 }
 
-const replacePxWithSwitchers = (value: string, mode: FMode, options?: FOptions): string =>
+const replacePxWithSwitchers = (
+	value: string,
+	mode: FMode,
+	options?: FOptions,
+): string =>
 	value.replace(pxRegex, (_, n: string) => {
 		const num = Number.parseFloat(n)
 		const { original, m, t, d, f } = computeTerms(num, mode, options)
@@ -221,7 +232,11 @@ const replacePxWithSwitchers = (value: string, mode: FMode, options?: FOptions):
 		}
 	})
 
-const transformStyleRule = (rule: StyleRule, mode: FMode, options?: FOptions): StyleRule => {
+const transformStyleRule = (
+	rule: StyleRule,
+	mode: FMode,
+	options?: FOptions,
+): StyleRule => {
 	const out: Record<string, unknown> = {}
 	for (const [key, val] of Object.entries(rule as Record<string, unknown>)) {
 		if (
@@ -324,10 +339,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("responsive", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -338,10 +361,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("scaledResponsive", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -352,10 +383,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("large", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -366,10 +405,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("small", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -380,10 +427,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("fullWidth", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -394,10 +449,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("desktop", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -408,10 +471,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("tablet", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -422,10 +493,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("mobile", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -436,10 +515,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("allFullWidth", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -450,10 +537,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("allDesktop", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -464,10 +559,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("allTablet", options)
 		const transformed = transformStyleRule(base, mode, options)
@@ -478,10 +581,18 @@ export const f = {
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
-		const hasOptions = typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
-		const options = (hasOptions ? (optionsOrExpr as FOptions) : undefined)
+		const hasOptions =
+			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
 		const base = isTemplate(tplOrRule)
-			? css(tplOrRule as TemplateStringsArray, ...(hasOptions ? expr : [optionsOrExpr as string | number, ...expr].filter((v) => v !== undefined)))
+			? css(
+					tplOrRule as TemplateStringsArray,
+					...(hasOptions
+						? expr
+						: [optionsOrExpr as string | number, ...expr].filter(
+								(v) => v !== undefined,
+							)),
+				)
 			: (tplOrRule as StyleRule)
 		const mode = resolveMode("allMobile", options)
 		const transformed = transformStyleRule(base, mode, options)

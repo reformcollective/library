@@ -2,20 +2,11 @@ import { fetchAssetMeta } from "library/sanity/assetMetadata"
 import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
 import type { ClientPerspective, QueryParams } from "next-sanity"
-import { createClient } from "next-sanity"
 import { defineLive } from "next-sanity/live"
 import { Toaster } from "sonner"
-import { apiVersion, dataset, projectId, studioUrl } from "@/sanity/lib/api"
+import { client } from "@/sanity/lib/client"
 import { token } from "@/sanity/lib/token"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
-
-export const client = createClient({
-	projectId: projectId,
-	dataset: dataset,
-	useCdn: false,
-	apiVersion: apiVersion,
-	stega: { studioUrl },
-})
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
