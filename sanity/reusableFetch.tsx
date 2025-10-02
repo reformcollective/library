@@ -25,6 +25,7 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	client,
 	serverToken: token,
 	browserToken: token,
+	fetchOptions: { revalidate: false }, // keep until manually revalidated
 })
 
 /**

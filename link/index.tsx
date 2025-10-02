@@ -1,6 +1,7 @@
 "use client"
 
 import Link, { type LinkProps } from "next/link"
+import { stegaClean } from "next-sanity"
 import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
 import { useTransitioner } from "./transitioner"
@@ -70,27 +71,29 @@ export const resolveRoute = (
 			newTab: false,
 		}
 
-	if (link.type === "internal" && link.internalSlug)
+	if (link.type === "internal" && link.internalSlug) {
+		const slugToUse = link.internalSlug === "home" ? "" : link.internalSlug
 		return {
-			url: `/${link.internalSlug.trim()}${link.parameters?.trim() || ""}${link.anchor?.trim() || ""}`,
+			url: `/${stegaClean(slugToUse || "")}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`,
 			// default to same tab if not specified
 			newTab: link.blank ?? false,
 		}
+	}
 
 	if (link.type === "external" && link.url)
 		return {
-			url: `${link.url.trim()}${link.parameters?.trim() || ""}${link.anchor?.trim() || ""}`,
+			url: `${stegaClean(link.url || "")}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`,
 			// default to other tab if not specified
 			newTab: link.blank ?? true,
 		}
 
 	if (link.type === "email" && link.email) {
-		return { url: `mailto:${link.email.trim()}`, newTab: true }
+		return { url: `mailto:${stegaClean(link.email || "")}`, newTab: true }
 	}
 
 	if (link.type === "phone") {
 		return {
-			url: `tel:${link.phone?.replace(/\s+/g, "").trim()}`,
+			url: `tel:${stegaClean(link.phone || "")}`,
 			newTab: true,
 		}
 	}
