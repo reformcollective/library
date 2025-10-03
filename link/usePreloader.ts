@@ -164,12 +164,12 @@ export const usePreloader = ({
 	useBlockThread(output.ready)
 
 	// sync ALL our preloaders together so that no single preloader races to the finish line
-	const [animationReadyPromise] = useState(()=>Promise.withResolvers())
-	const [animationCompletePromise] = useState(()=>Promise.withResolvers())
-	useEffect(()=>{
+	const [animationReadyPromise] = useState(() => Promise.withResolvers())
+	const [animationCompletePromise] = useState(() => Promise.withResolvers())
+	useEffect(() => {
 		globalReadyPromises.push(animationReadyPromise.promise)
 		globalCompletePromises.push(animationCompletePromise.promise)
-	}, [])
+	}, [animationReadyPromise, animationCompletePromise])
 
 	useAsyncEffect(async () => {
 		if (!initComplete) return
@@ -207,12 +207,14 @@ export const usePreloader = ({
 		/**
 		 * stop animations
 		 */
-		if (stopAnimations && scope) {
+		if ((stopAnimations || stopNoWaitAnimations) && scope?.current) {
 			const animatedElements = Array.from(
-				scope.current?.querySelectorAll(stopAnimations) ?? [],
+				stopAnimations ? scope.current?.querySelectorAll(stopAnimations) : [],
 			).map((element) => ({ element, type: "wait" }))
 			const noWaitAnimatedElements = Array.from(
-				scope.current?.querySelectorAll(stopNoWaitAnimations ?? "") ?? [],
+				stopNoWaitAnimations
+					? scope.current?.querySelectorAll(stopNoWaitAnimations)
+					: [],
 			).map((element) => ({ element, type: "noWait" }))
 			for (const { element, type } of [
 				...animatedElements,
@@ -266,11 +268,12 @@ export const usePreloader = ({
 			globalCompletePromises.push(animation.finished)
 		}
 
-		if (customAnimationComplete) globalCompletePromises.push(customAnimationComplete)
+		if (customAnimationComplete)
+			globalCompletePromises.push(customAnimationComplete)
 		animationCompletePromise.resolve(true)
 		await recursiveAllSettled(globalCompletePromises)
 		setGlobalComplete()
-		
+
 		setOutput((p) => ({
 			...p,
 			completed: true,
@@ -296,6 +299,8 @@ export const usePreloader = ({
 		stopAnimations,
 		stopNoWaitAnimations,
 		customAnimationComplete,
+		animationReadyPromise,
+		animationCompletePromise,
 	])
 
 	if (FORCE_PRELOADER_STATE === "loading")
