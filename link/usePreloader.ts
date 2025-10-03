@@ -4,7 +4,7 @@ import { isBrowser } from "library/deviceDetection"
 import { sleep } from "library/functions"
 import { ScreenContext } from "library/ScreenContext"
 import { createScrollLock } from "library/Scroll"
-import { type RefObject, use, useMemo, useState } from "react"
+import { type RefObject, use, useEffect, useMemo, useState } from "react"
 import { flushSync } from "react-dom"
 import { instantScrollToAnchor } from "./util"
 
@@ -36,7 +36,8 @@ const useBlockThread = (signal: unknown) => {
 	}, [signal])
 }
 
-const globalPromises: Promise<unknown>[] = []
+const globalReadyPromises: Promise<unknown>[] = []
+const globalCompletePromises: Promise<unknown>[] = []
 let globalComplete = false
 const lock = createScrollLock("lock")
 const setGlobalComplete = () => {
@@ -162,6 +163,14 @@ export const usePreloader = ({
 
 	useBlockThread(output.ready)
 
+	// sync ALL our preloaders together so that no single preloader races to the finish line
+	const [animationReadyPromise] = useState(()=>Promise.withResolvers())
+	const [animationCompletePromise] = useState(()=>Promise.withResolvers())
+	useEffect(()=>{
+		globalReadyPromises.push(animationReadyPromise.promise)
+		globalCompletePromises.push(animationCompletePromise.promise)
+	}, [])
+
 	useAsyncEffect(async () => {
 		if (!initComplete) return
 		if (output.ready) return
@@ -170,7 +179,7 @@ export const usePreloader = ({
 		if ((stopAnimations && !scope) || (slowAnimations && !scope))
 			throw new Error("scope is required in order to correctly stop animations")
 
-		processScroll()
+		await processScroll()
 
 		/**
 		 * slow down animations
@@ -182,7 +191,7 @@ export const usePreloader = ({
 			for (const element of animatedElements) {
 				const animations = element.getAnimations()
 				for (const animation of animations) {
-					globalPromises.push(
+					globalReadyPromises.push(
 						new Promise((resolve) => {
 							gsap.to(animation, {
 								playbackRate: 0,
@@ -219,7 +228,7 @@ export const usePreloader = ({
 						iterations: completedIterations + 1,
 					})
 
-					if (type === "wait") globalPromises.push(animation.finished)
+					if (type === "wait") globalReadyPromises.push(animation.finished)
 				}
 			}
 		}
@@ -227,7 +236,8 @@ export const usePreloader = ({
 		/**
 		 * wait for all animations to settle
 		 */
-		await recursiveAllSettled(globalPromises)
+		animationReadyPromise.resolve(true)
+		await recursiveAllSettled(globalReadyPromises)
 
 		/**
 		 * wait our specified minimum duration
@@ -253,13 +263,14 @@ export const usePreloader = ({
 			(a) => !beforeAnimations.includes(a),
 		)
 		for (const animation of newAnimations) {
-			globalPromises.push(animation.finished)
+			globalCompletePromises.push(animation.finished)
 		}
 
-		if (customAnimationComplete) globalPromises.push(customAnimationComplete)
-		await recursiveAllSettled(globalPromises)
+		if (customAnimationComplete) globalCompletePromises.push(customAnimationComplete)
+		animationCompletePromise.resolve(true)
+		await recursiveAllSettled(globalCompletePromises)
 		setGlobalComplete()
-
+		
 		setOutput((p) => ({
 			...p,
 			completed: true,
