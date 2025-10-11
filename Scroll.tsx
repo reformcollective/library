@@ -84,7 +84,6 @@ export const usePinType = () => {
  */
 export const useIsSmooth = () => {
 	const [smooth, setSmooth] = useState(
-		// biome-ignore lint/complexity/useOptionalChain: window cannot be chained
 		typeof window !== "undefined" &&
 			window.matchMedia("(hover: hover)").matches,
 	)

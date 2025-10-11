@@ -1,4 +1,4 @@
-import { createContext, use, useEffect, useMemo, useState } from "react"
+import { createContext, use, useEffect, useState } from "react"
 
 type PageTransition = {
 	animateBefore?: () => Promise<void> | void
@@ -19,7 +19,7 @@ export const PageTransitionProvider = ({
 	const [isAnimating, setIsAnimating] = useState<false | "before" | "after">(
 		false,
 	)
-	const animations = useMemo(() => new Set<PageTransition>(), [])
+	const [animations] = useState(() => new Set<PageTransition>())
 
 	return (
 		<TransitionsContext.Provider

@@ -1,5 +1,5 @@
 import MiniSearch from "minisearch"
-import { useEffect, useMemo } from "react"
+import { useEffect } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
 
 type IdLike = string | number
@@ -39,19 +39,15 @@ export function useSearchResults<
 		)
 	}, [fuzzyMatcher, items, resolvedIdField])
 
-	const results = useMemo(() => {
-		if (!query) return items
-		const found = fuzzyMatcher.search(query)
-		return found
-			.map((res) =>
-				items.find(
-					(it) =>
-						String(it[resolvedIdField] as IdLike | undefined) ===
-						String(res.id),
-				),
-			)
-			.filter(Boolean) as T[]
-	}, [fuzzyMatcher, query, items, resolvedIdField])
+	if (!query) return items
+	const found = fuzzyMatcher.search(query)
 
-	return results
+	return found
+		.map((res) =>
+			items.find(
+				(it) =>
+					String(it[resolvedIdField] as IdLike | undefined) === String(res.id),
+			),
+		)
+		.filter(Boolean) as T[]
 }

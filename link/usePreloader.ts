@@ -4,7 +4,7 @@ import { isBrowser } from "library/deviceDetection"
 import { sleep } from "library/functions"
 import { ScreenContext } from "library/ScreenContext"
 import { createScrollLock } from "library/Scroll"
-import { type RefObject, use, useMemo, useState } from "react"
+import { type RefObject, use, useState } from "react"
 import { flushSync } from "react-dom"
 import { instantScrollToAnchor } from "./util"
 
@@ -23,17 +23,11 @@ const DEBUG_BLOCK_THREAD_FOR_SECONDS = 0
 const FORCE_PRELOADER_STATE = undefined as "loading" | "ready" | undefined
 
 // block the main thread for debugging
-const useBlockThread = (signal: unknown) => {
-	// biome-ignore lint/correctness/useExhaustiveDependencies: debug
-	useMemo(() => {
-		if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0) {
-			const start = performance.now()
-			while (
-				performance.now() - start <
-				DEBUG_BLOCK_THREAD_FOR_SECONDS * 1000
-			) {}
-		}
-	}, [signal])
+const useBlockThread = () => {
+	if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0) {
+		const start = performance.now()
+		while (performance.now() - start < DEBUG_BLOCK_THREAD_FOR_SECONDS * 1000) {}
+	}
 }
 
 const globalPromises: Promise<unknown>[] = []
@@ -160,7 +154,7 @@ export const usePreloader = ({
 				},
 	)
 
-	useBlockThread(output.ready)
+	useBlockThread()
 
 	useAsyncEffect(async () => {
 		if (!initComplete) return
