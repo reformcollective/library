@@ -96,13 +96,88 @@ const buildVirtualModuleSource = (
 	return `${parts.join("\n")}\n`
 }
 
+/**
+ * Rewrite any relative import specifiers in a virtual module to absolute file paths
+ * resolved against the original file's directory using Turbopack's resolver.
+ */
+const rewriteRelativeImportsToAbsolute = async (
+	code: string,
+	originalDir: string,
+	resolverFactory: LoaderContext<unknown>["getResolve"],
+) => {
+	if (!resolverFactory)
+		throw new Error(
+			"vanilla-split: getResolve is not available; cannot rewrite relative imports",
+		)
+
+	const resolver = resolverFactory({})
+	if (!resolver)
+		throw new Error(
+			"vanilla-split: getResolve returned no resolver; cannot rewrite relative imports",
+		)
+
+	const sf = ts.createSourceFile(
+		"virtual.ts",
+		code,
+		ts.ScriptTarget.ES2020,
+		true,
+		ts.ScriptKind.TS,
+	)
+
+	const updates: Array<{ node: ts.ImportDeclaration; resolved: string }> = []
+	for (const st of sf.statements) {
+		if (!ts.isImportDeclaration(st)) continue
+		const spec = (st.moduleSpecifier as ts.StringLiteral).text
+		if (!spec.startsWith("./") && !spec.startsWith("../")) continue
+
+		const resolved: string = await new Promise((resolve, reject) => {
+			// biome-ignore lint/suspicious/noExplicitAny: interop with turbopack types
+			resolver(originalDir, spec, (err: any, result?: string) => {
+				if (err) return reject(err)
+				if (typeof result === "string")
+					return resolve(result.replace(/\\/g, "/"))
+				// fallback to absolute from original dir
+				const abs = path.resolve(originalDir, spec).replace(/\\/g, "/")
+				resolve(abs)
+			})
+		})
+
+		updates.push({ node: st, resolved })
+	}
+
+	if (updates.length === 0) return code
+
+	const statements: ts.Statement[] = []
+	for (const st of sf.statements) {
+		if (ts.isImportDeclaration(st)) {
+			const upd = updates.find((u) => u.node === st)
+			if (upd) {
+				const updated = ts.factory.updateImportDeclaration(
+					st,
+					st.modifiers,
+					st.importClause,
+					ts.factory.createStringLiteral(upd.resolved),
+					st.assertClause,
+				)
+				statements.push(updated)
+				continue
+			}
+		}
+		statements.push(st)
+	}
+
+	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
+	const nextFile = ts.factory.updateSourceFile(sf, statements)
+	return printer.printFile(nextFile)
+}
+
 const runVePluginOnTempFile = async (
 	originalThis: LoaderContext<unknown>,
 	tempFilePath: string,
 	originalFilePath: string,
 	loaderOptions: SplitOptions,
 ): Promise<string> => {
-	return await new Promise<string>((resolve, reject) => {
+	return new Promise<string>((resolve, reject) => {
 		const mode = originalThis.mode ?? "development"
 		const rootContext = originalThis.rootContext
 		const originalDir = path.dirname(originalFilePath)
@@ -135,8 +210,10 @@ const runVePluginOnTempFile = async (
 						stack.match(/\(([^)]+\.(?:ts|tsx))\)/) ||
 						stack.match(/at\s+.*?\s+\(([^)]+\.(?:ts|tsx))\)/) ||
 						stack.match(/\s(\/[^\s]+\.(?:ts|tsx))/)
-					const offender = offenderMatch?.[1] ?? "Unable to determine offending file!"
-					const offenderName = offender.split("/").pop() ?? "Unable to determine offending file!"
+					const offender =
+						offenderMatch?.[1] ?? "Unable to determine offending file!"
+					const offenderName =
+						offender.split("/").pop() ?? "Unable to determine offending file!"
 					if (rawMsg.includes("Styles were unable to be assigned to a file")) {
 						const message = [
 							"Styles were unable to be assigned to a file. You likely created styles outside of a '.css.ts' context",
@@ -146,7 +223,10 @@ const runVePluginOnTempFile = async (
 							"- You may define styles in a '.css.ts' file",
 							"",
 							"Potential ways to fix:",
-							`- Rename '${offenderName}' to '${offenderName.replace(".ts", ".css.ts")}'`,
+							`- Rename '${offenderName}' to '${offenderName.replace(
+								".ts",
+								".css.ts",
+							)}'`,
 							"- Move the styles to a '.css.ts' file",
 							"- Move the styles to the file they're used in",
 							"- Ask Robbie for guidance",
@@ -159,9 +239,7 @@ const runVePluginOnTempFile = async (
 					console.warn(
 						"Encountered an error processing styles. The error message may or may not be helpful, talk to Robbie if you're stuck.",
 					)
-					console.warn(
-						`Error occured in file: ${offenderName}`,
-					)
+					console.warn(`Error occured in file: ${offenderName}`)
 					return reject(err)
 				}
 				captured = content ?? ""
@@ -319,6 +397,20 @@ const transform = async (
 		movedDeclsForVirtual,
 	)
 
+	// resolve relative imports inside the virtual module so it can be evaluated from tmp dir
+	if (!loaderThis.getResolve) {
+		throw new Error(
+			"vanilla-split: getResolve is not available; cannot process virtual module imports",
+		)
+	}
+	const virtualSourceResolved = await rewriteRelativeImportsToAbsolute(
+		virtualSource,
+		path.dirname(filePath),
+		loaderThis.getResolve.bind(
+			loaderThis,
+		) as unknown as LoaderContext<unknown>["getResolve"],
+	)
+
 	// write a temp file for the VE plugin to process
 	const tmpDir = path.join(
 		rootContext,
@@ -331,32 +423,41 @@ const transform = async (
 
 	// use the original source filename for better debug class names, while
 	// retaining uniqueness by scoping under a content-hash subdirectory.
-	const tmpHash = crypto.createHash("md5").update(virtualSource).digest("hex")
+	const tmpHash = crypto.createHash("md5").update(virtualSourceResolved).digest("hex")
 	const originalBase = path
 		.basename(filePath)
 		.replace(/\.(?:tsx|ts|jsx|js)$/i, "")
 	const tmpScopedDir = path.join(tmpDir, tmpHash)
 	fs.mkdirSync(tmpScopedDir, { recursive: true })
 	const tmpFile = path.join(tmpScopedDir, `${originalBase}.css.ts`)
-	fs.writeFileSync(tmpFile, virtualSource)
+	fs.writeFileSync(tmpFile, virtualSourceResolved)
 
 	// run the official turbopack plugin on the temp file
-	const veJsRaw = await runVePluginOnTempFile(
-		loaderThis,
-		tmpFile,
-		filePath,
-		options,
-	)
-	const veJs = rewriteCssImportToOriginalDir(
-		veJsRaw,
-		rootContext,
-		path.dirname(filePath),
-	)
+	let veJs: string
 	try {
-		fs.unlinkSync(tmpFile)
-	} catch {}
+		const veJsRaw = await runVePluginOnTempFile(
+			loaderThis,
+			tmpFile,
+			filePath,
+			options,
+		)
+		veJs = rewriteCssImportToOriginalDir(
+			veJsRaw,
+			rootContext,
+			path.dirname(filePath),
+		)
+	} finally {
+		try {
+			fs.unlinkSync(tmpFile)
+		} catch {}
+		try {
+			fs.rmSync(path.dirname(tmpFile), { recursive: true, force: true })
+		} catch {}
+	}
 
-	const importPath = `./${path.basename(filePath)}?fileContent=${encodeBase64Url(veJs)}`
+	const importPath = `./${path.basename(
+		filePath,
+	)}?fileContent=${encodeBase64Url(veJs)}`
 	const importDecl = createNamedImport(movedNames, importPath)
 
 	let lastImportIndex = -1
