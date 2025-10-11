@@ -23,7 +23,6 @@ export const withVanillaSplit = (config: NextConfig): NextConfig => {
 		],
 	}
 	config.turbopack.rules["**/*.css.{ts,tsx,js,jsx}"] = {
-		as: "*.js",
 		loaders: [
 			// only run the vanilla-extract turbopack plugin; split precompiles virtual content
 			{

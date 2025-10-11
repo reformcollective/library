@@ -27,7 +27,7 @@ const DEFAULT_MODULES: ModulesConfig = {
 		"layer",
 		"createViewTransition",
 	],
-	"library/vanilla.css": ["styled"],
+	"library/styled": ["styled"],
 }
 
 const encodeBase64Url = (text: string): string => {
@@ -130,14 +130,14 @@ const runVePluginOnTempFile = async (
 			async: () => (err?: Error | null, content?: string) => {
 				if (err) {
 					const rawMsg = err.message ?? String(err)
+					const stack = err.stack ?? ""
+					const offenderMatch =
+						stack.match(/\(([^)]+\.(?:ts|tsx))\)/) ||
+						stack.match(/at\s+.*?\s+\(([^)]+\.(?:ts|tsx))\)/) ||
+						stack.match(/\s(\/[^\s]+\.(?:ts|tsx))/)
+					const offender = offenderMatch?.[1] ?? "Unable to determine offending file!"
+					const offenderName = offender.split("/").pop() ?? "Unable to determine offending file!"
 					if (rawMsg.includes("Styles were unable to be assigned to a file")) {
-						const stack = err.stack ?? ""
-						const offenderMatch =
-							stack.match(/\(([^)]+\.(?:ts|tsx))\)/) ||
-							stack.match(/at\s+.*?\s+\(([^)]+\.(?:ts|tsx))\)/) ||
-							stack.match(/\s(\/[^\s]+\.(?:ts|tsx))/)
-						const offender = offenderMatch?.[1] ?? "unknown"
-						const offenderName = offender.split("/").pop() ?? "example.ts"
 						const message = [
 							"Styles were unable to be assigned to a file. You likely created styles outside of a '.css.ts' context",
 							"",
@@ -158,6 +158,9 @@ const runVePluginOnTempFile = async (
 					}
 					console.warn(
 						"Encountered an error processing styles. The error message may or may not be helpful, talk to Robbie if you're stuck.",
+					)
+					console.warn(
+						`Error occured in file: ${offenderName}`,
 					)
 					return reject(err)
 				}
@@ -325,8 +328,16 @@ const transform = async (
 		"tmp",
 	)
 	fs.mkdirSync(tmpDir, { recursive: true })
+
+	// use the original source filename for better debug class names, while
+	// retaining uniqueness by scoping under a content-hash subdirectory.
 	const tmpHash = crypto.createHash("md5").update(virtualSource).digest("hex")
-	const tmpFile = path.join(tmpDir, `${tmpHash}.css.ts`)
+	const originalBase = path
+		.basename(filePath)
+		.replace(/\.(?:tsx|ts|jsx|js)$/i, "")
+	const tmpScopedDir = path.join(tmpDir, tmpHash)
+	fs.mkdirSync(tmpScopedDir, { recursive: true })
+	const tmpFile = path.join(tmpScopedDir, `${originalBase}.css.ts`)
 	fs.writeFileSync(tmpFile, virtualSource)
 
 	// run the official turbopack plugin on the temp file
