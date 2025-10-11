@@ -8,7 +8,7 @@ import { useClientOnly } from "./ClientOnly"
 import { useLoadState } from "./link/useLoadState"
 import { subscribeToMousePosition } from "./mouse-position"
 import { useIsSmooth } from "./Scroll"
-import { styled } from "./styled"
+import { styled } from "./styled-legacy"
 import { useAnimation } from "./useAnimation"
 
 // Default animation values

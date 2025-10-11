@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { css, fresponsive, styled } from "./styled"
+import { css, fresponsive, styled } from "./styled-legacy"
 
 /**
  * scales it's content to a certain size while maintaining

@@ -4,7 +4,7 @@ import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
-import { css, styled, unresponsive } from "./styled"
+import { css, styled, unresponsive } from "./styled-legacy"
 import { useBetterThrottle } from "./useBetterThrottle"
 
 const extractKey = (item: unknown): string => {

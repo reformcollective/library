@@ -1,6 +1,6 @@
 "use client"
 
-import { styled } from "library/styled"
+import { styled } from "library/styled-legacy"
 import type { PlaceholderValue } from "next/dist/shared/lib/get-img-props"
 import type { StaticImageData } from "next/image"
 import Image from "next/image"

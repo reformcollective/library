@@ -1,5 +1,5 @@
 import UniversalLink from "library/link"
-import { styled } from "library/styled"
+import { styled } from "library/styled-legacy"
 import {
 	type ListNestMode,
 	type MissingComponentHandler,
