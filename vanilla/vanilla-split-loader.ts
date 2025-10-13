@@ -276,7 +276,7 @@ const rewriteCssImportToOriginalDir = (
 	let rel = path.relative(originalDir, placeholder).replace(/\\/g, "/")
 	if (!rel.startsWith(".")) rel = `./${rel}`
 	const re =
-		/import\s+['"]([^'"]*vanilla\.virtual\.css)\?ve-source=([^'"]+)['"];?/m
+		/import\s+['"]([^'"]*vanilla\.virtual\.css)\?ve-source=([^'"]+)['"];?/gm
 	return code.replace(re, (_m, _p1, p2) => `import '${rel}?ve-source=${p2}';`)
 }
 
@@ -423,7 +423,10 @@ const transform = async (
 
 	// use the original source filename for better debug class names, while
 	// retaining uniqueness by scoping under a content-hash subdirectory.
-	const tmpHash = crypto.createHash("md5").update(virtualSourceResolved).digest("hex")
+	const tmpHash = crypto
+		.createHash("md5")
+		.update(virtualSourceResolved)
+		.digest("hex")
 	const originalBase = path
 		.basename(filePath)
 		.replace(/\.(?:tsx|ts|jsx|js)$/i, "")

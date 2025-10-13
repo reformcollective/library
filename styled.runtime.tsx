@@ -1,5 +1,3 @@
-import React from "react"
-
 type ClassName = string | undefined | null
 
 function cx(...classes: ClassName[]) {

@@ -135,70 +135,45 @@ export default async function turbopackVanillaExtractLoader(
 		const { source: veSource, watchFiles } = await compiler.processVanillaFile(
 			this.resourcePath,
 			{
-				outputCss: false, // always false since we inject CSS manually
+				outputCss: true,
 			},
 		)
 
 		watchFiles?.forEach((file) => this.addDependency(file))
 
-		// get generated css (if any) and construct css import
-		const { css } = compiler.getCssForFile(this.resourcePath)
+		// rewrite compiler-emitted .vanilla.css imports to the on-disk virtual stub with serialized CSS
+		const fromDir = path.dirname(this.resourcePath)
+		const relPath = path.relative(fromDir, virtualCssPath).replace(/\\/g, "/")
+		const importPath = relPath.startsWith(".") ? relPath : `./${relPath}`
 
 		let transformed = veSource
-		if (css && outputCss && css.length > 0) {
-			const serialized = await serializeCss(css)
-			const fromDir = path.dirname(this.resourcePath)
-			const relPath = path.relative(fromDir, virtualCssPath).replace(/\\/g, "/")
-			const importPath = relPath.startsWith(".") ? relPath : `./${relPath}`
-			const importRequest = `${importPath}?ve-source=${encodeURIComponent(serialized)}`
-			const importStmt = `import '${importRequest}';`
-			transformed = `${importStmt}${veSource}`
-		}
+		const importRegex = /import\s+['"](.+?\.vanilla\.css)['"];?/g
+		const matches = Array.from(veSource.matchAll(importRegex))
 
-		// Debug outputs: write vanilla-ts-out and vanilla-css-out here
-		try {
-			const relPathFromRoot = path
-				.relative(this.rootContext, this.resourcePath)
-				.replace(/\\/g, "/")
-			const relDir = path.dirname(relPathFromRoot)
-			const base = path
-				.basename(this.resourcePath)
-				.replace(/\.(?:tsx|ts|jsx|js)$/i, "")
+		for (const match of matches) {
+			const fullImport = match[0]
+			const cssImportPath = match[1]
+			if (!fullImport || !cssImportPath) continue
 
-			const writeDebugFile = async (
-				stage: string,
-				relativePath: string,
-				content: string,
-			) => {
-				const outPath = path.join(
-					this.rootContext,
-					".next",
-					"tmp",
-					stage,
-					relativePath,
-				)
-				await fs.mkdir(path.dirname(outPath), { recursive: true })
-				await fs.writeFile(outPath, content)
+			let cssModulePath = cssImportPath
+			if (cssModulePath.endsWith(".vanilla.css")) {
+				cssModulePath = cssModulePath.slice(0, -".vanilla.css".length)
 			}
 
-			// write ts out (the JS we return)
-			await writeDebugFile(
-				"vanilla-ts-out",
-				path.join(relDir, `${base}.js`).replace(/\\/g, "/"),
-				transformed,
-			)
+			const { css } = compiler.getCssForFile(cssModulePath)
 
-			// write css out (decode to final CSS text)
-			if (css && outputCss && css.length > 0) {
+			if (css && outputCss) {
 				const serialized = await serializeCss(css)
-				const decodedCss = await deserializeCss(serialized)
-				await writeDebugFile(
-					"vanilla-css-out",
-					path.join(relDir, `${base}.css`).replace(/\\/g, "/"),
-					decodedCss,
-				)
+				const importRequest = `${importPath}?ve-source=${encodeURIComponent(
+					serialized,
+				)}`
+				const newImport = `/*${fromDir}*/import '${importRequest}';`
+				transformed = transformed.replace(fullImport, newImport)
+			} else {
+				// no css available for this import; drop it
+				transformed = transformed.replace(fullImport, "")
 			}
-		} catch {}
+		}
 
 		callback(null, transformed)
 	} catch (e) {
