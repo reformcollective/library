@@ -173,6 +173,51 @@ export default async function turbopackVanillaExtractLoader(
 				// no css available for this import; drop it
 				transformed = transformed.replace(fullImport, "")
 			}
+
+			// Debug outputs: write vanilla-ts-out and vanilla-css-out here
+			try {
+				const relPathFromRoot = path
+					.relative(this.rootContext, this.resourcePath)
+					.replace(/\\/g, "/")
+				const relDir = path.dirname(relPathFromRoot)
+				const base = path
+					.basename(this.resourcePath)
+					.replace(/\.(?:tsx|ts|jsx|js)$/i, "")
+
+				const writeDebugFile = async (
+					stage: string,
+					relativePath: string,
+					content: string,
+				) => {
+					const outPath = path.join(
+						this.rootContext,
+						".next",
+						"tmp",
+						stage,
+						relativePath,
+					)
+					await fs.mkdir(path.dirname(outPath), { recursive: true })
+					await fs.writeFile(outPath, content)
+				}
+
+				// write ts out (the JS we return)
+				await writeDebugFile(
+					"vanilla-ts-out",
+					path.join(relDir, `${base}.js`).replace(/\\/g, "/"),
+					transformed,
+				)
+
+				// write css out (decode to final CSS text)
+				if (css && outputCss && css.length > 0) {
+					const serialized = await serializeCss(css)
+					const decodedCss = await deserializeCss(serialized)
+					await writeDebugFile(
+						"vanilla-css-out",
+						path.join(relDir, `${base}.css`).replace(/\\/g, "/"),
+						decodedCss,
+					)
+				}
+			} catch {}
 		}
 
 		callback(null, transformed)

@@ -10,7 +10,10 @@ export type RuntimeArgs = {
 	variantClassMap: Record<string, Record<string, string>>
 	defaultVariants?: Record<string, string | boolean>
 	varTokens?: Record<string, string | { token: string; unit?: string }>
-	slotClasses?: Record<string, string>
+	compoundVariants?: Array<{
+		className: string
+		conditions: Record<string, string | boolean>
+	}>
 }
 
 export function runtimeStyled({
@@ -19,7 +22,7 @@ export function runtimeStyled({
 	variantClassMap,
 	defaultVariants,
 	varTokens,
-	slotClasses,
+	compoundVariants,
 }: RuntimeArgs) {
 	const Component = function StyledRuntime(
 		props: Record<string, unknown> = {},
@@ -28,15 +31,30 @@ export function runtimeStyled({
 
 		// compute variant classes from props, falling back to defaults
 		const variantClasses: string[] = []
+		const variantValues: Record<string, string | boolean | undefined> = {}
 		for (const [variantName, options] of Object.entries(variantClassMap)) {
 			const value = (props as any)[variantName]
 			const effective =
 				value === undefined ? (defaultVariants as any)?.[variantName] : value
+			variantValues[variantName] = effective as any
 			if (effective !== undefined) {
 				const key = String(effective)
 				const cls = options[key]
 				if (cls) variantClasses.push(cls)
 			}
+		}
+
+		// compute compound variant classes when all conditions match active variant values
+		const compoundClasses: string[] = []
+		for (const entry of compoundVariants ?? []) {
+			let matches = true
+			for (const [name, expected] of Object.entries(entry.conditions ?? {})) {
+				if (variantValues[name] !== expected) {
+					matches = false
+					break
+				}
+			}
+			if (matches && entry.className) compoundClasses.push(entry.className)
 		}
 
 		// compute css variable inline styles from props
@@ -61,27 +79,25 @@ export function runtimeStyled({
 		const blocked = new Set<string>([
 			...Object.keys(variantClassMap),
 			...Object.keys(varTokens ?? {}),
+			"as",
 		])
 		const domProps: Record<string, unknown> = {}
 		for (const [key, value] of Object.entries(rest)) {
 			if (!blocked.has(key)) domProps[key] = value
 		}
 
-		const Tag: any = tag
+		const Render: any = (props as any).as ?? tag
 		return (
-			<Tag
+			<Render
 				ref={ref as any}
-				className={cx(baseClass, ...variantClasses, className as any)}
+				className={cx(baseClass, ...variantClasses, ...compoundClasses, className as any)}
 				style={{ ...(style as any), ...varStyle }}
 				{...domProps}
 			>
 				{children}
-			</Tag>
+			</Render>
 		)
 	}
-
-	// expose slots as static property so users can attach classes to children
-	;(Component as any).slots = slotClasses ?? {}
 
 	return Component
 }

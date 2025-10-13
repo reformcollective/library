@@ -26,9 +26,20 @@ const DEFAULT_MODULES: ModulesConfig = {
 		"createContainer",
 		"layer",
 		"createViewTransition",
+		"globalStyle",
+		"createGlobalTheme",
+		"createGlobalThemeContract",
+		"globalFontFace",
+		"createGlobalVar",
+		"globalKeyframes",
+		"globalLayer",
 	],
 	"library/styled": ["styled"],
 }
+
+// Only split styled(Component, ...) for this specific callee
+const SPLIT_STYLED_MODULE = "library/styled"
+const SPLIT_STYLED_IMPORT = "styled"
 
 const encodeBase64Url = (text: string): string => {
 	const b64 = Buffer.from(text, "utf8").toString("base64")
@@ -75,13 +86,14 @@ const createReExport = (
 // NOTE: avoid using deprecated AST fields like importClause.isTypeOnly and assertClause
 
 const buildVirtualModuleSource = (
-	sourceFile: ts.SourceFile,
-	imports: ts.ImportDeclaration[],
-	movedDecls: Array<{
-		name: string
-		initializerText: string
-		kind: "const" | "let"
-	}>,
+    sourceFile: ts.SourceFile,
+    imports: ts.ImportDeclaration[],
+    movedDecls: Array<{
+        name: string
+        initializerText: string
+        kind: "const" | "let"
+    }>,
+    movedExprs: string[],
 ): string => {
 	const parts: string[] = []
 
@@ -93,7 +105,11 @@ const buildVirtualModuleSource = (
 		parts.push(`export ${md.kind} ${md.name} = ${md.initializerText};`)
 	}
 
-	return `${parts.join("\n")}\n`
+    for (const ex of movedExprs) {
+        parts.push(ex.endsWith(";") ? ex : `${ex};`)
+    }
+
+    return `${parts.join("\n")}\n`
 }
 
 /**
@@ -131,15 +147,22 @@ const rewriteRelativeImportsToAbsolute = async (
 		if (!spec.startsWith("./") && !spec.startsWith("../")) continue
 
 		const resolved: string = await new Promise((resolve, reject) => {
-			// biome-ignore lint/suspicious/noExplicitAny: interop with turbopack types
-			resolver(originalDir, spec, (err: any, result?: string) => {
-				if (err) return reject(err)
-				if (typeof result === "string")
-					return resolve(result.replace(/\\/g, "/"))
-				// fallback to absolute from original dir
-				const abs = path.resolve(originalDir, spec).replace(/\\/g, "/")
-				resolve(abs)
-			})
+			resolver(
+				originalDir,
+				spec,
+				(
+					err: Error | null,
+					res?: string | false | undefined,
+					_req?: unknown,
+				) => {
+					if (err) return reject(err)
+					if (typeof res === "string")
+						return resolve(res.replace(/\\/g, "/"))
+					// fallback to absolute from original dir
+					const abs = path.resolve(originalDir, spec).replace(/\\/g, "/")
+					resolve(abs)
+				},
+			)
 		})
 
 		updates.push({ node: st, resolved })
@@ -302,7 +325,9 @@ const transform = async (
 	}
 
 	// 1) Build a map of tracked local identifiers based on imports
-	const trackedLocalNames = new Set<string>()
+    const trackedLocalNames = new Set<string>()
+    const trackedLocalToModule = new Map<string, string>()
+    const trackedLocalToImported = new Map<string, string>()
 	const allImports: ts.ImportDeclaration[] = []
 
 	for (const stmt of sourceFile.statements) {
@@ -313,20 +338,26 @@ const transform = async (
 		if (!tracked || !stmt.importClause) continue
 		const { name: defaultImport, namedBindings } = stmt.importClause
 		// track default if explicitly included as "default"
-		if (defaultImport && tracked.includes("default")) {
-			trackedLocalNames.add(defaultImport.text)
-		}
+        if (defaultImport && tracked.includes("default")) {
+            trackedLocalNames.add(defaultImport.text)
+            trackedLocalToModule.set(defaultImport.text, moduleSpecifier)
+            trackedLocalToImported.set(defaultImport.text, "default")
+        }
 		if (namedBindings && ts.isNamedImports(namedBindings)) {
 			for (const el of namedBindings.elements) {
 				const imported = (el.propertyName ?? el.name).text
 				const local = el.name.text
-				if (tracked.includes(imported)) trackedLocalNames.add(local)
+                if (tracked.includes(imported)) {
+                    trackedLocalNames.add(local)
+                    trackedLocalToModule.set(local, moduleSpecifier)
+                    trackedLocalToImported.set(local, imported)
+                }
 			}
 		}
 	}
 
 	// 2) Walk statements and split declarations
-	const statements: ts.Statement[] = []
+    const statements: ts.Statement[] = []
 	const movedNames: string[] = []
 	const reexportNames: string[] = []
 	const movedDeclsForVirtual: Array<{
@@ -334,12 +365,32 @@ const transform = async (
 		initializerText: string
 		kind: "const" | "let"
 	}> = []
+    const movedTopLevelExprs: string[] = []
+
+	let needsWithComponentHelper = false
 
 	for (const stmt of sourceFile.statements) {
-		if (!ts.isVariableStatement(stmt)) {
-			statements.push(stmt)
-			continue
-		}
+        // capture bare expression statements for tracked top-level calls
+        if (ts.isExpressionStatement(stmt)) {
+            const expr = stmt.expression
+            if (
+                ts.isCallExpression(expr) &&
+                ts.isIdentifier(expr.expression) &&
+                trackedLocalNames.has(expr.expression.text)
+            ) {
+                // move raw call text to virtual module as-is
+                movedTopLevelExprs.push(expr.getText(sourceFile))
+                // drop from original source (do not push to statements)
+                continue
+            }
+            statements.push(stmt)
+            continue
+        }
+
+        if (!ts.isVariableStatement(stmt)) {
+            statements.push(stmt)
+            continue
+        }
 
 		const isExported = (stmt.modifiers ?? []).some(
 			(m) => m.kind === ts.SyntaxKind.ExportKeyword,
@@ -354,19 +405,87 @@ const transform = async (
 				continue
 			}
 
-			if (
-				ts.isCallExpression(decl.initializer) &&
-				ts.isIdentifier(decl.initializer.expression) &&
-				trackedLocalNames.has(decl.initializer.expression.text)
-			) {
-				movedNames.push(decl.name.text)
-				if (isExported) reexportNames.push(decl.name.text)
-				movedDeclsForVirtual.push({
-					name: decl.name.text,
-					initializerText: decl.initializer.getText(sourceFile),
-					kind: isConstList ? "const" : "let",
-				})
-				continue
+            if (
+                ts.isCallExpression(decl.initializer) &&
+                ts.isIdentifier(decl.initializer.expression) &&
+                trackedLocalNames.has(decl.initializer.expression.text)
+            ) {
+				const call = decl.initializer
+				const args = call.arguments
+				const firstArg = args[0]
+                const calleeLocal = ts.isIdentifier(call.expression)
+                    ? call.expression.text
+                    : undefined
+                const calleeModule = calleeLocal ? trackedLocalToModule.get(calleeLocal) : undefined
+                const calleeImported = calleeLocal ? trackedLocalToImported.get(calleeLocal) : undefined
+
+                const isStyledFromLib =
+                    calleeModule === SPLIT_STYLED_MODULE && calleeImported === SPLIT_STYLED_IMPORT
+
+                if (isStyledFromLib) {
+                    const isStringTag =
+                        firstArg &&
+                        (ts.isStringLiteral(firstArg) || ts.isNoSubstitutionTemplateLiteral(firstArg))
+
+                    if (isStringTag) {
+                        // styled('tag', ...) -> move as-is
+                        movedNames.push(decl.name.text)
+                        if (isExported) reexportNames.push(decl.name.text)
+                        movedDeclsForVirtual.push({
+                            name: decl.name.text,
+                            initializerText: call.getText(sourceFile),
+                            kind: isConstList ? "const" : "let",
+                        })
+                        continue
+                    }
+
+                    // styled(Component, ...)
+                    const baseName = decl.name.text
+                    const rawName = `${baseName}___raw`
+                    const restArgs = args.slice(1)
+                    if (restArgs.length === 0) {
+                        // no config to carry; keep original declaration untouched
+                        keptDecls.push(decl)
+                        continue
+                    }
+                    const restArgsText = restArgs.map((a) => a.getText(sourceFile)).join(", ")
+                    const rawInitializer = restArgsText
+                        ? `styled("div", ${restArgsText})`
+                        : `styled("div")`
+                    movedNames.push(rawName)
+                    movedDeclsForVirtual.push({
+                        name: rawName,
+                        initializerText: rawInitializer,
+                        kind: isConstList ? "const" : "let",
+                    })
+
+                    // wrapper: const Name = withComponent(FirstArg, Name___raw)
+                    const newInit = ts.factory.createCallExpression(
+                        ts.factory.createIdentifier("withComponent"),
+                        undefined,
+                        [firstArg ?? ts.factory.createIdentifier("undefined"), ts.factory.createIdentifier(rawName)],
+                    )
+                    const newDecl = ts.factory.updateVariableDeclaration(
+                        decl,
+                        decl.name,
+                        decl.exclamationToken,
+                        decl.type,
+                        newInit,
+                    )
+                    keptDecls.push(newDecl)
+                    needsWithComponentHelper = true
+                    continue
+                }
+
+                // Non-styled tracked calls (e.g., createVar, keyframes): move as-is
+                movedNames.push(decl.name.text)
+                if (isExported) reexportNames.push(decl.name.text)
+                movedDeclsForVirtual.push({
+                    name: decl.name.text,
+                    initializerText: call.getText(sourceFile),
+                    kind: isConstList ? "const" : "let",
+                })
+                continue
 			}
 
 			keptDecls.push(decl)
@@ -391,10 +510,11 @@ const transform = async (
 	}
 
 	// 3) Create import to virtual module and possible re-export
-	const virtualSource = buildVirtualModuleSource(
+    const virtualSource = buildVirtualModuleSource(
 		sourceFile,
 		allImports,
-		movedDeclsForVirtual,
+        movedDeclsForVirtual,
+        movedTopLevelExprs,
 	)
 
 	// resolve relative imports inside the virtual module so it can be evaluated from tmp dir
@@ -410,6 +530,27 @@ const transform = async (
 			loaderThis,
 		) as unknown as LoaderContext<unknown>["getResolve"],
 	)
+
+	// debug: write the generated virtual .css.ts (pre-VE) to .next/tmp/split-cssts-out
+	try {
+		const relPathFromRoot = path
+			.relative(rootContext, filePath)
+			.replace(/\\/g, "/")
+		const relDir = path.dirname(relPathFromRoot)
+		const base = path
+			.basename(filePath)
+			.replace(/\.(?:tsx|ts|jsx|js)$/i, "")
+		const outPath = path.join(
+			rootContext,
+			".next",
+			"tmp",
+			"split-cssts-out",
+			relDir,
+			`${base}.css.ts`,
+		)
+		fs.mkdirSync(path.dirname(outPath), { recursive: true })
+		fs.writeFileSync(outPath, virtualSourceResolved)
+	} catch {}
 
 	// write a temp file for the VE plugin to process
 	const tmpDir = path.join(
@@ -471,6 +612,14 @@ const transform = async (
 		statements.splice(lastImportIndex + 1, 0, importDecl)
 	else statements.unshift(importDecl)
 
+	// Inject helper import if needed
+	if (needsWithComponentHelper) {
+		const helperImport = createNamedImport(["withComponent"], "library/styled.withComponent")
+		// insert just before the virtual import to keep order tidy
+		const where = lastImportIndex >= 0 ? lastImportIndex + 1 : 0
+		statements.splice(where, 0, helperImport)
+	}
+
 	if (reexportNames.length > 0) {
 		const reexp = createReExport(reexportNames, importPath)
 		const insertAt = lastImportIndex >= 0 ? lastImportIndex + 2 : 1
@@ -479,8 +628,25 @@ const transform = async (
 
 	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
 	const updated = ts.factory.updateSourceFile(sourceFile, statements)
+	const printed = printer.printFile(updated)
+
+	// debug: write transformed TS (pre-VE evaluation) to .next/tmp/split-ts-out
+	try {
+		const relPathFromRoot = path
+			.relative(rootContext, filePath)
+			.replace(/\\/g, "/")
+		const outPath = path.join(
+			rootContext,
+			".next",
+			"tmp",
+			"split-ts-out",
+			relPathFromRoot,
+		)
+		fs.mkdirSync(path.dirname(outPath), { recursive: true })
+		fs.writeFileSync(outPath, printed)
+	} catch {}
 	return {
-		code: printer.printFile(updated),
+		code: printed,
 		movedNames,
 		virtualSource,
 	}
