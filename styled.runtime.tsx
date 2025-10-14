@@ -90,7 +90,12 @@ export function runtimeStyled({
 		return (
 			<Render
 				ref={ref as any}
-				className={cx(baseClass, ...variantClasses, ...compoundClasses, className as any)}
+				className={cx(
+					baseClass,
+					...variantClasses,
+					...compoundClasses,
+					className as any,
+				)}
 				style={{ ...(style as any), ...varStyle }}
 				{...domProps}
 			>

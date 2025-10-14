@@ -1,7 +1,7 @@
-import { style, globalStyle } from "@vanilla-extract/css"
+import { globalStyle, style } from "@vanilla-extract/css"
 import { addFunctionSerializer } from "@vanilla-extract/css/functionSerializer"
+import { type ComponentType, createElement } from "react"
 import { runtimeStyled } from "./styled.runtime"
-import { createElement, type ComponentType } from "react"
 
 type SerializableStyle = Record<string, unknown>
 
@@ -28,39 +28,35 @@ function flatten(input?: (SerializableStyle | SerializableStyle[])[]) {
 }
 
 function styledCore(tag: string, config: StyledConfig) {
-	if (!config || Array.isArray(config)) {
-		const baseBlocks = Array.isArray(config) ? config : [config]
-		const baseClasses = baseBlocks.map((b) => style(b as SerializableStyle))
-		const baseClass = baseClasses.join(" ")
-		const args = {
-			tag,
-			baseClass,
-			variantClassMap: {},
-			defaultVariants: {} as Record<string, string | boolean>,
-			varTokens: {} as Record<
-				string,
-				string | { token: string; unit?: string }
-			>,
+	function normalizeConfig(input: StyledConfig) {
+		if (!input || (Array.isArray(input) && input.length === 0)) {
+			if (process.env.NODE_ENV !== "production") {
+				throw new Error(
+					"[styled] config is required; pass an array of style objects or a config object",
+				)
+			}
+			return { base: [] as SerializableStyle[] } as any
 		}
-		const Component = runtimeStyled(args)
-		addFunctionSerializer(Component, {
-			importPath: "library/styled.runtime",
-			importName: "runtimeStyled",
-			args: [args],
-		})
-		return Component
+		return Array.isArray(input) ? ({ base: input } as any) : (input as any)
 	}
 
-	// object form
-	const base = flatten((config as any).base as any)
-	const baseClass = base.map((b) => style(b)).join(" ")
+	const cfg = normalizeConfig(config)
+
+	// unified object form
+	const base = flatten((cfg as any).base as any)
+	let baseClass = base.map((b) => style(b)).join(" ")
+
+	// ensure a base anchor when base-level within exists but no base class
+	if (!baseClass && (cfg as any)?.within) {
+		baseClass = style({}, "styled_base_marker")
+	}
 
 	// helper: split classes for anchoring selectors
 	const splitClasses = (cls: string) => cls.split(" ").filter(Boolean)
 	const baseClassParts = splitClasses(baseClass)
 
 	// dev guard: avoid confusion with VE selectors API
-	if ((config as any)?.selectors && process.env.NODE_ENV !== "production") {
+	if ((cfg as any)?.selectors && process.env.NODE_ENV !== "production") {
 		console.warn(
 			"[styled] `selectors` found in config. Use `within` for scoped descendant styles.",
 		)
@@ -71,14 +67,15 @@ function styledCore(tag: string, config: StyledConfig) {
 		const trimmed = String(key ?? "").trim()
 		if (!trimmed) return rootSelector
 		if (trimmed.startsWith("&")) return trimmed.replace(/&/g, rootSelector)
-		// warn on pseudo without '&' as it's likely unintended
-		if (
-			process.env.NODE_ENV !== "production" &&
-			(trimmed.startsWith(":") || trimmed.startsWith("::"))
-		) {
-			console.warn(
-				`[styled.within] Pseudo selector "${trimmed}" should be prefixed with '&'.`,
-			)
+		// pseudo without '&' is ambiguous; enforce '&' in dev, auto-correct to self in prod
+		if (trimmed.startsWith(":") || trimmed.startsWith("::")) {
+			if (process.env.NODE_ENV !== "production") {
+				throw new Error(
+					`[styled.within] pseudo selector "${trimmed}" must start with '&'. use "&${trimmed}"`,
+				)
+			}
+			// production: assume self pseudo to avoid accidental descendant leak
+			return `${rootSelector}${trimmed}`
 		}
 		return `${rootSelector} ${trimmed}`
 	}
@@ -103,7 +100,10 @@ function styledCore(tag: string, config: StyledConfig) {
 		}
 	}
 
-	function emitWithinStyles(anchorClasses: string[], entries?: Record<string, any>) {
+	function emitWithinStyles(
+		anchorClasses: string[],
+		entries?: Record<string, any>,
+	) {
 		if (!entries) return
 		const rootSelector = "." + anchorClasses.filter(Boolean).join(".")
 		for (const [rawKey, rawStyle] of Object.entries(entries)) {
@@ -118,20 +118,29 @@ function styledCore(tag: string, config: StyledConfig) {
 	}
 
 	const variantClassMap: Record<string, Record<string, string>> = {}
-	for (const [variantName, options] of Object.entries((config as any).variants ?? {})) {
+	for (const [variantName, options] of Object.entries(
+		(cfg as any).variants ?? {},
+	)) {
 		variantClassMap[variantName] = {}
 		for (const [option, blocks] of Object.entries(options as any)) {
 			// support object form: { base, within }
-			const baseBlocks = Array.isArray(blocks) ? (blocks as any) : (blocks as any)?.base
-			const cls = flatten(baseBlocks as any)
+			const baseBlocks = Array.isArray(blocks)
+				? (blocks as any)
+				: (blocks as any)?.base
+			let cls = flatten(baseBlocks as any)
 				.map((b) => style(b))
 				.join(" ")
-			variantClassMap[variantName][option] = cls
 
 			// variant-level within
-			const withinEntries = (Array.isArray(blocks) ? undefined : (blocks as any)?.within) as
-				| Record<string, any>
-				| undefined
+			const withinEntries = (
+				Array.isArray(blocks) ? undefined : (blocks as any)?.within
+			) as Record<string, any> | undefined
+			// ensure a per-option anchor when within exists but the option has no class
+			if (withinEntries && !cls) {
+				cls = style({}, `styled_variant_marker_${variantName}_${option}`)
+			}
+
+			variantClassMap[variantName][option] = cls
 			if (withinEntries) {
 				const variantParts = splitClasses(cls)
 				emitWithinStyles([...baseClassParts, ...variantParts], withinEntries)
@@ -142,8 +151,8 @@ function styledCore(tag: string, config: StyledConfig) {
 	// slots API removed in favor of `within`
 
 	// base-level within
-	if ((config as any)?.within) {
-		emitWithinStyles(baseClassParts, (config as any).within as Record<string, any>)
+	if ((cfg as any)?.within) {
+		emitWithinStyles(baseClassParts, (cfg as any).within as Record<string, any>)
 	}
 
 	// compound variants
@@ -151,20 +160,25 @@ function styledCore(tag: string, config: StyledConfig) {
 		className: string
 		conditions: Record<string, string | boolean>
 	}> = []
-	const compoundList: any[] =
-		(Array.isArray((config as any)?.compoundVariants)
-			? (config as any).compoundVariants
-			: Array.isArray((config as any)?.compounds)
-				? (config as any).compounds
-				: []) as any[]
+	const compoundList: any[] = (
+		Array.isArray((cfg as any)?.compoundVariants)
+			? (cfg as any).compoundVariants
+			: Array.isArray((cfg as any)?.compounds)
+				? (cfg as any).compounds
+				: []
+	) as any[]
 	for (const raw of compoundList) {
 		if (!raw || typeof raw !== "object") continue
-		const { base: compoundBase, within: compoundWithin, ...conditions } = raw as any
+		const {
+			base: compoundBase,
+			within: compoundWithin,
+			...conditions
+		} = raw as any
 		let compoundClass = flatten(compoundBase as any)
 			.map((b) => style(b))
 			.join(" ")
 		// ensure we have a marker class to anchor selectors and attach at runtime
-		if (!compoundClass) compoundClass = style({})
+		if (!compoundClass) compoundClass = style({}, "styled_compound_marker")
 		compiledCompounds.push({ className: compoundClass, conditions })
 		if (compoundWithin) {
 			const compParts = splitClasses(compoundClass)
@@ -173,7 +187,7 @@ function styledCore(tag: string, config: StyledConfig) {
 	}
 
 	// direct pass-through of var tokens
-	const varTokens = (config.vars ?? {}) as Record<
+	const varTokens = ((cfg as any).vars ?? {}) as Record<
 		string,
 		string | { token: string; unit?: string }
 	>
@@ -182,7 +196,7 @@ function styledCore(tag: string, config: StyledConfig) {
 		tag,
 		baseClass,
 		variantClassMap,
-		defaultVariants: (config.defaults ?? {}) as Record<
+		defaultVariants: ((cfg as any).defaults ?? {}) as Record<
 			string,
 			string | boolean
 		>,
