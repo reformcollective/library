@@ -2,7 +2,7 @@
 
 import {
 	type ComponentProps,
-	unstable_ViewTransition as ReactViewTransition,
+	ViewTransition as ReactViewTransition,
 } from "react"
 import { usePreloader } from "./link/usePreloader"
 import { type CSSObject, createStyle } from "./styled"
