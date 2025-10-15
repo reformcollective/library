@@ -1,7 +1,12 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import { addFunctionSerializer } from "@vanilla-extract/css/functionSerializer"
-import { type ComponentType, createElement } from "react"
-import { runtimeStyled } from "./styled.runtime"
+import {
+	type ComponentPropsWithRef,
+	type ComponentType,
+	createElement,
+	type ElementType,
+} from "react"
+import { type RuntimeArgs, runtimeStyled } from "./styled.runtime"
 
 type SerializableStyle = Record<string, unknown>
 
@@ -16,6 +21,41 @@ type StyledConfig =
 			defaults?: Record<string, string | boolean>
 			vars?: Record<string, string | { token: string; unit?: string }>
 	  }
+
+// --- Begin Types ---
+
+type GetVariantProps<TConfig> = TConfig extends { variants: infer TVariants }
+	? {
+			[TVariantName in keyof TVariants]-?: TVariantName extends keyof (TConfig extends {
+				defaults: infer D
+			}
+				? D
+				: {})
+				? // Optional: key is in defaults
+					(keyof TVariants[TVariantName] extends "true" | "false"
+						? boolean
+						: keyof TVariants[TVariantName]) | undefined
+				: // Required: key is not in defaults
+					keyof TVariants[TVariantName] extends "true" | "false"
+					? boolean
+					: keyof TVariants[TVariantName]
+		}
+	: {}
+
+type GetVarProps<TConfig> = TConfig extends { vars: infer TVars }
+	? { [TVarName in keyof TVars]?: string | number }
+	: {}
+
+type StyledComponentProps<
+	TTarget extends ElementType,
+	TConfig,
+> = GetVariantProps<TConfig> &
+	GetVarProps<TConfig> & { as?: ElementType } & Omit<
+		ComponentPropsWithRef<TTarget>,
+		keyof GetVariantProps<TConfig> | keyof GetVarProps<TConfig> | "as"
+	>
+
+// --- End Types ---
 
 function flatten(input?: (SerializableStyle | SerializableStyle[])[]) {
 	const out: SerializableStyle[] = []
@@ -117,11 +157,15 @@ function styledCore(tag: string, config: StyledConfig) {
 		}
 	}
 
-	const variantClassMap: Record<string, Record<string, string>> = {}
+	const variantDefs: Array<{
+		name: string
+		options: Record<string, string>
+		defaultValue?: string | boolean
+	}> = []
 	for (const [variantName, options] of Object.entries(
 		(cfg as any).variants ?? {},
 	)) {
-		variantClassMap[variantName] = {}
+		const optionClassMap: Record<string, string> = {}
 		for (const [option, blocks] of Object.entries(options as any)) {
 			// support object form: { base, within }
 			const baseBlocks = Array.isArray(blocks)
@@ -140,12 +184,17 @@ function styledCore(tag: string, config: StyledConfig) {
 				cls = style({}, `styled_variant_marker_${variantName}_${option}`)
 			}
 
-			variantClassMap[variantName][option] = cls
+			optionClassMap[option] = cls
 			if (withinEntries) {
 				const variantParts = splitClasses(cls)
 				emitWithinStyles([...baseClassParts, ...variantParts], withinEntries)
 			}
 		}
+		variantDefs.push({
+			name: variantName,
+			options: optionClassMap,
+			defaultValue: ((cfg as any).defaults ?? ({} as any))[variantName],
+		})
 	}
 
 	// slots API removed in favor of `within`
@@ -186,41 +235,65 @@ function styledCore(tag: string, config: StyledConfig) {
 		}
 	}
 
-	// direct pass-through of var tokens
-	const varTokens = ((cfg as any).vars ?? {}) as Record<
+	// normalize vars to runtime-friendly defs
+	const rawVarTokens = ((cfg as any).vars ?? {}) as Record<
 		string,
 		string | { token: string; unit?: string }
 	>
-
-	const args = {
-		tag,
-		baseClass,
-		variantClassMap,
-		defaultVariants: ((cfg as any).defaults ?? {}) as Record<
-			string,
-			string | boolean
-		>,
-		varTokens,
-		compoundVariants: compiledCompounds,
+	const varDefs: Array<{ propName: string; cssVarName: string; unit?: string }> = []
+	for (const [propName, tokenSpec] of Object.entries(rawVarTokens)) {
+		const { token: rawName, unit } =
+			typeof tokenSpec === "string" ? { token: tokenSpec, unit: undefined } : tokenSpec
+		const trimmed = (rawName ?? "").trim()
+		const cssVarName = trimmed.startsWith("var(")
+			? trimmed.slice(4, -1).trim()
+			: trimmed.startsWith("--")
+				? trimmed
+				: `--${trimmed}`
+		varDefs.push({ propName, cssVarName, unit })
 	}
 
-	const Component = runtimeStyled(args)
+	// precompute blocked keys to strip from DOM props (exclude "as"; runtime adds it)
+	const blockedKeys = [
+		...variantDefs.map((d) => d.name),
+		...Object.keys(rawVarTokens),
+	]
+
+	const args: any = { tag, baseClass }
+	if (variantDefs.length) args.variantDefs = variantDefs
+	if (compiledCompounds.length)
+		args.compoundChecks = compiledCompounds.map(({ className, conditions }) => ({
+			className,
+			checks: Object.entries(conditions ?? {}) as Array<[
+				string,
+				string | boolean,
+			]>,
+		}))
+	if (varDefs.length) args.varDefs = varDefs
+	if (blockedKeys.length) args.blockedKeys = blockedKeys
+
+	const Component = runtimeStyled(args as RuntimeArgs)
 	addFunctionSerializer(Component, {
 		importPath: "library/styled.runtime",
 		importName: "runtimeStyled",
-		args: [args],
+		args: [args as any],
 	})
 	return Component
 }
 
-export function styled(
-	target: string | ComponentType<any>,
-	config: StyledConfig,
-) {
-	if (typeof target === "string") return styledCore(target, config)
+export function styled<
+	TTarget extends ElementType,
+	const TConfig extends StyledConfig,
+>(target: TTarget, config: TConfig) {
+	if (typeof target === "string")
+		return styledCore(target, config) as React.FC<
+			StyledComponentProps<TTarget, TConfig>
+		>
+
 	// component target: build a base with a default tag and wrap with `as`
 	const Base = styledCore("div", config)
 	const Wrapper = (props: Record<string, unknown> = {}) =>
 		createElement(Base as any, { ...props, as: target })
-	return Wrapper
+
+	return Wrapper as React.FC<StyledComponentProps<TTarget, TConfig>>
 }
