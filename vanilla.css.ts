@@ -72,7 +72,7 @@ const convert = (elements: Element[]): MutableStyle => {
 		}
 		if (el.type === RULESET) {
 			if (!Array.isArray(el.children)) continue
-			const sel = String(el.value || el.props)
+			const sel = String(el.value || el.props).replaceAll("\f", "")
 			style.selectors ||= {}
 			style.selectors[sel] = convert(el.children)
 			continue
