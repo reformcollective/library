@@ -36,7 +36,7 @@ export function runtimeStyled({
 	const Component = function StyledRuntime(
 		props: Record<string, unknown> = {},
 	) {
-		const { ref, className, style, children, ...rest } = props
+		const { className, style, children, ...rest } = props
 
 		// compute variant classes from props, falling back to defaults
 		const variantClasses: string[] = []
@@ -83,7 +83,6 @@ export function runtimeStyled({
 		const Render: any = (props as any).as ?? tag
 		return (
 			<Render
-				ref={ref as any}
 				className={cx(
 					baseClass,
 					...variantClasses,

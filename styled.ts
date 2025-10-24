@@ -1,86 +1,16 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import { addFunctionSerializer } from "@vanilla-extract/css/functionSerializer"
 import {
-	type ComponentPropsWithRef,
-	type ComponentType,
-	createElement,
-	type ElementType,
 	type ComponentProps,
-	type JSX as ReactJSX,
-	type Component as ReactComponentClass,
-} from "react"
+	type ComponentType,
+	type JSX,
+	type Component,
+	type ComponentClass,
+	createElement,
+	type ReactNode,
+} from 'react'
 import { type RuntimeArgs, runtimeStyled } from "./styled/runtime"
 
-type SerializableStyle = Record<string, unknown>
-
-type StyledConfig =
-	| (SerializableStyle | SerializableStyle[]) // simple form: array of compiled style objects
-	| {
-			base?: (SerializableStyle | SerializableStyle[])[]
-			variants?: Record<
-				string,
-				Record<string, (SerializableStyle | SerializableStyle[])[]>
-			>
-			defaults?: Record<string, string | boolean>
-			vars?: Record<string, string | { token: string; unit?: string }>
-	  }
-
-// --- Begin Types ---
-
-type VariantsOf<TConfig> = TConfig extends { variants: infer V } ? V : {}
-type DefaultsOf<TConfig> = TConfig extends { defaults: infer D } ? D : {}
-type VarsOf<TConfig> = TConfig extends { vars: infer TVars } ? TVars : {}
-
-type OptionalVariantKeys<TConfig> = Extract<keyof VariantsOf<TConfig>, keyof DefaultsOf<TConfig>>
-type RequiredVariantKeys<TConfig> = Exclude<keyof VariantsOf<TConfig>, OptionalVariantKeys<TConfig>>
-
-type VariantOptionValue<V, K extends keyof V> = keyof V[K] extends "true" | "false"
-	? boolean
-	: keyof V[K]
-
-type GetVariantProps<TConfig> = [keyof VariantsOf<TConfig>] extends [never]
-	? {}
-	: ({
-			// required variants (no default)
-			[K in RequiredVariantKeys<TConfig>]: VariantOptionValue<VariantsOf<TConfig>, K>
-	  } & {
-			// optional variants (have default)
-			[K in OptionalVariantKeys<TConfig>]?: VariantOptionValue<VariantsOf<TConfig>, K> | undefined
-	  })
-
-type GetVarProps<TConfig> = [keyof VarsOf<TConfig>] extends [never]
-	? {}
-	: { [K in keyof VarsOf<TConfig>]?: string | number }
-
-type DistributiveOmit<Type, Keys extends keyof any> = Type extends any
-	? Omit<Type, Keys>
-	: never
-
-type ClassNameMessage = "Component must accept a className prop"
-
-export type AcceptsClassName<Type> = Type extends keyof ReactJSX.IntrinsicElements
-	? "className" extends keyof ReactJSX.IntrinsicElements[Type]
-		? Type
-		: ClassNameMessage
-	: Type extends ComponentType<infer Props>
-		? "className" extends keyof Props
-			? Type
-			: ClassNameMessage
-		: ClassNameMessage
-
-type VariantKeysOf<TConfig> = keyof VariantsOf<TConfig>
-// eslint-disable-next-line @typescript-eslint/ban-types
-type VarKeysOf<TConfig> = keyof VarsOf<TConfig>
-
-// final prop computation: remove native props that collide with our dynamic props
-type StyledOutProps<BaseProps, TConfig> = DistributiveOmit<
-	BaseProps,
-	(keyof GetVariantProps<TConfig>) | (keyof GetVarProps<TConfig>)
-> &
-	GetVariantProps<TConfig> &
-	GetVarProps<TConfig>
-
-// --- End Types ---
 
 function flatten(input?: (SerializableStyle | SerializableStyle[])[]) {
 	const out: SerializableStyle[] = []
@@ -298,33 +228,131 @@ function styledCore(tag: string, config: StyledConfig) {
 	if (blockedKeys.length) args.blockedKeys = blockedKeys
 
 	const Component = runtimeStyled(args as RuntimeArgs)
-addFunctionSerializer(Component, {
-	importPath: "library/styled/runtime",
-	importName: "runtimeStyled",
-	args: [args as any],
-})
+	addFunctionSerializer(Component, {
+		importPath: "library/styled/runtime",
+		importName: "runtimeStyled",
+		args: [args as any],
+	})
 	return Component
 }
 
-// Overload: component target (function or class), must accept className
-export function styled<
-	P extends { className?: string },
-	const TConfig extends StyledConfig,
->(
-	Component: ComponentType<P>,
-	config: TConfig,
-): (props: StyledOutProps<ComponentProps<ComponentType<P>>, TConfig>) => any
 
-// Overload: intrinsic tag (and accept class components typed with className)
+// --- Config Types (as provided) ---
+
+type SerializableStyle = Record<string, unknown>
+
+export type StyledConfig =
+	| (SerializableStyle | SerializableStyle[]) // simple form: array of compiled style objects
+	| {
+		base?: (SerializableStyle | SerializableStyle[])[]
+		variants?: Record<
+			string,
+			Record<string, (SerializableStyle | SerializableStyle[])[]>
+		>
+		defaults?: Record<string, string | boolean>
+		vars?: Record<string, string | { token: string; unit?: string }>
+	}
+
+// --- Helper Types (as provided, mostly) ---
+
+type VariantsOf<TConfig> = TConfig extends { variants: infer V } ? V : {}
+type DefaultsOf<TConfig> = TConfig extends { defaults: infer D } ? D : {}
+type VarsOf<TConfig> = TConfig extends { vars: infer TVars } ? TVars : {}
+
+type OptionalVariantKeys<TConfig> = Extract<
+	keyof VariantsOf<TConfig>,
+	keyof DefaultsOf<TConfig>
+>
+type RequiredVariantKeys<TConfig> = Exclude<
+	keyof VariantsOf<TConfig>,
+	OptionalVariantKeys<TConfig>
+>
+
+// Correctly handles boolean variants (where keys are "true" or "false")
+type VariantOptionValue<V, K extends keyof V> = keyof V[K] extends
+	| 'true'
+	| 'false'
+	? boolean
+	: keyof V[K]
+
+type GetVariantProps<TConfig> = [keyof VariantsOf<TConfig>] extends [never]
+	? {}
+	: {
+		// required variants (no default)
+		[K in RequiredVariantKeys<TConfig>]: VariantOptionValue<
+			VariantsOf<TConfig>,
+			K
+		>
+	} & {
+		// optional variants (have default)
+		[K in OptionalVariantKeys<TConfig>]?:
+		| VariantOptionValue<VariantsOf<TConfig>, K>
+		| undefined
+	}
+
+type GetVarProps<TConfig> = [keyof VarsOf<TConfig>] extends [never]
+	? {}
+	: { [K in keyof VarsOf<TConfig>]?: string | number }
+
+type DistributiveOmit<Type, Keys extends keyof any> = Type extends any
+	? Omit<Type, Keys>
+	: never
+
+// --- Prop and Component Type Computations ---
+
+// 1. Combine BaseProps with Variant and Var props, omitting collisions
+// This definition remains the same, as it's generic on `Props`.
+export type StyledOutProps<
+	Props, // The *original* props
+	TConfig extends StyledConfig,
+> = DistributiveOmit<
+	Props,
+	keyof GetVariantProps<TConfig> | keyof GetVarProps<TConfig>
+> &
+	GetVariantProps<TConfig> &
+	GetVarProps<TConfig>
+
+// 2. Define the *output* component type (Simple `restyle` version)
+// This is a simple function type, generic on the final props.
+export type StyledComponent<Props> = (
+	props: Props & {
+		className?: string // Ensure className is always available
+	},
+) => JSX.Element
+
+// 3. Helper type for FunctionComponent (from `restyle` example)
+// This allows us to type the `Component` argument correctly.
+type FunctionComponent<Props> = (props: Props) => ReactNode | Promise<ReactNode>
+
+// --- `styled` Signatures ---
+// Refactored to be generic on `Props`, following the `restyle` pattern.
+
+// Overload: component target (function)
 export function styled<
-	TagName extends keyof ReactJSX.IntrinsicElements,
+	Props extends { className?: string },
 	const TConfig extends StyledConfig,
 >(
-	Component:
-		| AcceptsClassName<TagName>
-		| ReactComponentClass<{ className?: string }>,
+	Component: FunctionComponent<Props>,
 	config: TConfig,
-): (props: StyledOutProps<ComponentProps<TagName>, TConfig>) => any
+): StyledComponent<StyledOutProps<Props, TConfig>>
+
+// Overload: component target (class)
+export function styled<
+	Props extends { className?: string },
+	const TConfig extends StyledConfig,
+>(
+	Component: ComponentClass<Props>,
+	config: TConfig,
+): StyledComponent<StyledOutProps<Props, TConfig>>
+
+// Overload: intrinsic tag (e.g., 'div')
+export function styled<
+	Tag extends keyof JSX.IntrinsicElements,
+	const TConfig extends StyledConfig,
+>(
+	Component: Tag,
+	config: TConfig,
+): StyledComponent<StyledOutProps<JSX.IntrinsicElements[Tag], TConfig>>
 
 // Implementation
 export function styled(

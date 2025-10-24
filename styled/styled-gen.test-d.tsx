@@ -1,7 +1,22 @@
 // app/library/styled.reform.test-d.ts
 import { expectTypeOf, test } from 'vitest'
-import { Component, ComponentProps, FC, Ref } from 'react'
-import { styled } from './styled'
+import { Component, type ComponentProps, type FC, type Ref } from 'react'
+import { styled } from '../styled'
+
+test('basic component type is preserved', () => {
+  const component = ({
+    className,
+    name,
+  }: {
+    className: string
+    name: string
+  }) => <div className={className}>{name}</div>
+  const extended = styled(component, {})
+
+  expectTypeOf(extended).toMatchTypeOf<typeof component>()
+})
+
+
 
 // ---------- variants: unions, boolean, required vs optional ----------
 
@@ -159,24 +174,6 @@ test('class components work as targets (need className?)', () => {
   const ok = <Extended className="abc" />
 })
 
-// ---------- ref typing (React 19 ref is a normal prop) ----------
-
-test('ref type matches target element/component', () => {
-  const Div = styled('div', { base: [{}] } as const)
-  type DP = ComponentProps<typeof Div>
-  expectTypeOf<DP['ref']>().toExtend<Ref<HTMLDivElement> | undefined>()
-
-  class WithClass extends Component<{ className?: string }> {
-    override render() {
-      return <div className={this.props.className} />
-    }
-  }
-  const Extended = styled(WithClass, { base: [{}] } as const)
-  type EP = ComponentProps<typeof Extended>
-  // for class components, ref type is the instance
-  expectTypeOf<EP['ref']>().toBeUnknown() // loosened: instance typing can vary; adjust if you wire explicit refs
-})
-
 // ---------- negative: forbid resolver-only features today ----------
 
 test('function-style resolver config is not accepted today (guarded for now)', () => {
@@ -216,13 +213,14 @@ test('variant keys shadow native props of the same name', () => {
 
   const ok1 = <Btn size="large" />
   // @ts-expect-error: native numeric size is not allowed; variant union required
-  const e1 = <Btn size={3 as any} />
+  const e1 = <Btn size={3} />
 })
 
 // ---------- component targets must accept className ----------
 
 test('component targets must accept className', () => {
   const NoClass = (p: { id: string }) => <div />
+  styled('figure', { base: [{}] })
   // @ts-expect-error component targets must accept className
   const Bad = styled(NoClass, { base: [{}] } as const)
 })

@@ -28,7 +28,7 @@ export const withVanillaSplit = (config: NextConfig): NextConfig => {
 		loaders: [
 			// only run the vanilla-extract turbopack plugin; split precompiles virtual content
 			{
-				loader: require.resolve("./turbopack-plugin"),
+				loader: require.resolve("@vanilla-extract/turbopack-plugin"),
 				options: {
 					nextEnv: config.env ?? null,
 					outputCss: null,

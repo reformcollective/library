@@ -3,7 +3,11 @@ import fs from "node:fs"
 import path from "node:path"
 import ts from "typescript"
 import type { LoaderContext } from "webpack"
-import turboLoader from "./turbopack-plugin.ts"
+import turboLoaderRAW from "@vanilla-extract/turbopack-plugin"
+import { deserializeCss } from "@vanilla-extract/integration"
+
+// @ts-expect-error weird turbopack stuff
+const turboLoader = turboLoaderRAW.default as typeof turboLoaderRAW
 
 type ModulesConfig = Record<string, string[]>
 
@@ -41,17 +45,6 @@ const DEFAULT_MODULES: ModulesConfig = {
 const SPLIT_STYLED_MODULE = "library/styled"
 const SPLIT_STYLED_IMPORT = "styled"
 
-const encodeBase64Url = (text: string): string => {
-	const b64 = Buffer.from(text, "utf8").toString("base64")
-	return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")
-}
-
-const decodeBase64Url = (text: string): string => {
-	let base64 = text.replace(/-/g, "+").replace(/_/g, "/")
-	const pad = base64.length % 4
-	if (pad) base64 += "=".repeat(4 - pad)
-	return Buffer.from(base64, "base64").toString("utf8")
-}
 
 const createNamedImport = (
 	names: string[],
@@ -82,8 +75,6 @@ const createReExport = (
 		undefined,
 	)
 }
-
-// NOTE: avoid using deprecated AST fields like importClause.isTypeOnly and assertClause
 
 const buildVirtualModuleSource = (
 	sourceFile: ts.SourceFile,
@@ -194,10 +185,10 @@ const rewriteRelativeImportsToAbsolute = async (
 }
 
 const runVePluginOnTempFile = async (
-	originalThis: LoaderContext<unknown>,
+    originalThis: LoaderContext<unknown>,
 	tempFilePath: string,
-	originalFilePath: string,
-	loaderOptions: SplitOptions,
+    originalFilePath: string,
+    loaderOptions: SplitOptions,
 ): Promise<string> => {
 	return new Promise<string>((resolve, reject) => {
 		const mode = originalThis.mode ?? "development"
@@ -275,12 +266,12 @@ const runVePluginOnTempFile = async (
 			getResolve: getResolveWrapped,
 			addDependency: (_file: string) => {},
 			mode,
-			rootContext,
+            rootContext,
 			resourcePath: tempFilePath,
 			resourceQuery: "",
 		}
 
-		// biome-ignore lint/suspicious/noExplicitAny: webpack moment
+        // biome-ignore lint/suspicious/noExplicitAny: webpack moment
 		Promise.resolve(turboLoader.call(modifiedThis as any))
 			.then(() => {
 				if (captured === undefined) resolve("")
@@ -541,7 +532,7 @@ const transform = async (
 		) as unknown as LoaderContext<unknown>["getResolve"],
 	)
 
-	// debug: write the generated virtual .css.ts (pre-VE) to .next/tmp/split-cssts-out
+// debug: write the generated virtual .css.ts (pre-VE) to .next/tmp/split-cssts-out
 	try {
 		const relPathFromRoot = path
 			.relative(rootContext, filePath)
@@ -587,16 +578,11 @@ const transform = async (
 	// run the official turbopack plugin on the temp file
 	let veJs: string
 	try {
-		const veJsRaw = await runVePluginOnTempFile(
+		veJs = await runVePluginOnTempFile(
 			loaderThis,
 			tmpFile,
 			filePath,
 			options,
-		)
-		veJs = rewriteCssImportToOriginalDir(
-			veJsRaw,
-			rootContext,
-			path.dirname(filePath),
 		)
 	} finally {
 		try {
@@ -607,9 +593,8 @@ const transform = async (
 		} catch {}
 	}
 
-	const importPath = `./${path.basename(
-		filePath,
-	)}?fileContent=${encodeBase64Url(veJs)}`
+	const jsBase64 = Buffer.from(veJs, "utf8").toString("base64")
+	const importPath = `data:text/javascript;base64,${jsBase64}`
 	const importDecl = createNamedImport(movedNames, importPath)
 
 	let lastImportIndex = -1
@@ -624,7 +609,7 @@ const transform = async (
 	if (needsWithComponentHelper) {
 		const helperImport = createNamedImport(
 			["withComponent"],
-			"library/styled.withComponent",
+			"library/styled/withComponent",
 		)
 		// insert just before the virtual import to keep order tidy
 		const where = lastImportIndex >= 0 ? lastImportIndex + 1 : 0
@@ -669,18 +654,7 @@ export default async function vanillaSplitLoader(
 ) {
 	const callback = this.async()
 
-	try {
-		// serve virtual module content via query param
-		const rawQuery = this.resourceQuery
-		if (typeof rawQuery === "string" && rawQuery.length > 1) {
-			const query = rawQuery.startsWith("?") ? rawQuery.slice(1) : rawQuery
-			const params = new URLSearchParams(query)
-			const fileContent = params.get("fileContent")
-			if (fileContent != null) {
-				const decoded = decodeBase64Url(fileContent)
-				return callback(null, decoded)
-			}
-		}
+    try {
 
 		// pass through pure vanilla-extract files untouched
 		if (this.resourcePath.endsWith(".css.ts")) {
