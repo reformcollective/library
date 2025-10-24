@@ -7,8 +7,3 @@ export function withComponent<BaseProps extends Record<string, unknown>>(
 	return (props: BaseProps) =>
 		createElement(Base as any, { ...props, as: Target })
 }
-
-
-
-
-

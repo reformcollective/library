@@ -2,7 +2,7 @@
 
 import MuxVideo from "@mux/mux-video-react"
 import { ScreenContext } from "library/ScreenContext"
-import { css, f, styled } from "library/styled-legacy"
+import { css, f, styled } from "library/styled/legacy"
 import { use, useEffect, useRef, useState } from "react"
 
 export function BackgroundVideo({

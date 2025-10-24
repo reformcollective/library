@@ -1,10 +1,10 @@
 import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
+import { deserializeCss } from "@vanilla-extract/integration"
+import turboLoaderRAW from "@vanilla-extract/turbopack-plugin"
 import ts from "typescript"
 import type { LoaderContext } from "webpack"
-import turboLoaderRAW from "@vanilla-extract/turbopack-plugin"
-import { deserializeCss } from "@vanilla-extract/integration"
 
 // @ts-expect-error weird turbopack stuff
 const turboLoader = turboLoaderRAW.default as typeof turboLoaderRAW
@@ -44,7 +44,6 @@ const DEFAULT_MODULES: ModulesConfig = {
 // Only split styled(Component, ...) for this specific callee
 const SPLIT_STYLED_MODULE = "library/styled"
 const SPLIT_STYLED_IMPORT = "styled"
-
 
 const createNamedImport = (
 	names: string[],
@@ -185,10 +184,10 @@ const rewriteRelativeImportsToAbsolute = async (
 }
 
 const runVePluginOnTempFile = async (
-    originalThis: LoaderContext<unknown>,
+	originalThis: LoaderContext<unknown>,
 	tempFilePath: string,
-    originalFilePath: string,
-    loaderOptions: SplitOptions,
+	originalFilePath: string,
+	loaderOptions: SplitOptions,
 ): Promise<string> => {
 	return new Promise<string>((resolve, reject) => {
 		const mode = originalThis.mode ?? "development"
@@ -266,12 +265,12 @@ const runVePluginOnTempFile = async (
 			getResolve: getResolveWrapped,
 			addDependency: (_file: string) => {},
 			mode,
-            rootContext,
+			rootContext,
 			resourcePath: tempFilePath,
 			resourceQuery: "",
 		}
 
-        // biome-ignore lint/suspicious/noExplicitAny: webpack moment
+		// biome-ignore lint/suspicious/noExplicitAny: webpack moment
 		Promise.resolve(turboLoader.call(modifiedThis as any))
 			.then(() => {
 				if (captured === undefined) resolve("")
@@ -532,7 +531,7 @@ const transform = async (
 		) as unknown as LoaderContext<unknown>["getResolve"],
 	)
 
-// debug: write the generated virtual .css.ts (pre-VE) to .next/tmp/split-cssts-out
+	// debug: write the generated virtual .css.ts (pre-VE) to .next/tmp/split-cssts-out
 	try {
 		const relPathFromRoot = path
 			.relative(rootContext, filePath)
@@ -578,12 +577,7 @@ const transform = async (
 	// run the official turbopack plugin on the temp file
 	let veJs: string
 	try {
-		veJs = await runVePluginOnTempFile(
-			loaderThis,
-			tmpFile,
-			filePath,
-			options,
-		)
+		veJs = await runVePluginOnTempFile(loaderThis, tmpFile, filePath, options)
 	} finally {
 		try {
 			fs.unlinkSync(tmpFile)
@@ -654,8 +648,7 @@ export default async function vanillaSplitLoader(
 ) {
 	const callback = this.async()
 
-    try {
-
+	try {
 		// pass through pure vanilla-extract files untouched
 		if (this.resourcePath.endsWith(".css.ts")) {
 			return callback(null, sourceCode)

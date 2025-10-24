@@ -1,29 +1,10 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import { addFunctionSerializer } from "@vanilla-extract/css/functionSerializer"
-import { runtimeStyled, type RuntimeArgs } from "./runtime"
-
-type SerializableStyle = Record<string, unknown>
-
-export type StyledConfig =
-	| (SerializableStyle | SerializableStyle[])
-	| {
-			base?: (SerializableStyle | SerializableStyle[])[]
-			variants?: Record<
-				string,
-				Record<string, (SerializableStyle | SerializableStyle[])[]>
-			>
-			defaults?: Record<string, string | boolean>
-			vars?: Record<string, string | { token: string; unit?: string }>
-	  }
+import { runtimeStyled } from "./runtime"
+import type { SerializableStyle, StyledConfig } from "./types"
 
 function flatten(input?: (SerializableStyle | SerializableStyle[])[]) {
-	const out: SerializableStyle[] = []
-	for (const entry of input ?? []) {
-		if (!entry) continue
-		if (Array.isArray(entry)) out.push(...entry)
-		else out.push(entry)
-	}
-	return out
+	return Array.isArray(input) ? input : [input]
 }
 
 export function styledCore(tag: string, config: StyledConfig) {
@@ -41,32 +22,39 @@ export function styledCore(tag: string, config: StyledConfig) {
 
 	const cfg = normalizeConfig(config)
 
+	// unified object form
 	const base = flatten((cfg as any).base as any)
 	let baseClass = base.map((b) => style(b)).join(" ")
 
+	// ensure a base anchor when base-level within exists but no base class
 	if (!baseClass && (cfg as any)?.within) {
 		baseClass = style({}, "styled_base_marker")
 	}
 
+	// helper: split classes for anchoring selectors
 	const splitClasses = (cls: string) => cls.split(" ").filter(Boolean)
 	const baseClassParts = splitClasses(baseClass)
 
+	// dev guard: avoid confusion with VE selectors API
 	if ((cfg as any)?.selectors && process.env.NODE_ENV !== "production") {
 		console.warn(
 			"[styled] `selectors` found in config. Use `within` for scoped descendant styles.",
 		)
 	}
 
+	// normalize selector relative to root
 	function normalizeWithinSelector(rootSelector: string, key: string) {
 		const trimmed = String(key ?? "").trim()
 		if (!trimmed) return rootSelector
 		if (trimmed.startsWith("&")) return trimmed.replace(/&/g, rootSelector)
+		// pseudo without '&' is ambiguous; enforce '&' in dev, auto-correct to self in prod
 		if (trimmed.startsWith(":") || trimmed.startsWith("::")) {
 			if (process.env.NODE_ENV !== "production") {
 				throw new Error(
 					`[styled.within] pseudo selector "${trimmed}" must start with '&'. use "&${trimmed}"`,
 				)
 			}
+			// production: assume self pseudo to avoid accidental descendant leak
 			return `${rootSelector}${trimmed}`
 		}
 		return `${rootSelector} ${trimmed}`
@@ -119,6 +107,7 @@ export function styledCore(tag: string, config: StyledConfig) {
 	)) {
 		const optionClassMap: Record<string, string> = {}
 		for (const [option, blocks] of Object.entries(options as any)) {
+			// support object form: { base, within }
 			const baseBlocks = Array.isArray(blocks)
 				? (blocks as any)
 				: (blocks as any)?.base
@@ -126,9 +115,11 @@ export function styledCore(tag: string, config: StyledConfig) {
 				.map((b) => style(b))
 				.join(" ")
 
+			// variant-level within
 			const withinEntries = (
 				Array.isArray(blocks) ? undefined : (blocks as any)?.within
 			) as Record<string, any> | undefined
+			// ensure a per-option anchor when within exists but the option has no class
 			if (withinEntries && !cls) {
 				cls = style({}, `styled_variant_marker_${variantName}_${option}`)
 			}
@@ -146,10 +137,14 @@ export function styledCore(tag: string, config: StyledConfig) {
 		})
 	}
 
+	// slots API removed in favor of `within`
+
+	// base-level within
 	if ((cfg as any)?.within) {
 		emitWithinStyles(baseClassParts, (cfg as any).within as Record<string, any>)
 	}
 
+	// compound variants
 	const compiledCompounds: Array<{
 		className: string
 		conditions: Record<string, string | boolean>
@@ -163,10 +158,15 @@ export function styledCore(tag: string, config: StyledConfig) {
 	) as any[]
 	for (const raw of compoundList) {
 		if (!raw || typeof raw !== "object") continue
-		const { base: compoundBase, within: compoundWithin, ...conditions } = raw as any
+		const {
+			base: compoundBase,
+			within: compoundWithin,
+			...conditions
+		} = raw as any
 		let compoundClass = flatten(compoundBase as any)
 			.map((b) => style(b))
 			.join(" ")
+		// ensure we have a marker class to anchor selectors and attach at runtime
 		if (!compoundClass) compoundClass = style({}, "styled_compound_marker")
 		compiledCompounds.push({ className: compoundClass, conditions })
 		if (compoundWithin) {
@@ -175,14 +175,21 @@ export function styledCore(tag: string, config: StyledConfig) {
 		}
 	}
 
+	// normalize vars to runtime-friendly defs
 	const rawVarTokens = ((cfg as any).vars ?? {}) as Record<
 		string,
 		string | { token: string; unit?: string }
 	>
-	const varDefs: Array<{ propName: string; cssVarName: string; unit?: string }> = []
+	const varDefs: Array<{
+		propName: string
+		cssVarName: string
+		unit?: string
+	}> = []
 	for (const [propName, tokenSpec] of Object.entries(rawVarTokens)) {
 		const { token: rawName, unit } =
-			typeof tokenSpec === "string" ? { token: tokenSpec, unit: undefined } : tokenSpec
+			typeof tokenSpec === "string"
+				? { token: tokenSpec, unit: undefined }
+				: tokenSpec
 		const trimmed = (rawName ?? "").trim()
 		const cssVarName = trimmed.startsWith("var(")
 			? trimmed.slice(4, -1).trim()
@@ -192,6 +199,7 @@ export function styledCore(tag: string, config: StyledConfig) {
 		varDefs.push({ propName, cssVarName, unit })
 	}
 
+	// precompute blocked keys to strip from DOM props (exclude "as"; runtime adds it)
 	const blockedKeys = [
 		...variantDefs.map((d) => d.name),
 		...Object.keys(rawVarTokens),
@@ -200,21 +208,19 @@ export function styledCore(tag: string, config: StyledConfig) {
 	const args: RuntimeArgs = {
 		tag,
 		baseClass,
-		...(variantDefs.length ? { variantDefs } : {}),
-		...(compiledCompounds.length
-			? {
-				compoundChecks: compiledCompounds.map(({ className, conditions }) => ({
-					className,
-					checks: Object.entries(conditions ?? {}) as Array<[
-						string,
-						string | boolean,
-					]>,
-				})),
-			}
-			: {}),
-		...(varDefs.length ? { varDefs } : {}),
-		...(blockedKeys.length ? { blockedKeys } : {}),
 	}
+	if (variantDefs.length) args.variantDefs = variantDefs
+	if (compiledCompounds.length)
+		args.compoundChecks = compiledCompounds.map(
+			({ className, conditions }) => ({
+				className,
+				checks: Object.entries(conditions ?? {}) as Array<
+					[string, string | boolean]
+				>,
+			}),
+		)
+	if (varDefs.length) args.varDefs = varDefs
+	if (blockedKeys.length) args.blockedKeys = blockedKeys
 
 	const Component = runtimeStyled(args)
 	addFunctionSerializer(Component, {
@@ -224,8 +230,3 @@ export function styledCore(tag: string, config: StyledConfig) {
 	})
 	return Component
 }
-
-
-
-
-

@@ -5,7 +5,7 @@ import {
 	unstable_ViewTransition as ReactViewTransition,
 } from "react"
 import { usePreloader } from "./link/usePreloader"
-import { type CSSObject, createStyle } from "./styled-legacy"
+import { type CSSObject, createStyle } from "./styled/legacy"
 
 type ClassProps = "default" | "enter" | "exit" | "share" | "update"
 
