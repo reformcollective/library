@@ -1,8 +1,16 @@
 // app/library/styled.reform.test-d.ts
 
-import { Component, type ComponentProps, type FC, type Ref } from "react"
+import { style } from "@vanilla-extract/css"
+import { styled } from "library/styled"
+import { Component, type ComponentProps, type FC } from "react"
 import { expectTypeOf, test } from "vitest"
-import { styled } from "../styled"
+
+test("vanilla extract should be strict", () => {
+	style({
+		// @ts-expect-error not a css property
+		skibidi: "toilet",
+	})
+})
 
 test("basic component type is preserved", () => {
 	const component = ({
@@ -32,8 +40,8 @@ test("variants with defaults are optional; without defaults are required", () =>
 				large: [{ fontSize: "18px" }],
 			},
 		},
-		defaults: { color: "primary", size: "small" },
-	} as const)
+		defaultVariants: { color: "primary", size: "small" },
+	})
 
 	// should compile: defaults make these props optional
 	const ok1 = <StyledButton>Default</StyledButton>
@@ -74,6 +82,26 @@ test("variants with defaults are optional; without defaults are required", () =>
 	expectTypeOf<NDProps["tone"]>().toEqualTypeOf<"brand" | "neutral">()
 })
 
+test("default prop types are preserved", () => {
+	const Button = styled("button", {
+		base: [{ display: "inline-flex" }],
+		variants: {
+			color: {
+				primary: [{ color: "white", background: "#0070f3" }],
+				secondary: [{ color: "white", background: "#555" }],
+			},
+		},
+		defaultVariants: { color: "primary" },
+	} as const)
+
+	const ok1 = <Button onClick={() => {}}>Default</Button>
+	const ok2 = (
+		<Button color="secondary" onClick={() => {}}>
+			Secondary
+		</Button>
+	)
+})
+
 test("boolean variants are typed as boolean; optional when default exists", () => {
 	const Advanced = styled("div", {
 		variants: {
@@ -82,7 +110,7 @@ test("boolean variants are typed as boolean; optional when default exists", () =
 				false: [{ background: "#6b7280" }],
 			},
 		},
-		defaults: { active: false },
+		defaultVariants: { active: false },
 	} as const)
 
 	const ok1 = <Advanced>inactive by default</Advanced>
@@ -116,15 +144,15 @@ test("boolean variants are typed as boolean; optional when default exists", () =
 test("vars yield string | number props; units permit numeric values", () => {
 	const Box = styled("div", {
 		base: [{ border: "1px solid #333" }],
-		vars: {
-			height: { token: "--h", unit: "px" },
-			width: "--w", // string or number, no unit coercion
+		variables: {
+			height: { token: "var(--h)", unit: "px" },
+			width: "var(--w)", // string or number, no unit coercion
 		},
 	} as const)
 
 	const ok1 = <Box height={100} width="50%" />
 	const ok2 = <Box height={200} width={300} />
-	const ok3 = <Box height={"120px"} />
+	const ok3 = <Box height={"120px"} width={120} />
 
 	type BP = ComponentProps<typeof Box>
 	expectTypeOf<BP["height"]>().toEqualTypeOf<string | number | undefined>()
@@ -199,7 +227,7 @@ test("mixed: some variants optional (defaulted), others required", () => {
 			tone: { brand: [{}], neutral: [{}] }, // no default → required
 			size: { small: [{}], large: [{}] }, // default → optional
 		},
-		defaults: { size: "small" },
+		defaultVariants: { size: "small" },
 	} as const)
 
 	// @ts-expect-error: 'tone' required
@@ -215,7 +243,7 @@ test("variant keys shadow native props of the same name", () => {
 		variants: {
 			size: { small: [{}], large: [{}] },
 		},
-		defaults: { size: "small" },
+		defaultVariants: { size: "small" },
 	} as const)
 
 	const ok1 = <Btn size="large" />
@@ -259,7 +287,7 @@ test.fails("generic types are preserved with variants config", () => {
 		variants: {
 			tone: { brand: [{}], neutral: [{}] },
 		},
-		defaults: { tone: "brand" },
+		defaultVariants: { tone: "brand" },
 	} as const)
 
 	const ok = (
@@ -288,7 +316,7 @@ test.fails("generic types are preserved with vars config", () => {
 
 	const Extended = styled(Component, {
 		base: [{}],
-		vars: { height: "--h", width: { token: "--w", unit: "px" } },
+		variables: { height: "var(--h)", width: { token: "var(--w)", unit: "px" } },
 	} as const)
 
 	const ok = (
@@ -320,7 +348,7 @@ test.fails(
 		const Extended = styled(Component, {
 			base: [{}],
 			variants: { size: { small: [{}], large: [{}] } },
-			defaults: { size: "small" },
+			defaultVariants: { size: "small" },
 		} as const)
 
 		const ok = (
@@ -332,3 +360,70 @@ test.fails(
 		)
 	},
 )
+
+// test("errors on config are reported in the right place", () => {
+// 	const SmokeBox = styled(
+// 		// no error here
+// 		"div",
+// 		{
+// 			base: {
+// 				border: "2px solid black",
+// 			},
+// 			variants: {
+// 				color: {
+// 					red: [{ color: "red" }],
+// 					blue: [
+// 						{
+// 							color: "blue",
+// 							// @ts-expect-error not a valid css prop
+// 							skibidi: "toilet",
+// 						},
+// 					],
+// 				},
+// 				isLarge: {
+// 					true: [{ fontSize: "24px" }],
+// 					false: [{ fontSize: "16px" }],
+// 				},
+// 			},
+// 			// @ts-expect-error: not a valid option
+// 			skib: true,
+// 			variables: {
+// 				// required by default
+// 				paddingMultiplier: {
+// 					token: "var(--padding-multiplier)",
+// 					unit: "px",
+// 					// @ts-expect-error not a valid variable option
+// 					skib: true,
+// 				},
+// 				// optional
+// 				innerColor: {
+// 					token: "var(--inner-color)",
+// 					optional: true,
+// 				},
+// 			},
+// 			defaultVariants: {
+// 				// @ts-expect-error: not a valid option for this variant
+// 				isLarge: "skibidi",
+// 				color: "red",
+// 				// @ts-expect-error: not a variant
+// 				size: "small",
+// 			},
+// 			compoundVariants: [
+// 				{
+// 					color: "red",
+// 					// @ts-expect-error not a variant
+// 					orange: "peel",
+// 					style: "ok",
+// 				},
+// 			],
+// 		},
+// 	)
+
+// 	const SmokeBox2 = styled("div", {
+// 		base: {
+// 			border: "2px solid black",
+// 		},
+// 		// @ts-expect-error: not valid!
+// 		skib: true,
+// 	})
+// })

@@ -40,7 +40,7 @@ test("additional property types are added", () => {
 		variants: { color: { orange: [{ color: "orange" }] } },
 	})
 
-	expectTypeOf(extended2).toMatchTypeOf<FC<{ color: "orange" }>>()
+	expectTypeOf(extended2).toExtend<FC<{ color: "orange" }>>()
 })
 
 test("style props are filtered from the component props", () => {

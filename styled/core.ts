@@ -1,31 +1,78 @@
-import { globalStyle, style } from "@vanilla-extract/css"
+import {
+	type ComplexStyleRule,
+	globalStyle,
+	type StyleRule,
+	style,
+} from "@vanilla-extract/css"
 import { addFunctionSerializer } from "@vanilla-extract/css/functionSerializer"
-import { runtimeStyled } from "./runtime"
-import type { SerializableStyle, StyledConfig } from "./types"
+import { type RuntimeArgs, runtimeStyled } from "./runtime"
+import type { StyledConfig, StyledOptions } from "./types"
 
-function flatten(input?: (SerializableStyle | SerializableStyle[])[]) {
-	return Array.isArray(input) ? input : [input]
+function isStyledOptions(
+	input: ComplexStyleRule | StyledOptions,
+): input is StyledOptions {
+	return (
+		typeof input === "object" &&
+		input !== null &&
+		("base" in input ||
+			"variants" in input ||
+			"defaults" in input ||
+			"defaultVariants" in input ||
+			"vars" in input ||
+			"within" in input ||
+			"compoundVariants" in input ||
+			"compounds" in input) &&
+		Object.keys(input).find(
+			(key) =>
+				key !== "base" &&
+				key !== "variants" &&
+				key !== "defaults" &&
+				key !== "defaultVariants" &&
+				key !== "vars" &&
+				key !== "within" &&
+				key !== "compoundVariants" &&
+				key !== "compounds",
+		) === undefined
+	)
+}
+
+function normalizeConfig(input: StyledConfig = {}) {
+	return Array.isArray(input)
+		? { base: input }
+		: isStyledOptions(input)
+			? input
+			: { base: input }
+}
+
+// flatten arbitrarily nested arrays into a single-level array
+function flattenArray<T>(input: T | T[] | (T | T[])[] | undefined | null): T[] {
+	if (!input) return []
+	return (Array.isArray(input) ? input : [input]).flat(Infinity as 1) as T[]
+}
+
+// compile a mixture of VE style objects and/or class strings into a single class string
+function compileToClass(
+	blocks: Array<StyleRule | string | null | undefined>,
+): string {
+	const out: string[] = []
+	for (const b of blocks) {
+		if (!b) continue
+		if (typeof b === "string") {
+			out.push(b)
+		} else {
+			out.push(style(b))
+		}
+	}
+	return out.join(" ")
 }
 
 export function styledCore(tag: string, config: StyledConfig) {
-	function normalizeConfig(input: StyledConfig) {
-		if (!input || (Array.isArray(input) && input.length === 0)) {
-			if (process.env.NODE_ENV !== "production") {
-				throw new Error(
-					"[styled] config is required; pass an array of style objects or a config object",
-				)
-			}
-			return { base: [] as SerializableStyle[] } as any
-		}
-		return Array.isArray(input) ? ({ base: input } as any) : (input as any)
-	}
-
 	const cfg = normalizeConfig(config)
 
-	// unified object form
-	const base = flatten((cfg as any).base as any)
-	let baseClass = base.map((b) => style(b)).join(" ")
-
+	// base compilation (accept style objects, arrays, and/or class strings)
+	const rawBase = (cfg as any).base as unknown
+	const baseBlocks = flattenArray<StyleRule | string>(rawBase as any)
+	let baseClass = compileToClass(baseBlocks)
 	// ensure a base anchor when base-level within exists but no base class
 	if (!baseClass && (cfg as any)?.within) {
 		baseClass = style({}, "styled_base_marker")
@@ -97,82 +144,95 @@ export function styledCore(tag: string, config: StyledConfig) {
 		}
 	}
 
-	const variantDefs: Array<{
-		name: string
-		options: Record<string, string>
-		defaultValue?: string | boolean
-	}> = []
+	// build CVA-compatible options by compiling VE style objects to classes
+	const cvaVariants: Record<string, Record<string, string | null>> = {}
 	for (const [variantName, options] of Object.entries(
-		(cfg as any).variants ?? {},
+		((cfg as any).variants ?? {}) as Record<string, any>,
 	)) {
-		const optionClassMap: Record<string, string> = {}
-		for (const [option, blocks] of Object.entries(options as any)) {
-			// support object form: { base, within }
-			const baseBlocks = Array.isArray(blocks)
-				? (blocks as any)
-				: (blocks as any)?.base
-			let cls = flatten(baseBlocks as any)
-				.map((b) => style(b))
-				.join(" ")
-
-			// variant-level within
-			const withinEntries = (
-				Array.isArray(blocks) ? undefined : (blocks as any)?.within
-			) as Record<string, any> | undefined
-			// ensure a per-option anchor when within exists but the option has no class
-			if (withinEntries && !cls) {
-				cls = style({}, `styled_variant_marker_${variantName}_${option}`)
+		const compiled: Record<string, string | null> = {}
+		for (const [option, value] of Object.entries(options ?? {})) {
+			let withinEntries: Record<string, any> | undefined
+			let cls = ""
+			if (value == null) {
+				cls = ""
+			} else if (typeof value === "string") {
+				cls = value
+			} else if (Array.isArray(value)) {
+				cls = compileToClass(value as Array<StyleRule | string>)
+			} else if (
+				typeof value === "object" &&
+				("base" in (value as any) || "within" in (value as any))
+			) {
+				const baseBlocks = flattenArray<StyleRule | string>((value as any).base)
+				cls = compileToClass(baseBlocks)
+				withinEntries = (value as any).within
+			} else {
+				// assume VE style object
+				cls = compileToClass([value as StyleRule])
 			}
 
-			optionClassMap[option] = cls
 			if (withinEntries) {
-				const variantParts = splitClasses(cls)
-				emitWithinStyles([...baseClassParts, ...variantParts], withinEntries)
+				// ensure option anchor exists
+				if (!cls)
+					cls = style({}, `styled_variant_marker_${variantName}_${option}`)
+				const parts = splitClasses(cls)
+				emitWithinStyles([...baseClassParts, ...parts], withinEntries)
 			}
-		}
-		variantDefs.push({
-			name: variantName,
-			options: optionClassMap,
-			defaultValue: ((cfg as any).defaults ?? ({} as any))[variantName],
-		})
-	}
 
-	// slots API removed in favor of `within`
+			compiled[option] = cls || null
+		}
+		cvaVariants[variantName] = compiled
+	}
 
 	// base-level within
 	if ((cfg as any)?.within) {
 		emitWithinStyles(baseClassParts, (cfg as any).within as Record<string, any>)
 	}
 
-	// compound variants
-	const compiledCompounds: Array<{
-		className: string
-		conditions: Record<string, string | boolean>
-	}> = []
-	const compoundList: any[] = (
-		Array.isArray((cfg as any)?.compoundVariants)
-			? (cfg as any).compoundVariants
-			: Array.isArray((cfg as any)?.compounds)
-				? (cfg as any).compounds
-				: []
-	) as any[]
-	for (const raw of compoundList) {
+	// compound variants: compile class and emit compound-level within
+	const rawCompounds: any[] = Array.isArray((cfg as any)?.compoundVariants)
+		? (cfg as any).compoundVariants
+		: Array.isArray((cfg as any)?.compounds)
+			? (cfg as any).compounds
+			: []
+	const cvaCompounds: Array<Record<string, any>> = []
+	for (const raw of rawCompounds) {
 		if (!raw || typeof raw !== "object") continue
 		const {
 			base: compoundBase,
+			class: classProp,
+			className,
 			within: compoundWithin,
 			...conditions
 		} = raw as any
-		let compoundClass = flatten(compoundBase as any)
-			.map((b) => style(b))
-			.join(" ")
-		// ensure we have a marker class to anchor selectors and attach at runtime
+		const baseBlocks = flattenArray<StyleRule | string>(compoundBase)
+		const compiledBase = compileToClass(baseBlocks)
+		const compiledClassProp = Array.isArray(classProp)
+			? compileToClass(classProp as Array<StyleRule | string>)
+			: typeof classProp === "string"
+				? classProp
+				: typeof classProp === "object" && classProp
+					? compileToClass([classProp as StyleRule])
+					: ""
+		const compiledClassName = Array.isArray(className)
+			? compileToClass(className as Array<StyleRule | string>)
+			: typeof className === "string"
+				? className
+				: typeof className === "object" && className
+					? compileToClass([className as StyleRule])
+					: ""
+
+		let compoundClass = compileToClass(
+			[compiledBase, compiledClassProp, compiledClassName].filter(
+				Boolean,
+			) as string[],
+		)
 		if (!compoundClass) compoundClass = style({}, "styled_compound_marker")
-		compiledCompounds.push({ className: compoundClass, conditions })
 		if (compoundWithin) {
 			const compParts = splitClasses(compoundClass)
 			emitWithinStyles([...baseClassParts, ...compParts], compoundWithin as any)
 		}
+		cvaCompounds.push({ ...conditions, class: compoundClass })
 	}
 
 	// normalize vars to runtime-friendly defs
@@ -199,34 +259,27 @@ export function styledCore(tag: string, config: StyledConfig) {
 		varDefs.push({ propName, cssVarName, unit })
 	}
 
-	// precompute blocked keys to strip from DOM props (exclude "as"; runtime adds it)
-	const blockedKeys = [
-		...variantDefs.map((d) => d.name),
-		...Object.keys(rawVarTokens),
-	]
+	// build CVA options
+	const defaultVariants = (cfg as any).defaultVariants ?? (cfg as any).defaults
+	const cvaBase: string | string[] = baseClass
+	const cvaOptions: Record<string, unknown> = {
+		variants: cvaVariants,
+		...(cvaCompounds.length ? { compoundVariants: cvaCompounds } : {}),
+		...(defaultVariants ? { defaultVariants } : {}),
+	}
 
 	const args: RuntimeArgs = {
 		tag,
-		baseClass,
+		cvaBase,
+		cvaOptions,
 	}
-	if (variantDefs.length) args.variantDefs = variantDefs
-	if (compiledCompounds.length)
-		args.compoundChecks = compiledCompounds.map(
-			({ className, conditions }) => ({
-				className,
-				checks: Object.entries(conditions ?? {}) as Array<
-					[string, string | boolean]
-				>,
-			}),
-		)
 	if (varDefs.length) args.varDefs = varDefs
-	if (blockedKeys.length) args.blockedKeys = blockedKeys
 
 	const Component = runtimeStyled(args)
 	addFunctionSerializer(Component, {
 		importPath: "library/styled/runtime",
 		importName: "runtimeStyled",
-		args: [args],
+		args: [args as any],
 	})
 	return Component
 }

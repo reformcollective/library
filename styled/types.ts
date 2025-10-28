@@ -1,90 +1,111 @@
+import type { createVar, StyleRule as PlainRule } from "@vanilla-extract/css"
 import type { JSX, ReactNode } from "react"
 
-// --- Config Types (as provided) ---
+type PlainStyleRules = PlainRule | string | PlainStyleRules[]
+type WithinBlock = Record<string, PlainStyleRules>
+type WithinRule = PlainRule & { within?: WithinBlock }
 
-export type SerializableStyle = Record<string, unknown>
-
-export type StyledConfig =
-	| (SerializableStyle | SerializableStyle[]) // simple form: array of compiled style objects
+export type StyleRules = WithinRule | string | StyleRules[]
+type CompoundVariant<Props> = Props & {
+	base: StyleRules
+}
+type VariableOptions =
 	| {
-			base?: (SerializableStyle | SerializableStyle[])[]
-			variants?: Record<
-				string,
-				Record<string, (SerializableStyle | SerializableStyle[])[]>
-			>
-			defaults?: Record<string, string | boolean>
-			vars?: Record<string, string | { token: string; unit?: string }>
+			token: ReturnType<typeof createVar>
+			unit?: string
+			optional?: boolean
 	  }
+	| ReturnType<typeof createVar>
+type StringToBoolean<T> = T extends "true" | "false" ? boolean : T
+type BooleanToString<T> = T extends boolean ? "true" | "false" : T
 
-// --- Helper Types (as provided, mostly) ---
+// schemas to extend for type safety
+export type VariantsSchema = Record<string, Record<string, StyleRules>>
+export type VariablesSchema = Record<string, VariableOptions>
+export type DefaultVariantsSchema<Variants> = {
+	[Key in keyof Variants]?: StringToBoolean<keyof Variants[Key]>
+}
 
-type VariantsOf<TConfig> = TConfig extends { variants: infer V } ? V : {}
-type DefaultsOf<TConfig> = TConfig extends { defaults: infer D } ? D : {}
-type VarsOf<TConfig> = TConfig extends { vars: infer TVars } ? TVars : {}
+type VariantProps<
+	Variants extends VariantsSchema,
+	DefaultVariants extends DefaultVariantsSchema<Variants>,
+> = {
+	[Key in keyof Variants as [DefaultVariants] extends [never]
+		? Key
+		: Key extends keyof DefaultVariants
+			? never
+			: Key]: StringToBoolean<keyof Variants[Key]>
+} & {
+	[Key in keyof Variants]?: StringToBoolean<keyof Variants[Key]>
+}
 
-type OptionalVariantKeys<TConfig> = Extract<
-	keyof VariantsOf<TConfig>,
-	keyof DefaultsOf<TConfig>
->
-type RequiredVariantKeys<TConfig> = Exclude<
-	keyof VariantsOf<TConfig>,
-	OptionalVariantKeys<TConfig>
->
+type VariableProps<Variables extends VariablesSchema> = {
+	[Key in keyof Variables as Variables[Key] extends string
+		? never
+		: Variables[Key] extends { optional: true }
+			? never
+			: Variables[Key] extends { optional: false }
+				? Key
+				: never]: string | number
+} & {
+	[Key in keyof Variables]?: string | number
+}
 
-// Correctly handles boolean variants (where keys are "true" or "false")
-type VariantOptionValue<V, K extends keyof V> = keyof V[K] extends
-	| "true"
-	| "false"
-	? boolean
-	: keyof V[K]
+/**
+ * The main type for styled configs
+ */
+export type GenericConfig<
+	Variants extends VariantsSchema,
+	Variables extends VariablesSchema,
+	DefaultVariants extends DefaultVariantsSchema<Variants>,
+> =
+	| {
+			/** The base style rule applied to the component. */
+			base?: StyleRules
+			/** Component-specific selectors, e.g., { '&:hover': { ... } } */
+			within?: WithinBlock
+			/** Variant definitions. */
+			variants?: Variants
+			/** Default values for variants. */
+			defaultVariants?: DefaultVariants
 
-type GetVariantProps<TConfig> = [keyof VariantsOf<TConfig>] extends [never]
-	? {}
-	: {
-			// required variants (no default)
-			[K in RequiredVariantKeys<TConfig>]: VariantOptionValue<
-				VariantsOf<TConfig>,
-				K
+			/** CSS variable definitions. */
+			variables?: Variables
+			/** Rules for applying styles when multiple variants are active. */
+			compoundVariants?: NoInfer<
+				Array<CompoundVariant<VariantProps<Variants, DefaultVariants>>>
 			>
-		} & {
-			// optional variants (have default)
-			[K in OptionalVariantKeys<TConfig>]?:
-				| VariantOptionValue<VariantsOf<TConfig>, K>
-				| undefined
-		}
+	  }
+	| StyleRules
 
-type GetVarProps<TConfig> = [keyof VarsOf<TConfig>] extends [never]
-	? {}
-	: { [K in keyof VarsOf<TConfig>]?: string | number }
-
+// helpers
 type DistributiveOmit<Type, Keys extends keyof any> = Type extends any
 	? Omit<Type, Keys>
 	: never
 
-// --- Prop and Component Type Computations ---
+type SafeKeyOf<T> = T extends never ? never : keyof T
 
-// 1. Combine BaseProps with Variant and Var props, omitting collisions
-// This definition remains the same, as it's generic on `Props`.
+/**
+ * The final props for the component, merging base props with inferred variant/var props.
+ */
 export type StyledOutProps<
-	Props, // The *original* props
-	TConfig extends StyledConfig,
+	Props,
+	Variants extends VariantsSchema,
+	Variables extends VariablesSchema,
+	DefaultVariants extends DefaultVariantsSchema<Variants>,
 > = DistributiveOmit<
 	Props,
-	keyof GetVariantProps<TConfig> | keyof GetVarProps<TConfig>
+	SafeKeyOf<VariantProps<Variants, never>> | SafeKeyOf<VariableProps<Variables>>
 > &
-	GetVariantProps<TConfig> &
-	GetVarProps<TConfig>
+	([Variants] extends [never]
+		? unknown
+		: VariantProps<Variants, DefaultVariants>) &
+	([Variables] extends [never] ? unknown : VariableProps<Variables>)
 
-// 2. Define the *output* component type (Simple `restyle` version)
-// This is a simple function type, generic on the final props.
 export type StyledComponent<Props> = (
-	props: Props & {
-		className?: string // Ensure className is always available
-	},
+	props: Props & { className?: string },
 ) => JSX.Element
 
-// 3. Helper type for FunctionComponent (from `restyle` example)
-// This allows us to type the `Component` argument correctly.
 export type FunctionComponent<Props> = (
 	props: Props,
 ) => ReactNode | Promise<ReactNode>

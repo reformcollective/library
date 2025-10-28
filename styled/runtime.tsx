@@ -1,3 +1,5 @@
+import { cva } from "class-variance-authority"
+
 type ClassName = string | undefined | null
 
 function cx(...classes: ClassName[]) {
@@ -6,64 +8,34 @@ function cx(...classes: ClassName[]) {
 
 export type RuntimeArgs = {
 	tag: string
-	baseClass: string
-	variantDefs?: Array<{
-		name: string
-		options: Record<string, string>
-		defaultValue?: string | boolean
-	}>
-	compoundChecks?: Array<{
-		className: string
-		checks: Array<[string, string | boolean]>
-	}>
+	cvaBase: string | string[]
+	cvaOptions?: Record<string, unknown>
 	varDefs?: Array<{
 		propName: string
 		cssVarName: string
 		unit?: string
 	}>
-	blockedKeys?: string[]
 }
 
 export function runtimeStyled({
 	tag,
-	baseClass,
-	variantDefs,
-	compoundChecks,
+	cvaBase,
+	cvaOptions,
 	varDefs,
-	blockedKeys,
 }: RuntimeArgs) {
-	const blockedSet = new Set<string>([...(blockedKeys ?? []), "as"])
+	const resolve = cva(cvaBase as any, cvaOptions as any)
+
+	// compute blocked keys set once
+	const variantKeys = Object.keys(
+		((cvaOptions as any)?.variants ?? {}) as Record<string, unknown>,
+	)
+	const varKeys = (varDefs ?? []).map((d) => d.propName)
+	const blockedSet = new Set<string>([...variantKeys, ...varKeys, "as"])
+
 	const Component = function StyledRuntime(
 		props: Record<string, unknown> = {},
 	) {
-		const { className, style, children, ...rest } = props
-
-		// compute variant classes from props, falling back to defaults
-		const variantClasses: string[] = []
-		const variantValues: Record<string, string | boolean | undefined> = {}
-		for (const def of variantDefs ?? []) {
-			const value = (props as any)[def.name]
-			const effective = value === undefined ? def.defaultValue : value
-			variantValues[def.name] = effective as any
-			if (effective !== undefined) {
-				const key = String(effective)
-				const cls = def.options[key]
-				if (cls) variantClasses.push(cls)
-			}
-		}
-
-		// compute compound variant classes when all conditions match active variant values
-		const compoundClasses: string[] = []
-		for (const entry of compoundChecks ?? []) {
-			let matches = true
-			for (const [name, expected] of entry.checks ?? []) {
-				if (variantValues[name] !== expected) {
-					matches = false
-					break
-				}
-			}
-			if (matches && entry.className) compoundClasses.push(entry.className)
-		}
+		const { className, style, children, ...rest } = props as any
 
 		// compute css variable inline styles from props using pre-normalized var defs
 		const varStyle: Record<string, string> = {}
@@ -81,14 +53,10 @@ export function runtimeStyled({
 		}
 
 		const Render: any = (props as any).as ?? tag
+		const resolved = resolve(props as any)
 		return (
 			<Render
-				className={cx(
-					baseClass,
-					...variantClasses,
-					...compoundClasses,
-					className as any,
-				)}
+				className={cx(resolved, className as any)}
 				style={{ ...(style as any), ...varStyle }}
 				{...domProps}
 			>
