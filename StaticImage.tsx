@@ -32,6 +32,7 @@ export type StaticImageProps = DefaultImageProps & {
 	objectPosition?: string
 	loading?: LoadingType
 	sizes?: string
+	quality?: number
 	priority?: boolean
 	placeholder?: PlaceholderValue
 } & (
@@ -54,6 +55,7 @@ export default function StaticImage({
 	objectPosition,
 	loading,
 	sizes = "100vw",
+	quality = 90,
 	placeholder = "blur",
 	...otherProps
 }: StaticImageProps) {
@@ -89,6 +91,7 @@ export default function StaticImage({
 			placeholder={isSVG ? undefined : placeholder}
 			{...props}
 			src={src}
+			quality={quality}
 			sizes={sizes}
 			aspectRatio={
 				props.width && props.height
