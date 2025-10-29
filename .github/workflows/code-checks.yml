@@ -81,6 +81,17 @@ jobs:
           # Convert to ndjson
           jq -c '.[]' sanity-all.json > sanity-all.ndjson
 
+          # Ensure file buffers are flushed
+          sync
+
+          # Debug: Inspect NDJSON output inside the runner
+          echo "--- sanity-all.ndjson head ---"
+          head -n 3 sanity-all.ndjson
+          echo "--- sanity-all.ndjson tail ---"
+          tail -n 3 sanity-all.ndjson
+          echo "--- sanity-all.ndjson line count ---"
+          wc -l sanity-all.ndjson
+
           # Validate published documents
           pnpm exec sanity documents validate -y --file sanity-all.ndjson
       # running a build will also check types
