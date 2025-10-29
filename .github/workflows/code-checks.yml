@@ -9,10 +9,7 @@ on:
       isSanity:
         required: true
         type: boolean
-      fetch-lfs:
-        required: false
-        type: boolean
-        default: false
+      
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -29,18 +26,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          # optional: enable Git LFS for repositories that store large binaries in LFS
-          # input for call is fetch-lfs: true
-          lfs: ${{ inputs.fetch-lfs }}
+          lfs: true
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           run_install: false
-      - name: Ensure Git LFS objects are present (optional)
-        if: ${{ inputs.fetch-lfs == true }}
+      - name: Ensure Git LFS objects are present
         run: |
           git lfs install --local
-          # Attempt to pull LFS objects for the current ref; tolerant to failures
           git lfs pull || true
       - name: Install dependencies
         run: pnpm install || echo 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
@@ -68,7 +62,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          lfs: ${{ inputs.fetch-lfs }}
+          lfs: true
+          fetch-depth: 0
       - uses: useblacksmith/cache@v5
         with:
           path: |
