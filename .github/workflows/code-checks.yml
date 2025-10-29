@@ -76,7 +76,7 @@ jobs:
           rm -f sanity-all.json && rm -f sanity-all.ndjson
 
           # Query published documents
-          pnpm exec sanity documents query '*[!(_id in path("drafts.**"))]' --api-version='v2022-06-01' >> sanity-all.json
+          pnpm exec sanity documents query '*[!(_id in path("drafts.**"))]' --api-version='v2022-06-01' > sanity-all.json
 
           # Convert to ndjson
           cat sanity-all.json | jq -c '.[]' > sanity-all.ndjson
