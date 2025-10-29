@@ -13,7 +13,7 @@ import {
 } from "react"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { createDebouncedEventListener } from "./ScreenContext"
-import { css, fresponsive, styled } from "./styled/legacy"
+import { css, fresponsive, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
 import { useCombinedRefs } from "./useCombinedRefs"
 

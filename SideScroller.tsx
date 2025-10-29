@@ -4,7 +4,7 @@ import { usePinType } from "library/Scroll"
 import { useAnimation } from "library/useAnimation"
 import { useEffect, useState } from "react"
 
-import { css, styled, unresponsive } from "./styled/legacy"
+import { css, styled, unresponsive } from "./styled"
 import { getVH } from "./viewportUtils"
 
 interface SideScrollerProps {

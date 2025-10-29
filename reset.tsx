@@ -1,4 +1,4 @@
-import { css, GlobalStyles, unresponsive } from "./styled/legacy"
+import { css, GlobalStyles, unresponsive } from "./styled"
 
 const reset = unresponsive(css`
 	/* stylelint-disable */

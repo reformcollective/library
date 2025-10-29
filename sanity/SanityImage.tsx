@@ -1,7 +1,7 @@
 "use client"
 
 import type { AssetMeta } from "library/sanity/assetMetadata"
-import { styled } from "library/styled/legacy"
+import { styled } from "library/styled"
 import { stegaClean } from "next-sanity"
 import { use } from "react"
 import { SanityImage } from "sanity-image"

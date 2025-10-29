@@ -1,5 +1,5 @@
 import type libraryConfig from "libraryConfig"
-import { attrs, styled } from "library/styled/legacy"
+import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
 import type {
 	AutocompleteString,

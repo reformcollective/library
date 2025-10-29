@@ -3,7 +3,7 @@
 import MuxVideo from "@mux/mux-video-react"
 import { browserData } from "library/deviceDetection"
 import { ScreenContext } from "library/ScreenContext"
-import { css, f, styled } from "library/styled/legacy"
+import { css, f, styled } from "library/styled"
 import { use, useEffect, useRef, useState } from "react"
 
 export function CarouselBackgroundVideo({

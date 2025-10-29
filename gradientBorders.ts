@@ -1,4 +1,4 @@
-import { css } from "./styled/legacy"
+import { css } from "./styled"
 
 /**
  * generates CSS for a gradient border with a transparent background
