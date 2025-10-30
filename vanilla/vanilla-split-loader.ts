@@ -37,7 +37,7 @@ const DEFAULT_MODULES: ModulesConfig = {
 		"globalKeyframes",
 		"globalLayer",
 	],
-	"library/styled": ["styled"],
+	"library/styled/alpha": ["styled"],
 }
 
 // Only split styled(Component, ...) for this specific callee
@@ -249,6 +249,7 @@ const runVePluginOnTempFile = async (
 
 						return reject(new Error(message))
 					}
+					console.error(err)
 					console.warn(
 						"Encountered an error processing styles. The error message may or may not be helpful, talk to Robbie if you're stuck.",
 					)

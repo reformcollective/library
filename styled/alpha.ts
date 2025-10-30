@@ -12,6 +12,7 @@ import type {
 	VariablesSchema,
 	VariantsSchema,
 } from "./types"
+export * from "./vanilla.css"
 
 // using a union for the type of Component will cause
 // generic forwarding to fail, so we have overloads for each type
@@ -81,13 +82,6 @@ export function styled<
 ): unknown {
 	if (typeof target === "string")
 		return styledCore(target, config as StyledInput)
-	// component target: build a base with a default tag and wrap with runtime `as`
-	const Base = styledCore("div", config as StyledInput)
-	const Wrapper = (props: Record<string, unknown> = {}) =>
-		createElement(Base, {
-			...props,
-			// @ts-expect-error technically invalid but will be intercepted during bundling
-			as: target,
-		})
-	return Wrapper
+	// this will be intercepted by the vanilla split loader
+	return styledCore("div", config as StyledInput)
 }

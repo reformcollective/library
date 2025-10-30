@@ -73,10 +73,14 @@ export function runtimeStyled({
 		}
 
 		const Render = props.as ?? tag
+		// @ts-expect-error
 		const resolved = resolve(props)
 		return (
+			// @ts-expect-error
 			<Render
+				// @ts-expect-error
 				className={cx(resolved, className)}
+				// @ts-expect-error
 				style={{ ...style, ...varStyle }}
 				{...domProps}
 			>
