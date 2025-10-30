@@ -457,6 +457,7 @@ const splitDeclarations = (
 /**
  * Builds the source code for the virtual .css.ts module by combining imports,
  * moved declarations, and moved expressions.
+ * Only includes imports that are actually used in the moved code.
  */
 const buildVirtualModuleSource = (
 	sourceFile: ts.SourceFile,
@@ -470,8 +471,49 @@ const buildVirtualModuleSource = (
 ): string => {
 	const parts: string[] = []
 
+	// collect all text from moved code to check which imports are used
+	const movedCodeText =
+		movedDecls.map((md) => md.initializerText).join(" ") +
+		" " +
+		movedExprs.join(" ")
+
+	// only include imports that are referenced in the moved code
 	for (const i of imports) {
-		parts.push(i.getText(sourceFile))
+		const importText = i.getText(sourceFile)
+		const importClause = i.importClause
+		if (!importClause) {
+			// side-effect import, include it
+			parts.push(importText)
+			continue
+		}
+
+		// check if any imported names are used in moved code
+		let isUsed = false
+
+		if (importClause.name) {
+			// default import
+			if (movedCodeText.includes(importClause.name.text)) {
+				isUsed = true
+			}
+		}
+
+		if (
+			importClause.namedBindings &&
+			ts.isNamedImports(importClause.namedBindings)
+		) {
+			// named imports
+			for (const el of importClause.namedBindings.elements) {
+				const localName = el.name.text
+				if (movedCodeText.includes(localName)) {
+					isUsed = true
+					break
+				}
+			}
+		}
+
+		if (isUsed) {
+			parts.push(importText)
+		}
 	}
 
 	for (const md of movedDecls) {
