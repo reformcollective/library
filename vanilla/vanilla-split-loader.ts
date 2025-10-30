@@ -135,7 +135,9 @@ const rewriteImportsToBaseUrl = (
 		const absolutePath = path.resolve(originalDir, spec).replace(/\\/g, "/")
 
 		// convert to relative from baseUrl
-		let relativeToBase = path.relative(baseUrl, absolutePath).replace(/\\/g, "/")
+		const relativeToBase = path
+			.relative(baseUrl, absolutePath)
+			.replace(/\\/g, "/")
 
 		// ensure it doesn't start with ../
 		if (relativeToBase.startsWith("../")) {
@@ -384,13 +386,23 @@ const splitDeclarations = (
 				calleeImported === SPLIT_STYLED_IMPORT
 
 			if (isStyledFromLib) {
-				const result = handleStyledComponent(decl, call, sourceFile, isConstList)
-				if (result.shouldMove) {
-					movedNames.push(result.movedName!)
+				const result = handleStyledComponent(
+					decl,
+					call,
+					sourceFile,
+					isConstList,
+				)
+				if (
+					result.shouldMove &&
+					result.movedName &&
+					result.movedInitializer &&
+					result.kind
+				) {
+					movedNames.push(result.movedName)
 					movedDecls.push({
-						name: result.movedName!,
-						initializerText: result.movedInitializer!,
-						kind: result.kind!,
+						name: result.movedName,
+						initializerText: result.movedInitializer,
+						kind: result.kind,
 					})
 					if (result.newDecl) {
 						keptDecls.push(result.newDecl)
@@ -572,8 +584,7 @@ const runVePluginOnTempFile = async (
 				resolve(captured)
 			},
 			getOptions: () => ({
-				identifiers:
-					process.env.NODE_ENV === "production" ? "short" : "debug",
+				identifiers: process.env.NODE_ENV === "production" ? "short" : "debug",
 				outputCss: null,
 				nextEnv: loaderOptions?.nextEnv ?? null,
 			}),
@@ -613,8 +624,7 @@ const handleVanillaExtractError = (
 			stack.match(/\(([^)]+\.(?:ts|tsx))\)/) ||
 			stack.match(/at\s+.*?\s+\(([^)]+\.(?:ts|tsx))\)/) ||
 			stack.match(/\s(\/[^\s]+\.(?:ts|tsx))/)
-		const offender =
-			offenderMatch?.[1] ?? "Unable to determine offending file!"
+		const offender = offenderMatch?.[1] ?? "Unable to determine offending file!"
 		const offenderName = offender.split("/").pop() ?? offender
 
 		const message = [
@@ -692,7 +702,13 @@ const transform = async (
 	)
 
 	// 5) write temp file and run vanilla-extract plugin
-	const tmpDir = path.join(rootContext, ".next", "cache", "vanilla-split", "tmp")
+	const tmpDir = path.join(
+		rootContext,
+		".next",
+		"cache",
+		"vanilla-split",
+		"tmp",
+	)
 	fs.mkdirSync(tmpDir, { recursive: true })
 
 	// use relative path from rootContext for better class name prefixes

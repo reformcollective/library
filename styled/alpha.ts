@@ -1,5 +1,4 @@
-import type { ComponentProps, JSX } from "react"
-import { type ComponentClass } from "react"
+import type { ComponentClass, ComponentProps, JSX } from "react"
 import { styledCore } from "./core"
 import type {
 	DefaultVariantsSchema,
