@@ -110,6 +110,7 @@ export default function SanityUniversalImage(
 }
 
 const DefaultSanityImage = styled(
+	// @ts-ignore in some projects, this fails. on others, it works.
 	SanityImage,
 	defaultImageStyles,
 ) as unknown as typeof SanityImage
