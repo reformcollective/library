@@ -1,7 +1,6 @@
 import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
-import { deserializeCss } from "@vanilla-extract/integration"
 import turboLoaderRAW from "@vanilla-extract/turbopack-plugin"
 import ts from "typescript"
 import type { LoaderContext } from "webpack"
@@ -195,8 +194,10 @@ const runVePluginOnTempFile = async (
 		const originalDir = path.dirname(originalFilePath)
 
 		const getResolveWrapped = (options?: unknown) => {
-			// biome-ignore lint/suspicious/noExplicitAny: webpack moment
-			const realGetResolve = originalThis.getResolve?.(options as any)
+			const realGetResolve = originalThis.getResolve?.(
+				// @ts-expect-error webpack moment
+				options,
+			)
 			if (!realGetResolve) return undefined
 			return (
 				_context: string,
@@ -270,26 +271,17 @@ const runVePluginOnTempFile = async (
 			resourceQuery: "",
 		}
 
-		// biome-ignore lint/suspicious/noExplicitAny: webpack moment
-		Promise.resolve(turboLoader.call(modifiedThis as any))
+		Promise.resolve(
+			turboLoader.call(
+				// @ts-expect-error webpack moment
+				modifiedThis,
+			),
+		)
 			.then(() => {
 				if (captured === undefined) resolve("")
 			})
 			.catch(reject)
 	})
-}
-
-const rewriteCssImportToOriginalDir = (
-	code: string,
-	rootContext: string,
-	originalDir: string,
-): string => {
-	const placeholder = path.join(rootContext, ".next", "vanilla.virtual.css")
-	let rel = path.relative(originalDir, placeholder).replace(/\\/g, "/")
-	if (!rel.startsWith(".")) rel = `./${rel}`
-	const re =
-		/import\s+['"]([^'"]*vanilla\.virtual\.css)\?ve-source=([^'"]+)['"];?/gm
-	return code.replace(re, (_m, _p1, p2) => `import '${rel}?ve-source=${p2}';`)
 }
 
 const transform = async (

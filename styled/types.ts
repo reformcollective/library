@@ -1,9 +1,13 @@
-import type { createVar, StyleRule as PlainRule } from "@vanilla-extract/css"
+import type {
+	createVar,
+	GlobalStyleRule,
+	StyleRule as PlainRule,
+} from "@vanilla-extract/css"
 import type { JSX, ReactNode } from "react"
 
-type PlainStyleRules = PlainRule | string | PlainStyleRules[]
-type WithinBlock = Record<string, PlainStyleRules>
-type WithinRule = PlainRule & { within?: WithinBlock }
+type GlobalStyleRules = GlobalStyleRule | GlobalStyleRules[]
+export type WithinBlock = Record<string, GlobalStyleRules>
+export type WithinRule = PlainRule & { within?: WithinBlock }
 
 export type StyleRules = WithinRule | string | StyleRules[]
 type CompoundVariant<Props> = Props & {
@@ -17,7 +21,6 @@ type VariableOptions =
 	  }
 	| ReturnType<typeof createVar>
 type StringToBoolean<T> = T extends "true" | "false" ? boolean : T
-type BooleanToString<T> = T extends boolean ? "true" | "false" : T
 
 // schemas to extend for type safety
 export type VariantsSchema = Record<string, Record<string, StyleRules>>
@@ -58,27 +61,26 @@ export type GenericConfig<
 	Variants extends VariantsSchema,
 	Variables extends VariablesSchema,
 	DefaultVariants extends DefaultVariantsSchema<Variants>,
-> =
-	| {
-			/** The base style rule applied to the component. */
-			base?: StyleRules
-			/** Component-specific selectors, e.g., { '&:hover': { ... } } */
-			within?: WithinBlock
-			/** Variant definitions. */
-			variants?: Variants
-			/** Default values for variants. */
-			defaultVariants?: DefaultVariants
+> = {
+	/** The base style rule applied to the component. */
+	base?: StyleRules
+	/** Component-specific selectors, e.g., { '&:hover': { ... } } */
+	within?: WithinBlock
+	/** Variant definitions. */
+	variants?: Variants
+	/** Default values for variants. */
+	defaultVariants?: DefaultVariants
 
-			/** CSS variable definitions. */
-			variables?: Variables
-			/** Rules for applying styles when multiple variants are active. */
-			compoundVariants?: NoInfer<
-				Array<CompoundVariant<VariantProps<Variants, DefaultVariants>>>
-			>
-	  }
-	| StyleRules
+	/** CSS variable definitions. */
+	variables?: Variables
+	/** Rules for applying styles when multiple variants are active. */
+	compoundVariants?: NoInfer<
+		Array<CompoundVariant<VariantProps<Variants, DefaultVariants>>>
+	>
+}
 
 // helpers
+// biome-ignore lint/suspicious/noExplicitAny: necessary for distributive omit
 type DistributiveOmit<Type, Keys extends keyof any> = Type extends any
 	? Omit<Type, Keys>
 	: never
@@ -109,3 +111,19 @@ export type StyledComponent<Props> = (
 export type FunctionComponent<Props> = (
 	props: Props,
 ) => ReactNode | Promise<ReactNode>
+
+/**
+ * Internal type for styled options object.
+ * Used internally by core.ts to distinguish styled config objects from plain style rules.
+ */
+export type StyledOptions = GenericConfig<
+	VariantsSchema,
+	VariablesSchema,
+	DefaultVariantsSchema<VariantsSchema>
+>
+
+/**
+ * Internal type for styled config input.
+ * Can be a plain style rule, array of style rules, or a styled options object.
+ */
+export type StyledInput = StyledOptions | StyleRules

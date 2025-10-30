@@ -87,11 +87,11 @@ test("style props are allowed to override the component type", () => {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
 
-	const App = () => <Component className="abc" color="red" />
+	const _App = () => <Component className="abc" color="red" />
 })
 
 test("extra properties are not allowed", () => {
-	const Component = ({ className }: { className: string }) => (
+	const Component = (_props: { className: string }) => (
 		<div className={className} />
 	)
 	const Extended = styled(Component, { color: "red" })
@@ -99,14 +99,14 @@ test("extra properties are not allowed", () => {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
 
-	const basicTest = (
+	const _basicTest = (
 		<Extended
 			className="abc"
 			// @ts-expect-error name does not exist on type
 			name="abc"
 		/>
 	)
-	const propsTest = (
+	const _propsTest = (
 		<ExtendedWithProps
 			className="abc"
 			// @ts-expect-error name does not exist on type
@@ -120,14 +120,14 @@ test("extra properties are not allowed", () => {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
 
-	const basicTest2 = (
+	const _basicTest2 = (
 		<Extended2
 			className="abc"
 			// @ts-expect-error name does not exist on type
 			name="abc"
 		/>
 	)
-	const propsTest2 = (
+	const _propsTest2 = (
 		<ExtendedWithProps2
 			className="abc"
 			// @ts-expect-error name does not exist on type
@@ -146,14 +146,14 @@ declare module "react" {
 }
 
 test("component is required to have a className prop", () => {
-	const withClassName = (props: { className?: string }) => <div />
-	const withoutClassName = (props: { color: string }) => <div />
+	const withClassName = (_props: { className?: string }) => <div />
+	const withoutClassName = (_props: { color: string }) => <div />
 
 	// allowed
 	styled(withClassName, {})
 	styled("div", {})
 
-	const test = (
+	const _test = (
 		<>
 			<disallowed color="red" />
 		</>
@@ -167,12 +167,7 @@ test("component is required to have a className prop", () => {
 })
 
 test("generic types are preserved without style props", () => {
-	const Component = <SomeText extends string>({
-		id,
-		one,
-		two,
-		className,
-	}: {
+	const Component = <SomeText extends string>(_props: {
 		id: `id-${SomeText}`
 		one: NoInfer<SomeText>
 		two: NoInfer<SomeText>
@@ -180,7 +175,7 @@ test("generic types are preserved without style props", () => {
 	}) => <></>
 	const Extended = styled(Component, {})
 
-	const test = (
+	const _test = (
 		<>
 			<Component<"abc"> id="id-abc" one="abc" two="abc" />
 			<Extended<"abc"> id="id-abc" one="abc" two="abc" />
@@ -201,12 +196,7 @@ test("generic types are preserved without style props", () => {
 })
 
 test("generic types are preserved with style props", () => {
-	const Component = <SomeText extends string>({
-		id,
-		one,
-		two,
-		className,
-	}: {
+	const Component = <SomeText extends string>(_props: {
 		id: `id-${SomeText}`
 		one: NoInfer<SomeText>
 		two: NoInfer<SomeText>
@@ -216,7 +206,7 @@ test("generic types are preserved with style props", () => {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
 
-	const test = (
+	const _test = (
 		<>
 			<Component<"abc"> id="id-abc" one="abc" two="abc" />
 			<Extended<"abc"> id="id-abc" one="abc" two="abc" color="red" />
@@ -238,12 +228,7 @@ test("generic types are preserved with style props", () => {
 })
 
 test("generic types are preserved even when partially overwritten by style props", () => {
-	const component = <SomeText extends string>({
-		id,
-		one,
-		two,
-		className,
-	}: {
+	const component = <SomeText extends string>(_props: {
 		id: `id-${SomeText}`
 		one?: NoInfer<SomeText>
 		two: NoInfer<SomeText>
@@ -268,12 +253,10 @@ test("generic types are preserved even when partially overwritten by style props
 })
 
 test("generic types with multiple generics are preserved", () => {
-	const Component = <SomeText extends string, AnotherText extends string>({
-		id,
-		one,
-		two,
-		className,
-	}: {
+	const Component = <
+		SomeText extends string,
+		AnotherText extends string,
+	>(_props: {
 		id: `id-${SomeText}-${AnotherText}`
 		one: NoInfer<SomeText>
 		two: NoInfer<AnotherText>
@@ -283,7 +266,7 @@ test("generic types with multiple generics are preserved", () => {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
 
-	const test = (
+	const _test = (
 		<>
 			<Component<"abc", "xyz"> id="id-abc-xyz" one="abc" two="xyz" />
 			<Extended<"abc", "xyz"> id="id-abc-xyz" one="abc" two="xyz" color="red" />
@@ -312,7 +295,7 @@ test("class components work", () => {
 	}
 	const Extended = styled(WithClass, { color: "red" })
 
-	const test = (
+	const _test = (
 		<>
 			<Component className="abc" />
 			<Extended className="abc" />
@@ -321,18 +304,18 @@ test("class components work", () => {
 })
 
 test("components that return non-element react nodes are allowed", () => {
-	const NullComponent = ({ className }: { className: string }) => null
-	const NullExtended = styled(NullComponent, { color: "red" })
-	const StringComponent = ({ className }: { className: string }) => "abc"
-	const StringExtended = styled(StringComponent, { color: "red" })
-	const NumberComponent = ({ className }: { className: string }) => 123
-	const NumberExtended = styled(NumberComponent, { color: "red" })
+	const NullComponent = (_props: { className: string }) => null
+	const _NullExtended = styled(NullComponent, { color: "red" })
+	const StringComponent = (_props: { className: string }) => "abc"
+	const _StringExtended = styled(StringComponent, { color: "red" })
+	const NumberComponent = (_props: { className: string }) => 123
+	const _NumberExtended = styled(NumberComponent, { color: "red" })
 })
 
 test("async components are allowed", () => {
 	const Component: (props: { className?: string }) => Promise<React.ReactNode> =
 		() => Promise.resolve(null)
-	const Extended = styled(Component, { color: "red" })
+	const _Extended = styled(Component, { color: "red" })
 })
 
 test("unions are not broken", () => {
@@ -356,7 +339,7 @@ test("unions are not broken", () => {
 		},
 	})
 
-	const test = (
+	const _test = (
 		<>
 			<Test href="test" />
 			<Test type="button" onClick={() => {}} />

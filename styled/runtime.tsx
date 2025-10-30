@@ -1,15 +1,34 @@
-import { cva } from "class-variance-authority"
+import { cva, cx } from "class-variance-authority"
 
-type ClassName = string | undefined | null
+// These types are imported from your "./types"
+export type ClassValue =
+	| ClassArray
+	| ClassDictionary
+	| string
+	| number
+	| bigint
+	| null
+	| boolean
+	| undefined
+export type ClassDictionary = Record<string, unknown>
+export type ClassArray = ClassValue[]
 
-function cx(...classes: ClassName[]) {
-	return classes.filter(Boolean).join(" ")
+type ConfigSchema = Record<string, Record<string, ClassValue>>
+type AnyConfigVariants = Record<string, string | boolean | null | undefined>
+
+/**
+ * The final non-generic Config type.
+ */
+export type CvaConfig = {
+	variants?: ConfigSchema
+	defaultVariants?: AnyConfigVariants
+	compoundVariants?: Record<string, unknown>[]
 }
 
 export type RuntimeArgs = {
 	tag: string
-	cvaBase: string | string[]
-	cvaOptions?: Record<string, unknown>
+	cvaBase: string
+	cvaOptions?: CvaConfig
 	varDefs?: Array<{
 		propName: string
 		cssVarName: string
@@ -23,11 +42,12 @@ export function runtimeStyled({
 	cvaOptions,
 	varDefs,
 }: RuntimeArgs) {
-	const resolve = cva(cvaBase as any, cvaOptions as any)
+	// @ts-expect-error generated value won't match for cva
+	const resolve = cva(cvaBase, cvaOptions)
 
 	// compute blocked keys set once
 	const variantKeys = Object.keys(
-		((cvaOptions as any)?.variants ?? {}) as Record<string, unknown>,
+		(cvaOptions?.variants ?? {}) as Record<string, unknown>,
 	)
 	const varKeys = (varDefs ?? []).map((d) => d.propName)
 	const blockedSet = new Set<string>([...variantKeys, ...varKeys, "as"])
@@ -35,12 +55,12 @@ export function runtimeStyled({
 	const Component = function StyledRuntime(
 		props: Record<string, unknown> = {},
 	) {
-		const { className, style, children, ...rest } = props as any
+		const { className, style, children, ...rest } = props
 
 		// compute css variable inline styles from props using pre-normalized var defs
 		const varStyle: Record<string, string> = {}
 		for (const def of varDefs ?? []) {
-			const raw = (props as any)[def.propName]
+			const raw = props[def.propName]
 			if (raw === undefined || raw === null) continue
 			varStyle[def.cssVarName] =
 				typeof raw === "number" && def.unit ? `${raw}${def.unit}` : String(raw)
@@ -52,12 +72,12 @@ export function runtimeStyled({
 			if (!blockedSet.has(key)) domProps[key] = value
 		}
 
-		const Render: any = (props as any).as ?? tag
-		const resolved = resolve(props as any)
+		const Render = props.as ?? tag
+		const resolved = resolve(props)
 		return (
 			<Render
-				className={cx(resolved, className as any)}
-				style={{ ...(style as any), ...varStyle }}
+				className={cx(resolved, className)}
+				style={{ ...style, ...varStyle }}
 				{...domProps}
 			>
 				{children}

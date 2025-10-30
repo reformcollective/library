@@ -36,6 +36,7 @@ export const urlForImage = (source: URLForImageType) => {
 		return undefined
 	}
 
+	// biome-ignore lint/suspicious/noFocusedTests: false positive
 	return imageBuilder?.image(source).auto("format").fit("max")
 }
 
@@ -45,6 +46,7 @@ export function resolveOpenGraphImage(
 	height = 627,
 ) {
 	if (!image) return
+	// biome-ignore lint/suspicious/noFocusedTests: false positive
 	const url = urlForImage(image)?.width(1200).height(627).fit("crop").url()
 	if (!url) return
 	return { url, alt: "og image", width, height }

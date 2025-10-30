@@ -284,7 +284,6 @@ export function InfiniteSideScroll({
 		<Wrapper className={className}>
 			<Row ref={rowRef} className="track">
 				{Array.from({ length: numberNeeded }, (_, index) => (
-					// biome-ignore lint/suspicious/noArrayIndexKey: only unique identifier is index
 					<Fragment key={index}>{children}</Fragment>
 				))}
 			</Row>

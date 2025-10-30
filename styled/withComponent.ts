@@ -1,9 +1,8 @@
 import { type ComponentType, createElement } from "react"
 
 export function withComponent<BaseProps extends Record<string, unknown>>(
-	Target: ComponentType<any>,
+	Target: ComponentType<unknown>,
 	Base: ComponentType<BaseProps>,
 ) {
-	return (props: BaseProps) =>
-		createElement(Base as any, { ...props, as: Target })
+	return (props: BaseProps) => createElement(Base, { ...props, as: Target })
 }

@@ -110,7 +110,7 @@ export default function SanityUniversalImage(
 }
 
 const DefaultSanityImage = styled(
-	// @ts-ignore in some projects, this fails. on others, it works.
-	SanityImage,
+	// biome-ignore lint/suspicious/noExplicitAny: some projects, this fails. in others, it doesn't
+	SanityImage as any,
 	defaultImageStyles,
 ) as unknown as typeof SanityImage

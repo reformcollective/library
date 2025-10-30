@@ -44,10 +44,10 @@ test("variants with defaults are optional; without defaults are required", () =>
 	})
 
 	// should compile: defaults make these props optional
-	const ok1 = <StyledButton>Default</StyledButton>
-	const ok2 = <StyledButton color="secondary">Secondary</StyledButton>
-	const ok3 = <StyledButton size="large">Large</StyledButton>
-	const ok4 = (
+	const _ok1 = <StyledButton>Default</StyledButton>
+	const _ok2 = <StyledButton color="secondary">Secondary</StyledButton>
+	const _ok3 = <StyledButton size="large">Large</StyledButton>
+	const _ok4 = (
 		<StyledButton color="secondary" size="large">
 			Both
 		</StyledButton>
@@ -64,10 +64,10 @@ test("variants with defaults are optional; without defaults are required", () =>
 	} as const)
 
 	// @ts-expect-error: 'tone' required (no default)
-	const err1 = <NoDefault />
+	const _err1 = <NoDefault />
 
-	const ok5 = <NoDefault tone="brand" />
-	const ok6 = <NoDefault tone="neutral" />
+	const _ok5 = <NoDefault tone="brand" />
+	const _ok6 = <NoDefault tone="neutral" />
 
 	// type-level assertions
 	type SBProps = ComponentProps<typeof StyledButton>
@@ -94,8 +94,8 @@ test("default prop types are preserved", () => {
 		defaultVariants: { color: "primary" },
 	} as const)
 
-	const ok1 = <Button onClick={() => {}}>Default</Button>
-	const ok2 = (
+	const _ok1 = <Button onClick={() => {}}>Default</Button>
+	const _ok2 = (
 		<Button color="secondary" onClick={() => {}}>
 			Secondary
 		</Button>
@@ -113,9 +113,9 @@ test("boolean variants are typed as boolean; optional when default exists", () =
 		defaultVariants: { active: false },
 	} as const)
 
-	const ok1 = <Advanced>inactive by default</Advanced>
-	const ok2 = <Advanced active>active</Advanced>
-	const ok3 = <Advanced active={false}>inactive</Advanced>
+	const _ok1 = <Advanced>inactive by default</Advanced>
+	const _ok2 = <Advanced active>active</Advanced>
+	const _ok3 = <Advanced active={false}>inactive</Advanced>
 
 	type P = ComponentProps<typeof Advanced>
 	expectTypeOf<P["active"]>().toEqualTypeOf<boolean | undefined>()
@@ -130,10 +130,10 @@ test("boolean variants are typed as boolean; optional when default exists", () =
 	} as const)
 
 	// @ts-expect-error: missing required boolean variant 'on'
-	const err1 = <RequiredBool />
+	const _err1 = <RequiredBool />
 
-	const ok4 = <RequiredBool on />
-	const ok5 = <RequiredBool on={false} />
+	const _ok4 = <RequiredBool on />
+	const _ok5 = <RequiredBool on={false} />
 
 	type RP = ComponentProps<typeof RequiredBool>
 	expectTypeOf<RP["on"]>().toEqualTypeOf<boolean>()
@@ -150,9 +150,9 @@ test("vars yield string | number props; units permit numeric values", () => {
 		},
 	} as const)
 
-	const ok1 = <Box height={100} width="50%" />
-	const ok2 = <Box height={200} width={300} />
-	const ok3 = <Box height={"120px"} width={120} />
+	const _ok1 = <Box height={100} width="50%" />
+	const _ok2 = <Box height={200} width={300} />
+	const _ok3 = <Box height={"120px"} width={120} />
 
 	type BP = ComponentProps<typeof Box>
 	expectTypeOf<BP["height"]>().toEqualTypeOf<string | number | undefined>()
@@ -164,8 +164,8 @@ test("vars yield string | number props; units permit numeric values", () => {
 test("no `as` prop in the type surface", () => {
 	const Div = styled("div", { base: [{ padding: "4px" }] } as const)
 	// @ts-expect-error: as is not part of the typed API
-	const err = <Div as="a" />
-	const ok = <Div />
+	const _err = <Div as="a" />
+	const _ok = <Div />
 })
 
 // ---------- union targets preserved ----------
@@ -188,8 +188,8 @@ test("union component targets are preserved after styling", () => {
 		base: [{ display: "inline-flex" }],
 	} as const)
 
-	const ok1 = <StyledLink href="test" />
-	const ok2 = <StyledLink type="button" onClick={() => {}} />
+	const _ok1 = <StyledLink href="test" />
+	const _ok2 = <StyledLink type="button" onClick={() => {}} />
 })
 
 // ---------- class components work ----------
@@ -202,19 +202,19 @@ test("class components work as targets (need className?)", () => {
 	}
 	const Extended = styled(WithClass, { base: [{ color: "red" }] } as const)
 
-	const ok = <Extended className="abc" />
+	const _ok = <Extended className="abc" />
 })
 
 // ---------- negative: forbid resolver-only features today ----------
 
 test("function-style resolver config is not accepted today (guarded for now)", () => {
-	const C = (p: { className?: string }) => <div />
+	const C = (_p: { className?: string }) => <div />
 	// @ts-expect-error function-form config not supported by current API
-	const Bad = styled(C, (styleProps: { color: string }) => ({
+	const _Bad = styled(C, (styleProps: { color: string }) => ({
 		color: styleProps.color,
 	}))
 	// @ts-expect-error function-form config not supported by current API
-	const Bad2 = styled("div", (styleProps: { color: string }) => ({
+	const _Bad2 = styled("div", (styleProps: { color: string }) => ({
 		color: styleProps.color,
 	}))
 })
@@ -231,9 +231,9 @@ test("mixed: some variants optional (defaulted), others required", () => {
 	} as const)
 
 	// @ts-expect-error: 'tone' required
-	const e1 = <Mixed />
-	const ok1 = <Mixed tone="brand" />
-	const ok2 = <Mixed tone="neutral" size="large" />
+	const _e1 = <Mixed />
+	const _ok1 = <Mixed tone="brand" />
+	const _ok2 = <Mixed tone="neutral" size="large" />
 })
 
 // ---------- variant/native prop collision ----------
@@ -246,36 +246,31 @@ test("variant keys shadow native props of the same name", () => {
 		defaultVariants: { size: "small" },
 	} as const)
 
-	const ok1 = <Btn size="large" />
+	const _ok1 = <Btn size="large" />
 	// @ts-expect-error: native numeric size is not allowed; variant union required
-	const e1 = <Btn size={3} />
+	const _e1 = <Btn size={3} />
 })
 
 // ---------- component targets must accept className ----------
 
 test("component targets must accept className", () => {
-	const NoClass = (p: { id: string }) => <div />
+	const NoClass = (_p: { id: string }) => <div />
 	styled("figure", { base: [{}] })
 	// @ts-expect-error component targets must accept className
-	const Bad = styled(NoClass, { base: [{}] } as const)
+	const _Bad = styled(NoClass, { base: [{}] } as const)
 })
 
 // ---------- DOM prop forwarding sanity ----------
 
 test("unrelated DOM props still forward", () => {
 	const Btn = styled("button", { base: [{}] } as const)
-	const ok = <Btn disabled aria-label="x" />
+	const _ok = <Btn disabled aria-label="x" />
 })
 
 // ---------- generics preservation with variants ----------
 
 test.fails("generic types are preserved with variants config", () => {
-	const Component = <SomeText extends string>({
-		id,
-		one,
-		two,
-		className,
-	}: {
+	const Component = <SomeText extends string>(_props: {
 		id: `id-${SomeText}`
 		one: NoInfer<SomeText>
 		two: NoInfer<SomeText>
@@ -290,7 +285,7 @@ test.fails("generic types are preserved with variants config", () => {
 		defaultVariants: { tone: "brand" },
 	} as const)
 
-	const ok = (
+	const _ok = (
 		<>
 			<Component<"abc"> id="id-abc" one="abc" two="abc" />
 			<Extended<"abc"> id="id-abc" one="abc" two="abc" />
@@ -302,12 +297,7 @@ test.fails("generic types are preserved with variants config", () => {
 // ---------- generics preservation with vars ----------
 
 test.fails("generic types are preserved with vars config", () => {
-	const Component = <SomeText extends string>({
-		id,
-		one,
-		two,
-		className,
-	}: {
+	const Component = <SomeText extends string>(_props: {
 		id: `id-${SomeText}`
 		one: NoInfer<SomeText>
 		two: NoInfer<SomeText>
@@ -319,7 +309,7 @@ test.fails("generic types are preserved with vars config", () => {
 		variables: { height: "var(--h)", width: { token: "var(--w)", unit: "px" } },
 	} as const)
 
-	const ok = (
+	const _ok = (
 		<>
 			<Component<"abc"> id="id-abc" one="abc" two="abc" />
 			<Extended<"abc"> id="id-abc" one="abc" two="abc" height={100} />
@@ -333,12 +323,10 @@ test.fails("generic types are preserved with vars config", () => {
 test.fails(
 	"generic types with multiple generics are preserved with variants",
 	() => {
-		const Component = <SomeText extends string, AnotherText extends string>({
-			id,
-			one,
-			two,
-			className,
-		}: {
+		const Component = <
+			SomeText extends string,
+			AnotherText extends string,
+		>(_props: {
 			id: `id-${SomeText}-${AnotherText}`
 			one: NoInfer<SomeText>
 			two: NoInfer<AnotherText>
@@ -351,7 +339,7 @@ test.fails(
 			defaultVariants: { size: "small" },
 		} as const)
 
-		const ok = (
+		const _ok = (
 			<>
 				<Component<"a", "b"> id="id-a-b" one="a" two="b" />
 				<Extended<"a", "b"> id="id-a-b" one="a" two="b" />
