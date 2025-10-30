@@ -13,7 +13,7 @@ test("basic component type is preserved", () => {
 	}) => <div className={className}>{name}</div>
 	const extended = styled(component, {})
 
-	expectTypeOf(extended).toMatchTypeOf<typeof component>()
+	expectTypeOf(extended).toExtend<typeof component>()
 })
 
 test("additional property types are added", () => {
@@ -28,7 +28,7 @@ test("additional property types are added", () => {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
 
-	expectTypeOf(extended).toMatchTypeOf<
+	expectTypeOf(extended).toExtend<
 		FC<{
 			className: string
 			name: string
@@ -55,7 +55,7 @@ test("style props are filtered from the component props", () => {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
 
-	expectTypeOf(extended).toMatchTypeOf<
+	expectTypeOf(extended).toExtend<
 		StyledComponent<{
 			className: string
 			color: number & "red"
@@ -66,7 +66,7 @@ test("style props are filtered from the component props", () => {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
 
-	expectTypeOf(extended2).toMatchTypeOf<
+	expectTypeOf(extended2).toExtend<
 		FC<{
 			color: "red"
 			disabled?: boolean

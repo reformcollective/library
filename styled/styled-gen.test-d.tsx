@@ -22,7 +22,7 @@ test("basic component type is preserved", () => {
 	}) => <div className={className}>{name}</div>
 	const extended = styled(component, {})
 
-	expectTypeOf(extended).toMatchTypeOf<typeof component>()
+	expectTypeOf(extended).toExtend<typeof component>()
 })
 
 // ---------- variants: unions, boolean, required vs optional ----------

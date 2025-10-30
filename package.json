@@ -27,7 +27,7 @@
 		"@types/stylis": "^4.2.7",
 		"@types/three": "^0.180",
 		"typescript": "^5.9.3",
-		"vitest": "3.2.4",
+		"vitest": "4.0.5",
 		"webpack": "5.102.1"
 	},
 	"scripts": {
