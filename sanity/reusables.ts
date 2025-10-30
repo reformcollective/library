@@ -221,7 +221,7 @@ export function definePageSection<
 		// @ts-expect-error doesn't match due to narrowing constraints
 		{
 			...options,
-			groups: [{ name: "Designed for Home page" }],
+			groups: [{ name: group }],
 			icon: createSectionPreview(icon),
 		},
 		secondary,

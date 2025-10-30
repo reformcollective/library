@@ -4,6 +4,7 @@ on:
     secrets:
       SECRETS_JSON:
         required: false
+    inputs: {}
 
 permissions:
   contents: read
@@ -32,10 +33,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          lfs: true
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
           run_install: false
+      - name: Ensure Git LFS objects are present
+        run: |
+          git lfs install --local
+          git lfs pull || true
       - name: Install dependencies
         if: github.event.action != 'closed'
         run: pnpm install
