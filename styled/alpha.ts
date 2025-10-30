@@ -1,5 +1,5 @@
 import type { ComponentProps, JSX } from "react"
-import { type ComponentClass, createElement } from "react"
+import { type ComponentClass } from "react"
 import { styledCore } from "./core"
 import type {
 	DefaultVariantsSchema,
@@ -12,6 +12,7 @@ import type {
 	VariablesSchema,
 	VariantsSchema,
 } from "./types"
+
 export * from "./vanilla.css"
 
 // using a union for the type of Component will cause

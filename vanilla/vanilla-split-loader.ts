@@ -11,11 +11,11 @@ const turboLoader = turboLoaderRAW.default as typeof turboLoaderRAW
 type ModulesConfig = Record<string, string[]>
 
 type SplitOptions = {
-	modules?: ModulesConfig
 	nextEnv?: Record<string, string> | null
 }
 
-const DEFAULT_MODULES: ModulesConfig = {
+// tracked functions that should be extracted to virtual .css.ts modules
+const TRACKED_MODULES: ModulesConfig = {
 	"@vanilla-extract/css": [
 		"style",
 		"styleVariants",
@@ -40,9 +40,32 @@ const DEFAULT_MODULES: ModulesConfig = {
 	"library/styled/alpha": ["styled"],
 }
 
-// Only split styled(Component, ...) for this specific callee
-const SPLIT_STYLED_MODULE = "library/styled"
+const SPLIT_STYLED_MODULE = "library/styled/alpha"
 const SPLIT_STYLED_IMPORT = "styled"
+
+type ImportRegistry = {
+	trackedLocalNames: Set<string>
+	trackedLocalToModule: Map<string, string>
+	trackedLocalToImported: Map<string, string>
+	allImports: ts.ImportDeclaration[]
+}
+
+type SplitResult = {
+	statements: ts.Statement[]
+	movedNames: string[]
+	reexportNames: string[]
+	movedDecls: Array<{
+		name: string
+		initializerText: string
+		kind: "const" | "let"
+	}>
+	movedExprs: string[]
+	needsWithComponentHelper: boolean
+}
+
+// =============================================================================
+// TS factory helpers
+// =============================================================================
 
 const createNamedImport = (
 	names: string[],
@@ -74,6 +97,355 @@ const createReExport = (
 	)
 }
 
+// =============================================================================
+// Import rewriting
+// =============================================================================
+
+/**
+ * Rewrites relative imports to be relative to the tsconfig baseUrl (app/).
+ * This allows code evaluated in temp directories to resolve imports correctly,
+ * and ensures vanilla-extract's output (which contains relative imports) works
+ * when embedded as data URIs.
+ *
+ * Example: ../../../styles/fonts/typography → styles/fonts/typography
+ */
+const rewriteImportsToBaseUrl = (
+	code: string,
+	originalFilePath: string,
+	baseUrl: string,
+): string => {
+	const sf = ts.createSourceFile(
+		"rewrite.ts",
+		code,
+		ts.ScriptTarget.ES2020,
+		true,
+		ts.ScriptKind.TS,
+	)
+
+	const updates: Array<{ node: ts.ImportDeclaration; newSpec: string }> = []
+
+	for (const st of sf.statements) {
+		if (!ts.isImportDeclaration(st)) continue
+
+		const spec = (st.moduleSpecifier as ts.StringLiteral).text
+		if (!spec.startsWith("./") && !spec.startsWith("../")) continue
+
+		// resolve relative import to absolute path
+		const originalDir = path.dirname(originalFilePath)
+		const absolutePath = path.resolve(originalDir, spec).replace(/\\/g, "/")
+
+		// convert to relative from baseUrl
+		let relativeToBase = path.relative(baseUrl, absolutePath).replace(/\\/g, "/")
+
+		// ensure it doesn't start with ../
+		if (relativeToBase.startsWith("../")) {
+			// if it goes outside baseUrl, keep it as absolute or leave as-is
+			// this shouldn't happen in normal usage
+			continue
+		}
+
+		updates.push({ node: st, newSpec: relativeToBase })
+	}
+
+	if (updates.length === 0) return code
+
+	const statements: ts.Statement[] = []
+	for (const st of sf.statements) {
+		if (ts.isImportDeclaration(st)) {
+			const upd = updates.find((u) => u.node === st)
+			if (upd) {
+				statements.push(
+					ts.factory.updateImportDeclaration(
+						st,
+						st.modifiers,
+						st.importClause,
+						ts.factory.createStringLiteral(upd.newSpec),
+						st.assertClause,
+					),
+				)
+				continue
+			}
+		}
+		statements.push(st)
+	}
+
+	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
+	const nextFile = ts.factory.updateSourceFile(sf, statements)
+	return printer.printFile(nextFile)
+}
+
+// =============================================================================
+// Import registry
+// =============================================================================
+
+/**
+ * Scans the source file for imports of tracked functions and builds a registry
+ * mapping local names to their module/import names.
+ */
+const buildImportRegistry = (sourceFile: ts.SourceFile): ImportRegistry => {
+	const trackedLocalNames = new Set<string>()
+	const trackedLocalToModule = new Map<string, string>()
+	const trackedLocalToImported = new Map<string, string>()
+	const allImports: ts.ImportDeclaration[] = []
+
+	for (const stmt of sourceFile.statements) {
+		if (!ts.isImportDeclaration(stmt)) continue
+
+		allImports.push(stmt)
+
+		const moduleSpecifier = (stmt.moduleSpecifier as ts.StringLiteral).text
+		const tracked = TRACKED_MODULES[moduleSpecifier]
+
+		if (!tracked || !stmt.importClause) continue
+
+		const { name: defaultImport, namedBindings } = stmt.importClause
+
+		// track default import if explicitly included
+		if (defaultImport && tracked.includes("default")) {
+			trackedLocalNames.add(defaultImport.text)
+			trackedLocalToModule.set(defaultImport.text, moduleSpecifier)
+			trackedLocalToImported.set(defaultImport.text, "default")
+		}
+
+		// track named imports
+		if (namedBindings && ts.isNamedImports(namedBindings)) {
+			for (const el of namedBindings.elements) {
+				const imported = (el.propertyName ?? el.name).text
+				const local = el.name.text
+				if (tracked.includes(imported)) {
+					trackedLocalNames.add(local)
+					trackedLocalToModule.set(local, moduleSpecifier)
+					trackedLocalToImported.set(local, imported)
+				}
+			}
+		}
+	}
+
+	return {
+		trackedLocalNames,
+		trackedLocalToModule,
+		trackedLocalToImported,
+		allImports,
+	}
+}
+
+// =============================================================================
+// Styled component handling
+// =============================================================================
+
+/**
+ * Handles styled(Component, config) by splitting it into:
+ * - Virtual module: Component___raw = styled('div', config)
+ * - Original file: Component = withComponent(FirstArg, Component___raw)
+ */
+const handleStyledComponent = (
+	decl: ts.VariableDeclaration,
+	call: ts.CallExpression,
+	sourceFile: ts.SourceFile,
+	isConstList: boolean,
+): {
+	shouldMove: boolean
+	movedName?: string
+	movedInitializer?: string
+	kind?: "const" | "let"
+	newDecl?: ts.VariableDeclaration
+} => {
+	const args = call.arguments
+	const firstArg = args[0]
+
+	// styled('tag', ...) -> move entirely to virtual module
+	const isStringTag =
+		firstArg &&
+		(ts.isStringLiteral(firstArg) ||
+			ts.isNoSubstitutionTemplateLiteral(firstArg))
+
+	if (isStringTag) {
+		return {
+			shouldMove: true,
+			movedName: (decl.name as ts.Identifier).text,
+			movedInitializer: call.getText(sourceFile),
+			kind: isConstList ? "const" : "let",
+		}
+	}
+
+	// styled(Component, ...) -> split into raw + wrapper
+	const baseName = (decl.name as ts.Identifier).text
+	const rawName = `${baseName}___raw`
+	const restArgs = args.slice(1)
+
+	// build: styled('div', ...restArgs)
+	const restArgsText = restArgs.map((a) => a.getText(sourceFile)).join(", ")
+	const rawInitializer = restArgsText
+		? `styled("div", ${restArgsText})`
+		: `styled("div")`
+
+	// build: withComponent(FirstArg, rawName)
+	const newInit = ts.factory.createCallExpression(
+		ts.factory.createIdentifier("withComponent"),
+		undefined,
+		[
+			firstArg ?? ts.factory.createIdentifier("undefined"),
+			ts.factory.createIdentifier(rawName),
+		],
+	)
+
+	const newDecl = ts.factory.updateVariableDeclaration(
+		decl,
+		decl.name,
+		decl.exclamationToken,
+		decl.type,
+		newInit,
+	)
+
+	return {
+		shouldMove: true,
+		movedName: rawName,
+		movedInitializer: rawInitializer,
+		kind: isConstList ? "const" : "let",
+		newDecl,
+	}
+}
+
+// =============================================================================
+// Statement splitting
+// =============================================================================
+
+/**
+ * Walks all statements in the source file and splits out tracked function calls
+ * into declarations/expressions to be moved to the virtual module.
+ */
+const splitDeclarations = (
+	sourceFile: ts.SourceFile,
+	registry: ImportRegistry,
+): SplitResult => {
+	const statements: ts.Statement[] = []
+	const movedNames: string[] = []
+	const reexportNames: string[] = []
+	const movedDecls: Array<{
+		name: string
+		initializerText: string
+		kind: "const" | "let"
+	}> = []
+	const movedExprs: string[] = []
+	let needsWithComponentHelper = false
+
+	for (const stmt of sourceFile.statements) {
+		// handle top-level expression statements (e.g., globalStyle(...))
+		if (ts.isExpressionStatement(stmt)) {
+			const expr = stmt.expression
+			if (
+				ts.isCallExpression(expr) &&
+				ts.isIdentifier(expr.expression) &&
+				registry.trackedLocalNames.has(expr.expression.text)
+			) {
+				movedExprs.push(expr.getText(sourceFile))
+				continue
+			}
+			statements.push(stmt)
+			continue
+		}
+
+		// only interested in variable statements from here
+		if (!ts.isVariableStatement(stmt)) {
+			statements.push(stmt)
+			continue
+		}
+
+		const isExported = (stmt.modifiers ?? []).some(
+			(m) => m.kind === ts.SyntaxKind.ExportKeyword,
+		)
+		const isConstList = (stmt.declarationList.flags & ts.NodeFlags.Const) !== 0
+		const keptDecls: ts.VariableDeclaration[] = []
+
+		for (const decl of stmt.declarationList.declarations) {
+			// skip non-identifier or uninitialized declarations
+			if (!ts.isIdentifier(decl.name) || !decl.initializer) {
+				keptDecls.push(decl)
+				continue
+			}
+
+			// check if initializer is a tracked function call
+			if (
+				!ts.isCallExpression(decl.initializer) ||
+				!ts.isIdentifier(decl.initializer.expression) ||
+				!registry.trackedLocalNames.has(decl.initializer.expression.text)
+			) {
+				keptDecls.push(decl)
+				continue
+			}
+
+			const call = decl.initializer
+			const calleeLocal = (call.expression as ts.Identifier).text
+			const calleeModule = registry.trackedLocalToModule.get(calleeLocal)
+			const calleeImported = registry.trackedLocalToImported.get(calleeLocal)
+
+			const isStyledFromLib =
+				calleeModule === SPLIT_STYLED_MODULE &&
+				calleeImported === SPLIT_STYLED_IMPORT
+
+			if (isStyledFromLib) {
+				const result = handleStyledComponent(decl, call, sourceFile, isConstList)
+				if (result.shouldMove) {
+					movedNames.push(result.movedName!)
+					movedDecls.push({
+						name: result.movedName!,
+						initializerText: result.movedInitializer!,
+						kind: result.kind!,
+					})
+					if (result.newDecl) {
+						keptDecls.push(result.newDecl)
+						needsWithComponentHelper = true
+					} else if (isExported) {
+						// styled('tag') was moved entirely, re-export it
+						reexportNames.push(decl.name.text)
+					}
+				}
+				continue
+			}
+
+			// non-styled tracked calls (style, keyframes, etc.) -> move to virtual module
+			movedNames.push(decl.name.text)
+			if (isExported) reexportNames.push(decl.name.text)
+			movedDecls.push({
+				name: decl.name.text,
+				initializerText: call.getText(sourceFile),
+				kind: isConstList ? "const" : "let",
+			})
+		}
+
+		// if any declarations remain, keep the statement
+		if (keptDecls.length > 0) {
+			statements.push(
+				ts.factory.updateVariableStatement(
+					stmt,
+					stmt.modifiers,
+					ts.factory.updateVariableDeclarationList(
+						stmt.declarationList,
+						keptDecls,
+					),
+				),
+			)
+		}
+	}
+
+	return {
+		statements,
+		movedNames,
+		reexportNames,
+		movedDecls,
+		movedExprs,
+		needsWithComponentHelper,
+	}
+}
+
+// =============================================================================
+// Virtual module construction
+// =============================================================================
+
+/**
+ * Builds the source code for the virtual .css.ts module by combining imports,
+ * moved declarations, and moved expressions.
+ */
 const buildVirtualModuleSource = (
 	sourceFile: ts.SourceFile,
 	imports: ts.ImportDeclaration[],
@@ -101,87 +473,61 @@ const buildVirtualModuleSource = (
 	return `${parts.join("\n")}\n`
 }
 
+// =============================================================================
+// Import injection
+// =============================================================================
+
 /**
- * Rewrite any relative import specifiers in a virtual module to absolute file paths
- * resolved against the original file's directory using Turbopack's resolver.
+ * Injects the virtual module import and re-exports into the transformed statements.
+ * Also injects withComponent helper import if needed.
  */
-const rewriteRelativeImportsToAbsolute = async (
-	code: string,
-	originalDir: string,
-	resolverFactory: LoaderContext<unknown>["getResolve"],
-) => {
-	if (!resolverFactory)
-		throw new Error(
-			"vanilla-split: getResolve is not available; cannot rewrite relative imports",
+const injectImports = (
+	statements: ts.Statement[],
+	movedNames: string[],
+	reexportNames: string[],
+	importPath: string,
+	needsWithComponentHelper: boolean,
+): ts.Statement[] => {
+	const importDecl = createNamedImport(movedNames, importPath)
+
+	// find last import to insert after it
+	let lastImportIndex = -1
+	statements.forEach((st, i) => {
+		if (ts.isImportDeclaration(st)) lastImportIndex = i
+	})
+
+	const insertAt = lastImportIndex >= 0 ? lastImportIndex + 1 : 0
+	const newStatements = [...statements]
+
+	// inject withComponent helper if needed
+	if (needsWithComponentHelper) {
+		const helperImport = createNamedImport(
+			["withComponent"],
+			"library/styled/withComponent",
 		)
-
-	const resolver = resolverFactory({})
-	if (!resolver)
-		throw new Error(
-			"vanilla-split: getResolve returned no resolver; cannot rewrite relative imports",
-		)
-
-	const sf = ts.createSourceFile(
-		"virtual.ts",
-		code,
-		ts.ScriptTarget.ES2020,
-		true,
-		ts.ScriptKind.TS,
-	)
-
-	const updates: Array<{ node: ts.ImportDeclaration; resolved: string }> = []
-	for (const st of sf.statements) {
-		if (!ts.isImportDeclaration(st)) continue
-		const spec = (st.moduleSpecifier as ts.StringLiteral).text
-		if (!spec.startsWith("./") && !spec.startsWith("../")) continue
-
-		const resolved: string = await new Promise((resolve, reject) => {
-			resolver(
-				originalDir,
-				spec,
-				(
-					err: Error | null,
-					res?: string | false | undefined,
-					_req?: unknown,
-				) => {
-					if (err) return reject(err)
-					if (typeof res === "string") return resolve(res.replace(/\\/g, "/"))
-					// fallback to absolute from original dir
-					const abs = path.resolve(originalDir, spec).replace(/\\/g, "/")
-					resolve(abs)
-				},
-			)
-		})
-
-		updates.push({ node: st, resolved })
+		newStatements.splice(insertAt, 0, helperImport)
 	}
 
-	if (updates.length === 0) return code
+	// inject virtual module import
+	const virtualImportAt = needsWithComponentHelper ? insertAt + 1 : insertAt
+	newStatements.splice(virtualImportAt, 0, importDecl)
 
-	const statements: ts.Statement[] = []
-	for (const st of sf.statements) {
-		if (ts.isImportDeclaration(st)) {
-			const upd = updates.find((u) => u.node === st)
-			if (upd) {
-				const updated = ts.factory.updateImportDeclaration(
-					st,
-					st.modifiers,
-					st.importClause,
-					ts.factory.createStringLiteral(upd.resolved),
-					st.assertClause,
-				)
-				statements.push(updated)
-				continue
-			}
-		}
-		statements.push(st)
+	// inject re-exports if needed
+	if (reexportNames.length > 0) {
+		const reexp = createReExport(reexportNames, importPath)
+		newStatements.splice(virtualImportAt + 1, 0, reexp)
 	}
 
-	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
-	const nextFile = ts.factory.updateSourceFile(sf, statements)
-	return printer.printFile(nextFile)
+	return newStatements
 }
 
+// =============================================================================
+// Vanilla-extract plugin integration
+// =============================================================================
+
+/**
+ * Runs the vanilla-extract turbopack plugin on a temp file, capturing its output.
+ */
 const runVePluginOnTempFile = async (
 	originalThis: LoaderContext<unknown>,
 	tempFilePath: string,
@@ -193,9 +539,10 @@ const runVePluginOnTempFile = async (
 		const rootContext = originalThis.rootContext
 		const originalDir = path.dirname(originalFilePath)
 
+		// wrap getResolve to always resolve from original file's directory
 		const getResolveWrapped = (options?: unknown) => {
 			const realGetResolve = originalThis.getResolve?.(
-				// @ts-expect-error webpack moment
+				// @ts-expect-error webpack types
 				options,
 			)
 			if (!realGetResolve) return undefined
@@ -214,53 +561,19 @@ const runVePluginOnTempFile = async (
 		}
 
 		let captured: string | undefined
+
 		const modifiedThis = {
 			async: () => (err?: Error | null, content?: string) => {
 				if (err) {
-					const rawMsg = err.message ?? String(err)
-					const stack = err.stack ?? ""
-					const offenderMatch =
-						stack.match(/\(([^)]+\.(?:ts|tsx))\)/) ||
-						stack.match(/at\s+.*?\s+\(([^)]+\.(?:ts|tsx))\)/) ||
-						stack.match(/\s(\/[^\s]+\.(?:ts|tsx))/)
-					const offender =
-						offenderMatch?.[1] ?? "Unable to determine offending file!"
-					const offenderName =
-						offender.split("/").pop() ?? "Unable to determine offending file!"
-					if (rawMsg.includes("Styles were unable to be assigned to a file")) {
-						const message = [
-							"Styles were unable to be assigned to a file. You likely created styles outside of a '.css.ts' context",
-							"",
-							"Places you're allowed to define styles:",
-							"- You may define styles in the same file they're used in",
-							"- You may define styles in a '.css.ts' file",
-							"",
-							"Potential ways to fix:",
-							`- Rename '${offenderName}' to '${offenderName.replace(
-								".ts",
-								".css.ts",
-							)}'`,
-							"- Move the styles to a '.css.ts' file",
-							"- Move the styles to the file they're used in",
-							"- Ask Robbie for guidance",
-							"",
-							`Offending file: ${offender}`,
-						].join("\n")
-
-						return reject(new Error(message))
-					}
-					console.error(err)
-					console.warn(
-						"Encountered an error processing styles. The error message may or may not be helpful, talk to Robbie if you're stuck.",
-					)
-					console.warn(`Error occured in file: ${offenderName}`)
-					return reject(err)
+					handleVanillaExtractError(err, reject)
+					return
 				}
 				captured = content ?? ""
 				resolve(captured)
 			},
 			getOptions: () => ({
-				identifiers: null,
+				identifiers:
+					process.env.NODE_ENV === "production" ? "short" : "debug",
 				outputCss: null,
 				nextEnv: loaderOptions?.nextEnv ?? null,
 			}),
@@ -274,7 +587,7 @@ const runVePluginOnTempFile = async (
 
 		Promise.resolve(
 			turboLoader.call(
-				// @ts-expect-error webpack moment
+				// @ts-expect-error webpack types
 				modifiedThis,
 			),
 		)
@@ -285,13 +598,63 @@ const runVePluginOnTempFile = async (
 	})
 }
 
+/**
+ * Handles errors from vanilla-extract plugin with helpful messages.
+ */
+const handleVanillaExtractError = (
+	err: Error,
+	reject: (reason: Error) => void,
+): void => {
+	const rawMsg = err.message ?? String(err)
+	const stack = err.stack ?? ""
+
+	if (rawMsg.includes("Styles were unable to be assigned to a file")) {
+		const offenderMatch =
+			stack.match(/\(([^)]+\.(?:ts|tsx))\)/) ||
+			stack.match(/at\s+.*?\s+\(([^)]+\.(?:ts|tsx))\)/) ||
+			stack.match(/\s(\/[^\s]+\.(?:ts|tsx))/)
+		const offender =
+			offenderMatch?.[1] ?? "Unable to determine offending file!"
+		const offenderName = offender.split("/").pop() ?? offender
+
+		const message = [
+			"Styles were unable to be assigned to a file. You likely created styles outside of a '.css.ts' context",
+			"",
+			"Places you're allowed to define styles:",
+			"- You may define styles in the same file they're used in",
+			"- You may define styles in a '.css.ts' file",
+			"",
+			"Potential ways to fix:",
+			`- Rename '${offenderName}' to '${offenderName.replace(".ts", ".css.ts")}'`,
+			"- Move the styles to a '.css.ts' file",
+			"- Move the styles to the file they're used in",
+			"- Ask Robbie for guidance",
+			"",
+			`Offending file: ${offender}`,
+		].join("\n")
+
+		reject(new Error(message))
+		return
+	}
+
+	console.error(err)
+	console.warn(
+		"Encountered an error processing styles. The error message may or may not be helpful, talk to Robbie if you're stuck.",
+	)
+	reject(err)
+}
+
+// =============================================================================
+// Main transform
+// =============================================================================
+
 const transform = async (
 	loaderThis: LoaderContext<unknown>,
 	rootContext: string,
 	filePath: string,
 	sourceCode: string,
 	options: SplitOptions,
-): Promise<{ code: string; movedNames: string[]; virtualSource?: string }> => {
+): Promise<{ code: string; movedNames: string[] }> => {
 	const isTsx = filePath.endsWith(".tsx") || filePath.endsWith(".jsx")
 	const sourceFile = ts.createSourceFile(
 		filePath,
@@ -301,339 +664,94 @@ const transform = async (
 		isTsx ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
 	)
 
-	const modules: ModulesConfig = {
-		...DEFAULT_MODULES,
-		...(options.modules ?? {}),
-	}
+	// 1) build import registry
+	const registry = buildImportRegistry(sourceFile)
 
-	// 1) Build a map of tracked local identifiers based on imports
-	const trackedLocalNames = new Set<string>()
-	const trackedLocalToModule = new Map<string, string>()
-	const trackedLocalToImported = new Map<string, string>()
-	const allImports: ts.ImportDeclaration[] = []
+	// 2) split declarations
+	const splitResult = splitDeclarations(sourceFile, registry)
 
-	for (const stmt of sourceFile.statements) {
-		if (!ts.isImportDeclaration(stmt)) continue
-		allImports.push(stmt)
-		const moduleSpecifier = (stmt.moduleSpecifier as ts.StringLiteral).text
-		const tracked = modules[moduleSpecifier]
-		if (!tracked || !stmt.importClause) continue
-		const { name: defaultImport, namedBindings } = stmt.importClause
-		// track default if explicitly included as "default"
-		if (defaultImport && tracked.includes("default")) {
-			trackedLocalNames.add(defaultImport.text)
-			trackedLocalToModule.set(defaultImport.text, moduleSpecifier)
-			trackedLocalToImported.set(defaultImport.text, "default")
-		}
-		if (namedBindings && ts.isNamedImports(namedBindings)) {
-			for (const el of namedBindings.elements) {
-				const imported = (el.propertyName ?? el.name).text
-				const local = el.name.text
-				if (tracked.includes(imported)) {
-					trackedLocalNames.add(local)
-					trackedLocalToModule.set(local, moduleSpecifier)
-					trackedLocalToImported.set(local, imported)
-				}
-			}
-		}
-	}
-
-	// 2) Walk statements and split declarations
-	const statements: ts.Statement[] = []
-	const movedNames: string[] = []
-	const reexportNames: string[] = []
-	const movedDeclsForVirtual: Array<{
-		name: string
-		initializerText: string
-		kind: "const" | "let"
-	}> = []
-	const movedTopLevelExprs: string[] = []
-
-	let needsWithComponentHelper = false
-
-	for (const stmt of sourceFile.statements) {
-		// capture bare expression statements for tracked top-level calls
-		if (ts.isExpressionStatement(stmt)) {
-			const expr = stmt.expression
-			if (
-				ts.isCallExpression(expr) &&
-				ts.isIdentifier(expr.expression) &&
-				trackedLocalNames.has(expr.expression.text)
-			) {
-				// move raw call text to virtual module as-is
-				movedTopLevelExprs.push(expr.getText(sourceFile))
-				// drop from original source (do not push to statements)
-				continue
-			}
-			statements.push(stmt)
-			continue
-		}
-
-		if (!ts.isVariableStatement(stmt)) {
-			statements.push(stmt)
-			continue
-		}
-
-		const isExported = (stmt.modifiers ?? []).some(
-			(m) => m.kind === ts.SyntaxKind.ExportKeyword,
-		)
-
-		const keptDecls: ts.VariableDeclaration[] = []
-		const isConstList = (stmt.declarationList.flags & ts.NodeFlags.Const) !== 0
-
-		for (const decl of stmt.declarationList.declarations) {
-			if (!ts.isIdentifier(decl.name) || !decl.initializer) {
-				keptDecls.push(decl)
-				continue
-			}
-
-			if (
-				ts.isCallExpression(decl.initializer) &&
-				ts.isIdentifier(decl.initializer.expression) &&
-				trackedLocalNames.has(decl.initializer.expression.text)
-			) {
-				const call = decl.initializer
-				const args = call.arguments
-				const firstArg = args[0]
-				const calleeLocal = ts.isIdentifier(call.expression)
-					? call.expression.text
-					: undefined
-				const calleeModule = calleeLocal
-					? trackedLocalToModule.get(calleeLocal)
-					: undefined
-				const calleeImported = calleeLocal
-					? trackedLocalToImported.get(calleeLocal)
-					: undefined
-
-				const isStyledFromLib =
-					calleeModule === SPLIT_STYLED_MODULE &&
-					calleeImported === SPLIT_STYLED_IMPORT
-
-				if (isStyledFromLib) {
-					const isStringTag =
-						firstArg &&
-						(ts.isStringLiteral(firstArg) ||
-							ts.isNoSubstitutionTemplateLiteral(firstArg))
-
-					if (isStringTag) {
-						// styled('tag', ...) -> move as-is
-						movedNames.push(decl.name.text)
-						if (isExported) reexportNames.push(decl.name.text)
-						movedDeclsForVirtual.push({
-							name: decl.name.text,
-							initializerText: call.getText(sourceFile),
-							kind: isConstList ? "const" : "let",
-						})
-						continue
-					}
-
-					// styled(Component, ...)
-					const baseName = decl.name.text
-					const rawName = `${baseName}___raw`
-					const restArgs = args.slice(1)
-					if (restArgs.length === 0) {
-						// no config to carry; keep original declaration untouched
-						keptDecls.push(decl)
-						continue
-					}
-					const restArgsText = restArgs
-						.map((a) => a.getText(sourceFile))
-						.join(", ")
-					const rawInitializer = restArgsText
-						? `styled("div", ${restArgsText})`
-						: `styled("div")`
-					movedNames.push(rawName)
-					movedDeclsForVirtual.push({
-						name: rawName,
-						initializerText: rawInitializer,
-						kind: isConstList ? "const" : "let",
-					})
-
-					// wrapper: const Name = withComponent(FirstArg, Name___raw)
-					const newInit = ts.factory.createCallExpression(
-						ts.factory.createIdentifier("withComponent"),
-						undefined,
-						[
-							firstArg ?? ts.factory.createIdentifier("undefined"),
-							ts.factory.createIdentifier(rawName),
-						],
-					)
-					const newDecl = ts.factory.updateVariableDeclaration(
-						decl,
-						decl.name,
-						decl.exclamationToken,
-						decl.type,
-						newInit,
-					)
-					keptDecls.push(newDecl)
-					needsWithComponentHelper = true
-					continue
-				}
-
-				// Non-styled tracked calls (e.g., createVar, keyframes): move as-is
-				movedNames.push(decl.name.text)
-				if (isExported) reexportNames.push(decl.name.text)
-				movedDeclsForVirtual.push({
-					name: decl.name.text,
-					initializerText: call.getText(sourceFile),
-					kind: isConstList ? "const" : "let",
-				})
-				continue
-			}
-
-			keptDecls.push(decl)
-		}
-
-		if (keptDecls.length > 0) {
-			statements.push(
-				ts.factory.updateVariableStatement(
-					stmt,
-					stmt.modifiers,
-					ts.factory.updateVariableDeclarationList(
-						stmt.declarationList,
-						keptDecls,
-					),
-				),
-			)
-		}
-	}
-
-	if (movedNames.length === 0) {
+	// nothing to move? return original code unchanged
+	if (splitResult.movedNames.length === 0) {
 		return { code: sourceCode, movedNames: [] }
 	}
 
-	// 3) Create import to virtual module and possible re-export
+	// 3) build virtual module source
 	const virtualSource = buildVirtualModuleSource(
 		sourceFile,
-		allImports,
-		movedDeclsForVirtual,
-		movedTopLevelExprs,
+		registry.allImports,
+		splitResult.movedDecls,
+		splitResult.movedExprs,
 	)
 
-	// resolve relative imports inside the virtual module so it can be evaluated from tmp dir
-	if (!loaderThis.getResolve) {
-		throw new Error(
-			"vanilla-split: getResolve is not available; cannot process virtual module imports",
-		)
-	}
-	const virtualSourceResolved = await rewriteRelativeImportsToAbsolute(
+	// 4) rewrite imports in virtual module to be relative to baseUrl (app/)
+	const baseUrl = path.join(rootContext, "app")
+	const virtualSourceResolved = rewriteImportsToBaseUrl(
 		virtualSource,
-		path.dirname(filePath),
-		loaderThis.getResolve.bind(
-			loaderThis,
-		) as unknown as LoaderContext<unknown>["getResolve"],
+		filePath,
+		baseUrl,
 	)
 
-	// debug: write the generated virtual .css.ts (pre-VE) to .next/tmp/split-cssts-out
-	try {
-		const relPathFromRoot = path
-			.relative(rootContext, filePath)
-			.replace(/\\/g, "/")
-		const relDir = path.dirname(relPathFromRoot)
-		const base = path.basename(filePath).replace(/\.(?:tsx|ts|jsx|js)$/i, "")
-		const outPath = path.join(
-			rootContext,
-			".next",
-			"tmp",
-			"split-cssts-out",
-			relDir,
-			`${base}.css.ts`,
-		)
-		fs.mkdirSync(path.dirname(outPath), { recursive: true })
-		fs.writeFileSync(outPath, virtualSourceResolved)
-	} catch {}
-
-	// write a temp file for the VE plugin to process
-	const tmpDir = path.join(
-		rootContext,
-		".next",
-		"cache",
-		"vanilla-split",
-		"tmp",
-	)
+	// 5) write temp file and run vanilla-extract plugin
+	const tmpDir = path.join(rootContext, ".next", "cache", "vanilla-split", "tmp")
 	fs.mkdirSync(tmpDir, { recursive: true })
 
-	// use the original source filename for better debug class names, while
-	// retaining uniqueness by scoping under a content-hash subdirectory.
+	// use relative path from rootContext for better class name prefixes
+	// e.g., app/sections/BrandedComps/index.tsx -> sections-BrandedComps-index
+	const relPath = path.relative(rootContext, filePath).replace(/\\/g, "/")
+	const relPathNoExt = relPath.replace(/\.(?:tsx|ts|jsx|js)$/i, "")
+	const fileIdentifier = relPathNoExt
+		.replace(/^app\//, "") // remove app/ prefix
+		.replace(/\//g, "-") // convert slashes to dashes
+
 	const tmpHash = crypto
 		.createHash("md5")
 		.update(virtualSourceResolved)
 		.digest("hex")
-	const originalBase = path
-		.basename(filePath)
-		.replace(/\.(?:tsx|ts|jsx|js)$/i, "")
-	const tmpScopedDir = path.join(tmpDir, tmpHash)
-	fs.mkdirSync(tmpScopedDir, { recursive: true })
-	const tmpFile = path.join(tmpScopedDir, `${originalBase}.css.ts`)
+		.slice(0, 8) // shorter hash is sufficient
+
+	const tmpFile = path.join(tmpDir, `${fileIdentifier}-${tmpHash}.css.ts`)
 	fs.writeFileSync(tmpFile, virtualSourceResolved)
 
-	// run the official turbopack plugin on the temp file
 	let veJs: string
 	try {
 		veJs = await runVePluginOnTempFile(loaderThis, tmpFile, filePath, options)
 	} finally {
+		// cleanup temp file
 		try {
 			fs.unlinkSync(tmpFile)
 		} catch {}
-		try {
-			fs.rmSync(path.dirname(tmpFile), { recursive: true, force: true })
-		} catch {}
 	}
 
-	const jsBase64 = Buffer.from(veJs, "utf8").toString("base64")
+	// 6) rewrite imports in vanilla-extract's output to be relative to baseUrl
+	// note: veJs contains imports relative to tmpFile location, not original file
+	const veJsResolved = rewriteImportsToBaseUrl(veJs, tmpFile, baseUrl)
+
+	// 7) embed as data URI and inject imports
+	const jsBase64 = Buffer.from(veJsResolved, "utf8").toString("base64")
 	const importPath = `data:text/javascript;base64,${jsBase64}`
-	const importDecl = createNamedImport(movedNames, importPath)
 
-	let lastImportIndex = -1
-	statements.forEach((st, i) => {
-		if (ts.isImportDeclaration(st)) lastImportIndex = i
-	})
-	if (lastImportIndex >= 0)
-		statements.splice(lastImportIndex + 1, 0, importDecl)
-	else statements.unshift(importDecl)
+	const newStatements = injectImports(
+		splitResult.statements,
+		splitResult.movedNames,
+		splitResult.reexportNames,
+		importPath,
+		splitResult.needsWithComponentHelper,
+	)
 
-	// Inject helper import if needed
-	if (needsWithComponentHelper) {
-		const helperImport = createNamedImport(
-			["withComponent"],
-			"library/styled/withComponent",
-		)
-		// insert just before the virtual import to keep order tidy
-		const where = lastImportIndex >= 0 ? lastImportIndex + 1 : 0
-		statements.splice(where, 0, helperImport)
-	}
-
-	if (reexportNames.length > 0) {
-		const reexp = createReExport(reexportNames, importPath)
-		const insertAt = lastImportIndex >= 0 ? lastImportIndex + 2 : 1
-		statements.splice(insertAt, 0, reexp)
-	}
-
+	// 8) print final transformed source
 	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
-	const updated = ts.factory.updateSourceFile(sourceFile, statements)
+	const updated = ts.factory.updateSourceFile(sourceFile, newStatements)
 	const printed = printer.printFile(updated)
 
-	// debug: write transformed TS (pre-VE evaluation) to .next/tmp/split-ts-out
-	try {
-		const relPathFromRoot = path
-			.relative(rootContext, filePath)
-			.replace(/\\/g, "/")
-		const outPath = path.join(
-			rootContext,
-			".next",
-			"tmp",
-			"split-ts-out",
-			relPathFromRoot,
-		)
-		fs.mkdirSync(path.dirname(outPath), { recursive: true })
-		fs.writeFileSync(outPath, printed)
-	} catch {}
 	return {
 		code: printed,
-		movedNames,
-		virtualSource,
+		movedNames: splitResult.movedNames,
 	}
 }
+
+// =============================================================================
+// Loader entry point
+// =============================================================================
 
 export default async function vanillaSplitLoader(
 	this: LoaderContext<unknown>,
