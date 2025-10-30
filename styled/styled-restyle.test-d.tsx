@@ -91,7 +91,7 @@ test("style props are allowed to override the component type", () => {
 })
 
 test("extra properties are not allowed", () => {
-	const Component = (_props: { className: string }) => (
+	const Component = ({ className }: { className: string }) => (
 		<div className={className} />
 	)
 	const Extended = styled(Component, { color: "red" })
