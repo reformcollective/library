@@ -9,7 +9,7 @@
 		"@mux/mux-video-react": "^0",
 		"@vanilla-extract/css": "^1",
 		"@vanilla-extract/integration": "8.0.4",
-		"@vanilla-extract/turbopack-plugin": "link:/tmp/vanilla-temp/packages/turbopack-plugin",
+		"@vanilla-extract/next-plugin": "link:/tmp/vanilla-temp/packages/next-plugin",
 		"ahooks": "^3",
 		"browser-dtector": "4.1.0",
 		"class-variance-authority": "0.7.1",

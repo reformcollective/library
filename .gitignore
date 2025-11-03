@@ -4,3 +4,6 @@ tsconfig.tsbuildinfo
 
 # we don't want the library to keep it's own lockfile, since it's managed by the root project
 pnpm-lock.yaml
+
+# vanilla-split cache
+vanilla/.cache

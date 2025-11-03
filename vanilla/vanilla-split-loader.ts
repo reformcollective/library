@@ -1,18 +1,9 @@
-import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
-import turboLoaderRAW from "@vanilla-extract/turbopack-plugin"
 import ts from "typescript"
 import type { LoaderContext } from "webpack"
 
-// @ts-expect-error weird turbopack stuff
-const turboLoader = turboLoaderRAW.default as typeof turboLoaderRAW
-
 type ModulesConfig = Record<string, string[]>
-
-type SplitOptions = {
-	nextEnv?: Record<string, string> | null
-}
 
 // tracked functions that should be extracted to virtual .css.ts modules
 const TRACKED_MODULES: ModulesConfig = {
@@ -576,137 +567,14 @@ const injectImports = (
 }
 
 // =============================================================================
-// Vanilla-extract plugin integration
-// =============================================================================
-
-/**
- * Runs the vanilla-extract turbopack plugin on a temp file, capturing its output.
- */
-const runVePluginOnTempFile = async (
-	originalThis: LoaderContext<unknown>,
-	tempFilePath: string,
-	originalFilePath: string,
-	loaderOptions: SplitOptions,
-): Promise<string> => {
-	return new Promise<string>((resolve, reject) => {
-		const mode = originalThis.mode ?? "development"
-		const rootContext = originalThis.rootContext
-		const originalDir = path.dirname(originalFilePath)
-
-		// wrap getResolve to always resolve from original file's directory
-		const getResolveWrapped = (options?: unknown) => {
-			const realGetResolve = originalThis.getResolve?.(
-				// @ts-expect-error webpack types
-				options,
-			)
-			if (!realGetResolve) return undefined
-			return (
-				_context: string,
-				request: string,
-				cb: (err: Error | null, result?: string) => void,
-			) => {
-				realGetResolve(
-					originalDir,
-					request,
-					(err: Error | null, res?: string | false) =>
-						cb(err, (typeof res === "string" ? res : undefined) ?? undefined),
-				)
-			}
-		}
-
-		let captured: string | undefined
-
-		const modifiedThis = {
-			async: () => (err?: Error | null, content?: string) => {
-				if (err) {
-					handleVanillaExtractError(err, reject)
-					return
-				}
-				captured = content ?? ""
-				resolve(captured)
-			},
-			getOptions: () => ({
-				identifiers: process.env.NODE_ENV === "production" ? "short" : "debug",
-				outputCss: null,
-				nextEnv: loaderOptions?.nextEnv ?? null,
-			}),
-			getResolve: getResolveWrapped,
-			addDependency: (_file: string) => {},
-			mode,
-			rootContext,
-			resourcePath: tempFilePath,
-			resourceQuery: "",
-		}
-
-		Promise.resolve(
-			turboLoader.call(
-				// @ts-expect-error webpack types
-				modifiedThis,
-			),
-		)
-			.then(() => {
-				if (captured === undefined) resolve("")
-			})
-			.catch(reject)
-	})
-}
-
-/**
- * Handles errors from vanilla-extract plugin with helpful messages.
- */
-const handleVanillaExtractError = (
-	err: Error,
-	reject: (reason: Error) => void,
-): void => {
-	const rawMsg = err.message ?? String(err)
-	const stack = err.stack ?? ""
-
-	if (rawMsg.includes("Styles were unable to be assigned to a file")) {
-		const offenderMatch =
-			stack.match(/\(([^)]+\.(?:ts|tsx))\)/) ||
-			stack.match(/at\s+.*?\s+\(([^)]+\.(?:ts|tsx))\)/) ||
-			stack.match(/\s(\/[^\s]+\.(?:ts|tsx))/)
-		const offender = offenderMatch?.[1] ?? "Unable to determine offending file!"
-		const offenderName = offender.split("/").pop() ?? offender
-
-		const message = [
-			"Styles were unable to be assigned to a file. You likely created styles outside of a '.css.ts' context",
-			"",
-			"Places you're allowed to define styles:",
-			"- You may define styles in the same file they're used in",
-			"- You may define styles in a '.css.ts' file",
-			"",
-			"Potential ways to fix:",
-			`- Rename '${offenderName}' to '${offenderName.replace(".ts", ".css.ts")}'`,
-			"- Move the styles to a '.css.ts' file",
-			"- Move the styles to the file they're used in",
-			"- Ask Robbie for guidance",
-			"",
-			`Offending file: ${offender}`,
-		].join("\n")
-
-		reject(new Error(message))
-		return
-	}
-
-	console.error(err)
-	console.warn(
-		"Encountered an error processing styles. The error message may or may not be helpful, talk to Robbie if you're stuck.",
-	)
-	reject(err)
-}
-
-// =============================================================================
 // Main transform
 // =============================================================================
 
-const transform = async (
-	loaderThis: LoaderContext<unknown>,
+const transform = (
 	rootContext: string,
 	filePath: string,
 	sourceCode: string,
-	options: SplitOptions,
-): Promise<{ code: string; movedNames: string[] }> => {
+): { code: string; movedNames: string[] } => {
 	const isTsx = filePath.endsWith(".tsx") || filePath.endsWith(".jsx")
 	const sourceFile = ts.createSourceFile(
 		filePath,
@@ -743,50 +611,49 @@ const transform = async (
 		baseUrl,
 	)
 
-	// 5) write temp file and run vanilla-extract plugin
-	const tmpDir = path.join(
-		rootContext,
-		".next",
-		"cache",
-		"vanilla-split",
-		"tmp",
-	)
-	fs.mkdirSync(tmpDir, { recursive: true })
-
 	// use relative path from rootContext for better class name prefixes
 	// e.g., app/sections/BrandedComps/index.tsx -> sections-BrandedComps-index
 	const relPath = path.relative(rootContext, filePath).replace(/\\/g, "/")
 	const relPathNoExt = relPath.replace(/\.(?:tsx|ts|jsx|js)$/i, "")
-	const fileIdentifier = relPathNoExt
-		.replace(/^app\//, "") // remove app/ prefix
-		.replace(/\//g, "-") // convert slashes to dashes
 
-	const tmpHash = crypto
-		.createHash("md5")
-		.update(virtualSourceResolved)
-		.digest("hex")
-		.slice(0, 8) // shorter hash is sufficient
+	// write pre-process debug file
+	const preProcessDebugPath = path.join(
+		rootContext,
+		".next",
+		"debug",
+		"pre-process",
+		`${relPathNoExt}.css.ts`,
+	)
+	fs.mkdirSync(path.dirname(preProcessDebugPath), { recursive: true })
+	fs.writeFileSync(preProcessDebugPath, virtualSourceResolved)
 
-	const tmpFile = path.join(tmpDir, `${fileIdentifier}-${tmpHash}.css.ts`)
+	// 5) write temp .css.ts file - vanilla-extract will process it for us
+	// preserve directory structure 1-1 in cache for simplicity
+	// use library/vanilla/.cache so it's colocated with vanilla-split
+	const tmpFile = path
+		.join(
+			rootContext,
+			"app",
+			"library",
+			"vanilla",
+			".cache",
+			`${relPathNoExt}.css.ts`,
+		)
+		.replace(/\\/g, "/")
+	fs.mkdirSync(path.dirname(tmpFile), { recursive: true })
 	fs.writeFileSync(tmpFile, virtualSourceResolved)
 
-	let veJs: string
-	try {
-		veJs = await runVePluginOnTempFile(loaderThis, tmpFile, filePath, options)
-	} finally {
-		// cleanup temp file
-		try {
-			fs.unlinkSync(tmpFile)
-		} catch {}
+	// 6) generate normal import path - vanilla-extract will handle processing
+	// convert absolute path to relative import from original file
+	const originalDir = path.dirname(filePath)
+	let importPath = path.relative(originalDir, tmpFile).replace(/\\/g, "/")
+	// ensure it starts with ./ or ../
+	if (!importPath.startsWith(".")) {
+		importPath = `./${importPath}`
 	}
-
-	// 6) rewrite imports in vanilla-extract's output to be relative to baseUrl
-	// note: veJs contains imports relative to tmpFile location, not original file
-	const veJsResolved = rewriteImportsToBaseUrl(veJs, tmpFile, baseUrl)
-
-	// 7) embed as data URI and inject imports
-	const jsBase64 = Buffer.from(veJsResolved, "utf8").toString("base64")
-	const importPath = `data:text/javascript;base64,${jsBase64}`
+	// add random query param to force turbopack to re-process on HMR
+	const randomId = Math.random().toString(36).substring(2, 15)
+	importPath = `${importPath}?v=${randomId}`
 
 	const newStatements = injectImports(
 		splitResult.statements,
@@ -796,10 +663,21 @@ const transform = async (
 		splitResult.needsWithComponentHelper,
 	)
 
-	// 8) print final transformed source
+	// 7) print final transformed source
 	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
 	const updated = ts.factory.updateSourceFile(sourceFile, newStatements)
 	const printed = printer.printFile(updated)
+
+	// write final debug file (transformed source that gets passed to loader)
+	const finalDebugPath = path.join(
+		rootContext,
+		".next",
+		"debug",
+		"final",
+		relPath,
+	)
+	fs.mkdirSync(path.dirname(finalDebugPath), { recursive: true })
+	fs.writeFileSync(finalDebugPath, printed)
 
 	return {
 		code: printed,
@@ -811,7 +689,7 @@ const transform = async (
 // Loader entry point
 // =============================================================================
 
-export default async function vanillaSplitLoader(
+export default function vanillaSplitLoader(
 	this: LoaderContext<unknown>,
 	sourceCode: string,
 ) {
@@ -823,14 +701,7 @@ export default async function vanillaSplitLoader(
 			return callback(null, sourceCode)
 		}
 
-		const options = this.getOptions ? (this.getOptions() as SplitOptions) : {}
-		const { code } = await transform(
-			this,
-			this.rootContext,
-			this.resourcePath,
-			sourceCode,
-			options,
-		)
+		const { code } = transform(this.rootContext, this.resourcePath, sourceCode)
 
 		callback(null, code)
 	} catch (e) {
