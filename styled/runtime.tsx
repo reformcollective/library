@@ -89,5 +89,9 @@ export function runtimeStyled({
 		)
 	}
 
+	Component.toString = () => {
+		return cvaBase
+	}
+
 	return Component
 }
