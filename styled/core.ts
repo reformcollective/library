@@ -88,12 +88,13 @@ function emitWithin(anchorClass: string, entries?: WithinBlock) {
 }
 
 // generate a classname from StyleRules and emit any `within` blocks as global styles
-function classFromStyleRules(input: StyleRules | undefined) {
+function classFromStyleRules(input: StyleRules | undefined, debugId?: string) {
 	const flatInput = flattenArray(input)
 	const className = style(
 		flatInput
 			.map((x) => (typeof x === "object" ? stripWithin(x) : x))
 			.filter(Boolean),
+			 debugId,
 	)
 
 	const withinBlocks = flatInput
@@ -126,11 +127,14 @@ function processVars(vars: StyledOptions["variables"]) {
 	return varDefs
 }
 
-export function styledCore(tag: string, input: StyledInput) {
+export function styledCore(tag: string, input: StyledInput, debugId?: string) {
 	const config = normalizeConfig(input)
 
 	// 1) base: generate classname and collect any plain class strings
-	const baseClass = classFromStyleRules(config.base)
+	const baseClass = classFromStyleRules(
+		config.base,
+		debugId ? debugId : undefined,
+	)
 	if (config.within) emitWithin(baseClass, config.within)
 
 	// 2) variants → classes + emit variant-level within anchored to base + variant
@@ -138,7 +142,10 @@ export function styledCore(tag: string, input: StyledInput) {
 	for (const [variantName, options] of Object.entries(config.variants ?? {})) {
 		const compiled: Record<string, string> = {}
 		for (const [option, value] of Object.entries(options ?? {})) {
-			const vClass = classFromStyleRules(value)
+			const vClass = classFromStyleRules(
+				value,
+				debugId ? `${debugId}_${variantName}_${option}` : undefined,
+			)
 			compiled[option] = vClass
 		}
 		cvaVariants[variantName] = compiled
@@ -146,10 +153,13 @@ export function styledCore(tag: string, input: StyledInput) {
 
 	// 2.1) compoundVariants → classes + emit compound-level within anchored to base + variant
 	const compounds = config.compoundVariants
-		?.map((compound) => {
+		?.map((compound, index) => {
 			if (!compound?.base) return compound
 
-			const className = classFromStyleRules(compound?.base)
+			const className = classFromStyleRules(
+				compound?.base,
+				debugId ? `${debugId}_compound_${index}` : undefined,
+			)
 			const copy: Record<string, unknown> = { ...compound, className }
 			delete copy.base
 

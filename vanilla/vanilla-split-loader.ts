@@ -245,6 +245,7 @@ const handleStyledComponent = (
 } => {
 	const args = call.arguments
 	const firstArg = args[0]
+    const baseName = (decl.name as ts.Identifier).text
 
 	// styled('tag', ...) -> move entirely to virtual module
 	const isStringTag =
@@ -252,25 +253,32 @@ const handleStyledComponent = (
 		(ts.isStringLiteral(firstArg) ||
 			ts.isNoSubstitutionTemplateLiteral(firstArg))
 
-	if (isStringTag) {
-		return {
-			shouldMove: true,
-			movedName: (decl.name as ts.Identifier).text,
-			movedInitializer: call.getText(sourceFile),
-			kind: isConstList ? "const" : "let",
-		}
-	}
+    if (isStringTag) {
+        // styled('tag', ...rest) -> include debugId as third arg when rest exists
+        const firstArgText = firstArg.getText(sourceFile)
+        const restArgs = args.slice(1)
+        const restArgsText = restArgs.map((a) => a.getText(sourceFile)).join(", ")
+        const movedInitializer = restArgs.length > 0
+            ? `styled(${firstArgText}, ${restArgsText}, ${JSON.stringify(baseName)})`
+            : `styled(${firstArgText})`
+
+        return {
+            shouldMove: true,
+            movedName: baseName,
+            movedInitializer,
+            kind: isConstList ? "const" : "let",
+        }
+    }
 
 	// styled(Component, ...) -> split into raw + wrapper
-	const baseName = (decl.name as ts.Identifier).text
 	const rawName = `${baseName}___raw`
 	const restArgs = args.slice(1)
 
 	// build: styled('div', ...restArgs)
 	const restArgsText = restArgs.map((a) => a.getText(sourceFile)).join(", ")
-	const rawInitializer = restArgsText
-		? `styled("div", ${restArgsText})`
-		: `styled("div")`
+    const rawInitializer = restArgsText
+        ? `styled("div", ${restArgsText}, ${JSON.stringify(baseName)})`
+        : `styled("div")`
 
 	// build: withComponent(FirstArg, rawName)
 	const newInit = ts.factory.createCallExpression(

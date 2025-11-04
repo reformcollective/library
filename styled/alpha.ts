@@ -27,6 +27,7 @@ export function styled<
 >(
 	Component: Tag,
 	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	debugId?: string,
 ): StyledComponent<
 	StyledOutProps<ComponentProps<Tag>, Variants, Variables, DefaultVariants>
 >
@@ -41,6 +42,7 @@ export function styled<
 >(
 	Component: FunctionComponent<Props>,
 	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	debugId?: string,
 ): StyledComponent<StyledOutProps<Props, Variants, Variables, DefaultVariants>>
 
 // Overload: component target (class)
@@ -53,6 +55,7 @@ export function styled<
 >(
 	Component: ComponentClass<Props>,
 	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	debugId?: string,
 ): StyledComponent<StyledOutProps<Props, Variants, Variables, DefaultVariants>>
 
 // most generic, only exists to catch config errors
@@ -67,6 +70,7 @@ export function styled<
 >(
 	target: FunctionComponent<Props> | ComponentClass<Props> | Tag,
 	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	debugId?: string,
 ): "Your styled configuration has errors"
 
 // Implementation
@@ -79,9 +83,10 @@ export function styled<
 >(
 	target: FunctionComponent<Props> | ComponentClass<Props> | Tag,
 	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	debugId?: string,
 ): unknown {
 	if (typeof target === "string")
-		return styledCore(target, config as StyledInput)
+		return styledCore(target, config as StyledInput, debugId)
 	// this will be intercepted by the vanilla split loader
-	return styledCore("div", config as StyledInput)
+	return styledCore("div", config as StyledInput, debugId)
 }

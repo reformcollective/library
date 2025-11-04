@@ -43,8 +43,11 @@ export const getRandomInt = (min: number, max: number) => {
 	return Math.floor(Math.random() * (max - min + 1) + min)
 }
 
-export function measureSticky<T>(element: Element|null|undefined, value: T) {
-	return ()=>{
+export function measureSticky<T>(
+	element: Element | null | undefined,
+	value: T,
+) {
+	return () => {
 		if (!element) return value
 		if (!(element instanceof HTMLElement)) return value
 		element.style.position = "static"
