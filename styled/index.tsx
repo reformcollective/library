@@ -447,6 +447,12 @@ export const mergeStyles = (styles: CSSObject) => {
 	return output
 }
 
+function layerize<T>(input: T) {
+	return {
+		'@layer restyle': input,
+	}
+}
+
 export const styled = ((
 	component: Parameters<typeof restyled>[0],
 	style: Parameters<typeof restyled>[1],
@@ -455,8 +461,8 @@ export const styled = ((
 
 	if (style === undefined) return restyled(component)
 	if (typeof style === "function")
-		return restyled(component, (...props) => mergeStyles(style(...props)))
-	return restyled(component, mergeStyles(style))
+		return restyled(component, (...props) => layerize(mergeStyles(style(...props))))
+	return restyled(component, layerize(mergeStyles(style)))
 }) as typeof restyled
 
 /**
