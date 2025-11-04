@@ -34,7 +34,8 @@
 		"test": "vitest run",
 		"lint": "biome lint",
 		"format": "biome check --write",
-		"preinstall": "pnpm dlx gitpick https://github.com/RJWadley/vanilla-extract/tree/turbo-loader/ /tmp/vanilla-temp -f && cd /tmp/vanilla-temp && pnpm i && pnpm build"
+		"preinstall": "pnpm dlx gitpick https://github.com/RJWadley/vanilla-extract/tree/turbo-loader/ /tmp/vanilla-temp -f && cd /tmp/vanilla-temp && pnpm i && pnpm build",
+		"postinstall": "rm -rf ./vanilla/.cache"
 	},
 	"packageManager": "pnpm@10.20.0",
 	"devEngines": {
