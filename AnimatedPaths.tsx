@@ -167,6 +167,7 @@ export function AnimatedPaths({
 	)
 }
 
+// TODO(alpha-style-migration): function-based styled; manual conversion required
 const Wrapper = styled("div", ({ selector }: { selector: string }) =>
 	unresponsive(css`
 		${selector} {

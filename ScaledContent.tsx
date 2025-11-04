@@ -60,6 +60,7 @@ const Outer = styled(
 	`),
 )
 
+// TODO(alpha-style-migration): function-based styled; manual conversion required
 const Inner = styled("div", ({ scale }: { scale: number }) =>
 	fresponsive(css`
 		transform-origin: top left;

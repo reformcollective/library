@@ -3,7 +3,7 @@
 import MuxVideo from "@mux/mux-video-react"
 import { browserData } from "library/deviceDetection"
 import { ScreenContext } from "library/ScreenContext"
-import { css, f, styled } from "library/styled"
+import { css, f, styled } from "library/styled/alpha"
 import SanityUniversalImage from "library/UniversalImage"
 import { use, useEffect, useRef, useState } from "react"
 import type {
@@ -300,33 +300,33 @@ export function BackgroundVideo({
 	)
 }
 
-const Container = styled("div", {
-	...f.responsive(css`
+const Container = styled("div", [
+	f.responsive(css`
 		isolation: isolate;
 		overflow: clip;
 	`),
-})
+])
 
-const MainVideo = styled(MuxVideo, {
-	...f.responsive(css`
+const MainVideo = styled(MuxVideo, [
+	f.responsive(css`
 		width: 100%;
 		height: 100%;
 		display: block;
 		object-fit: cover;
 		object-position: center;
 	`),
-})
+])
 
-const PosterVideo = styled(MainVideo, {
-	...f.responsive(css`
+const PosterVideo = styled(MainVideo, [
+	f.responsive(css`
 		position: absolute;
 		transition: opacity 0.2s ease-in-out;
 		pointer-events: none;
 	`),
-})
+])
 
-const PosterImage = styled(SanityUniversalImage, {
-	...f.responsive(css`
+const PosterImage = styled(SanityUniversalImage, [
+	f.responsive(css`
 		position: absolute;
 		inset: 0;
 		width: 100%;
@@ -334,4 +334,4 @@ const PosterImage = styled(SanityUniversalImage, {
 		object-fit: cover;
 		object-position: center;
 	`),
-})
+])

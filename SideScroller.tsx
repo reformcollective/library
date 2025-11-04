@@ -121,6 +121,7 @@ export default function SideScroller({
 	)
 }
 
+// TODO(alpha-style-migration): function-based styled; manual conversion required
 const Wrapper = styled(
 	"section",
 	({ height, touchscreenMode }: { height: number; touchscreenMode: boolean }) =>
@@ -140,6 +141,7 @@ const Wrapper = styled(
 		`),
 )
 
+// TODO(alpha-style-migration): function-based styled; manual conversion required
 const Inner = styled(
 	"div",
 	({ touchscreenMode }: { touchscreenMode: boolean }) =>

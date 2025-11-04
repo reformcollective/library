@@ -1,4 +1,4 @@
-import { css, f, styled } from "library/styled"
+import { css, f, styled } from "library/styled/alpha"
 import { draftMode } from "next/headers"
 import { redirect } from "next/navigation"
 import type { GetSectionType } from "page"
@@ -24,8 +24,8 @@ export async function Redirect({ link }: GetSectionType<"redirect">) {
 	redirect(link as Parameters<typeof redirect>[0])
 }
 
-const Wrapper = styled("div", {
-	...f.unresponsive(css`
+const Wrapper = styled("div", [
+	f.unresponsive(css`
 		grid-column: main;
 		height: 100vh;
 		padding: 100px;
@@ -38,4 +38,4 @@ const Wrapper = styled("div", {
 			text-decoration: underline;
 		}
 	`),
-})
+])

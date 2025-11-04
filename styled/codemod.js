@@ -152,7 +152,7 @@ function transformFile(sourceText, fileName) {
 async function run() {
   const files = await globby(patterns.length ? patterns : defaultPatterns, {
     gitignore: true,
-    ignore: ["**/node_modules/**", "**/.next/**", "**/dist/**", "**/app/library/**"],
+    ignore: ["**/node_modules/**", "**/.next/**", "**/dist/**"],
     onlyFiles: true,
     expandDirectories: false,
   })

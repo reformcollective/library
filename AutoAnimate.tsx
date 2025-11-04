@@ -313,6 +313,7 @@ const Wrapper = styled(
 	`),
 )
 
+// TODO(alpha-style-migration): function-based styled; manual conversion required
 const AnimationWrapper = styled(
 	"div",
 	({ alignment }: { alignment: "start" | "center" | "end" }) =>
