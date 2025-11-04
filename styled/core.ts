@@ -94,7 +94,7 @@ function classFromStyleRules(input: StyleRules | undefined, debugId?: string) {
 		flatInput
 			.map((x) => (typeof x === "object" ? stripWithin(x) : x))
 			.filter(Boolean),
-			 debugId,
+		debugId,
 	)
 
 	const withinBlocks = flatInput
