@@ -46,7 +46,7 @@ const AdvancedComponent = styled("div", {
   defaults: {
     /* default variant values */
   },
-  vars: {
+  variables: {
     /* CSS variable mappings */
   },
   within: {
@@ -58,7 +58,7 @@ const AdvancedComponent = styled("div", {
 - **`base`**: An array of style objects that are always applied to the component.
 - **`variants`**: An object where keys are prop names and values are objects mapping prop values to styles. This allows for creating different visual states based on props (e.g., `size`, `color`).
 - **`defaults`**: An object specifying the default values for your variants.
-- **`vars`**: An object for mapping component props to CSS variables, enabling fully dynamic styles like custom sizes or colors.
+- **`variables`**: An object for mapping component props to CSS variables, enabling fully dynamic styles like custom sizes or colors.
 
 #### Within (scoped descendant selectors)
 
@@ -140,7 +140,7 @@ Constraints and notes:
 
 ### Render target override (`as` prop)
 
-All components created with `styled` accept an `as` prop to change the render target at runtime. This works for both DOM tags and React components. Variant and `vars` props are filtered from the DOM and won’t leak.
+All components created with `styled` accept an `as` prop to change the render target at runtime. This works for both DOM tags and React components. Variant and `variables` props are filtered from the DOM and won’t leak.
 
 ```tsx
 const Box = styled("div", { base: [{ padding: 12, background: "#123" }] })
@@ -179,7 +179,7 @@ const Button = styled("button", {
 // Usage: <Button color="secondary">Click Me</Button>
 ```
 
-#### CSS Variables (`vars`)
+#### CSS Variables (`variables`)
 
 For styles that need to be fully dynamic, you can use CSS variables. This is perfect for properties that can have a wide range of values, like `width`, `height`, or `transform`.
 
@@ -188,7 +188,7 @@ const heightVar = createVar();
 
 const DynamicBox = styled("div", {
   base: [{ border: "1px solid black" }],
-  vars: {
+  variables: {
     height: { token: heightVar, unit: "px" },
   },
 });
