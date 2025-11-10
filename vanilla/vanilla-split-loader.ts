@@ -41,16 +41,25 @@ type ImportRegistry = {
 	allImports: ts.ImportDeclaration[]
 }
 
+type MovedDeclaration = {
+	name: string
+	initializerText: string
+	initializer: ts.Expression
+	kind: "const" | "let"
+}
+
+type MovedExpression = {
+	text: string
+	expression: ts.Expression
+}
+
 type SplitResult = {
 	statements: ts.Statement[]
 	movedNames: string[]
 	reexportNames: string[]
-	movedDecls: Array<{
-		name: string
-		initializerText: string
-		kind: "const" | "let"
-	}>
-	movedExprs: string[]
+	movedDecls: MovedDeclaration[]
+	movedExprs: MovedExpression[]
+	supportingStatements: string[]
 	needsWithComponentHelper: boolean
 }
 
@@ -323,12 +332,8 @@ const splitDeclarations = (
 	const statements: ts.Statement[] = []
 	const movedNames: string[] = []
 	const reexportNames: string[] = []
-	const movedDecls: Array<{
-		name: string
-		initializerText: string
-		kind: "const" | "let"
-	}> = []
-	const movedExprs: string[] = []
+	const movedDecls: MovedDeclaration[] = []
+	const movedExprs: MovedExpression[] = []
 	let needsWithComponentHelper = false
 
 	for (const stmt of sourceFile.statements) {
@@ -340,7 +345,10 @@ const splitDeclarations = (
 				ts.isIdentifier(expr.expression) &&
 				registry.trackedLocalNames.has(expr.expression.text)
 			) {
-				movedExprs.push(expr.getText(sourceFile))
+				movedExprs.push({
+					text: expr.getText(sourceFile),
+					expression: expr,
+				})
 				continue
 			}
 			statements.push(stmt)
@@ -402,6 +410,7 @@ const splitDeclarations = (
 					movedDecls.push({
 						name: result.movedName,
 						initializerText: result.movedInitializer,
+						initializer: call,
 						kind: result.kind,
 					})
 					if (result.newDecl) {
@@ -421,6 +430,7 @@ const splitDeclarations = (
 			movedDecls.push({
 				name: decl.name.text,
 				initializerText: call.getText(sourceFile),
+				initializer: call,
 				kind: isConstList ? "const" : "let",
 			})
 		}
@@ -446,8 +456,250 @@ const splitDeclarations = (
 		reexportNames,
 		movedDecls,
 		movedExprs,
+		supportingStatements: [],
 		needsWithComponentHelper,
 	}
+}
+
+// =============================================================================
+// Dependency analysis helpers
+// =============================================================================
+
+const GLOBAL_IDENTIFIERS = new Set<string>([
+	"Math",
+	"Number",
+	"String",
+	"Boolean",
+	"Object",
+	"Array",
+	"Set",
+	"Map",
+	"WeakMap",
+	"WeakSet",
+	"Date",
+	"BigInt",
+	"Symbol",
+	"Promise",
+	"RegExp",
+	"Intl",
+	"JSON",
+	"Reflect",
+	"Proxy",
+	"console",
+	"window",
+	"document",
+	"navigator",
+	"location",
+	"globalThis",
+	"self",
+])
+
+const extractBindingNames = (
+	binding: ts.BindingName,
+	names: string[],
+): void => {
+	if (ts.isIdentifier(binding)) {
+		names.push(binding.text)
+		return
+	}
+
+	for (const element of binding.elements) {
+		if (ts.isOmittedExpression(element)) continue
+		extractBindingNames(element.name, names)
+	}
+}
+
+const collectLocalNames = (
+	node: ts.Node | undefined,
+	locals: Set<string>,
+): void => {
+	if (!node) return
+
+	const visit = (current: ts.Node) => {
+		if (ts.isFunctionLike(current)) {
+			if (current.name && ts.isIdentifier(current.name)) {
+				locals.add(current.name.text)
+			}
+			for (const param of current.parameters) {
+				const paramNames: string[] = []
+				extractBindingNames(param.name, paramNames)
+				paramNames.forEach((name) => locals.add(name))
+			}
+		}
+
+		if (ts.isVariableDeclaration(current)) {
+			const declNames: string[] = []
+			extractBindingNames(current.name, declNames)
+			declNames.forEach((name) => locals.add(name))
+		}
+
+		if (ts.isCatchClause(current) && current.variableDeclaration) {
+			const catchNames: string[] = []
+			extractBindingNames(current.variableDeclaration.name, catchNames)
+			catchNames.forEach((name) => locals.add(name))
+		}
+
+		current.forEachChild(visit)
+	}
+
+	visit(node)
+}
+
+const isIdentifierInTypePosition = (identifier: ts.Identifier): boolean => {
+	let current: ts.Node | undefined = identifier
+	while (current) {
+		switch (current.kind) {
+			case ts.SyntaxKind.TypeReference:
+			case ts.SyntaxKind.TypeAliasDeclaration:
+			case ts.SyntaxKind.InterfaceDeclaration:
+			case ts.SyntaxKind.TypeLiteral:
+			case ts.SyntaxKind.MappedType:
+			case ts.SyntaxKind.TypePredicate:
+			case ts.SyntaxKind.TypeQuery:
+			case ts.SyntaxKind.TypeParameter:
+			case ts.SyntaxKind.ImportType:
+			case ts.SyntaxKind.ExpressionWithTypeArguments:
+				return true
+		}
+
+		if (ts.isImportClause(current) && current.isTypeOnly) return true
+		if (ts.isImportSpecifier(current) && current.isTypeOnly) return true
+
+		current = current.parent
+	}
+	return false
+}
+
+const shouldIncludeIdentifier = (identifier: ts.Identifier): boolean => {
+	const text = identifier.text
+	if (!text) return false
+	if (text === "undefined" || text === "NaN" || text === "Infinity")
+		return false
+
+	const parent = identifier.parent
+	if (!parent) return true
+
+	if (ts.isPropertyAccessExpression(parent) && parent.name === identifier) {
+		return false
+	}
+
+	if (
+		ts.isPropertyAssignment(parent) &&
+		parent.name === identifier &&
+		!ts.isComputedPropertyName(parent.name)
+	) {
+		return false
+	}
+
+	if (ts.isBindingElement(parent) && parent.name === identifier) {
+		return false
+	}
+
+	if (ts.isImportSpecifier(parent) && parent.name === identifier) {
+		return false
+	}
+
+	if (isIdentifierInTypePosition(identifier)) return false
+
+	return true
+}
+
+const collectDependenciesForNode = (node: ts.Node | undefined): Set<string> => {
+	const deps = new Set<string>()
+	if (!node) return deps
+
+	const locals = new Set<string>()
+	collectLocalNames(node, locals)
+
+	const visit = (current: ts.Node) => {
+		if (ts.isIdentifier(current)) {
+			if (!locals.has(current.text) && shouldIncludeIdentifier(current)) {
+				deps.add(current.text)
+			}
+			return
+		}
+
+		current.forEachChild(visit)
+	}
+
+	visit(node)
+	return deps
+}
+
+const collectDependenciesFromSplitResult = (
+	result: SplitResult,
+): Set<string> => {
+	const deps = new Set<string>()
+	for (const md of result.movedDecls) {
+		for (const dep of collectDependenciesForNode(md.initializer)) {
+			deps.add(dep)
+		}
+	}
+	for (const expr of result.movedExprs) {
+		for (const dep of collectDependenciesForNode(expr.expression)) {
+			deps.add(dep)
+		}
+	}
+	return deps
+}
+
+const collectImportLocalNames = (
+	imports: ts.ImportDeclaration[],
+): Set<string> => {
+	const names = new Set<string>()
+	for (const decl of imports) {
+		const clause = decl.importClause
+		if (!clause) continue
+		if (clause.name) {
+			names.add(clause.name.text)
+		}
+		if (clause.namedBindings) {
+			if (ts.isNamespaceImport(clause.namedBindings)) {
+				names.add(clause.namedBindings.name.text)
+			} else if (ts.isNamedImports(clause.namedBindings)) {
+				for (const element of clause.namedBindings.elements) {
+					names.add(element.name.text)
+				}
+			}
+		}
+	}
+	return names
+}
+
+const getDeclaredNamesFromStatement = (stmt: ts.Statement): string[] => {
+	const names: string[] = []
+	if (ts.isVariableStatement(stmt)) {
+		for (const decl of stmt.declarationList.declarations) {
+			extractBindingNames(decl.name, names)
+		}
+	} else if (ts.isFunctionDeclaration(stmt) && stmt.name) {
+		names.push(stmt.name.text)
+	} else if (ts.isClassDeclaration(stmt) && stmt.name) {
+		names.push(stmt.name.text)
+	} else if (ts.isEnumDeclaration(stmt)) {
+		names.push(stmt.name.text)
+	}
+	return names
+}
+
+const findSupportingStatements = (
+	sourceFile: ts.SourceFile,
+	unresolvedNames: Set<string>,
+): string[] => {
+	const supporting: string[] = []
+	if (unresolvedNames.size === 0) return supporting
+
+	for (const stmt of sourceFile.statements) {
+		if (unresolvedNames.size === 0) break
+		const declared = getDeclaredNamesFromStatement(stmt)
+		if (declared.length === 0) continue
+		const matches = declared.filter((name) => unresolvedNames.has(name))
+		if (matches.length === 0) continue
+		supporting.push(stmt.getText(sourceFile))
+		matches.forEach((name) => unresolvedNames.delete(name))
+	}
+
+	return supporting
 }
 
 // =============================================================================
@@ -462,20 +714,20 @@ const splitDeclarations = (
 const buildVirtualModuleSource = (
 	sourceFile: ts.SourceFile,
 	imports: ts.ImportDeclaration[],
-	movedDecls: Array<{
-		name: string
-		initializerText: string
-		kind: "const" | "let"
-	}>,
-	movedExprs: string[],
+	movedDecls: MovedDeclaration[],
+	movedExprs: MovedExpression[],
+	supportingStatements: string[],
 ): string => {
 	const parts: string[] = []
 
 	// collect all text from moved code to check which imports are used
-	const movedCodeText =
-		movedDecls.map((md) => md.initializerText).join(" ") +
-		" " +
-		movedExprs.join(" ")
+	const movedCodeText = [
+		...supportingStatements,
+		...movedDecls.map((md) => md.initializerText),
+		...movedExprs.map((ex) => ex.text),
+	]
+		.join(" ")
+		.trim()
 
 	// only include imports that are referenced in the moved code
 	for (const i of imports) {
@@ -516,12 +768,16 @@ const buildVirtualModuleSource = (
 		}
 	}
 
+	for (const stmtText of supportingStatements) {
+		parts.push(stmtText)
+	}
+
 	for (const md of movedDecls) {
 		parts.push(`export ${md.kind} ${md.name} = ${md.initializerText};`)
 	}
 
 	for (const ex of movedExprs) {
-		parts.push(ex.endsWith(";") ? ex : `${ex};`)
+		parts.push(ex.text.endsWith(";") ? ex.text : `${ex.text};`)
 	}
 
 	return `${parts.join("\n")}\n`
@@ -604,12 +860,32 @@ const transform = (
 		return { code: sourceCode, movedNames: [] }
 	}
 
+	const dependencyNames = collectDependenciesFromSplitResult(splitResult)
+	const importLocalNames = collectImportLocalNames(registry.allImports)
+	const movedNamesSet = new Set(splitResult.movedNames)
+	const unresolvedNames = new Set<string>()
+
+	for (const name of dependencyNames) {
+		if (movedNamesSet.has(name)) continue
+		if (importLocalNames.has(name)) continue
+		if (GLOBAL_IDENTIFIERS.has(name)) continue
+		unresolvedNames.add(name)
+	}
+
+	if (unresolvedNames.size > 0) {
+		const supporting = findSupportingStatements(sourceFile, unresolvedNames)
+		if (supporting.length > 0) {
+			splitResult.supportingStatements.push(...supporting)
+		}
+	}
+
 	// 3) build virtual module source
 	const virtualSource = buildVirtualModuleSource(
 		sourceFile,
 		registry.allImports,
 		splitResult.movedDecls,
 		splitResult.movedExprs,
+		splitResult.supportingStatements,
 	)
 
 	// 4) rewrite imports in virtual module to be relative to baseUrl (app/)
