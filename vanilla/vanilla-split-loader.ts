@@ -523,20 +523,26 @@ const collectLocalNames = (
 			for (const param of current.parameters) {
 				const paramNames: string[] = []
 				extractBindingNames(param.name, paramNames)
-				paramNames.forEach((name) => locals.add(name))
+				paramNames.forEach((name) => {
+					locals.add(name)
+				})
 			}
 		}
 
 		if (ts.isVariableDeclaration(current)) {
 			const declNames: string[] = []
 			extractBindingNames(current.name, declNames)
-			declNames.forEach((name) => locals.add(name))
+			declNames.forEach((name) => {
+				locals.add(name)
+			})
 		}
 
 		if (ts.isCatchClause(current) && current.variableDeclaration) {
 			const catchNames: string[] = []
 			extractBindingNames(current.variableDeclaration.name, catchNames)
-			catchNames.forEach((name) => locals.add(name))
+			catchNames.forEach((name) => {
+				locals.add(name)
+			})
 		}
 
 		current.forEachChild(visit)
@@ -696,7 +702,9 @@ const findSupportingStatements = (
 		const matches = declared.filter((name) => unresolvedNames.has(name))
 		if (matches.length === 0) continue
 		supporting.push(stmt.getText(sourceFile))
-		matches.forEach((name) => unresolvedNames.delete(name))
+		matches.forEach((name) => {
+			unresolvedNames.delete(name)
+		})
 	}
 
 	return supporting

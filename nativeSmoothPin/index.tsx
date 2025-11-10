@@ -6,7 +6,7 @@ export default function nativeSmoothPin({
 	goopLevel = 200,
 	goopType = "both",
 	top = "0",
-	containerAware = false
+	containerAware = false,
 }: {
 	goopLevel?: number
 	goopType?: "start" | "end" | "both"
@@ -21,20 +21,24 @@ export default function nativeSmoothPin({
 
 		animation-name: ${startGoopAnimation}, ${endGoopAnimation};
 		animation-timeline: view(y);
-		${containerAware ? css`
+		${
+			containerAware
+				? css`
 			animation-range: 
 				entry-crossing calc(100dvh - ${top} - ${goopLevel}px) 
 				entry-crossing calc(100dvh - ${top} + ${goopLevel}px),
 				
 				entry-crossing calc(100vh + 100cqh - ${top} - 100% - ${goopLevel}px)
 				entry-crossing calc(100vh + 100cqh - ${top} - 100% + ${goopLevel}px);
-		`: css`
+		`
+				: css`
 			animation-range: 
 				entry-crossing calc(100dvh - ${top} - ${goopLevel}px) 
 				entry-crossing calc(100dvh - ${top} + ${goopLevel}px),
 				
 				exit-crossing calc(calc(-1 * ${top}) - ${goopLevel}px) 
 				exit-crossing calc(calc(-1 * ${top}) + ${goopLevel}px);
-		`}
+		`
+		}
 	`
 }
