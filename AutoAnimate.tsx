@@ -4,7 +4,7 @@ import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
-import { css, styled, unresponsive } from "./styled"
+import { css, styled, unresponsive } from "./styled/alpha"
 import { useBetterThrottle } from "./useBetterThrottle"
 
 const extractKey = (item: unknown): string => {
@@ -313,26 +313,71 @@ const Wrapper = styled(
 	`),
 )
 
-// TODO(alpha-style-migration): function-based styled; manual conversion required
-const AnimationWrapper = styled(
-	"div",
-	({ alignment }: { alignment: "start" | "center" | "end" }) =>
+const AnimationWrapper = styled("div", {
+	base: [
 		unresponsive(css`
 			display: grid;
-			place-items: ${alignment};
-			place-content: ${alignment};
+		`),
+	],
+	within: {
+		"& > *": unresponsive(css`
+			grid-area: 1 / 1 / 2 / 2;
+			min-width: 100%;
+			min-height: 100%;
+			display: grid;
 
-			> * {
-				grid-area: 1 / 1 / 2 / 2;
-				min-width: 100%;
-				min-height: 100%;
-				display: grid;
-				place-items: ${alignment};
-				place-content: ${alignment};
-
-				&:empty {
-					pointer-events: none;
-				}
+			&:empty {
+				pointer-events: none;
 			}
 		`),
-)
+	},
+	variants: {
+		alignment: {
+			start: [
+				unresponsive(css`
+					place-items: start;
+					place-content: start;
+				`),
+				{
+					within: {
+						"& > *": unresponsive(css`
+							place-items: start;
+							place-content: start;
+						`),
+					},
+				},
+			],
+			center: [
+				unresponsive(css`
+					place-items: center;
+					place-content: center;
+				`),
+				{
+					within: {
+						"& > *": unresponsive(css`
+							place-items: center;
+							place-content: center;
+						`),
+					},
+				},
+			],
+			end: [
+				unresponsive(css`
+					place-items: end;
+					place-content: end;
+				`),
+				{
+					within: {
+						"& > *": unresponsive(css`
+							place-items: end;
+							place-content: end;
+						`),
+					},
+				},
+			],
+		},
+	},
+	defaultVariants: {
+		alignment: "start",
+	},
+})

@@ -1,7 +1,7 @@
 "use client"
 
 import type { AssetMeta } from "library/sanity/assetMetadata"
-import { styled } from "library/styled"
+import { styled } from "library/styled/alpha"
 import { stegaClean } from "next-sanity"
 import { use } from "react"
 import { SanityImage } from "sanity-image"
@@ -9,7 +9,7 @@ import { dataset, projectId } from "@/sanity/lib/api"
 import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import StaticImage, {
 	type DefaultImageProps,
-	defaultImageStyles,
+	createDefaultImageConfig,
 	EagerContext,
 	prioritizeLoading,
 	type StaticImageProps,
@@ -112,5 +112,5 @@ export default function SanityUniversalImage(
 const DefaultSanityImage = styled(
 	// biome-ignore lint/suspicious/noExplicitAny: some projects, this fails. in others, it doesn't
 	SanityImage as any,
-	defaultImageStyles,
+	createDefaultImageConfig(),
 ) as unknown as typeof SanityImage

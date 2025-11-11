@@ -1,6 +1,5 @@
 import { DrawSVGPlugin, gsap } from "gsap/all"
 import { useState } from "react"
-import { css, styled, unresponsive } from "./styled"
 import { useAnimation } from "./useAnimation"
 
 gsap.registerPlugin(DrawSVGPlugin)
@@ -157,21 +156,10 @@ export function AnimatedPaths({
 	)
 
 	return (
-		<Wrapper
-			className={className}
-			ref={(ref) => setWrapper(ref)}
-			selector={selector}
-		>
+		<div className={className} ref={(ref) => setWrapper(ref)}>
+			<style>{`${selector} { visibility: hidden; }`}</style>
 			{children}
-		</Wrapper>
+		</div>
 	)
 }
 
-// TODO(alpha-style-migration): function-based styled; manual conversion required
-const Wrapper = styled("div", ({ selector }: { selector: string }) =>
-	unresponsive(css`
-		${selector} {
-			visibility: hidden;
-		}
-	`),
-)

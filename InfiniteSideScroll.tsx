@@ -329,11 +329,14 @@ const Row = styled(
 		display: flex;
 		width: 100%;
 		overflow: hidden;
-
-		> * {
-			flex-shrink: 0;
-		}
 	`),
+	{
+		within: {
+			"& > *": fresponsive(css`
+				flex-shrink: 0;
+			`),
+		},
+	},
 )
 
 const TwoButtons = styled(
@@ -346,8 +349,12 @@ const TwoButtons = styled(
 const OneButton = styled(
 	TwoButtons,
 	fresponsive(css`
-		> *:first-child {
-			scale: -1 1;
-		}
 	`),
+	{
+		within: {
+			"& > *:first-child": fresponsive(css`
+				scale: -1 1;
+			`),
+		},
+	},
 )

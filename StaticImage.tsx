@@ -1,6 +1,7 @@
 "use client"
 
-import { styled } from "library/styled"
+import { createVar } from "@vanilla-extract/css"
+import { styled } from "library/styled/alpha"
 import type { PlaceholderValue } from "next/dist/shared/lib/get-img-props"
 import type { StaticImageData } from "next/image"
 import Image from "next/image"
@@ -102,22 +103,37 @@ export default function StaticImage({
 	)
 }
 
-export const defaultImageStyles = ({
-	objectFit,
-	objectPosition,
-	aspectRatio,
-}: {
-	objectFit: "contain" | "cover"
-	objectPosition: string | undefined
-	aspectRatio: string | undefined
-}) => ({
+const objectFitVar = createVar()
+const objectPositionVar = createVar()
+const aspectRatioVar = createVar()
+
+const defaultImageVars = {
+	vars: {
+		[objectFitVar]: "cover",
+		[objectPositionVar]: "center",
+		[aspectRatioVar]: "auto",
+	},
+} as const
+
+const defaultImageLayout = {
 	display: "block",
-	objectFit,
-	objectPosition,
+	objectFit: objectFitVar,
+	objectPosition: objectPositionVar,
 	height: "auto",
 	width: "100%",
-	aspectRatio,
+	aspectRatio: aspectRatioVar,
+} as const
+
+const defaultImageVariables = {
+	objectFit: { token: objectFitVar },
+	objectPosition: { token: objectPositionVar },
+	aspectRatio: { token: aspectRatioVar },
+} as const
+
+export const createDefaultImageConfig = () => ({
+	base: [defaultImageVars, defaultImageLayout],
+	variables: defaultImageVariables,
 })
 
-const DefaultImage = styled("img", defaultImageStyles)
-const DefaultNextImage = styled(Image, defaultImageStyles)
+const DefaultImage = styled("img", createDefaultImageConfig())
+const DefaultNextImage = styled(Image, createDefaultImageConfig())

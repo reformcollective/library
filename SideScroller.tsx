@@ -4,7 +4,7 @@ import { usePinType } from "library/Scroll"
 import { useAnimation } from "library/useAnimation"
 import { useEffect, useState } from "react"
 
-import { css, styled, unresponsive } from "./styled"
+import { css, styled, unresponsive } from "./styled/alpha"
 import { getVH } from "./viewportUtils"
 
 interface SideScrollerProps {
@@ -108,43 +108,48 @@ export default function SideScroller({
 		setContainerAnimation,
 	])
 
+	type Mode = "default" | "touch"
+	const mode: Mode = touchscreenMode ? "touch" : "default"
+
 	return (
 		<Wrapper
 			ref={setWrapperEl}
-			height={pinAmount}
-			touchscreenMode={touchscreenMode}
+			mode={mode}
+			style={touchscreenMode ? undefined : { height: `${pinAmount}px` }}
 		>
-			<Inner ref={setInnerEl} touchscreenMode={touchscreenMode}>
+			<Inner ref={setInnerEl} mode={mode}>
 				{children}
 			</Inner>
 		</Wrapper>
 	)
 }
 
-// TODO(alpha-style-migration): function-based styled; manual conversion required
-const Wrapper = styled(
-	"section",
-	({ height, touchscreenMode }: { height: number; touchscreenMode: boolean }) =>
+const Wrapper = styled("section", {
+	base: [
 		unresponsive(css`
 			position: relative;
 			overflow: hidden;
 			width: 100%;
-			height: ${height}px;
-
-			${
-				touchscreenMode &&
-				css`
-				height: fit-content;
-				overflow-x: auto;
-			`
-			}
 		`),
-)
+	],
+	variants: {
+		mode: {
+			default: [],
+			touch: [
+				unresponsive(css`
+					height: fit-content;
+					overflow-x: auto;
+				`),
+			],
+		},
+	},
+	defaultVariants: {
+		mode: "default",
+	},
+})
 
-// TODO(alpha-style-migration): function-based styled; manual conversion required
-const Inner = styled(
-	"div",
-	({ touchscreenMode }: { touchscreenMode: boolean }) =>
+const Inner = styled("div", {
+	base: [
 		unresponsive(css`
 			position: absolute;
 			width: fit-content;
@@ -154,13 +159,19 @@ const Inner = styled(
 			> div {
 				width: fit-content;
 			}
-
-			${
-				touchscreenMode &&
-				css`
-				width: fit-content;
-				height: fit-content;
-			`
-			}
 		`),
-)
+	],
+	variants: {
+		mode: {
+			default: [],
+			touch: [
+				unresponsive(css`
+					height: fit-content;
+				`),
+			],
+		},
+	},
+	defaultVariants: {
+		mode: "default",
+	},
+})

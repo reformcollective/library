@@ -1,4 +1,4 @@
-import { css, GlobalStyles, unresponsive } from "./styled"
+import { css, unresponsive } from "./styled/alpha"
 
 const reset = unresponsive(css`
 	/* stylelint-disable */
@@ -235,4 +235,6 @@ const reset = unresponsive(css`
 	/* stylelint-enable */
 `)
 
-export const ResetStyles = () => <GlobalStyles>{reset}</GlobalStyles>
+export const ResetStyles = () => (
+	<style dangerouslySetInnerHTML={{ __html: reset }} suppressHydrationWarning />
+)

@@ -13,8 +13,7 @@ The `styled` function is used to create a styled component. It accepts two argum
 For components with only static styles, you can provide an array of style objects. This is the simplest way to use the `styled` utility.
 
 ```javascript
-import { styled } from "library/styled";
-import { f, css } from "library/styled-legacy";
+import { styled, f, css } from "library/styled/alpha";
 
 const SimpleComponent = styled("div", [
   f.responsive(css`
@@ -31,7 +30,7 @@ const SimpleComponent = styled("div", [
 For more complex components, you can use the configuration object to define variants, CSS variables, defaults, and `within` scoped selectors.
 
 ```javascript
-import { styled } from "library/styled";
+import { styled } from "library/styled/alpha";
 import { createVar } from "@vanilla-extract/css";
 
 const heightVar = createVar();
@@ -117,7 +116,7 @@ You can style a React component target using `styled(MyComponent, config)`. This
 Usage in a normal component file:
 
 ```tsx
-import { styled } from "library/styled"
+import { styled } from "library/styled/alpha"
 
 function Target(props: React.HTMLAttributes<HTMLDivElement>) {
   return <div {...props} data-kind="target" />
@@ -135,7 +134,7 @@ export const StyledOnComponent = styled(Target, {
 
 Constraints and notes:
 - In `.css.ts(x)` files, keep using `styled('tag', ...)`. If you need to target a component from a `.css.ts(x)` module, prefer the `as` prop from a consumer module.
-- The split loader only transforms `styled` imported from `library/styled`.
+- The split loader only transforms `styled` imported from `library/styled/alpha`.
 - `ref` is a normal prop in React 19 and flows to the render target.
 
 ### Render target override (`as` prop)

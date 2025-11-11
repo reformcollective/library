@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { css, fresponsive, styled } from "./styled"
+import { css, fresponsive, styled } from "./styled/alpha"
 
 /**
  * scales it's content to a certain size while maintaining
@@ -45,7 +45,7 @@ export default function ScaledContent({
 
 	return (
 		<Outer ref={outer}>
-			<Inner ref={inner} scale={scale ?? 1}>
+			<Inner ref={inner} style={{ scale: `${scale ?? 1}` }}>
 				{children}
 			</Inner>
 		</Outer>
@@ -60,10 +60,9 @@ const Outer = styled(
 	`),
 )
 
-// TODO(alpha-style-migration): function-based styled; manual conversion required
-const Inner = styled("div", ({ scale }: { scale: number }) =>
+const Inner = styled(
+	"div",
 	fresponsive(css`
 		transform-origin: top left;
-		scale: ${scale};
 	`),
 )

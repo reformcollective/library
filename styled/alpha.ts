@@ -12,7 +12,7 @@ import type {
 	VariantsSchema,
 } from "./types"
 
-export * from "./vanilla.css"
+export * from "./vanilla"
 
 // using a union for the type of Component will cause
 // generic forwarding to fail, so we have overloads for each type
