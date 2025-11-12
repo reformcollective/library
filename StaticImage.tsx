@@ -108,14 +108,14 @@ export default function StaticImage({
 	)
 }
 
-export const createDefaultImageConfig = () => ({
+export const defaultImageConfig = {
 	base: [defaultImageClass],
 	variables: {
 		objectFit: { token: objectFitVar },
 		objectPosition: { token: objectPositionVar },
 		aspectRatio: { token: aspectRatioVar },
 	} as const,
-})
+}
 
-const DefaultImage = styled("img", createDefaultImageConfig())
-const DefaultNextImage = styled(Image, createDefaultImageConfig())
+const DefaultImage = styled("img", defaultImageConfig)
+const DefaultNextImage = styled(Image, defaultImageConfig)
