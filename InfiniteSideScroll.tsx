@@ -320,9 +320,9 @@ const Wrapper = styled("div", [
 	{
 		"@layer": {
 			[library]: fresponsive(css`
-		display: grid;
-		position: relative;
-	`),
+				display: grid;
+				position: relative;
+			`),
 		},
 	},
 ])
@@ -331,10 +331,10 @@ const Row = styled("div", [
 	{
 		"@layer": {
 			[library]: fresponsive(css`
-		display: flex;
-		width: 100%;
-		overflow: hidden;
-	`),
+				display: flex;
+				width: 100%;
+				overflow: hidden;
+			`),
 		},
 	},
 	{
@@ -342,8 +342,8 @@ const Row = styled("div", [
 			"& > *": {
 				"@layer": {
 					[library]: fresponsive(css`
-				flex-shrink: 0;
-			`),
+						flex-shrink: 0;
+					`),
 				},
 			},
 		},
@@ -354,8 +354,8 @@ const TwoButtons = styled("div", [
 	{
 		"@layer": {
 			[library]: fresponsive(css`
-		display: flex;
-	`),
+				display: flex;
+			`),
 		},
 	},
 ])
@@ -363,8 +363,7 @@ const TwoButtons = styled("div", [
 const OneButton = styled(TwoButtons, [
 	{
 		"@layer": {
-			[library]: fresponsive(css`
-		`),
+			[library]: fresponsive(css``),
 		},
 	},
 	{
@@ -372,8 +371,8 @@ const OneButton = styled(TwoButtons, [
 			"& > *:first-child": {
 				"@layer": {
 					[library]: fresponsive(css`
-					scale: -1 1;
-				`),
+						scale: -1 1;
+					`),
 				},
 			},
 		},

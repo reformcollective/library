@@ -29,18 +29,18 @@ const Wrapper = styled("div", [
 	{
 		"@layer": {
 			[library]: f.unresponsive(css`
-		grid-column: main;
-		height: 100vh;
-		padding: 100px;
-		background: white;
-		color: black;
-		text-align: center;
-		overflow-wrap: break-word;
+				grid-column: main;
+				height: 100vh;
+				padding: 100px;
+				background: white;
+				color: black;
+				text-align: center;
+				overflow-wrap: break-word;
 
-		a {
-			text-decoration: underline;
-		}
-	`),
+				a {
+					text-decoration: underline;
+				}
+			`),
 		},
 	},
 ])

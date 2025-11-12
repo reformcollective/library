@@ -305,9 +305,9 @@ const Container = styled("div", [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
-		isolation: isolate;
-		overflow: clip;
-	`),
+				isolation: isolate;
+				overflow: clip;
+			`),
 		},
 	},
 ])
@@ -316,12 +316,12 @@ const MainVideo = styled(MuxVideo, [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
-		width: 100%;
-		height: 100%;
-		display: block;
-		object-fit: cover;
-		object-position: center;
-	`),
+				width: 100%;
+				height: 100%;
+				display: block;
+				object-fit: cover;
+				object-position: center;
+			`),
 		},
 	},
 ])
@@ -330,10 +330,10 @@ const PosterVideo = styled(MainVideo, [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
-		position: absolute;
-		transition: opacity 0.2s ease-in-out;
-		pointer-events: none;
-	`),
+				position: absolute;
+				transition: opacity 0.2s ease-in-out;
+				pointer-events: none;
+			`),
 		},
 	},
 ])
@@ -342,13 +342,13 @@ const PosterImage = styled(SanityUniversalImage, [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		object-position: center;
-	`),
+				position: absolute;
+				inset: 0;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: center;
+			`),
 		},
 	},
 ])

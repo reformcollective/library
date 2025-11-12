@@ -102,7 +102,7 @@ const convert = (elements: Element[]): MutableStyle => {
 	return style
 }
 
-export const css = String.raw.bind(String) as typeof String.raw
+export const css = String.raw
 
 const compileCssText = (content: string): StyleRule =>
 	convert(compile(content)) as unknown as StyleRule

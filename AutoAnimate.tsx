@@ -310,8 +310,8 @@ export default function AutoAnimate({
 const Wrapper = styled("div", {
 	"@layer": {
 		[library]: unresponsive(css`
-		overflow: clip;
-	`),
+			overflow: clip;
+		`),
 	},
 })
 
@@ -320,8 +320,8 @@ const AnimationWrapper = styled("div", {
 		{
 			"@layer": {
 				[library]: unresponsive(css`
-			display: grid;
-		`),
+					display: grid;
+				`),
 			},
 		},
 	],
@@ -329,15 +329,15 @@ const AnimationWrapper = styled("div", {
 		"& > *": {
 			"@layer": {
 				[library]: unresponsive(css`
-			grid-area: 1 / 1 / 2 / 2;
-			min-width: 100%;
-			min-height: 100%;
-			display: grid;
+					grid-area: 1 / 1 / 2 / 2;
+					min-width: 100%;
+					min-height: 100%;
+					display: grid;
 
-			&:empty {
-				pointer-events: none;
-			}
-		`),
+					&:empty {
+						pointer-events: none;
+					}
+				`),
 			},
 		},
 	},
@@ -347,9 +347,9 @@ const AnimationWrapper = styled("div", {
 				{
 					"@layer": {
 						[library]: unresponsive(css`
-					place-items: start;
-					place-content: start;
-				`),
+							place-items: start;
+							place-content: start;
+						`),
 					},
 				},
 				{
@@ -357,9 +357,9 @@ const AnimationWrapper = styled("div", {
 						"& > *": {
 							"@layer": {
 								[library]: unresponsive(css`
-							place-items: start;
-							place-content: start;
-						`),
+									place-items: start;
+									place-content: start;
+								`),
 							},
 						},
 					},
@@ -369,9 +369,9 @@ const AnimationWrapper = styled("div", {
 				{
 					"@layer": {
 						[library]: unresponsive(css`
-					place-items: center;
-					place-content: center;
-				`),
+							place-items: center;
+							place-content: center;
+						`),
 					},
 				},
 				{
@@ -379,9 +379,9 @@ const AnimationWrapper = styled("div", {
 						"& > *": {
 							"@layer": {
 								[library]: unresponsive(css`
-							place-items: center;
-							place-content: center;
-						`),
+									place-items: center;
+									place-content: center;
+								`),
 							},
 						},
 					},
@@ -391,9 +391,9 @@ const AnimationWrapper = styled("div", {
 				{
 					"@layer": {
 						[library]: unresponsive(css`
-					place-items: end;
-					place-content: end;
-				`),
+							place-items: end;
+							place-content: end;
+						`),
 					},
 				},
 				{
@@ -401,9 +401,9 @@ const AnimationWrapper = styled("div", {
 						"& > *": {
 							"@layer": {
 								[library]: unresponsive(css`
-							place-items: end;
-							place-content: end;
-						`),
+									place-items: end;
+									place-content: end;
+								`),
 							},
 						},
 					},

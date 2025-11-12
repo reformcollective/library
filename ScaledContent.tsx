@@ -56,16 +56,16 @@ export default function ScaledContent({
 const Outer = styled("div", {
 	"@layer": {
 		[library]: fresponsive(css`
-		display: grid;
-		place-items: start;
-	`),
+			display: grid;
+			place-items: start;
+		`),
 	},
 })
 
 const Inner = styled("div", {
 	"@layer": {
 		[library]: fresponsive(css`
-		transform-origin: top left;
-	`),
+			transform-origin: top left;
+		`),
 	},
 })

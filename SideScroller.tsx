@@ -1,10 +1,10 @@
 import gsap from "gsap/all"
 import useCanHover from "library/canHover"
-import { library } from "library/layers.css"
 import { usePinType } from "library/Scroll"
 import { useAnimation } from "library/useAnimation"
 import { useEffect, useState } from "react"
-import { css, styled, unresponsive } from "./styled/alpha"
+
+import { css, styled, unresponsive } from "./styled"
 import { getVH } from "./viewportUtils"
 
 interface SideScrollerProps {
@@ -108,59 +108,42 @@ export default function SideScroller({
 		setContainerAnimation,
 	])
 
-	type Mode = "default" | "touch"
-	const mode: Mode = touchscreenMode ? "touch" : "default"
-
 	return (
 		<Wrapper
 			ref={setWrapperEl}
-			mode={mode}
-			style={touchscreenMode ? undefined : { height: `${pinAmount}px` }}
+			height={pinAmount}
+			touchscreenMode={touchscreenMode}
 		>
-			<Inner ref={setInnerEl} mode={mode}>
+			<Inner ref={setInnerEl} touchscreenMode={touchscreenMode}>
 				{children}
 			</Inner>
 		</Wrapper>
 	)
 }
 
-const Wrapper = styled("section", {
-	base: [
-		{
-			"@layer": {
-				[library]: unresponsive(css`
+const Wrapper = styled(
+	"section",
+	({ height, touchscreenMode }: { height: number; touchscreenMode: boolean }) =>
+		unresponsive(css`
 			position: relative;
 			overflow: hidden;
 			width: 100%;
-		`),
-			},
-		},
-	],
-	variants: {
-		mode: {
-			default: [],
-			touch: [
-				{
-					"@layer": {
-						[library]: unresponsive(css`
-					height: fit-content;
-					overflow-x: auto;
-				`),
-					},
-				},
-			],
-		},
-	},
-	defaultVariants: {
-		mode: "default",
-	},
-})
+			height: ${height}px;
 
-const Inner = styled("div", {
-	base: [
-		{
-			"@layer": {
-				[library]: unresponsive(css`
+			${
+				touchscreenMode &&
+				css`
+				height: fit-content;
+				overflow-x: auto;
+			`
+			}
+		`),
+)
+
+const Inner = styled(
+	"div",
+	({ touchscreenMode }: { touchscreenMode: boolean }) =>
+		unresponsive(css`
 			position: absolute;
 			width: fit-content;
 			top: 0;
@@ -169,25 +152,13 @@ const Inner = styled("div", {
 			> div {
 				width: fit-content;
 			}
+
+			${
+				touchscreenMode &&
+				css`
+				width: fit-content;
+				height: fit-content;
+			`
+			}
 		`),
-			},
-		},
-	],
-	variants: {
-		mode: {
-			default: [],
-			touch: [
-				{
-					"@layer": {
-						[library]: unresponsive(css`
-					height: fit-content;
-				`),
-					},
-				},
-			],
-		},
-	},
-	defaultVariants: {
-		mode: "default",
-	},
-})
+)

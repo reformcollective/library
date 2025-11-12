@@ -24,21 +24,20 @@ export default function nativeSmoothPin({
 		${
 			containerAware
 				? css`
-			animation-range: 
-				entry-crossing calc(100dvh - ${top} - ${goopLevel}px) 
-				entry-crossing calc(100dvh - ${top} + ${goopLevel}px),
-				
-				entry-crossing calc(100vh + 100cqh - ${top} - 100% - ${goopLevel}px)
-				entry-crossing calc(100vh + 100cqh - ${top} - 100% + ${goopLevel}px);
-		`
+					animation-range:
+						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) entry-crossing
+							calc(100dvh - ${top} + ${goopLevel}px),
+						entry-crossing calc(100vh + 100cqh - ${top} - 100% - ${goopLevel}px)
+							entry-crossing
+							calc(100vh + 100cqh - ${top} - 100% + ${goopLevel}px);
+				`
 				: css`
-			animation-range: 
-				entry-crossing calc(100dvh - ${top} - ${goopLevel}px) 
-				entry-crossing calc(100dvh - ${top} + ${goopLevel}px),
-				
-				exit-crossing calc(calc(-1 * ${top}) - ${goopLevel}px) 
-				exit-crossing calc(calc(-1 * ${top}) + ${goopLevel}px);
-		`
+					animation-range:
+						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) entry-crossing
+							calc(100dvh - ${top} + ${goopLevel}px),
+						exit-crossing calc(calc(-1 * ${top}) - ${goopLevel}px) exit-crossing
+							calc(calc(-1 * ${top}) + ${goopLevel}px);
+				`
 		}
 	`
 }

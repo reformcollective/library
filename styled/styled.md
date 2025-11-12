@@ -13,16 +13,16 @@ The `styled` function is used to create a styled component. It accepts two argum
 For components with only static styles, you can provide an array of style objects. This is the simplest way to use the `styled` utility.
 
 ```javascript
-import { styled, f, css } from "library/styled/alpha";
+import { styled, f, css } from "library/styled/alpha"
 
 const SimpleComponent = styled("div", [
-  f.responsive(css`
-    color: blue;
-  `),
-  f.tablet(css`
-    padding: 10px;
-  `),
-]);
+	f.responsive(css`
+		color: blue;
+	`),
+	f.tablet(css`
+		padding: 10px;
+	`),
+])
 ```
 
 #### Advanced Usage (Dynamic Styles)
@@ -30,28 +30,28 @@ const SimpleComponent = styled("div", [
 For more complex components, you can use the configuration object to define variants, CSS variables, defaults, and `within` scoped selectors.
 
 ```javascript
-import { styled } from "library/styled/alpha";
-import { createVar } from "@vanilla-extract/css";
+import { styled } from "library/styled/alpha"
+import { createVar } from "@vanilla-extract/css"
 
-const heightVar = createVar();
+const heightVar = createVar()
 
 const AdvancedComponent = styled("div", {
-  base: [
-    /* base styles */
-  ],
-  variants: {
-    /* prop-based style variations */
-  },
-  defaults: {
-    /* default variant values */
-  },
-  variables: {
-    /* CSS variable mappings */
-  },
-  within: {
-    /* scoped selectors relative to the component root */
-  },
-});
+	base: [
+		/* base styles */
+	],
+	variants: {
+		/* prop-based style variations */
+	},
+	defaults: {
+		/* default variant values */
+	},
+	variables: {
+		/* CSS variable mappings */
+	},
+	within: {
+		/* scoped selectors relative to the component root */
+	},
+})
 ```
 
 - **`base`**: An array of style objects that are always applied to the component.
@@ -71,18 +71,18 @@ Rules:
 
 ```ts
 const Card = styled("section", {
-  base: [{ display: "grid", gap: 12 }],
-  within: {
-    "&:hover": { boxShadow: "0 6px 20px rgba(0,0,0,0.12)" },
-    "h2": { margin: 0, fontWeight: 600 },
-    "& > a": { textDecoration: "none", color: "inherit" },
-  },
-  variants: {
-    density: {
-      comfy: { base: [{ gap: 16 }], within: { h2: { marginTop: 6 } } },
-      compact: { base: [{ gap: 8 }], within: { h2: { marginTop: 0 } } },
-    },
-  },
+	base: [{ display: "grid", gap: 12 }],
+	within: {
+		"&:hover": { boxShadow: "0 6px 20px rgba(0,0,0,0.12)" },
+		h2: { margin: 0, fontWeight: 600 },
+		"& > a": { textDecoration: "none", color: "inherit" },
+	},
+	variants: {
+		density: {
+			comfy: { base: [{ gap: 16 }], within: { h2: { marginTop: 6 } } },
+			compact: { base: [{ gap: 8 }], within: { h2: { marginTop: 0 } } },
+		},
+	},
 })
 ```
 
@@ -94,18 +94,18 @@ You can define styles that apply when multiple variant conditions are met. These
 
 ```ts
 const Button = styled("button", {
-  variants: {
-    size: { sm: [{ fontSize: 12 }], lg: [{ fontSize: 16 }] },
-    tone: { primary: [{ color: "white" }], neutral: [{ color: "#222" }] },
-  },
-  compoundVariants: [
-    {
-      size: "lg",
-      tone: "primary",
-      base: [{ fontWeight: 700 }],
-      within: { "&:hover": { filter: "brightness(1.1)" } },
-    },
-  ],
+	variants: {
+		size: { sm: [{ fontSize: 12 }], lg: [{ fontSize: 16 }] },
+		tone: { primary: [{ color: "white" }], neutral: [{ color: "#222" }] },
+	},
+	compoundVariants: [
+		{
+			size: "lg",
+			tone: "primary",
+			base: [{ fontWeight: 700 }],
+			within: { "&:hover": { filter: "brightness(1.1)" } },
+		},
+	],
 })
 ```
 
@@ -119,13 +119,15 @@ Usage in a normal component file:
 import { styled } from "library/styled/alpha"
 
 function Target(props: React.HTMLAttributes<HTMLDivElement>) {
-  return <div {...props} data-kind="target" />
+	return <div {...props} data-kind="target" />
 }
 
 export const StyledOnComponent = styled(Target, {
-  base: [{ padding: 8, background: "#223" }],
-  variants: { tone: { brand: [{ color: "#0af" }], neutral: [{ color: "#ccc" }] } },
-  defaults: { tone: "brand" },
+	base: [{ padding: 8, background: "#223" }],
+	variants: {
+		tone: { brand: [{ color: "#0af" }], neutral: [{ color: "#ccc" }] },
+	},
+	defaults: { tone: "brand" },
 })
 
 // Usage
@@ -133,6 +135,7 @@ export const StyledOnComponent = styled(Target, {
 ```
 
 Constraints and notes:
+
 - In `.css.ts(x)` files, keep using `styled('tag', ...)`. If you need to target a component from a `.css.ts(x)` module, prefer the `as` prop from a consumer module.
 - The split loader only transforms `styled` imported from `library/styled/alpha`.
 - `ref` is a normal prop in React 19 and flows to the render target.
@@ -163,17 +166,17 @@ Variants allow you to define different styles based on component props. This is 
 
 ```javascript
 const Button = styled("button", {
-  base: [{ padding: "10px 20px" }],
-  variants: {
-    color: {
-      primary: [{ background: "blue", color: "white" }],
-      secondary: [{ background: "gray", color: "black" }],
-    },
-  },
-  defaults: {
-    color: "primary",
-  },
-});
+	base: [{ padding: "10px 20px" }],
+	variants: {
+		color: {
+			primary: [{ background: "blue", color: "white" }],
+			secondary: [{ background: "gray", color: "black" }],
+		},
+	},
+	defaults: {
+		color: "primary",
+	},
+})
 
 // Usage: <Button color="secondary">Click Me</Button>
 ```
@@ -183,14 +186,14 @@ const Button = styled("button", {
 For styles that need to be fully dynamic, you can use CSS variables. This is perfect for properties that can have a wide range of values, like `width`, `height`, or `transform`.
 
 ```javascript
-const heightVar = createVar();
+const heightVar = createVar()
 
 const DynamicBox = styled("div", {
-  base: [{ border: "1px solid black" }],
-  variables: {
-    height: { token: heightVar, unit: "px" },
-  },
-});
+	base: [{ border: "1px solid black" }],
+	variables: {
+		height: { token: heightVar, unit: "px" },
+	},
+})
 
 // Usage: <DynamicBox height={100} />
 ```
@@ -201,12 +204,12 @@ Slots provide a way to style child or descendant components, which is useful for
 
 ```javascript
 const Card = styled("div", {
-  base: [{ padding: "16px" }],
-  within: {
-    h2: [{ fontSize: "24px" }],
-    p: [{ marginTop: "8px" }],
-  },
-});
+	base: [{ padding: "16px" }],
+	within: {
+		h2: [{ fontSize: "24px" }],
+		p: [{ marginTop: "8px" }],
+	},
+})
 
 // Usage: (
 //   <Card>
