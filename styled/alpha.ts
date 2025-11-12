@@ -87,6 +87,7 @@ export function styled<
 ): unknown {
 	if (typeof target === "string")
 		return styledCore(target, config as StyledInput, debugId)
+	
 	// this will be intercepted by the vanilla split loader
 	return styledCore("div", config as StyledInput, debugId)
 }

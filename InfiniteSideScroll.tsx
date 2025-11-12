@@ -13,7 +13,7 @@ import {
 } from "react"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { createDebouncedEventListener } from "./ScreenContext"
-import { css, fresponsive, styled } from "./styled"
+import { css, fresponsive, styled } from "library/styled/alpha"
 import { useAnimation } from "./useAnimation"
 import { useCombinedRefs } from "./useCombinedRefs"
 
@@ -315,16 +315,14 @@ export function InfiniteSideScroll({
 	)
 }
 
-const Wrapper = styled(
-	"div",
+const Wrapper = styled("div", [
 	fresponsive(css`
 		display: grid;
 		position: relative;
 	`),
-)
+])
 
-const Row = styled(
-	"div",
+const Row = styled("div", [
 	fresponsive(css`
 		display: flex;
 		width: 100%;
@@ -337,24 +335,25 @@ const Row = styled(
 			`),
 		},
 	},
-)
+])
 
-const TwoButtons = styled(
-	"div",
+const TwoButtons = styled("div", [
 	fresponsive(css`
 		display: flex;
 	`),
-)
+])
 
 const OneButton = styled(
 	TwoButtons,
-	fresponsive(css`
-	`),
-	{
-		within: {
-			"& > *:first-child": fresponsive(css`
-				scale: -1 1;
-			`),
+	[
+		fresponsive(css`
+		`),
+		{
+			within: {
+				"& > *:first-child": fresponsive(css`
+					scale: -1 1;
+				`),
+			},
 		},
-	},
+	],
 )

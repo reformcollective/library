@@ -84,7 +84,8 @@ function wrapWithAtRules(
 	wrappers: Array<{ type: string; param: string }>,
 ): Record<string, unknown> {
 	if (wrappers.length === 0) return style
-	const [head, ...tail] = wrappers
+	const head = wrappers[0]!
+	const tail = wrappers.slice(1)
 	return {
 		[head.type]: {
 			[head.param]: wrapWithAtRules(style, tail),

@@ -1,6 +1,6 @@
 import { css, unresponsive } from "./styled/alpha"
 
-const reset = unresponsive(css`
+const reset = (css`
 	/* stylelint-disable */
 	@layer reset {
 		/***
@@ -236,5 +236,5 @@ const reset = unresponsive(css`
 `)
 
 export const ResetStyles = () => (
-	<style dangerouslySetInnerHTML={{ __html: reset }} suppressHydrationWarning />
+	<style>{reset}</style>
 )

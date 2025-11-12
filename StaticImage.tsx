@@ -1,11 +1,16 @@
 "use client"
 
-import { createVar } from "@vanilla-extract/css"
 import { styled } from "library/styled/alpha"
 import type { PlaceholderValue } from "next/dist/shared/lib/get-img-props"
 import type { StaticImageData } from "next/image"
 import Image from "next/image"
 import { createContext, type ImgHTMLAttributes, use } from "react"
+import {
+	aspectRatioVar,
+	defaultImageClass,
+	objectFitVar,
+	objectPositionVar,
+} from "./StaticImage.css"
 
 export const EagerContext = createContext(false)
 export const EagerImages = ({ children }: { children: React.ReactNode }) => (
@@ -103,36 +108,13 @@ export default function StaticImage({
 	)
 }
 
-const objectFitVar = createVar()
-const objectPositionVar = createVar()
-const aspectRatioVar = createVar()
-
-const defaultImageVars = {
-	vars: {
-		[objectFitVar]: "cover",
-		[objectPositionVar]: "center",
-		[aspectRatioVar]: "auto",
-	},
-} as const
-
-const defaultImageLayout = {
-	display: "block",
-	objectFit: objectFitVar,
-	objectPosition: objectPositionVar,
-	height: "auto",
-	width: "100%",
-	aspectRatio: aspectRatioVar,
-} as const
-
-const defaultImageVariables = {
-	objectFit: { token: objectFitVar },
-	objectPosition: { token: objectPositionVar },
-	aspectRatio: { token: aspectRatioVar },
-} as const
-
 export const createDefaultImageConfig = () => ({
-	base: [defaultImageVars, defaultImageLayout],
-	variables: defaultImageVariables,
+	base: [defaultImageClass],
+	variables: {
+		objectFit: { token: objectFitVar },
+		objectPosition: { token: objectPositionVar },
+		aspectRatio: { token: aspectRatioVar },
+	} as const,
 })
 
 const DefaultImage = styled("img", createDefaultImageConfig())

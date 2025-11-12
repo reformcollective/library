@@ -9,11 +9,16 @@ import { dataset, projectId } from "@/sanity/lib/api"
 import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import StaticImage, {
 	type DefaultImageProps,
-	createDefaultImageConfig,
 	EagerContext,
 	prioritizeLoading,
 	type StaticImageProps,
 } from "../StaticImage"
+import {
+	aspectRatioVar,
+	defaultImageClass,
+	objectFitVar,
+	objectPositionVar,
+} from "../StaticImage.css"
 
 type SanityImageData<CropType, WithAlt extends "true" | "false"> = {
 	asset?: { _ref: string }
@@ -109,8 +114,11 @@ export default function SanityUniversalImage(
 	)
 }
 
-const DefaultSanityImage = styled(
-	// biome-ignore lint/suspicious/noExplicitAny: some projects, this fails. in others, it doesn't
-	SanityImage as any,
-	createDefaultImageConfig(),
-) as unknown as typeof SanityImage
+const DefaultSanityImage = styled(SanityImage as typeof SanityImage<'img'>, {
+	base: [defaultImageClass],
+	variables: {
+		objectFit: { token: objectFitVar },
+		objectPosition: { token: objectPositionVar },
+		aspectRatio: { token: aspectRatioVar },
+	},
+})

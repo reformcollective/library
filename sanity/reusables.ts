@@ -1,7 +1,5 @@
 import type libraryConfig from "libraryConfig"
-import { attrs, styled } from "library/styled/alpha"
-import { createElement } from "react"
-import type { ComponentProps, ComponentType } from "react"
+import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
 import type {
 	AutocompleteString,
@@ -13,27 +11,15 @@ import { requiredLinkField } from "sanity-plugin-link-field"
 import UniversalImage from "./SanityImage"
 
 export const createSectionPreview = (image: StaticImageData) =>
-	(() => {
-		const Preview = styled(UniversalImage, {
+	attrs(
+		styled(UniversalImage, {
 			width: 160,
 			height: 90,
 			borderRadius: "0.1875rem",
 			objectFit: "cover !important" as "cover",
-		})
-		const PreviewWithDefaults = attrs(
-			Preview,
-			{
-				src: image,
-				alt: "",
-				objectFit: "cover",
-			} as Partial<ComponentProps<typeof Preview>>,
-		)
-		return () =>
-			createElement(
-				PreviewWithDefaults as ComponentType<ComponentProps<typeof PreviewWithDefaults>>,
-				{} as ComponentProps<typeof PreviewWithDefaults>,
-			)
-	})()
+		}),
+		{ src: image, alt: "", objectFit: "cover" },
+	)
 
 export const universalImage = <
 	CropType extends "css" | "sanity" | "uncropped" | undefined = undefined,
