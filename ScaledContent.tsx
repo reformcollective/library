@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import { css, fresponsive, styled } from "./styled/alpha"
+import { library } from "library/layers.css"
 
 /**
  * scales it's content to a certain size while maintaining
@@ -52,17 +53,15 @@ export default function ScaledContent({
 	)
 }
 
-const Outer = styled(
-	"div",
-	fresponsive(css`
+const Outer = styled("div", {
+	"@layer": { [library]: fresponsive(css`
 		display: grid;
 		place-items: start;
-	`),
-)
+	`) },
+})
 
-const Inner = styled(
-	"div",
-	fresponsive(css`
+const Inner = styled("div", {
+	"@layer": { [library]: fresponsive(css`
 		transform-origin: top left;
-	`),
-)
+	`) },
+})

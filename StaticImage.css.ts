@@ -1,4 +1,5 @@
 import { createVar, style } from "@vanilla-extract/css"
+import { library } from "library/layers.css"
 
 export const objectFitVar = createVar({
 	initialValue: "cover",
@@ -19,12 +20,16 @@ export const aspectRatioVar = createVar({
 })
 
 export const defaultImageClass = style({
-	display: "block",
-	objectFit: objectFitVar,
-	objectPosition: objectPositionVar,
-	height: "auto",
-	width: "100%",
-	aspectRatio: aspectRatioVar,
+	"@layer": {
+		[library]: {
+			display: "block",
+			objectFit: objectFitVar,
+			objectPosition: objectPositionVar,
+			height: "auto",
+			width: "100%",
+			aspectRatio: aspectRatioVar,
+		},
+	},
 })
 
 

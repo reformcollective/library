@@ -3,6 +3,7 @@
 import MuxVideo from "@mux/mux-video-react"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled/alpha"
+import { library } from "library/layers.css"
 import { use, useEffect, useRef, useState } from "react"
 
 export function BackgroundVideo({
@@ -207,26 +208,26 @@ export function BackgroundVideo({
 }
 
 const Container = styled("div", [
-	f.responsive(css`
+	{ "@layer": { [library]: f.responsive(css`
 		isolation: isolate;
 		overflow: clip;
-	`),
+	`) } },
 ])
 
 const MainVideo = styled(MuxVideo, [
-	f.responsive(css`
+	{ "@layer": { [library]: f.responsive(css`
 		width: 100%;
 		height: 100%;
 		display: block;
 		object-fit: cover;
 		object-position: center;
-	`),
+	`) } },
 ])
 
 const PosterVideo = styled(MainVideo, [
-	f.responsive(css`
+	{ "@layer": { [library]: f.responsive(css`
 		position: absolute;
 		transition: opacity 0.2s ease-in-out;
 		pointer-events: none;
-	`),
+	`) } },
 ])

@@ -14,6 +14,7 @@ import {
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { createDebouncedEventListener } from "./ScreenContext"
 import { css, fresponsive, styled } from "library/styled/alpha"
+import { library } from "library/layers.css"
 import { useAnimation } from "./useAnimation"
 import { useCombinedRefs } from "./useCombinedRefs"
 
@@ -316,43 +317,43 @@ export function InfiniteSideScroll({
 }
 
 const Wrapper = styled("div", [
-	fresponsive(css`
+	{ "@layer": { [library]: fresponsive(css`
 		display: grid;
 		position: relative;
-	`),
+	`) } },
 ])
 
 const Row = styled("div", [
-	fresponsive(css`
+	{ "@layer": { [library]: fresponsive(css`
 		display: flex;
 		width: 100%;
 		overflow: hidden;
-	`),
+	`) } },
 	{
 		within: {
-			"& > *": fresponsive(css`
+			"& > *": { "@layer": { [library]: fresponsive(css`
 				flex-shrink: 0;
-			`),
+			`) } },
 		},
 	},
 ])
 
 const TwoButtons = styled("div", [
-	fresponsive(css`
+	{ "@layer": { [library]: fresponsive(css`
 		display: flex;
-	`),
+	`) } },
 ])
 
 const OneButton = styled(
 	TwoButtons,
 	[
-		fresponsive(css`
-		`),
+		{ "@layer": { [library]: fresponsive(css`
+		`) } },
 		{
 			within: {
-				"& > *:first-child": fresponsive(css`
+				"& > *:first-child": { "@layer": { [library]: fresponsive(css`
 					scale: -1 1;
-				`),
+				`) } },
 			},
 		},
 	],

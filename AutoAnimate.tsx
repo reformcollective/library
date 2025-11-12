@@ -5,6 +5,7 @@ import { gsap } from "gsap/all"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
 import { css, styled, unresponsive } from "./styled/alpha"
+import { library } from "library/layers.css"
 import { useBetterThrottle } from "./useBetterThrottle"
 
 const extractKey = (item: unknown): string => {
@@ -306,21 +307,20 @@ export default function AutoAnimate({
 	)
 }
 
-const Wrapper = styled(
-	"div",
-	unresponsive(css`
+const Wrapper = styled("div", {
+	"@layer": { [library]: unresponsive(css`
 		overflow: clip;
-	`),
-)
+	`) },
+})
 
 const AnimationWrapper = styled("div", {
 	base: [
-		unresponsive(css`
+		{ "@layer": { [library]: unresponsive(css`
 			display: grid;
-		`),
+		`) } },
 	],
 	within: {
-		"& > *": unresponsive(css`
+		"& > *": { "@layer": { [library]: unresponsive(css`
 			grid-area: 1 / 1 / 2 / 2;
 			min-width: 100%;
 			min-height: 100%;
@@ -329,49 +329,49 @@ const AnimationWrapper = styled("div", {
 			&:empty {
 				pointer-events: none;
 			}
-		`),
+		`) } },
 	},
 	variants: {
 		alignment: {
 			start: [
-				unresponsive(css`
+				{ "@layer": { [library]: unresponsive(css`
 					place-items: start;
 					place-content: start;
-				`),
+				`) } },
 				{
 					within: {
-						"& > *": unresponsive(css`
+						"& > *": { "@layer": { [library]: unresponsive(css`
 							place-items: start;
 							place-content: start;
-						`),
+						`) } },
 					},
 				},
 			],
 			center: [
-				unresponsive(css`
+				{ "@layer": { [library]: unresponsive(css`
 					place-items: center;
 					place-content: center;
-				`),
+				`) } },
 				{
 					within: {
-						"& > *": unresponsive(css`
+						"& > *": { "@layer": { [library]: unresponsive(css`
 							place-items: center;
 							place-content: center;
-						`),
+						`) } },
 					},
 				},
 			],
 			end: [
-				unresponsive(css`
+				{ "@layer": { [library]: unresponsive(css`
 					place-items: end;
 					place-content: end;
-				`),
+				`) } },
 				{
 					within: {
-						"& > *": unresponsive(css`
+						"& > *": { "@layer": { [library]: unresponsive(css`
 							place-items: end;
 							place-content: end;
-						`),
+						`) } },
 					},
 				},
 			],
