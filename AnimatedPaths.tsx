@@ -1,5 +1,5 @@
 import { DrawSVGPlugin, gsap } from "gsap/all"
-import { useState } from "react"
+import { useId, useState } from "react"
 import { useAnimation } from "./useAnimation"
 
 gsap.registerPlugin(DrawSVGPlugin)
@@ -155,9 +155,11 @@ export function AnimatedPaths({
 		},
 	)
 
+	const id = useId()
+
 	return (
-		<div className={className} ref={(ref) => setWrapper(ref)}>
-			<style>{`${selector} { visibility: hidden; }`}</style>
+		<div id={id} className={className} ref={(ref) => setWrapper(ref)}>
+			<style>{`#${id} ${selector} { visibility: hidden; }`}</style>
 			{children}
 		</div>
 	)

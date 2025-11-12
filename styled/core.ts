@@ -14,16 +14,14 @@ function isStyledOptions(input: StyledInput): input is StyledOptions {
 	return (
 		typeof input === "object" &&
 		input !== null &&
-		f(
-			"base" in input ||
-				"variants" in input ||
-				"defaults" in input ||
-				"defaultVariants" in input ||
-				"vars" in input ||
-				"within" in input ||
-				"compoundVariants" in input ||
-				"compounds" in input,
-		) &&
+		("base" in input ||
+			"variants" in input ||
+			"defaults" in input ||
+			"defaultVariants" in input ||
+			"vars" in input ||
+			"within" in input ||
+			"compoundVariants" in input ||
+			"compounds" in input) &&
 		Object.keys(input).find(
 			(key) =>
 				key !== "base" &&
@@ -80,77 +78,6 @@ function normalizeWithinSelector(rootSelector: string, key: string) {
 	return `${rootSelector} ${trimmed}`
 }
 
-// recursively wrap a style object with at-rule layers
-function wrapWithAtRules(
-	style: Record<string, unknown>,
-	wrappers: Array<{ type: string; param: string }>,
-): Record<string, unknown> {
-	if (wrappers.length === 0) return style
-	const head = wrappers[0]
-	if (!head)
-		throw new Error("Head is missing! This is a bug in the styled library")
-	const tail = wrappers.slice(1)
-	return {
-		[head.type]: {
-			[head.param]: wrapWithAtRules(style, tail),
-		},
-	}
-}
-
-// recursively emit globalStyle ensuring no "selectors" keys remain inside the payload
-function emitFlattenedGlobalStyle(
-	selector: string,
-	rule: Record<string, unknown>,
-	wrappers: Array<{ type: string; param: string }> = [],
-) {
-	if (!rule) return
-
-	// partition keys
-	const atRuleKeys = new Set(["@media", "@supports", "@container", "@layer"])
-	const baseDecls: Record<string, unknown> = {}
-	let hasBase = false
-
-	for (const [k, v] of Object.entries(rule)) {
-		if (k === "selectors" || atRuleKeys.has(k)) continue
-		baseDecls[k] = v
-		hasBase = true
-	}
-
-	// emit base declarations (wrapped) if any
-	if (hasBase) {
-		globalStyle(selector, wrapWithAtRules(baseDecls, wrappers))
-	}
-
-	// handle nested selectors by re-emitting under normalized keys
-	const selectors = (rule as Record<string, unknown>).selectors as
-		| Record<string, Record<string, unknown>>
-		| undefined
-	if (selectors) {
-		for (const [nestedKey, nestedRule] of Object.entries(selectors)) {
-			const normalized = normalizeWithinSelector(selector, nestedKey)
-			emitFlattenedGlobalStyle(
-				normalized,
-				nestedRule as Record<string, unknown>,
-				wrappers,
-			)
-		}
-	}
-
-	// handle known at-rules; recurse while preserving wrapper chain
-	for (const atKey of atRuleKeys) {
-		const block = (rule as Record<string, unknown>)[atKey] as
-			| Record<string, Record<string, unknown>>
-			| undefined
-		if (!block) continue
-		for (const [param, child] of Object.entries(block)) {
-			emitFlattenedGlobalStyle(selector, child as Record<string, unknown>, [
-				...wrappers,
-				{ type: atKey, param },
-			])
-		}
-	}
-}
-
 function emitWithin(anchorClass: string, entries?: WithinBlock) {
 	if (!entries) return
 
@@ -158,12 +85,7 @@ function emitWithin(anchorClass: string, entries?: WithinBlock) {
 		const selector = normalizeWithinSelector(anchorClass, rawKey)
 		for (const block of flattenArray(rawStyle)) {
 			if (!block) continue
-			// ensure any nested selectors in the style payload are re-emitted as separate globalStyle calls
-			if (typeof block === "object") {
-				emitFlattenedGlobalStyle(selector, block as Record<string, unknown>)
-			} else {
-				// non-object payloads are not supported for globalStyle; skip
-			}
+			globalStyle(selector, block)
 		}
 	}
 }

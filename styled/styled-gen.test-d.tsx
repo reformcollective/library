@@ -210,12 +210,10 @@ test("class components work as targets (need className?)", () => {
 test("function-style resolver config is not accepted today (guarded for now)", () => {
 	const C = (_p: { className?: string }) => <div />
 	// @ts-expect-error function-form config not supported by current API
-	// TODO(alpha-style-migration): function-based styled; manual conversion required
 	const _Bad = styled(C, (styleProps: { color: string }) => ({
 		color: styleProps.color,
 	}))
 	// @ts-expect-error function-form config not supported by current API
-	// TODO(alpha-style-migration): function-based styled; manual conversion required
 	const _Bad2 = styled("div", (styleProps: { color: string }) => ({
 		color: styleProps.color,
 	}))

@@ -1,5 +1,6 @@
 "use client"
 
+import { createVar } from "@vanilla-extract/css"
 import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
 import { library } from "library/layers.css"
@@ -315,103 +316,26 @@ const Wrapper = styled("div", {
 	},
 })
 
-const AnimationWrapper = styled("div", {
-	base: [
-		{
-			"@layer": {
-				[library]: unresponsive(css`
-					display: grid;
-				`),
-			},
-		},
-	],
-	within: {
-		"& > *": {
-			"@layer": {
-				[library]: unresponsive(css`
-					grid-area: 1 / 1 / 2 / 2;
-					min-width: 100%;
-					min-height: 100%;
-					display: grid;
+const alignment = createVar()
 
-					&:empty {
-						pointer-events: none;
-					}
-				`),
-			},
-		},
-	},
-	variants: {
-		alignment: {
-			start: [
-				{
-					"@layer": {
-						[library]: unresponsive(css`
-							place-items: start;
-							place-content: start;
-						`),
-					},
-				},
-				{
-					within: {
-						"& > *": {
-							"@layer": {
-								[library]: unresponsive(css`
-									place-items: start;
-									place-content: start;
-								`),
-							},
-						},
-					},
-				},
-			],
-			center: [
-				{
-					"@layer": {
-						[library]: unresponsive(css`
-							place-items: center;
-							place-content: center;
-						`),
-					},
-				},
-				{
-					within: {
-						"& > *": {
-							"@layer": {
-								[library]: unresponsive(css`
-									place-items: center;
-									place-content: center;
-								`),
-							},
-						},
-					},
-				},
-			],
-			end: [
-				{
-					"@layer": {
-						[library]: unresponsive(css`
-							place-items: end;
-							place-content: end;
-						`),
-					},
-				},
-				{
-					within: {
-						"& > *": {
-							"@layer": {
-								[library]: unresponsive(css`
-									place-items: end;
-									place-content: end;
-								`),
-							},
-						},
-					},
-				},
-			],
-		},
-	},
-	defaultVariants: {
-		alignment: "start",
-	},
+const AnimationWrapper = styled("div", {
+	base: unresponsive(css`
+		display: grid;
+		place-items: ${alignment};
+		place-content: ${alignment};
+
+		> * {
+			grid-area: 1 / 1 / 2 / 2;
+			min-width: 100%;
+			min-height: 100%;
+			display: grid;
+			place-items: ${alignment};
+			place-content: ${alignment};
+
+			&:empty {
+				pointer-events: none;
+			}
+		}
+	`),
+	variables: { alignment },
 })
