@@ -114,7 +114,7 @@ export default function SanityUniversalImage(
 	)
 }
 
-const DefaultSanityImage = styled(SanityImage as typeof SanityImage<'img'>, {
+const DefaultSanityImage = styled(SanityImage as typeof SanityImage<"img">, {
 	base: [defaultImageClass],
 	variables: {
 		objectFit: { token: objectFitVar },

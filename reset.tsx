@@ -1,6 +1,6 @@
-import { css, unresponsive } from "./styled/alpha"
+import { css } from "./styled/alpha"
 
-const reset = (css`
+const reset = css`
 	/* stylelint-disable */
 	@layer reset {
 		/***
@@ -233,8 +233,6 @@ const reset = (css`
 		}
 	}
 	/* stylelint-enable */
-`)
+`
 
-export const ResetStyles = () => (
-	<style>{reset}</style>
-)
+export const ResetStyles = () => <style>{reset}</style>

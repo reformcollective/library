@@ -1,7 +1,9 @@
 import config from "libraryConfig"
-import { type StyleRule, keyframes as vanillaKeyframes } from "@vanilla-extract/css"
-import { createElement, type ComponentType } from "react"
-import { COMMENT, compile, DECLARATION, type Element, RULESET } from "stylis"
+import {
+	type StyleRule,
+	keyframes as vanillaKeyframes,
+} from "@vanilla-extract/css"
+import { type ComponentType, createElement } from "react"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -10,6 +12,7 @@ import {
 	tabletBreakpoint,
 	tabletDesignSize,
 } from "styles/media"
+import { COMMENT, compile, DECLARATION, type Element, RULESET } from "stylis"
 import { isDesktop, isFull, isMobile, isTablet } from "./breakpoints.css"
 
 export type CSSObject = StyleRule
@@ -20,10 +23,13 @@ export function attrs<Props>(
 	addedProps: Partial<Props>,
 ) {
 	return (props: Props) =>
-		createElement(Component as ComponentType<unknown>, {
-			...addedProps,
-			...props,
-		} as Record<string, unknown>)
+		createElement(
+			Component as ComponentType<unknown>,
+			{
+				...addedProps,
+				...props,
+			} as Record<string, unknown>,
+		)
 }
 
 // Re-exports and helpers from the combined module
@@ -168,7 +174,12 @@ const normalizeSelectorsOnly = (rule: StyleRule): StyleRule => {
 			out.selectors = nested
 			continue
 		}
-		if (key === "@media" || key === "@supports" || key === "@container" || key === "@layer") {
+		if (
+			key === "@media" ||
+			key === "@supports" ||
+			key === "@container" ||
+			key === "@layer"
+		) {
 			const nested: Record<string, unknown> = {}
 			for (const [k, child] of Object.entries(val as Record<string, unknown>)) {
 				nested[k] = normalizeSelectorsOnly(child as StyleRule)
@@ -312,7 +323,12 @@ const transformStyleRule = (
 			out.selectors = nested
 			continue
 		}
-		if (key === "@media" || key === "@supports" || key === "@container" || key === "@layer") {
+		if (
+			key === "@media" ||
+			key === "@supports" ||
+			key === "@container" ||
+			key === "@layer"
+		) {
 			const nested: Record<string, unknown> = {}
 			for (const [k, child] of Object.entries(val as Record<string, unknown>)) {
 				nested[k] = transformStyleRule(child as StyleRule, mode, options)
@@ -590,5 +606,3 @@ export const f = {
 export const fresponsive = f.responsive
 export const ftablet = f.tablet
 export const fmobile = f.mobile
-
-

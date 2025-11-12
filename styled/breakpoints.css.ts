@@ -34,5 +34,3 @@ globalStyle(":root", {
 		},
 	},
 })
-
-

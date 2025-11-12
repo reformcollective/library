@@ -1,11 +1,10 @@
 import gsap from "gsap/all"
 import useCanHover from "library/canHover"
+import { library } from "library/layers.css"
 import { usePinType } from "library/Scroll"
 import { useAnimation } from "library/useAnimation"
 import { useEffect, useState } from "react"
-
 import { css, styled, unresponsive } from "./styled/alpha"
-import { library } from "library/layers.css"
 import { getVH } from "./viewportUtils"
 
 interface SideScrollerProps {
@@ -127,20 +126,28 @@ export default function SideScroller({
 
 const Wrapper = styled("section", {
 	base: [
-		{ "@layer": { [library]: unresponsive(css`
+		{
+			"@layer": {
+				[library]: unresponsive(css`
 			position: relative;
 			overflow: hidden;
 			width: 100%;
-		`) } },
+		`),
+			},
+		},
 	],
 	variants: {
 		mode: {
 			default: [],
 			touch: [
-				{ "@layer": { [library]: unresponsive(css`
+				{
+					"@layer": {
+						[library]: unresponsive(css`
 					height: fit-content;
 					overflow-x: auto;
-				`) } },
+				`),
+					},
+				},
 			],
 		},
 	},
@@ -151,7 +158,9 @@ const Wrapper = styled("section", {
 
 const Inner = styled("div", {
 	base: [
-		{ "@layer": { [library]: unresponsive(css`
+		{
+			"@layer": {
+				[library]: unresponsive(css`
 			position: absolute;
 			width: fit-content;
 			top: 0;
@@ -160,15 +169,21 @@ const Inner = styled("div", {
 			> div {
 				width: fit-content;
 			}
-		`) } },
+		`),
+			},
+		},
 	],
 	variants: {
 		mode: {
 			default: [],
 			touch: [
-				{ "@layer": { [library]: unresponsive(css`
+				{
+					"@layer": {
+						[library]: unresponsive(css`
 					height: fit-content;
-				`) } },
+				`),
+					},
+				},
 			],
 		},
 	},

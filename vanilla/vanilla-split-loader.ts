@@ -28,7 +28,7 @@ const TRACKED_MODULES: ModulesConfig = {
 		"globalKeyframes",
 		"globalLayer",
 	],
-	"library/styled/alpha": ["styled","keyframes"],
+	"library/styled/alpha": ["styled", "keyframes"],
 }
 
 const SPLIT_STYLED_MODULE = "library/styled/alpha"
@@ -382,19 +382,19 @@ const splitDeclarations = (
 
 			// check if initializer is a tracked function call
 			let trackedIdent: ts.Identifier | undefined
-			let initExpr: ts.Expression | undefined
+			let _initExpr: ts.Expression | undefined
 			if (
 				ts.isCallExpression(decl.initializer) &&
 				ts.isIdentifier(decl.initializer.expression)
 			) {
 				trackedIdent = decl.initializer.expression
-				initExpr = decl.initializer
+				_initExpr = decl.initializer
 			} else if (
 				ts.isTaggedTemplateExpression(decl.initializer) &&
 				ts.isIdentifier(decl.initializer.tag)
 			) {
 				trackedIdent = decl.initializer.tag
-				initExpr = decl.initializer
+				_initExpr = decl.initializer
 			}
 			if (!trackedIdent || !registry.trackedLocalNames.has(trackedIdent.text)) {
 				keptDecls.push(decl)
@@ -429,7 +429,7 @@ const splitDeclarations = (
 					movedDecls.push({
 						name: result.movedName,
 						initializerText: result.movedInitializer,
-						initializer: initExpr!,
+						initializer: callExpr,
 						kind: result.kind,
 					})
 					if (result.newDecl) {
@@ -448,8 +448,8 @@ const splitDeclarations = (
 			if (isExported) reexportNames.push(decl.name.text)
 			movedDecls.push({
 				name: decl.name.text,
-				initializerText: initExpr!.getText(sourceFile),
-				initializer: initExpr!,
+				initializerText: decl.initializer.getText(sourceFile),
+				initializer: decl.initializer,
 				kind: isConstList ? "const" : "let",
 			})
 		}
@@ -651,7 +651,7 @@ const collectDependenciesForNode = (node: ts.Node | undefined): Set<string> => {
 	return deps
 }
 
-const collectDependenciesFromSplitResult = (
+const _collectDependenciesFromSplitResult = (
 	result: SplitResult,
 ): Set<string> => {
 	const deps = new Set<string>()
@@ -954,7 +954,8 @@ const transform = (
 	const computeUnresolved = (): Set<string> => {
 		const deps = new Set<string>()
 		for (const md of splitResult.movedDecls) {
-			for (const dep of collectDependenciesForNode(md.initializer)) deps.add(dep)
+			for (const dep of collectDependenciesForNode(md.initializer))
+				deps.add(dep)
 		}
 		for (const ex of splitResult.movedExprs) {
 			for (const dep of collectDependenciesForNode(ex.expression)) deps.add(dep)
@@ -975,7 +976,10 @@ const transform = (
 
 	let unresolvedNames = computeUnresolved()
 	for (let i = 0; i < 5 && unresolvedNames.size > 0; i++) {
-		const support = findSupportingStatements(sourceFile, unresolvedNames).filter(
+		const support = findSupportingStatements(
+			sourceFile,
+			unresolvedNames,
+		).filter(
 			(s) =>
 				!includedSupport.has(s) &&
 				!isTrackedStyledCall(s, registry) &&

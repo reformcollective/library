@@ -31,5 +31,3 @@ export const defaultImageClass = style({
 		},
 	},
 })
-
-

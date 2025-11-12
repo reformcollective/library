@@ -14,14 +14,16 @@ function isStyledOptions(input: StyledInput): input is StyledOptions {
 	return (
 		typeof input === "object" &&
 		input !== null &&
-		("base" in input ||
-			"variants" in input ||
-			"defaults" in input ||
-			"defaultVariants" in input ||
-			"vars" in input ||
-			"within" in input ||
-			"compoundVariants" in input ||
-			"compounds" in input) &&
+		f(
+			"base" in input ||
+				"variants" in input ||
+				"defaults" in input ||
+				"defaultVariants" in input ||
+				"vars" in input ||
+				"within" in input ||
+				"compoundVariants" in input ||
+				"compounds" in input,
+		) &&
 		Object.keys(input).find(
 			(key) =>
 				key !== "base" &&
@@ -84,7 +86,9 @@ function wrapWithAtRules(
 	wrappers: Array<{ type: string; param: string }>,
 ): Record<string, unknown> {
 	if (wrappers.length === 0) return style
-	const head = wrappers[0]!
+	const head = wrappers[0]
+	if (!head)
+		throw new Error("Head is missing! This is a bug in the styled library")
 	const tail = wrappers.slice(1)
 	return {
 		[head.type]: {
@@ -134,16 +138,15 @@ function emitFlattenedGlobalStyle(
 
 	// handle known at-rules; recurse while preserving wrapper chain
 	for (const atKey of atRuleKeys) {
-		const block = (rule as Record<string, unknown>)[
-			atKey
-		] as Record<string, Record<string, unknown>> | undefined
+		const block = (rule as Record<string, unknown>)[atKey] as
+			| Record<string, Record<string, unknown>>
+			| undefined
 		if (!block) continue
 		for (const [param, child] of Object.entries(block)) {
-			emitFlattenedGlobalStyle(
-				selector,
-				child as Record<string, unknown>,
-				[...wrappers, { type: atKey, param }],
-			)
+			emitFlattenedGlobalStyle(selector, child as Record<string, unknown>, [
+				...wrappers,
+				{ type: atKey, param },
+			])
 		}
 	}
 }
