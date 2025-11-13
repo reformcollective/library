@@ -88,3 +88,13 @@ jobs:
           umbrella-dir: ${{ github.repository }}
           deploy-repository: reformcollective/lighthouse
           token: ${{ env.LIGHTHOUSE_PAT }}
+
+      - uses: LouisBrunner/checks-action@v2.0.0
+        # don't skip if unlighthouse fails
+        if: always()
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Test XYZ
+          conclusion: ${{ job.status }}
+          output: |
+            {"summary":"summary goes here"}
