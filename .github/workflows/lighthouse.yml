@@ -20,7 +20,7 @@ concurrency:
 # image fix
 
 jobs:
-  lighthouse:
+  run:
     timeout-minutes: 15
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
@@ -56,38 +56,38 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
       # END INSTALLATION
-      - name: Build
-        if: github.event.action != 'closed'
-        run: pnpm run build
+      # - name: Build
+      #   if: github.event.action != 'closed'
+      #   run: pnpm run build
 
-      - name: Serve
-        if: github.event.action != 'closed'
-        run: PORT=3000 pnpm run serve & exit 0
+      # - name: Serve
+      #   if: github.event.action != 'closed'
+      #   run: PORT=3000 pnpm run serve & exit 0
 
-      - name: Wait for server...
-        if: github.event.action != 'closed'
-        run: sleep 5
+      # - name: Wait for server...
+      #   if: github.event.action != 'closed'
+      #   run: sleep 5
 
-      - name: Run Unlighthouse
-        if: github.event.action != 'closed'
-        run: pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
+      # - name: Run Unlighthouse
+      #   if: github.event.action != 'closed'
+      #   run: pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
 
-      - name: kill the server
-        # don't skip if unlighthouse fails
-        if: always()
-        run: kill -9 $(lsof -t -i:3000)
-        continue-on-error: true
+      # - name: kill the server
+      #   # don't skip if unlighthouse fails
+      #   if: always()
+      #   run: kill -9 $(lsof -t -i:3000)
+      #   continue-on-error: true
 
-      - name: Deploy preview
-        id: deployment
-        # don't skip if unlighthouse fails
-        if: always()
-        uses: rossjrw/pr-preview-action@v1
-        with:
-          source-dir: ./report/
-          umbrella-dir: ${{ github.repository }}
-          deploy-repository: reformcollective/lighthouse
-          token: ${{ env.LIGHTHOUSE_PAT }}
+      # - name: Deploy preview
+      #   id: deployment
+      #   # don't skip if unlighthouse fails
+      #   if: always()
+      #   uses: rossjrw/pr-preview-action@v1
+      #   with:
+      #     source-dir: ./report/
+      #     umbrella-dir: ${{ github.repository }}
+      #     deploy-repository: reformcollective/lighthouse
+      #     token: ${{ env.LIGHTHOUSE_PAT }}
 
       - uses: LouisBrunner/checks-action@v2.0.0
         # don't skip if unlighthouse fails
