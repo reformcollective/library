@@ -1,10 +1,18 @@
-import fs from "node:fs"
+import fsSync from "node:fs"
+import fs from "node:fs/promises"
 import path from "node:path"
+import turboLoaderRAW from "@vanilla-extract/turbopack-plugin"
 import ts from "typescript"
 import type { LoaderContext } from "webpack"
 
 type ModulesConfig = Record<string, string[]>
 
+type SplitOptions = {
+	nextEnv?: Record<string, string> | null
+}
+
+// @ts-expect-error turbopack loader shape has default export in some builds
+const turboLoader = turboLoaderRAW.default as typeof turboLoaderRAW
 // tracked functions that should be extracted to virtual .css.ts modules
 const TRACKED_MODULES: ModulesConfig = {
 	"@vanilla-extract/css": [
@@ -95,85 +103,6 @@ const createReExport = (
 		ts.factory.createStringLiteral(fromPath),
 		undefined,
 	)
-}
-
-// =============================================================================
-// Import rewriting
-// =============================================================================
-
-/**
- * Rewrites relative imports to be relative to the tsconfig baseUrl (app/).
- * This allows code evaluated in temp directories to resolve imports correctly,
- * and ensures vanilla-extract's output (which contains relative imports) works
- * when embedded as data URIs.
- *
- * Example: ../../../styles/fonts/typography → styles/fonts/typography
- */
-const rewriteImportsToBaseUrl = (
-	code: string,
-	originalFilePath: string,
-	baseUrl: string,
-): string => {
-	const sf = ts.createSourceFile(
-		"rewrite.ts",
-		code,
-		ts.ScriptTarget.ES2020,
-		true,
-		ts.ScriptKind.TS,
-	)
-
-	const updates: Array<{ node: ts.ImportDeclaration; newSpec: string }> = []
-
-	for (const st of sf.statements) {
-		if (!ts.isImportDeclaration(st)) continue
-
-		const spec = (st.moduleSpecifier as ts.StringLiteral).text
-		if (!spec.startsWith("./") && !spec.startsWith("../")) continue
-
-		// resolve relative import to absolute path
-		const originalDir = path.dirname(originalFilePath)
-		const absolutePath = path.resolve(originalDir, spec).replace(/\\/g, "/")
-
-		// convert to relative from baseUrl
-		const relativeToBase = path
-			.relative(baseUrl, absolutePath)
-			.replace(/\\/g, "/")
-
-		// ensure it doesn't start with ../
-		if (relativeToBase.startsWith("../")) {
-			// if it goes outside baseUrl, keep it as absolute or leave as-is
-			// this shouldn't happen in normal usage
-			continue
-		}
-
-		updates.push({ node: st, newSpec: relativeToBase })
-	}
-
-	if (updates.length === 0) return code
-
-	const statements: ts.Statement[] = []
-	for (const st of sf.statements) {
-		if (ts.isImportDeclaration(st)) {
-			const upd = updates.find((u) => u.node === st)
-			if (upd) {
-				statements.push(
-					ts.factory.updateImportDeclaration(
-						st,
-						st.modifiers,
-						st.importClause,
-						ts.factory.createStringLiteral(upd.newSpec),
-						st.assertClause,
-					),
-				)
-				continue
-			}
-		}
-		statements.push(st)
-	}
-
-	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
-	const nextFile = ts.factory.updateSourceFile(sf, statements)
-	return printer.printFile(nextFile)
 }
 
 // =============================================================================
@@ -382,19 +311,16 @@ const splitDeclarations = (
 
 			// check if initializer is a tracked function call
 			let trackedIdent: ts.Identifier | undefined
-			let _initExpr: ts.Expression | undefined
 			if (
 				ts.isCallExpression(decl.initializer) &&
 				ts.isIdentifier(decl.initializer.expression)
 			) {
 				trackedIdent = decl.initializer.expression
-				_initExpr = decl.initializer
 			} else if (
 				ts.isTaggedTemplateExpression(decl.initializer) &&
 				ts.isIdentifier(decl.initializer.tag)
 			) {
 				trackedIdent = decl.initializer.tag
-				_initExpr = decl.initializer
 			}
 			if (!trackedIdent || !registry.trackedLocalNames.has(trackedIdent.text)) {
 				keptDecls.push(decl)
@@ -917,14 +843,125 @@ const injectImports = (
 }
 
 // =============================================================================
+// Vanilla-extract plugin integration
+// =============================================================================
+
+const handleVanillaExtractError = (
+	err: Error,
+	reject: (reason: Error) => void,
+): void => {
+	const rawMsg = (err && (err as Error).message) || String(err)
+	const stack = (err && (err as Error).stack) || ""
+	if (rawMsg.includes("Styles were unable to be assigned to a file")) {
+		const offenderMatch =
+			stack.match(/\(([^)]+\.(?:ts|tsx))\)/) ||
+			stack.match(/at\s+.*?\s+\(([^)]+\.(?:ts|tsx))\)/) ||
+			stack.match(/\s(\/[^\s]+\.(?:ts|tsx))/)
+		const offender = offenderMatch?.[1] ?? "Unable to determine offending file!"
+		const offenderName = offender.split("/").pop() ?? offender
+		const message = [
+			"Styles were unable to be assigned to a file. You likely created styles outside of a '.css.ts' context",
+			"",
+			"Places you're allowed to define styles:",
+			"- You may define styles in the same file they're used in",
+			"- You may define styles in a '.css.ts' file",
+			"",
+			"Potential ways to fix:",
+			`- Rename '${offenderName}' to '${offenderName.replace(".ts", ".css.ts")}'`,
+			"- Move the styles to a '.css.ts' file",
+			"- Move the styles to the file they're used in",
+			"- Ask Robbie for guidance",
+			"",
+			`Offending file: ${offender}`,
+		].join("\n")
+		reject(new Error(message))
+		return
+	}
+
+	// eslint-disable-next-line no-console
+	console.error(err)
+	// eslint-disable-next-line no-console
+	console.warn(
+		"Encountered an error processing styles. The error message may or may not be helpful, talk to Robbie if you're stuck.",
+	)
+	reject(err)
+}
+
+const runVePluginOnTempFile = async (
+	originalThis: LoaderContext<unknown>,
+	tempFilePath: string,
+	originalFilePath: string,
+	loaderOptions: SplitOptions,
+): Promise<string> => {
+	return new Promise<string>((resolve, reject) => {
+		const mode = originalThis.mode ?? "development"
+		const rootContext = originalThis.rootContext
+		const originalDir = path.dirname(originalFilePath)
+
+		// wrap getResolve to always resolve from original file's directory
+		const getResolveWrapped = (options?: unknown) => {
+			// @ts-expect-error webpack types
+			const realGetResolve = originalThis.getResolve?.(options)
+			if (!realGetResolve) return undefined
+			return (
+				_context: string,
+				request: string,
+				cb: (err: Error | null, result?: string) => void,
+			) => {
+				realGetResolve(
+					originalDir,
+					request,
+					(err: Error | null, res?: string | false) =>
+						cb(err, (typeof res === "string" ? res : undefined) ?? undefined),
+				)
+			}
+		}
+
+		let captured: string | undefined
+		const modifiedThis = {
+			async: () => (err?: Error | null, content?: string) => {
+				if (err) {
+					handleVanillaExtractError(err, reject)
+					return
+				}
+				captured = content ?? ""
+				resolve(captured)
+			},
+			getOptions: () => ({
+				identifiers: process.env.NODE_ENV === "production" ? "short" : "debug",
+				outputCss: null,
+				nextEnv: loaderOptions?.nextEnv ?? null,
+			}),
+			getResolve: getResolveWrapped,
+			addDependency: (_file: string) => {},
+			mode,
+			rootContext,
+			resourcePath: tempFilePath,
+			resourceQuery: "",
+		}
+
+		Promise.resolve(
+			// @ts-expect-error loader callable
+			turboLoader.call(modifiedThis),
+		)
+			.then(() => {
+				if (captured === undefined) resolve("")
+			})
+			.catch(reject)
+	})
+}
+
+// =============================================================================
 // Main transform
 // =============================================================================
 
-const transform = (
+const transform = async (
+	loaderThis: LoaderContext<unknown>,
 	rootContext: string,
 	filePath: string,
 	sourceCode: string,
-): { code: string; movedNames: string[] } => {
+	options: SplitOptions,
+): Promise<{ code: string; movedNames: string[] }> => {
 	const isTsx = filePath.endsWith(".tsx") || filePath.endsWith(".jsx")
 	const sourceFile = ts.createSourceFile(
 		filePath,
@@ -1005,12 +1042,58 @@ const transform = (
 		splitResult.supportingStatements,
 	)
 
-	// 4) rewrite imports in virtual module to be relative to baseUrl (app/)
-	const baseUrl = path.join(rootContext, "app")
-	const virtualSourceResolved = rewriteImportsToBaseUrl(
+	// 4) rewrite imports in virtual module to be tsconfig-safe specifiers
+	const rewriteToTsconfig = (
+		code: string,
+		originalFilePath: string,
+		rootDir: string,
+	): string => {
+		const sf = ts.createSourceFile(
+			"rewrite.ts",
+			code,
+			ts.ScriptTarget.ES2020,
+			true,
+			ts.ScriptKind.TS,
+		)
+		const updates: Array<{ node: ts.ImportDeclaration; newSpec: string }> = []
+		for (const st of sf.statements) {
+			if (!ts.isImportDeclaration(st)) continue
+			const spec = (st.moduleSpecifier as ts.StringLiteral).text
+			if (!spec.startsWith("./") && !spec.startsWith("../")) continue
+			const originalDir = path.dirname(originalFilePath)
+			const absolutePath = path.resolve(originalDir, spec).replace(/\\/g, "/")
+			const relRoot = path.relative(rootDir, absolutePath).replace(/\\/g, "/")
+			const newSpec = `@/${relRoot}`
+			updates.push({ node: st, newSpec })
+		}
+		if (updates.length === 0) return code
+		const statements: ts.Statement[] = []
+		for (const st of sf.statements) {
+			if (ts.isImportDeclaration(st)) {
+				const upd = updates.find((u) => u.node === st)
+				if (upd) {
+					statements.push(
+						ts.factory.updateImportDeclaration(
+							st,
+							st.modifiers,
+							st.importClause,
+							ts.factory.createStringLiteral(upd.newSpec),
+							st.assertClause,
+						),
+					)
+					continue
+				}
+			}
+			statements.push(st)
+		}
+		const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
+		const nextFile = ts.factory.updateSourceFile(sf, statements)
+		return printer.printFile(nextFile)
+	}
+	const virtualSourceResolved = rewriteToTsconfig(
 		virtualSource,
 		filePath,
-		baseUrl,
+		rootContext,
 	)
 
 	// use relative path from rootContext for better class name prefixes
@@ -1026,35 +1109,33 @@ const transform = (
 		"pre-process",
 		`${relPathNoExt}.css.ts`,
 	)
-	fs.mkdirSync(path.dirname(preProcessDebugPath), { recursive: true })
-	fs.writeFileSync(preProcessDebugPath, virtualSourceResolved)
+	await fs.mkdir(path.dirname(preProcessDebugPath), { recursive: true })
+	await fs.writeFile(preProcessDebugPath, virtualSourceResolved)
 
-	// 5) write temp .css.ts file - vanilla-extract will process it for us
-	// preserve directory structure 1-1 in cache for simplicity
-	// use library/vanilla/.cache so it's colocated with vanilla-split
+	// 5) write temp file mirroring the original relative path
+	const tmpRoot = path.join(rootContext, ".next", "cache", "vanilla-split")
 	const tmpFile = path
-		.join(
-			rootContext,
-			"app",
-			"library",
-			"vanilla",
-			".cache",
-			`${relPathNoExt}.css.ts`,
-		)
+		.join(tmpRoot, `${relPathNoExt}.css.ts`)
 		.replace(/\\/g, "/")
-	fs.mkdirSync(path.dirname(tmpFile), { recursive: true })
-	fs.writeFileSync(tmpFile, virtualSourceResolved)
+	fsSync.mkdirSync(path.dirname(tmpFile), { recursive: true })
+	fsSync.writeFileSync(tmpFile, virtualSourceResolved, "utf8")
 
-	// 6) generate normal import path - vanilla-extract will handle processing
-	// convert absolute path to relative import from original file
-	const originalDir = path.dirname(filePath)
-	let importPath = path.relative(originalDir, tmpFile).replace(/\\/g, "/")
-	// ensure it starts with ./ or ../
-	if (!importPath.startsWith(".")) {
-		importPath = `./${importPath}`
+	// 6) run VE plugin on temp file and delete it immediately after
+	let veJs = ""
+	try {
+		veJs = await runVePluginOnTempFile(loaderThis, tmpFile, filePath, options)
+	} finally {
+		try {
+			fsSync.unlinkSync(tmpFile)
+		} catch {}
 	}
-	// avoid adding query params that can break resolution in some environments
 
+	// 7) rewrite imports in VE output to tsconfig-safe specifiers
+	const veJsResolved = rewriteToTsconfig(veJs, tmpFile, rootContext)
+
+	// 8) embed as data URL and inject imports
+	const jsBase64 = Buffer.from(veJsResolved, "utf8").toString("base64")
+	const importPath = `data:text/javascript;base64,${jsBase64}`
 	const newStatements = injectImports(
 		splitResult.statements,
 		splitResult.movedNames,
@@ -1076,8 +1157,8 @@ const transform = (
 		"final",
 		relPath,
 	)
-	fs.mkdirSync(path.dirname(finalDebugPath), { recursive: true })
-	fs.writeFileSync(finalDebugPath, printed)
+	await fs.mkdir(path.dirname(finalDebugPath), { recursive: true })
+	await fs.writeFile(finalDebugPath, printed)
 
 	return {
 		code: printed,
@@ -1089,7 +1170,7 @@ const transform = (
 // Loader entry point
 // =============================================================================
 
-export default function vanillaSplitLoader(
+export default async function vanillaSplitLoader(
 	this: LoaderContext<unknown>,
 	sourceCode: string,
 ) {
@@ -1101,8 +1182,14 @@ export default function vanillaSplitLoader(
 			return callback(null, sourceCode)
 		}
 
-		const { code } = transform(this.rootContext, this.resourcePath, sourceCode)
-
+		const options = this.getOptions ? (this.getOptions() as SplitOptions) : {}
+		const { code } = await transform(
+			this,
+			this.rootContext,
+			this.resourcePath,
+			sourceCode,
+			options,
+		)
 		callback(null, code)
 	} catch (e) {
 		callback(e as Error)

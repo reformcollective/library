@@ -22,6 +22,8 @@ const DEBUG_BLOCK_THREAD_FOR_SECONDS = 0
  */
 const FORCE_PRELOADER_STATE = undefined as "loading" | "ready" | undefined
 
+const createDevKey = () => (FORCE_PRELOADER_STATE ? Math.random() : 0)
+
 // block the main thread for debugging
 const useBlockThread = () => {
 	if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0) {
@@ -145,13 +147,13 @@ export const usePreloader = ({
 					ready: true,
 					completed: true,
 					isAtPageTop: true,
-					devKey: Math.random(),
+					devKey: createDevKey(),
 				}
 			: {
 					ready: false,
 					completed: false,
 					isAtPageTop: null,
-					devKey: Math.random(),
+					devKey: createDevKey(),
 				},
 	)
 
@@ -279,7 +281,7 @@ export const usePreloader = ({
 						ready: false,
 						completed: false,
 						isAtPageTop: null,
-						devKey: Math.random(),
+						devKey: createDevKey(),
 					}),
 				1000,
 			)

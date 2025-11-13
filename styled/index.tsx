@@ -43,6 +43,11 @@ import {
 	RULESET,
 } from "stylis"
 
+if (libraryConfig.stylingSystem === "vanilla")
+	throw new Error(
+		"this project is only configured to use the vanilla styling system",
+	)
+
 /**
  * converts a css property value to camelCase
  */

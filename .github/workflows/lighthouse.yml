@@ -11,6 +11,7 @@ permissions:
   pages: write
   id-token: write
   pull-requests: write
+  checks: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -20,7 +21,7 @@ concurrency:
 # image fix
 
 jobs:
-  lighthouse:
+  run:
     timeout-minutes: 15
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
@@ -56,6 +57,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
       # END INSTALLATION
+
       - name: Build
         if: github.event.action != 'closed'
         run: pnpm run build
@@ -69,7 +71,9 @@ jobs:
         run: sleep 5
 
       - name: Run Unlighthouse
+        id: unlighthouse
         if: github.event.action != 'closed'
+        continue-on-error: true
         run: pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
 
       - name: kill the server
@@ -77,6 +81,30 @@ jobs:
         if: always()
         run: kill -9 $(lsof -t -i:3000)
         continue-on-error: true
+
+      - name: Determine Lighthouse conclusion
+        id: determine_conclusion
+        if: always()
+        run: |
+          if [ "${UNLIGHTHOUSE_OUTCOME}" = "failure" ]; then
+            echo "result=neutral" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=success" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          UNLIGHTHOUSE_OUTCOME: ${{ steps.unlighthouse.outcome }}
+
+      - name: Determine Lighthouse check name
+        id: determine_check_name
+        if: always()
+        run: |
+          if [ "${UNLIGHTHOUSE_OUTCOME}" = "failure" ]; then
+            echo "value=Lighthouse Failed" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=Lighthouse Passed" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          UNLIGHTHOUSE_OUTCOME: ${{ steps.unlighthouse.outcome }}
 
       - name: Deploy preview
         id: deployment
@@ -88,3 +116,13 @@ jobs:
           umbrella-dir: ${{ github.repository }}
           deploy-repository: reformcollective/lighthouse
           token: ${{ env.LIGHTHOUSE_PAT }}
+
+      - uses: LouisBrunner/checks-action@v2.0.0
+        # don't skip if unlighthouse fails
+        if: always()
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ steps.determine_check_name.outputs.value }}
+          conclusion: ${{ steps.determine_conclusion.outputs.result }}
+          output: |
+            {"summary":"summary goes here"}

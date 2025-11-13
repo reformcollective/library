@@ -13,7 +13,7 @@ export async function Redirect({ link }: GetSectionType<"redirect">) {
 				<p>
 					This page is configured as a redirect. If someone tries to navigate to
 					this page in any way, they will be redirected to{" "}
-					<a href={link}>{link}</a>
+					<Link href={link}>{link}</Link>
 				</p>
 				<br />
 				<p>You are seeing this message because you are in draft mode.</p>
@@ -36,10 +36,16 @@ const Wrapper = styled("div", [
 				color: black;
 				text-align: center;
 				overflow-wrap: break-word;
+			`),
+		},
+	},
+])
 
-				a {
-					text-decoration: underline;
-				}
+const Link = styled("a", [
+	{
+		"@layer": {
+			[library]: f.unresponsive(css`
+				text-decoration: underline;
 			`),
 		},
 	},

@@ -1,4 +1,5 @@
 import config from "libraryConfig"
+import libraryConfig from "libraryConfig"
 import {
 	type StyleRule,
 	keyframes as vanillaKeyframes,
@@ -17,6 +18,11 @@ import { isDesktop, isFull, isMobile, isTablet } from "./breakpoints.css"
 
 export type CSSObject = StyleRule
 export type CSSValue = string | number | StyleRule
+
+if (libraryConfig.stylingSystem === "restyle")
+	throw new Error(
+		"this project is only configured to use the restyle styling system",
+	)
 
 export function attrs<Props>(
 	Component: ComponentType<Props>,

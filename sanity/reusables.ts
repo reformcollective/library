@@ -1,6 +1,7 @@
 import type libraryConfig from "libraryConfig"
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
+import { lazy } from "react"
 import type {
 	AutocompleteString,
 	IntrinsicTypeName,
@@ -8,7 +9,6 @@ import type {
 } from "sanity"
 import { defineArrayMember, defineField, type ImageDefinition } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
-import { lazy } from "react"
 
 const UniversalImage = lazy(() => import("./SanityImage"))
 
