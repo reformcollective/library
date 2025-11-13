@@ -1,4 +1,3 @@
-"use client"
 
 import MuxVideo from "@mux/mux-video-react"
 import { library } from "library/layers.css"

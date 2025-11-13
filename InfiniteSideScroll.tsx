@@ -1,4 +1,3 @@
-"use client"
 
 import { useDebounceFn } from "ahooks"
 import { gsap, Observer, ScrollTrigger } from "gsap/all"

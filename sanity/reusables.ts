@@ -1,5 +1,6 @@
 import type libraryConfig from "libraryConfig"
-import { attrs, styled } from "library/styled"
+import UniversalImage from "library/UniversalImage"
+import { attrs, styled } from "library/styled/alpha"
 import type { StaticImageData } from "next/image"
 import { lazy } from "react"
 import type {
@@ -10,7 +11,13 @@ import type {
 import { defineArrayMember, defineField, type ImageDefinition } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
 
-const UniversalImage = lazy(() => import("./SanityImage"))
+export const Link = styled.a()
+export const Img = attrs(UniversalImage, {
+	width: 160,
+	height: 90,
+	borderRadius: "0.1875rem",
+	objectFit: "cover !important" as "cover",
+})
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(

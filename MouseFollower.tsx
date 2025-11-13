@@ -1,4 +1,3 @@
-"use client"
 
 import { useLatest } from "ahooks"
 import gsap from "gsap/all"
