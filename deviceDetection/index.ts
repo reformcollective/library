@@ -2,7 +2,7 @@ import BrowserDetector from "browser-dtector"
 
 // environment detection
 // sanity will run in JSDOM, so check for that to ensure we're not running extra code for schema scripts
-const isJSDOM =
+export const isJSDOM =
 	typeof window !== "undefined" &&
 	window?.navigator.userAgent.toLowerCase().includes("jsdom")
 export const isCI = !!process.env.CI

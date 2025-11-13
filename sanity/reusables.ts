@@ -8,7 +8,9 @@ import type {
 } from "sanity"
 import { defineArrayMember, defineField, type ImageDefinition } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
-import UniversalImage from "./SanityImage"
+import { lazy } from "react"
+
+const UniversalImage = lazy(() => import("./SanityImage"))
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(

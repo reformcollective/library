@@ -70,8 +70,11 @@ function stripWithin(rule: WithinRule): Exclude<WithinRule, "within"> {
 function normalizeWithinSelector(rootSelector: string, key: string) {
 	const trimmed = String(key ?? "").trim()
 	if (!trimmed) return rootSelector
-	if (trimmed.startsWith("&")) return trimmed.replace(/^&/g, rootSelector)
+	// replace ALL occurrences of '&' with the root selector (not just leading)
+	if (trimmed.includes("&")) return trimmed.replaceAll("&", rootSelector)
+	// pseudo starting tokens should attach to root without a space
 	if (trimmed.startsWith(":")) return `${rootSelector}${trimmed}`
+	// default: scope the selector under the root with a space
 	return `${rootSelector} ${trimmed}`
 }
 

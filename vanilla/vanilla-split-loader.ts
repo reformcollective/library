@@ -28,7 +28,7 @@ const TRACKED_MODULES: ModulesConfig = {
 		"globalKeyframes",
 		"globalLayer",
 	],
-	"library/styled/alpha": ["styled"],
+	"library/styled/alpha": ["styled", "keyframes"],
 }
 
 const SPLIT_STYLED_MODULE = "library/styled/alpha"
@@ -59,7 +59,7 @@ type SplitResult = {
 	reexportNames: string[]
 	movedDecls: MovedDeclaration[]
 	movedExprs: MovedExpression[]
-	supportingStatements: string[]
+	supportingStatements: ts.Statement[]
 	needsWithComponentHelper: boolean
 }
 
@@ -340,11 +340,17 @@ const splitDeclarations = (
 		// handle top-level expression statements (e.g., globalStyle(...))
 		if (ts.isExpressionStatement(stmt)) {
 			const expr = stmt.expression
-			if (
-				ts.isCallExpression(expr) &&
-				ts.isIdentifier(expr.expression) &&
-				registry.trackedLocalNames.has(expr.expression.text)
+			// handle both call expressions and tagged template expressions
+			let ident: ts.Identifier | undefined
+			if (ts.isCallExpression(expr) && ts.isIdentifier(expr.expression)) {
+				ident = expr.expression
+			} else if (
+				ts.isTaggedTemplateExpression(expr) &&
+				ts.isIdentifier(expr.tag)
 			) {
+				ident = expr.tag
+			}
+			if (ident && registry.trackedLocalNames.has(ident.text)) {
 				movedExprs.push({
 					text: expr.getText(sourceFile),
 					expression: expr,
@@ -375,28 +381,41 @@ const splitDeclarations = (
 			}
 
 			// check if initializer is a tracked function call
+			let trackedIdent: ts.Identifier | undefined
+			let _initExpr: ts.Expression | undefined
 			if (
-				!ts.isCallExpression(decl.initializer) ||
-				!ts.isIdentifier(decl.initializer.expression) ||
-				!registry.trackedLocalNames.has(decl.initializer.expression.text)
+				ts.isCallExpression(decl.initializer) &&
+				ts.isIdentifier(decl.initializer.expression)
 			) {
+				trackedIdent = decl.initializer.expression
+				_initExpr = decl.initializer
+			} else if (
+				ts.isTaggedTemplateExpression(decl.initializer) &&
+				ts.isIdentifier(decl.initializer.tag)
+			) {
+				trackedIdent = decl.initializer.tag
+				_initExpr = decl.initializer
+			}
+			if (!trackedIdent || !registry.trackedLocalNames.has(trackedIdent.text)) {
 				keptDecls.push(decl)
 				continue
 			}
 
-			const call = decl.initializer
-			const calleeLocal = (call.expression as ts.Identifier).text
+			const calleeLocal = trackedIdent.text
 			const calleeModule = registry.trackedLocalToModule.get(calleeLocal)
 			const calleeImported = registry.trackedLocalToImported.get(calleeLocal)
 
 			const isStyledFromLib =
 				calleeModule === SPLIT_STYLED_MODULE &&
 				calleeImported === SPLIT_STYLED_IMPORT
+			const callExpr = ts.isCallExpression(decl.initializer)
+				? decl.initializer
+				: undefined
 
-			if (isStyledFromLib) {
+			if (isStyledFromLib && callExpr) {
 				const result = handleStyledComponent(
 					decl,
-					call,
+					callExpr,
 					sourceFile,
 					isConstList,
 				)
@@ -410,7 +429,7 @@ const splitDeclarations = (
 					movedDecls.push({
 						name: result.movedName,
 						initializerText: result.movedInitializer,
-						initializer: call,
+						initializer: callExpr,
 						kind: result.kind,
 					})
 					if (result.newDecl) {
@@ -429,8 +448,8 @@ const splitDeclarations = (
 			if (isExported) reexportNames.push(decl.name.text)
 			movedDecls.push({
 				name: decl.name.text,
-				initializerText: call.getText(sourceFile),
-				initializer: call,
+				initializerText: decl.initializer.getText(sourceFile),
+				initializer: decl.initializer,
 				kind: isConstList ? "const" : "let",
 			})
 		}
@@ -632,7 +651,7 @@ const collectDependenciesForNode = (node: ts.Node | undefined): Set<string> => {
 	return deps
 }
 
-const collectDependenciesFromSplitResult = (
+const _collectDependenciesFromSplitResult = (
 	result: SplitResult,
 ): Set<string> => {
 	const deps = new Set<string>()
@@ -691,8 +710,8 @@ const getDeclaredNamesFromStatement = (stmt: ts.Statement): string[] => {
 const findSupportingStatements = (
 	sourceFile: ts.SourceFile,
 	unresolvedNames: Set<string>,
-): string[] => {
-	const supporting: string[] = []
+): ts.Statement[] => {
+	const supporting: ts.Statement[] = []
 	if (unresolvedNames.size === 0) return supporting
 
 	for (const stmt of sourceFile.statements) {
@@ -701,13 +720,52 @@ const findSupportingStatements = (
 		if (declared.length === 0) continue
 		const matches = declared.filter((name) => unresolvedNames.has(name))
 		if (matches.length === 0) continue
-		supporting.push(stmt.getText(sourceFile))
+		supporting.push(stmt)
 		matches.forEach((name) => {
 			unresolvedNames.delete(name)
 		})
 	}
 
 	return supporting
+}
+
+const isTrackedStyledCall = (
+	stmt: ts.Statement,
+	registry: ImportRegistry,
+): boolean => {
+	if (!ts.isVariableStatement(stmt)) return false
+	for (const decl of stmt.declarationList.declarations) {
+		if (!decl.initializer) continue
+		if (
+			ts.isCallExpression(decl.initializer) &&
+			ts.isIdentifier(decl.initializer.expression) &&
+			registry.trackedLocalNames.has(decl.initializer.expression.text) &&
+			registry.trackedLocalToModule.get(decl.initializer.expression.text) ===
+				SPLIT_STYLED_MODULE &&
+			registry.trackedLocalToImported.get(decl.initializer.expression.text) ===
+				SPLIT_STYLED_IMPORT
+		) {
+			return true
+		}
+	}
+	return false
+}
+
+const containsJsx = (node: ts.Node): boolean => {
+	let found = false
+	const visit = (n: ts.Node) => {
+		if (
+			ts.isJsxElement(n) ||
+			ts.isJsxSelfClosingElement(n) ||
+			ts.isJsxFragment(n)
+		) {
+			found = true
+			return
+		}
+		n.forEachChild(visit)
+	}
+	visit(node)
+	return found
 }
 
 // =============================================================================
@@ -724,13 +782,13 @@ const buildVirtualModuleSource = (
 	imports: ts.ImportDeclaration[],
 	movedDecls: MovedDeclaration[],
 	movedExprs: MovedExpression[],
-	supportingStatements: string[],
+	supportingStatements: ts.Statement[],
 ): string => {
 	const parts: string[] = []
 
 	// collect all text from moved code to check which imports are used
 	const movedCodeText = [
-		...supportingStatements,
+		...supportingStatements.map((s) => s.getText(sourceFile)),
 		...movedDecls.map((md) => md.initializerText),
 		...movedExprs.map((ex) => ex.text),
 	]
@@ -776,16 +834,35 @@ const buildVirtualModuleSource = (
 		}
 	}
 
-	for (const stmtText of supportingStatements) {
-		parts.push(stmtText)
+	// ensure supporting statements are emitted in original source order
+	const units: Array<{ pos: number; text: string }> = []
+	for (const stmtNode of supportingStatements) {
+		let text = stmtNode.getText(sourceFile)
+		// avoid exporting functions/values from .css.ts that vanilla-extract can't serialize
+		if (/^\s*export\s+/.test(text)) {
+			text = text.replace(/^\s*export\s+/, "")
+		}
+		units.push({
+			pos: stmtNode.getStart(sourceFile),
+			text,
+		})
 	}
-
 	for (const md of movedDecls) {
-		parts.push(`export ${md.kind} ${md.name} = ${md.initializerText};`)
+		units.push({
+			pos: md.initializer.getStart(),
+			text: `export ${md.kind} ${md.name} = ${md.initializerText};`,
+		})
 	}
-
 	for (const ex of movedExprs) {
-		parts.push(ex.text.endsWith(";") ? ex.text : `${ex.text};`)
+		const text = ex.text.endsWith(";") ? ex.text : `${ex.text};`
+		units.push({
+			pos: ex.expression.getStart(),
+			text,
+		})
+	}
+	units.sort((a, b) => a.pos - b.pos)
+	for (const u of units) {
+		parts.push(u.text)
 	}
 
 	return `${parts.join("\n")}\n`
@@ -868,23 +945,55 @@ const transform = (
 		return { code: sourceCode, movedNames: [] }
 	}
 
-	const dependencyNames = collectDependenciesFromSplitResult(splitResult)
+	// 2.5) iteratively include supporting statements (and their own deps)
 	const importLocalNames = collectImportLocalNames(registry.allImports)
 	const movedNamesSet = new Set(splitResult.movedNames)
-	const unresolvedNames = new Set<string>()
+	const includedSupport = new Set<ts.Statement>()
+	const declaredBySupport = new Set<string>()
 
-	for (const name of dependencyNames) {
-		if (movedNamesSet.has(name)) continue
-		if (importLocalNames.has(name)) continue
-		if (GLOBAL_IDENTIFIERS.has(name)) continue
-		unresolvedNames.add(name)
+	const computeUnresolved = (): Set<string> => {
+		const deps = new Set<string>()
+		for (const md of splitResult.movedDecls) {
+			for (const dep of collectDependenciesForNode(md.initializer))
+				deps.add(dep)
+		}
+		for (const ex of splitResult.movedExprs) {
+			for (const dep of collectDependenciesForNode(ex.expression)) deps.add(dep)
+		}
+		for (const st of splitResult.supportingStatements) {
+			for (const dep of collectDependenciesForNode(st)) deps.add(dep)
+		}
+		const unresolved = new Set<string>()
+		for (const name of deps) {
+			if (movedNamesSet.has(name)) continue
+			if (importLocalNames.has(name)) continue
+			if (GLOBAL_IDENTIFIERS.has(name)) continue
+			if (declaredBySupport.has(name)) continue
+			unresolved.add(name)
+		}
+		return unresolved
 	}
 
-	if (unresolvedNames.size > 0) {
-		const supporting = findSupportingStatements(sourceFile, unresolvedNames)
-		if (supporting.length > 0) {
-			splitResult.supportingStatements.push(...supporting)
+	let unresolvedNames = computeUnresolved()
+	for (let i = 0; i < 5 && unresolvedNames.size > 0; i++) {
+		const support = findSupportingStatements(
+			sourceFile,
+			unresolvedNames,
+		).filter(
+			(s) =>
+				!includedSupport.has(s) &&
+				!isTrackedStyledCall(s, registry) &&
+				!containsJsx(s),
+		)
+		if (support.length === 0) break
+		for (const st of support) {
+			includedSupport.add(st)
+			splitResult.supportingStatements.push(st)
+			for (const nm of getDeclaredNamesFromStatement(st)) {
+				declaredBySupport.add(nm)
+			}
 		}
+		unresolvedNames = computeUnresolved()
 	}
 
 	// 3) build virtual module source
@@ -944,9 +1053,7 @@ const transform = (
 	if (!importPath.startsWith(".")) {
 		importPath = `./${importPath}`
 	}
-	// add random query param to force turbopack to re-process on HMR
-	const randomId = Math.random().toString(36).substring(2, 15)
-	importPath = `${importPath}?v=${randomId}`
+	// avoid adding query params that can break resolution in some environments
 
 	const newStatements = injectImports(
 		splitResult.statements,

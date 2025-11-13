@@ -2,6 +2,8 @@
 
 import { useDebounceFn } from "ahooks"
 import { gsap, Observer, ScrollTrigger } from "gsap/all"
+import { library } from "library/layers.css"
+import { css, fresponsive, styled } from "library/styled/alpha"
 import {
 	Fragment,
 	type ReactNode,
@@ -13,7 +15,6 @@ import {
 } from "react"
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { createDebouncedEventListener } from "./ScreenContext"
-import { css, fresponsive, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
 import { useCombinedRefs } from "./useCombinedRefs"
 
@@ -315,39 +316,65 @@ export function InfiniteSideScroll({
 	)
 }
 
-const Wrapper = styled(
-	"div",
-	fresponsive(css`
-		display: grid;
-		position: relative;
-	`),
-)
+const Wrapper = styled("div", [
+	{
+		"@layer": {
+			[library]: fresponsive(css`
+				display: grid;
+				position: relative;
+			`),
+		},
+	},
+])
 
-const Row = styled(
-	"div",
-	fresponsive(css`
-		display: flex;
-		width: 100%;
-		overflow: hidden;
+const Row = styled("div", [
+	{
+		"@layer": {
+			[library]: fresponsive(css`
+				display: flex;
+				width: 100%;
+				overflow: hidden;
+			`),
+		},
+	},
+	{
+		within: {
+			"& > *": {
+				"@layer": {
+					[library]: fresponsive(css`
+						flex-shrink: 0;
+					`),
+				},
+			},
+		},
+	},
+])
 
-		> * {
-			flex-shrink: 0;
-		}
-	`),
-)
+const TwoButtons = styled("div", [
+	{
+		"@layer": {
+			[library]: fresponsive(css`
+				display: flex;
+			`),
+		},
+	},
+])
 
-const TwoButtons = styled(
-	"div",
-	fresponsive(css`
-		display: flex;
-	`),
-)
-
-const OneButton = styled(
-	TwoButtons,
-	fresponsive(css`
-		> *:first-child {
-			scale: -1 1;
-		}
-	`),
-)
+const OneButton = styled(TwoButtons, [
+	{
+		"@layer": {
+			[library]: fresponsive(css``),
+		},
+	},
+	{
+		within: {
+			"& > *:first-child": {
+				"@layer": {
+					[library]: fresponsive(css`
+						scale: -1 1;
+					`),
+				},
+			},
+		},
+	},
+])
