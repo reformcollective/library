@@ -44,58 +44,73 @@ jobs:
         run: |
           git lfs install --local
           git lfs pull || true
-      # - name: Install dependencies
-      #   if: github.event.action != 'closed'
-      #   run: pnpm install
-      # - uses: useblacksmith/cache@v5
-      #   with:
-      #     path: |
-      #       ${{ github.workspace }}/.next/cache
-      #     # Generate a new cache whenever packages or source files change.
-      #     key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
-      #     # If source files changed but packages didn't, rebuild from a prior cache.
-      #     restore-keys: |
-      #       ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
-      # # END INSTALLATION
-      # - name: Build
-      #   if: github.event.action != 'closed'
-      #   run: pnpm run build
+      - name: Install dependencies
+        if: github.event.action != 'closed'
+        run: pnpm install
+      - uses: useblacksmith/cache@v5
+        with:
+          path: |
+            ${{ github.workspace }}/.next/cache
+          # Generate a new cache whenever packages or source files change.
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          # If source files changed but packages didn't, rebuild from a prior cache.
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+      # END INSTALLATION
 
-      # - name: Serve
-      #   if: github.event.action != 'closed'
-      #   run: PORT=3000 pnpm run serve & exit 0
+      - name: Build
+        if: github.event.action != 'closed'
+        run: pnpm run build
 
-      # - name: Wait for server...
-      #   if: github.event.action != 'closed'
-      #   run: sleep 5
+      - name: Serve
+        if: github.event.action != 'closed'
+        run: PORT=3000 pnpm run serve & exit 0
 
-      # - name: Run Unlighthouse
-      #   if: github.event.action != 'closed'
-      #   run: pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
+      - name: Wait for server...
+        if: github.event.action != 'closed'
+        run: sleep 5
 
-      # - name: kill the server
-      #   # don't skip if unlighthouse fails
-      #   if: always()
-      #   run: kill -9 $(lsof -t -i:3000)
-      #   continue-on-error: true
+      - name: Run Unlighthouse
+        id: unlighthouse
+        if: github.event.action != 'closed'
+        continue-on-error: true
+        run: pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
 
-      # - name: Deploy preview
-      #   id: deployment
-      #   # don't skip if unlighthouse fails
-      #   if: always()
-      #   uses: rossjrw/pr-preview-action@v1
-      #   with:
-      #     source-dir: ./report/
-      #     umbrella-dir: ${{ github.repository }}
-      #     deploy-repository: reformcollective/lighthouse
-      #     token: ${{ env.LIGHTHOUSE_PAT }}
+      - name: kill the server
+        # don't skip if unlighthouse fails
+        if: always()
+        run: kill -9 $(lsof -t -i:3000)
+        continue-on-error: true
+
+      - name: Determine Lighthouse conclusion
+        id: determine_conclusion
+        if: always()
+        run: |
+          if [ "${UNLIGHTHOUSE_OUTCOME}" = "failure" ]; then
+            echo "result=neutral" >> "$GITHUB_OUTPUT"
+          else
+            echo "result=success" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          UNLIGHTHOUSE_OUTCOME: ${{ steps.unlighthouse.outcome }}
+
+      - name: Deploy preview
+        id: deployment
+        # don't skip if unlighthouse fails
+        if: always()
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./report/
+          umbrella-dir: ${{ github.repository }}
+          deploy-repository: reformcollective/lighthouse
+          token: ${{ env.LIGHTHOUSE_PAT }}
 
       - uses: LouisBrunner/checks-action@v2.0.0
         # don't skip if unlighthouse fails
         if: always()
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          name: Test XYZ
-          conclusion: ${{ job.status }}
+          name: Lighthouse Result
+          conclusion: ${{ steps.determine_conclusion.outputs.result }}
           output: |
             {"summary":"summary goes here"}
