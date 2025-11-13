@@ -94,6 +94,18 @@ jobs:
         env:
           UNLIGHTHOUSE_OUTCOME: ${{ steps.unlighthouse.outcome }}
 
+      - name: Determine Lighthouse check name
+        id: determine_check_name
+        if: always()
+        run: |
+          if [ "${UNLIGHTHOUSE_OUTCOME}" = "failure" ]; then
+            echo "value=Lighthouse Failed" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=Lighthouse Passed" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          UNLIGHTHOUSE_OUTCOME: ${{ steps.unlighthouse.outcome }}
+
       - name: Deploy preview
         id: deployment
         # don't skip if unlighthouse fails
@@ -110,7 +122,7 @@ jobs:
         if: always()
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          name: Lighthouse Result
+          name: ${{ steps.determine_check_name.outputs.value }}
           conclusion: ${{ steps.determine_conclusion.outputs.result }}
           output: |
             {"summary":"summary goes here"}
