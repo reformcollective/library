@@ -1,4 +1,4 @@
-import fs from "node:fs"
+import fs from "node:fs/promises"
 import path from "node:path"
 import ts from "typescript"
 import type { LoaderContext } from "webpack"
@@ -382,19 +382,16 @@ const splitDeclarations = (
 
 			// check if initializer is a tracked function call
 			let trackedIdent: ts.Identifier | undefined
-			let _initExpr: ts.Expression | undefined
 			if (
 				ts.isCallExpression(decl.initializer) &&
 				ts.isIdentifier(decl.initializer.expression)
 			) {
 				trackedIdent = decl.initializer.expression
-				_initExpr = decl.initializer
 			} else if (
 				ts.isTaggedTemplateExpression(decl.initializer) &&
 				ts.isIdentifier(decl.initializer.tag)
 			) {
 				trackedIdent = decl.initializer.tag
-				_initExpr = decl.initializer
 			}
 			if (!trackedIdent || !registry.trackedLocalNames.has(trackedIdent.text)) {
 				keptDecls.push(decl)
@@ -920,11 +917,11 @@ const injectImports = (
 // Main transform
 // =============================================================================
 
-const transform = (
+const transform = async (
 	rootContext: string,
 	filePath: string,
 	sourceCode: string,
-): { code: string; movedNames: string[] } => {
+): Promise<{ code: string; movedNames: string[] }> => {
 	const isTsx = filePath.endsWith(".tsx") || filePath.endsWith(".jsx")
 	const sourceFile = ts.createSourceFile(
 		filePath,
@@ -1026,8 +1023,8 @@ const transform = (
 		"pre-process",
 		`${relPathNoExt}.css.ts`,
 	)
-	fs.mkdirSync(path.dirname(preProcessDebugPath), { recursive: true })
-	fs.writeFileSync(preProcessDebugPath, virtualSourceResolved)
+	await fs.mkdir(path.dirname(preProcessDebugPath), { recursive: true })
+	await fs.writeFile(preProcessDebugPath, virtualSourceResolved)
 
 	// 5) write temp .css.ts file - vanilla-extract will process it for us
 	// preserve directory structure 1-1 in cache for simplicity
@@ -1042,8 +1039,8 @@ const transform = (
 			`${relPathNoExt}.css.ts`,
 		)
 		.replace(/\\/g, "/")
-	fs.mkdirSync(path.dirname(tmpFile), { recursive: true })
-	fs.writeFileSync(tmpFile, virtualSourceResolved)
+	await fs.mkdir(path.dirname(tmpFile), { recursive: true })
+	await fs.writeFile(tmpFile, virtualSourceResolved)
 
 	// 6) generate normal import path - vanilla-extract will handle processing
 	// convert absolute path to relative import from original file
@@ -1076,8 +1073,8 @@ const transform = (
 		"final",
 		relPath,
 	)
-	fs.mkdirSync(path.dirname(finalDebugPath), { recursive: true })
-	fs.writeFileSync(finalDebugPath, printed)
+	await fs.mkdir(path.dirname(finalDebugPath), { recursive: true })
+	await fs.writeFile(finalDebugPath, printed)
 
 	return {
 		code: printed,
@@ -1089,7 +1086,7 @@ const transform = (
 // Loader entry point
 // =============================================================================
 
-export default function vanillaSplitLoader(
+export default async function vanillaSplitLoader(
 	this: LoaderContext<unknown>,
 	sourceCode: string,
 ) {
@@ -1101,8 +1098,7 @@ export default function vanillaSplitLoader(
 			return callback(null, sourceCode)
 		}
 
-		const { code } = transform(this.rootContext, this.resourcePath, sourceCode)
-
+		const { code } = await transform(this.rootContext, this.resourcePath, sourceCode)
 		callback(null, code)
 	} catch (e) {
 		callback(e as Error)

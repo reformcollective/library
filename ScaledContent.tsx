@@ -1,6 +1,6 @@
 import { library } from "library/layers.css"
 import { useEffect, useRef } from "react"
-import { css, fresponsive, styled } from "./styled/alpha"
+import { css, fresponsive, styled } from "library/styled/alpha"
 
 /**
  * scales it's content to a certain size while maintaining

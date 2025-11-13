@@ -85,9 +85,17 @@ export function styled<
 	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
 	debugId?: string,
 ): unknown {
-	if (typeof target === "string")
-		return styledCore(target, config as StyledInput, debugId)
+	try {
+		if (typeof target === "string")
+			return styledCore(target, config as StyledInput, debugId)
 
-	// this will be intercepted by the vanilla split loader
-	return styledCore("div", config as StyledInput, debugId)
+		// this will be intercepted by the vanilla split loader
+		return styledCore("div", config as StyledInput, debugId)
+	} catch (e) {
+		console.log(
+			"Encountered an error while generating styles for",
+			debugId || "component with no debug id",
+		)
+		throw e
+	}
 }
