@@ -9,7 +9,7 @@ import { isBrowser } from "./deviceDetection"
 export function useBetterThrottle<T>(value: T, msWait: number): T {
 	const [throttledValue, setThrottledValue] = useState(value)
 
-	const throttledUntil = useRef(isBrowser ?Date.now() + msWait:0)
+	const throttledUntil = useRef(isBrowser ? Date.now() + msWait : 0)
 	const isWaiting = useRef(false)
 	const [refreshSignal, setRefreshSignal] = useState(0)
 
