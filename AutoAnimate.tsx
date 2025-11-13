@@ -3,9 +3,10 @@
 import { createVar } from "@vanilla-extract/css"
 import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
+import { css, styled, unresponsive } from "library/styled/alpha"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
-import { css, styled, unresponsive } from "./styled"
+import { library } from "./layers.css"
 import { useBetterThrottle } from "./useBetterThrottle"
 
 const extractKey = (item: unknown): string => {
@@ -318,24 +319,32 @@ const Wrapper = styled("div", {
 const alignment = createVar()
 
 const AnimationWrapper = styled("div", {
-	base: unresponsive(css`
-		display: grid;
-		place-items: ${alignment};
-		place-content: ${alignment};
-	`),
+	base: {
+		"@layer": {
+			[library]: unresponsive(css`
+				display: grid;
+				place-items: ${alignment};
+				place-content: ${alignment};
+			`),
+		},
+	},
 	within: {
-		"> *": unresponsive(css`
-			grid-area: 1 / 1 / 2 / 2;
-			min-width: 100%;
-			min-height: 100%;
-			display: grid;
-			place-items: ${alignment};
-			place-content: ${alignment};
+		"> *": {
+			"@layer": {
+				[library]: unresponsive(css`
+					grid-area: 1 / 1 / 2 / 2;
+					min-width: 100%;
+					min-height: 100%;
+					display: grid;
+					place-items: ${alignment};
+					place-content: ${alignment};
 
-			&:empty {
-				pointer-events: none;
-			}
-		`),
+					&:empty {
+						pointer-events: none;
+					}
+				`),
+			},
+		},
 	},
 	variables: { alignment },
 })
