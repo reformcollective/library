@@ -110,6 +110,7 @@ jobs:
         id: deployment
         # don't skip if unlighthouse fails
         if: always()
+        continue-on-error: true
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: ./report/
