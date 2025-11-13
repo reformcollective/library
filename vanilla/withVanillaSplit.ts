@@ -3,9 +3,7 @@ import { createVanillaExtractPlugin } from "@vanilla-extract/next-plugin"
 import type { NextConfig } from "next"
 import type { TurbopackLoaderItem } from "next/dist/server/config-shared"
 
-const withVanillaExtract = createVanillaExtractPlugin({
-	identifiers: "debug",
-})
+const withVanillaExtract = createVanillaExtractPlugin()
 
 export const withVanillaSplit = (config: NextConfig): NextConfig => {
 	config.turbopack ??= {}

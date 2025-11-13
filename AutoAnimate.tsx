@@ -1,5 +1,6 @@
 "use client"
 
+import { createVar } from "@vanilla-extract/css"
 import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
 import type { ReactNode, RefObject } from "react"
@@ -306,32 +307,35 @@ export default function AutoAnimate({
 	)
 }
 
-const Wrapper = styled(
-	"div",
-	unresponsive(css`
-		overflow: clip;
-	`),
-)
+const Wrapper = styled("div", {
+	"@layer": {
+		[library]: unresponsive(css`
+			overflow: clip;
+		`),
+	},
+})
 
-const AnimationWrapper = styled(
-	"div",
-	({ alignment }: { alignment: "start" | "center" | "end" }) =>
-		unresponsive(css`
+const alignment = createVar()
+
+const AnimationWrapper = styled("div", {
+	base: unresponsive(css`
+		display: grid;
+		place-items: ${alignment};
+		place-content: ${alignment};
+	`),
+	within: {
+		"> *": unresponsive(css`
+			grid-area: 1 / 1 / 2 / 2;
+			min-width: 100%;
+			min-height: 100%;
 			display: grid;
 			place-items: ${alignment};
 			place-content: ${alignment};
 
-			> * {
-				grid-area: 1 / 1 / 2 / 2;
-				min-width: 100%;
-				min-height: 100%;
-				display: grid;
-				place-items: ${alignment};
-				place-content: ${alignment};
-
-				&:empty {
-					pointer-events: none;
-				}
+			&:empty {
+				pointer-events: none;
 			}
 		`),
-)
+	},
+	variables: { alignment },
+})
