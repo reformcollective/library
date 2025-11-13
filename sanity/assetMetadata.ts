@@ -97,10 +97,7 @@ export const fetchAssetMeta = async <InputType>(
 			assetSchema,
 			input,
 		)
-		const { data: linkParse, success: isLink } = z.safeParse(
-			linkSchema,
-			input,
-		)
+		const { data: linkParse, success: isLink } = z.safeParse(linkSchema, input)
 
 		if (isAsset) {
 			const { data: asset } = await sanityFetch({
