@@ -3,7 +3,7 @@ import { sleep } from "library/functions"
 import { defineQuery, stegaClean } from "next-sanity"
 import { cache } from "react"
 import { sanityFetch } from "sanity/lib/live"
-import * as v from "valibot"
+import { z } from "zod"
 
 export const getBlurUp = cache(async (playbackId: string) =>
 	Promise.race([
@@ -22,26 +22,26 @@ export const getBlurUp = cache(async (playbackId: string) =>
 	})),
 )
 
-const assetSchema = v.object({
-	asset: v.object({
-		_ref: v.string(),
+const assetSchema = z.object({
+	asset: z.object({
+		_ref: z.string(),
 	}),
 })
 
-const linkSchema = v.object({
-	internalLink: v.object({
-		_ref: v.string(),
+const linkSchema = z.object({
+	internalLink: z.object({
+		_ref: z.string(),
 	}),
-	_type: v.string(),
-	text: v.optional(v.string()),
-	type: v.optional(v.string()),
-	url: v.optional(v.string()),
-	email: v.optional(v.string()),
-	phone: v.optional(v.string()),
-	value: v.optional(v.string()),
-	blank: v.optional(v.boolean()),
-	parameters: v.optional(v.string()),
-	anchor: v.optional(v.string()),
+	_type: z.string(),
+	text: z.optional(z.string()),
+	type: z.optional(z.string()),
+	url: z.optional(z.string()),
+	email: z.optional(z.string()),
+	phone: z.optional(z.string()),
+	value: z.optional(z.string()),
+	blank: z.optional(z.boolean()),
+	parameters: z.optional(z.string()),
+	anchor: z.optional(z.string()),
 })
 
 type VideoAssetMeta = {
@@ -93,11 +93,11 @@ export const fetchAssetMeta = async <InputType>(
 	}
 
 	if (typeof input === "object" && input !== null) {
-		const { output: assetParse, success: isAsset } = v.safeParse(
+		const { data: assetParse, success: isAsset } = z.safeParse(
 			assetSchema,
 			input,
 		)
-		const { output: linkParse, success: isLink } = v.safeParse(
+		const { data: linkParse, success: isLink } = z.safeParse(
 			linkSchema,
 			input,
 		)

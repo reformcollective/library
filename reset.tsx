@@ -254,6 +254,15 @@ display:revert; revert to element instead of attribute */
 	}
 
 	/**
+	 * Starting with iOS 26, Safari allows content beneath the UI chrome to be visible. Backdrops such as those used 
+	 * by dialogs must use position: absolute instead of position: fixed to cover the entire visual viewport. 
+	 * For this to work after the page was scrolled, the following style must be added to your global styles:
+	 */
+	body {
+		position: relative;
+	}
+
+	/**
 * this is a workaround for lvh being calculated incorrectly
 * - on iOS safari
 * - AND only in the webview
