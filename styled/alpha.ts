@@ -8,7 +8,7 @@ import type {
 	StyledInput,
 	StyledOutProps,
 	StyleRules,
-	VariablesSchema,
+	TokensSchema,
 	VariantsSchema,
 } from "./types"
 
@@ -22,14 +22,14 @@ export function styled<
 	Tag extends keyof JSX.IntrinsicElements,
 	_Props extends { className?: string },
 	const Variants extends VariantsSchema = never,
-	const Variables extends VariablesSchema = never,
+	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,
 >(
 	Component: Tag,
-	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	config: GenericConfig<Variants, Tokens, DefaultVariants> | StyleRules,
 	debugId?: string,
 ): StyledComponent<
-	StyledOutProps<ComponentProps<Tag>, Variants, Variables, DefaultVariants>
+	StyledOutProps<ComponentProps<Tag>, Variants, Tokens, DefaultVariants>
 >
 
 // Overload: component target (function)
@@ -37,26 +37,26 @@ export function styled<
 	_Tag extends keyof JSX.IntrinsicElements,
 	Props extends { className?: string },
 	const Variants extends VariantsSchema = never,
-	const Variables extends VariablesSchema = never,
+	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,
 >(
 	Component: FunctionComponent<Props>,
-	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	config: GenericConfig<Variants, Tokens, DefaultVariants> | StyleRules,
 	debugId?: string,
-): StyledComponent<StyledOutProps<Props, Variants, Variables, DefaultVariants>>
+): StyledComponent<StyledOutProps<Props, Variants, Tokens, DefaultVariants>>
 
 // Overload: component target (class)
 export function styled<
 	_Tag extends keyof JSX.IntrinsicElements,
 	Props extends { className?: string },
 	const Variants extends VariantsSchema = never,
-	const Variables extends VariablesSchema = never,
+	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,
 >(
 	Component: ComponentClass<Props>,
-	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	config: GenericConfig<Variants, Tokens, DefaultVariants> | StyleRules,
 	debugId?: string,
-): StyledComponent<StyledOutProps<Props, Variants, Variables, DefaultVariants>>
+): StyledComponent<StyledOutProps<Props, Variants, Tokens, DefaultVariants>>
 
 // most generic, only exists to catch config errors
 // since if the config is invalid typescript will check against
@@ -65,11 +65,11 @@ export function styled<
 	Tag extends keyof JSX.IntrinsicElements,
 	Props extends { className?: string },
 	const Variants extends VariantsSchema = never,
-	const Variables extends VariablesSchema = never,
+	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,
 >(
 	target: FunctionComponent<Props> | ComponentClass<Props> | Tag,
-	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	config: GenericConfig<Variants, Tokens, DefaultVariants> | StyleRules,
 	debugId?: string,
 ): "Your styled configuration has errors"
 
@@ -78,11 +78,11 @@ export function styled<
 	Tag extends keyof JSX.IntrinsicElements,
 	Props extends { className?: string },
 	const Variants extends VariantsSchema = never,
-	const Variables extends VariablesSchema = never,
+	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,
 >(
 	target: FunctionComponent<Props> | ComponentClass<Props> | Tag,
-	config: GenericConfig<Variants, Variables, DefaultVariants> | StyleRules,
+	config: GenericConfig<Variants, Tokens, DefaultVariants> | StyleRules,
 	debugId?: string,
 ): unknown {
 	try {

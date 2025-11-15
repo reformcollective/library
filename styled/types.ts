@@ -13,7 +13,7 @@ export type StyleRules = WithinRule | string | StyleRules[]
 type CompoundVariant<Props> = Props & {
 	base: StyleRules
 }
-type VariableOptions =
+type TokenOptions =
 	| {
 			token: ReturnType<typeof createVar>
 			unit?: string
@@ -24,7 +24,7 @@ type StringToBoolean<T> = T extends "true" | "false" ? boolean : T
 
 // schemas to extend for type safety
 export type VariantsSchema = Record<string, Record<string, StyleRules>>
-export type VariablesSchema = Record<string, VariableOptions>
+export type TokensSchema = Record<string, TokenOptions>
 export type DefaultVariantsSchema<Variants> = {
 	[Key in keyof Variants]?: StringToBoolean<keyof Variants[Key]>
 }
@@ -42,16 +42,16 @@ type VariantProps<
 	[Key in keyof Variants]?: StringToBoolean<keyof Variants[Key]>
 }
 
-type VariableProps<Variables extends VariablesSchema> = {
-	[Key in keyof Variables as Variables[Key] extends string
+type TokenProps<Tokens extends TokensSchema> = {
+	[Key in keyof Tokens as Tokens[Key] extends string
 		? never
-		: Variables[Key] extends { optional: true }
+		: Tokens[Key] extends { optional: true }
 			? never
-			: Variables[Key] extends { optional: false }
+			: Tokens[Key] extends { optional: false }
 				? Key
 				: never]: string | number
 } & {
-	[Key in keyof Variables]?: string | number
+	[Key in keyof Tokens]?: string | number
 }
 
 /**
@@ -59,7 +59,7 @@ type VariableProps<Variables extends VariablesSchema> = {
  */
 export type GenericConfig<
 	Variants extends VariantsSchema,
-	Variables extends VariablesSchema,
+	Tokens extends TokensSchema,
 	DefaultVariants extends DefaultVariantsSchema<Variants>,
 > = {
 	/** The base style rule applied to the component. */
@@ -72,7 +72,7 @@ export type GenericConfig<
 	defaultVariants?: DefaultVariants
 
 	/** CSS variable definitions. */
-	variables?: Variables
+	tokens?: Tokens
 	/** Rules for applying styles when multiple variants are active. */
 	compoundVariants?: NoInfer<
 		Array<CompoundVariant<VariantProps<Variants, DefaultVariants>>>
@@ -93,16 +93,16 @@ type SafeKeyOf<T> = T extends never ? never : keyof T
 export type StyledOutProps<
 	Props,
 	Variants extends VariantsSchema,
-	Variables extends VariablesSchema,
+	Tokens extends TokensSchema,
 	DefaultVariants extends DefaultVariantsSchema<Variants>,
 > = DistributiveOmit<
 	Props,
-	SafeKeyOf<VariantProps<Variants, never>> | SafeKeyOf<VariableProps<Variables>>
+	SafeKeyOf<VariantProps<Variants, never>> | SafeKeyOf<TokenProps<Tokens>>
 > &
 	([Variants] extends [never]
 		? unknown
 		: VariantProps<Variants, DefaultVariants>) &
-	([Variables] extends [never] ? unknown : VariableProps<Variables>)
+	([Tokens] extends [never] ? unknown : TokenProps<Tokens>)
 
 export type StyledComponent<Props> = (
 	props: Props & { className?: string },
@@ -118,7 +118,7 @@ export type FunctionComponent<Props> = (
  */
 export type StyledOptions = GenericConfig<
 	VariantsSchema,
-	VariablesSchema,
+	TokensSchema,
 	DefaultVariantsSchema<VariantsSchema>
 >
 

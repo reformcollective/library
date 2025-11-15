@@ -45,8 +45,8 @@ const AdvancedComponent = styled("div", {
 	defaults: {
 		/* default variant values */
 	},
-	variables: {
-		/* CSS variable mappings */
+	tokens: {
+		/* CSS variable mappings (our token system, not vanilla-extract's `vars`) */
 	},
 	within: {
 		/* scoped selectors relative to the component root */
@@ -57,7 +57,7 @@ const AdvancedComponent = styled("div", {
 - **`base`**: An array of style objects that are always applied to the component.
 - **`variants`**: An object where keys are prop names and values are objects mapping prop values to styles. This allows for creating different visual states based on props (e.g., `size`, `color`).
 - **`defaults`**: An object specifying the default values for your variants.
-- **`variables`**: An object for mapping component props to CSS variables, enabling fully dynamic styles like custom sizes or colors.
+- **`tokens`**: An object for mapping component props to CSS variables, enabling fully dynamic styles like custom sizes or colors. This is *distinct* from vanilla-extract’s built-in `vars` option; use `tokens` for the styled token system and reserve `vars` for low-level vanilla-extract usage.
 
 #### Within (scoped descendant selectors)
 
@@ -142,7 +142,7 @@ Constraints and notes:
 
 ### Render target override (`as` prop)
 
-All components created with `styled` accept an `as` prop to change the render target at runtime. This works for both DOM tags and React components. Variant and `variables` props are filtered from the DOM and won’t leak.
+All components created with `styled` accept an `as` prop to change the render target at runtime. This works for both DOM tags and React components. Variant and `tokens` props are filtered from the DOM and won’t leak.
 
 ```tsx
 const Box = styled("div", { base: [{ padding: 12, background: "#123" }] })
@@ -181,7 +181,7 @@ const Button = styled("button", {
 // Usage: <Button color="secondary">Click Me</Button>
 ```
 
-#### CSS Variables (`variables`)
+#### CSS Variables via tokens (`tokens`)
 
 For styles that need to be fully dynamic, you can use CSS variables. This is perfect for properties that can have a wide range of values, like `width`, `height`, or `transform`.
 
@@ -190,7 +190,7 @@ const heightVar = createVar()
 
 const DynamicBox = styled("div", {
 	base: [{ border: "1px solid black" }],
-	variables: {
+	tokens: {
 		height: { token: heightVar, unit: "px" },
 	},
 })

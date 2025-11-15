@@ -139,12 +139,12 @@ test("boolean variants are typed as boolean; optional when default exists", () =
 	expectTypeOf<RP["on"]>().toEqualTypeOf<boolean>()
 })
 
-// ---------- vars: prop typing and units ----------
+// ---------- tokens: prop typing and units ----------
 
-test("vars yield string | number props; units permit numeric values", () => {
+test("tokens yield string | number props; units permit numeric values", () => {
 	const Box = styled("div", {
 		base: [{ border: "1px solid #333" }],
-		variables: {
+		tokens: {
 			height: { token: "var(--h)", unit: "px" },
 			width: "var(--w)", // string or number, no unit coercion
 		},
@@ -294,9 +294,9 @@ test.fails("generic types are preserved with variants config", () => {
 	)
 })
 
-// ---------- generics preservation with vars ----------
+// ---------- generics preservation with tokens config ----------
 
-test.fails("generic types are preserved with vars config", () => {
+test.fails("generic types are preserved with tokens config", () => {
 	const Component = <SomeText extends string>(_props: {
 		id: `id-${SomeText}`
 		one: NoInfer<SomeText>
@@ -306,7 +306,7 @@ test.fails("generic types are preserved with vars config", () => {
 
 	const Extended = styled(Component, {
 		base: [{}],
-		variables: { height: "var(--h)", width: { token: "var(--w)", unit: "px" } },
+		tokens: { height: "var(--h)", width: { token: "var(--w)", unit: "px" } },
 	} as const)
 
 	const _ok = (
@@ -375,7 +375,7 @@ test.fails(
 // 			},
 // 			// @ts-expect-error: not a valid option
 // 			skib: true,
-// 			variables: {
+// 			tokens: {
 // 				// required by default
 // 				paddingMultiplier: {
 // 					token: "var(--padding-multiplier)",
