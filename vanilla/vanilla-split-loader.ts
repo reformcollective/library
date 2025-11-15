@@ -1113,7 +1113,7 @@ const transform = async (
 	await fs.writeFile(preProcessDebugPath, virtualSourceResolved)
 
 	// 5) write temp file mirroring the original relative path
-	const tmpRoot = path.join(rootContext, ".next", "cache", "vanilla-split")
+	const tmpRoot = path.join(rootContext, ".next", "vanilla")
 	const tmpFile = path
 		.join(tmpRoot, `${relPathNoExt}.css.ts`)
 		.replace(/\\/g, "/")
