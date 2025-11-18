@@ -1,5 +1,3 @@
-"use client"
-
 import { ScrollTrigger } from "gsap/all"
 import { type ReactNode, type Ref, useRef, useState } from "react"
 import { usePreloader } from "./link/usePreloader"

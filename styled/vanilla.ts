@@ -1,5 +1,10 @@
 import config from "libraryConfig"
-import { createVar, globalStyle, type StyleRule } from "@vanilla-extract/css"
+import libraryConfig from "libraryConfig"
+import {
+	type StyleRule,
+	keyframes as vanillaKeyframes,
+} from "@vanilla-extract/css"
+import { type ComponentType, createElement } from "react"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -9,31 +14,29 @@ import {
 	tabletDesignSize,
 } from "styles/media"
 import { COMMENT, compile, DECLARATION, type Element, RULESET } from "stylis"
+import { isDesktop, isFull, isMobile, isTablet } from "./breakpoints.css"
 
-export const isMobile = createVar()
-export const isTablet = createVar()
-export const isDesktop = createVar()
-export const isFull = createVar()
+export type CSSObject = StyleRule
+export type CSSValue = string | number | StyleRule
 
-globalStyle(":root", {
-	vars: {
-		[isMobile]: "1",
-		[isTablet]: "0",
-		[isDesktop]: "0",
-		[isFull]: "0",
-	},
-	"@media": {
-		[`screen and (min-width: ${mobileBreakpoint + 1}px)`]: {
-			vars: { [isMobile]: "0", [isTablet]: "1" },
-		},
-		[`screen and (min-width: ${tabletBreakpoint + 1}px)`]: {
-			vars: { [isTablet]: "0", [isDesktop]: "1" },
-		},
-		[`screen and (min-width: ${desktopBreakpoint + 1}px)`]: {
-			vars: { [isDesktop]: "0", [isFull]: "1" },
-		},
-	},
-})
+if (libraryConfig.stylingSystem === "restyle")
+	throw new Error(
+		"this project is only configured to use the restyle styling system",
+	)
+
+export function attrs<Props>(
+	Component: ComponentType<Props>,
+	addedProps: Partial<Props>,
+) {
+	return (props: Props) =>
+		createElement(
+			Component as ComponentType<unknown>,
+			{
+				...addedProps,
+				...props,
+			} as Record<string, unknown>,
+		)
+}
 
 // Re-exports and helpers from the combined module
 export const px = (n: number) => `${n}px`
@@ -45,8 +48,6 @@ export const switchValue4 = (
 	full: string,
 ) =>
 	`calc((${mobile}) * ${isMobile} + (${tablet}) * ${isTablet} + (${desktop}) * ${isDesktop} + (${full}) * ${isFull})`
-
-// ---- merged logic from vanilla.tsx ----
 
 const toCamel = (prop: string) =>
 	prop.startsWith("--")
@@ -107,24 +108,98 @@ const convert = (elements: Element[]): MutableStyle => {
 	return style
 }
 
-export const css = (
+export const css = String.raw
+
+const compileCssText = (content: string): StyleRule =>
+	convert(compile(content)) as unknown as StyleRule
+
+const fromTemplate = (
 	tpl: TemplateStringsArray,
-	...expr: Array<string | number>
-): StyleRule => {
-	const content = String.raw(tpl, ...expr)
-	const compiled = compile(content)
-	return convert(compiled) as unknown as StyleRule
-}
+	values: Array<string | number>,
+): StyleRule => compileCssText(String.raw(tpl, ...values))
 
 const isTemplate = (v: unknown): v is TemplateStringsArray =>
 	Array.isArray(v) && Object.hasOwn(v, "raw")
 
-export function unresponsive(
-	tpl: TemplateStringsArray | StyleRule,
+const isStringOrNumber = (value: unknown): value is string | number =>
+	typeof value === "string" || typeof value === "number"
+
+const resolveStyleRule = (
+	input: TemplateStringsArray | string | StyleRule,
+	optionsOrExpr: unknown,
+	expr: Array<string | number>,
+	hasOptions: boolean,
+): StyleRule => {
+	if (isTemplate(input))
+		return fromTemplate(
+			input,
+			(hasOptions ? expr : [optionsOrExpr, ...expr]).filter(isStringOrNumber),
+		)
+	if (typeof input === "string") return compileCssText(input)
+	return input as StyleRule
+}
+
+export const unresponsive = (
+	input: TemplateStringsArray | string | StyleRule,
 	...expr: Array<string | number>
-): StyleRule {
-	if (isTemplate(tpl)) return css(tpl, ...expr)
-	return tpl as StyleRule
+): StyleRule =>
+	isTemplate(input)
+		? normalizeSelectorsOnly(fromTemplate(input, expr))
+		: typeof input === "string"
+			? normalizeSelectorsOnly(compileCssText(input))
+			: normalizeSelectorsOnly(input as StyleRule)
+
+export const keyframes = (
+	tpl: TemplateStringsArray,
+	...expr: Array<string | number>
+) => {
+	const rule = fromTemplate(tpl, expr)
+	const selectors = (rule as Record<string, unknown>).selectors as
+		| Record<string, StyleRule>
+		| undefined
+	if (!selectors)
+		throw new Error(
+			"keyframes template must contain at least one frame selector",
+		)
+	return vanillaKeyframes(selectors)
+}
+
+const normalizeSelectorsOnly = (rule: StyleRule): StyleRule => {
+	const out: Record<string, unknown> = {}
+	for (const [key, val] of Object.entries(rule as Record<string, unknown>)) {
+		if (key === "selectors") {
+			const nested: Record<string, unknown> = {}
+			for (const [rawSel, child] of Object.entries(
+				val as Record<string, unknown>,
+			)) {
+				let sel = String(rawSel).trim()
+				if (sel.startsWith(":")) sel = `&${sel}`
+				sel = sel.replace(/&\s*([>+~])\s*/g, "& $1 ")
+				nested[sel] = normalizeSelectorsOnly(child as StyleRule)
+			}
+			out.selectors = nested
+			continue
+		}
+		if (
+			key === "@media" ||
+			key === "@supports" ||
+			key === "@container" ||
+			key === "@layer"
+		) {
+			const nested: Record<string, unknown> = {}
+			for (const [k, child] of Object.entries(val as Record<string, unknown>)) {
+				nested[k] = normalizeSelectorsOnly(child as StyleRule)
+			}
+			out[key] = nested
+			continue
+		}
+		if (typeof val === "object" && val) {
+			out[key] = normalizeSelectorsOnly(val as StyleRule)
+		} else {
+			out[key] = val
+		}
+	}
+	return out as StyleRule
 }
 
 const VW_PRECISION = 3
@@ -239,8 +314,22 @@ const transformStyleRule = (
 ): StyleRule => {
 	const out: Record<string, unknown> = {}
 	for (const [key, val] of Object.entries(rule as Record<string, unknown>)) {
+		if (key === "selectors") {
+			const nested: Record<string, unknown> = {}
+			for (const [rawSel, child] of Object.entries(
+				val as Record<string, unknown>,
+			)) {
+				let sel = String(rawSel).trim()
+				// ensure self-targeting pseudos/elements are anchored
+				if (sel.startsWith(":")) sel = `&${sel}`
+				// normalize awkward child/sibling combinator spacing like "&>*" → "& > *"
+				sel = sel.replace(/&\s*([>+~])\s*/g, "& $1 ")
+				nested[sel] = transformStyleRule(child as StyleRule, mode, options)
+			}
+			out.selectors = nested
+			continue
+		}
 		if (
-			key === "selectors" ||
 			key === "@media" ||
 			key === "@supports" ||
 			key === "@container" ||
@@ -335,269 +424,189 @@ const wrapWithMedia = (rule: StyleRule, query: string | null): StyleRule => {
 
 export const f = {
 	responsive: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("responsive", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	scaledResponsive: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("scaledResponsive", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	large: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("large", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	small: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("small", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	fullWidth: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("fullWidth", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	desktop: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("desktop", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	tablet: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("tablet", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	mobile: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("mobile", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	allFullWidth: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("allFullWidth", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	allDesktop: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("allDesktop", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	allTablet: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("allTablet", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
 	allMobile: (
-		tplOrRule: TemplateStringsArray | StyleRule,
+		tplOrRule: TemplateStringsArray | string | StyleRule,
 		optionsOrExpr?: FOptions | string | number,
 		...expr: Array<string | number>
 	): StyleRule => {
 		const hasOptions =
-			typeof optionsOrExpr === "object" && !Array.isArray(optionsOrExpr)
+			typeof optionsOrExpr === "object" &&
+			optionsOrExpr !== null &&
+			!Array.isArray(optionsOrExpr)
 		const options = hasOptions ? (optionsOrExpr as FOptions) : undefined
-		const base = isTemplate(tplOrRule)
-			? css(
-					tplOrRule as TemplateStringsArray,
-					...(hasOptions
-						? expr
-						: [optionsOrExpr as string | number, ...expr].filter(
-								(v) => v !== undefined,
-							)),
-				)
-			: (tplOrRule as StyleRule)
+		const base = resolveStyleRule(tplOrRule, optionsOrExpr, expr, hasOptions)
 		const mode = resolveMode("allMobile", options)
 		const transformed = transformStyleRule(base, mode, options)
 		return wrapWithMedia(transformed, getMediaQueryForMode(mode))
 	},
+	unresponsive: (
+		tplOrRule: TemplateStringsArray | string | StyleRule,
+		...expr: Array<string | number>
+	): StyleRule => unresponsive(tplOrRule, ...expr),
 }
 
 export const fresponsive = f.responsive

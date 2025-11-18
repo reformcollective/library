@@ -29,7 +29,7 @@ export type RuntimeArgs = {
 	tag: string
 	cvaBase: string
 	cvaOptions?: CvaConfig
-	varDefs?: Array<{
+	tokenDefs?: Array<{
 		propName: string
 		cssVarName: string
 		unit?: string
@@ -40,7 +40,7 @@ export function runtimeStyled({
 	tag,
 	cvaBase,
 	cvaOptions,
-	varDefs,
+	tokenDefs,
 }: RuntimeArgs) {
 	// @ts-expect-error generated value won't match for cva
 	const resolve = cva(cvaBase, cvaOptions)
@@ -49,20 +49,20 @@ export function runtimeStyled({
 	const variantKeys = Object.keys(
 		(cvaOptions?.variants ?? {}) as Record<string, unknown>,
 	)
-	const varKeys = (varDefs ?? []).map((d) => d.propName)
-	const blockedSet = new Set<string>([...variantKeys, ...varKeys, "as"])
+	const tokenKeys = (tokenDefs ?? []).map((d) => d.propName)
+	const blockedSet = new Set<string>([...variantKeys, ...tokenKeys, "as"])
 
 	const Component = function StyledRuntime(
 		props: Record<string, unknown> = {},
 	) {
 		const { className, style, children, ...rest } = props
 
-		// compute css variable inline styles from props using pre-normalized var defs
-		const varStyle: Record<string, string> = {}
-		for (const def of varDefs ?? []) {
+		// compute css variable inline styles from props using pre-normalized token defs
+		const tokenStyle: Record<string, string> = {}
+		for (const def of tokenDefs ?? []) {
 			const raw = props[def.propName]
 			if (raw === undefined || raw === null) continue
-			varStyle[def.cssVarName] =
+			tokenStyle[def.cssVarName] =
 				typeof raw === "number" && def.unit ? `${raw}${def.unit}` : String(raw)
 		}
 
@@ -81,7 +81,7 @@ export function runtimeStyled({
 				// @ts-expect-error
 				className={cx(resolved, className)}
 				// @ts-expect-error
-				style={{ ...style, ...varStyle }}
+				style={{ ...style, ...tokenStyle }}
 				{...domProps}
 			>
 				{children}

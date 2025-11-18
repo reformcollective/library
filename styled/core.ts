@@ -18,7 +18,7 @@ function isStyledOptions(input: StyledInput): input is StyledOptions {
 			"variants" in input ||
 			"defaults" in input ||
 			"defaultVariants" in input ||
-			"vars" in input ||
+			"tokens" in input ||
 			"within" in input ||
 			"compoundVariants" in input ||
 			"compounds" in input) &&
@@ -28,7 +28,7 @@ function isStyledOptions(input: StyledInput): input is StyledOptions {
 				key !== "variants" &&
 				key !== "defaults" &&
 				key !== "defaultVariants" &&
-				key !== "vars" &&
+				key !== "tokens" &&
 				key !== "within" &&
 				key !== "compoundVariants" &&
 				key !== "compounds",
@@ -70,8 +70,11 @@ function stripWithin(rule: WithinRule): Exclude<WithinRule, "within"> {
 function normalizeWithinSelector(rootSelector: string, key: string) {
 	const trimmed = String(key ?? "").trim()
 	if (!trimmed) return rootSelector
-	if (trimmed.startsWith("&")) return trimmed.replace(/^&/g, rootSelector)
+	// replace ALL occurrences of '&' with the root selector (not just leading)
+	if (trimmed.includes("&")) return trimmed.replaceAll("&", rootSelector)
+	// pseudo starting tokens should attach to root without a space
 	if (trimmed.startsWith(":")) return `${rootSelector}${trimmed}`
+	// default: scope the selector under the root with a space
 	return `${rootSelector} ${trimmed}`
 }
 
@@ -107,9 +110,9 @@ function classFromStyleRules(input: StyleRules | undefined, debugId?: string) {
 	return className
 }
 
-function processVars(vars: StyledOptions["variables"]) {
-	const varDefs = []
-	for (const [propName, tokenSpec] of Object.entries(vars ?? {})) {
+function processTokens(tokens: StyledOptions["tokens"]) {
+	const tokenDefs = []
+	for (const [propName, tokenSpec] of Object.entries(tokens ?? {})) {
 		const isPrimitive =
 			typeof tokenSpec === "string" || typeof tokenSpec === "number"
 		const tokenObj = isPrimitive ? undefined : tokenSpec
@@ -122,9 +125,9 @@ function processVars(vars: StyledOptions["variables"]) {
 			: trimmed.startsWith("--")
 				? trimmed
 				: `--${trimmed}`
-		varDefs.push({ propName, cssVarName, unit })
+		tokenDefs.push({ propName, cssVarName, unit })
 	}
-	return varDefs
+	return tokenDefs
 }
 
 export function styledCore(tag: string, input: StyledInput, debugId?: string) {
@@ -167,8 +170,8 @@ export function styledCore(tag: string, input: StyledInput, debugId?: string) {
 		})
 		.filter(Boolean)
 
-	// 3) vars → runtime varDefs
-	const varDefs = processVars(config.variables)
+	// 3) tokens → runtime tokenDefs
+	const tokenDefs = processTokens(config.tokens)
 
 	// 4) build runtime options
 	const defaultVariants = config.defaultVariants
@@ -179,7 +182,7 @@ export function styledCore(tag: string, input: StyledInput, debugId?: string) {
 	if (compounds && compounds.length > 0) cvaOptions.compoundVariants = compounds
 
 	const args: RuntimeArgs = { tag, cvaBase, cvaOptions }
-	if (varDefs.length) args.varDefs = varDefs
+	if (tokenDefs.length) args.tokenDefs = tokenDefs
 
 	const Component = runtimeStyled(args)
 	addFunctionSerializer(Component, {

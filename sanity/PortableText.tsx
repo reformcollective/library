@@ -1,5 +1,6 @@
+import { library } from "library/layers.css"
 import UniversalLink from "library/link"
-import { styled } from "library/styled"
+import { styled } from "library/styled/alpha"
 import {
 	type ListNestMode,
 	type MissingComponentHandler,
@@ -146,9 +147,13 @@ export const TypedPortableText = <MarkType extends Input[]>({
  */
 
 const DefaultNormal = styled("div", {
-	minHeight: "1em",
-	marginTop: "0.5em",
-	marginBottom: "0.5em",
+	"@layer": {
+		[library]: {
+			minHeight: "1em",
+			marginTop: "0.5em",
+			marginBottom: "0.5em",
+		},
+	},
 })
 const hStyle = {
 	fontWeight: "bold",
@@ -156,17 +161,33 @@ const hStyle = {
 	marginTop: "1em",
 	marginBottom: "0.5em",
 }
-const DefaultH1 = styled("h1", { ...hStyle, fontSize: "2em" })
-const DefaultH2 = styled("h2", { ...hStyle, fontSize: "1.5em" })
-const DefaultH3 = styled("h3", { ...hStyle, fontSize: "1.25em" })
-const DefaultH4 = styled("h4", { ...hStyle, fontSize: "1em" })
-const DefaultH5 = styled("h5", { ...hStyle, fontSize: "0.875em" })
-const DefaultH6 = styled("h6", { ...hStyle, fontSize: "0.75em" })
+const DefaultH1 = styled("h1", {
+	"@layer": { [library]: { ...hStyle, fontSize: "2em" } },
+})
+const DefaultH2 = styled("h2", {
+	"@layer": { [library]: { ...hStyle, fontSize: "1.5em" } },
+})
+const DefaultH3 = styled("h3", {
+	"@layer": { [library]: { ...hStyle, fontSize: "1.25em" } },
+})
+const DefaultH4 = styled("h4", {
+	"@layer": { [library]: { ...hStyle, fontSize: "1em" } },
+})
+const DefaultH5 = styled("h5", {
+	"@layer": { [library]: { ...hStyle, fontSize: "0.875em" } },
+})
+const DefaultH6 = styled("h6", {
+	"@layer": { [library]: { ...hStyle, fontSize: "0.75em" } },
+})
 const DefaultBlockQuote = styled("blockquote", {
-	borderLeft: "1px solid currentcolor",
-	marginLeft: 0,
-	padding: "1em 2em",
-	opacity: 0.8,
+	"@layer": {
+		[library]: {
+			borderLeft: "1px solid currentcolor",
+			marginLeft: 0,
+			padding: "1em 2em",
+			opacity: 0.8,
+		},
+	},
 })
 
 const defaultBlocks = {
@@ -197,12 +218,20 @@ const defaultBlocks = {
 }
 
 const DefaultBullet = styled("ul", {
-	listStyle: "disc",
-	paddingLeft: "1.5em",
+	"@layer": {
+		[library]: {
+			listStyle: "disc",
+			paddingLeft: "1.5em",
+		},
+	},
 })
 const DefaultNumber = styled("ol", {
-	listStyle: "decimal",
-	paddingLeft: "1.5em",
+	"@layer": {
+		[library]: {
+			listStyle: "decimal",
+			paddingLeft: "1.5em",
+		},
+	},
 })
 
 const defaultList = {
@@ -215,34 +244,66 @@ const defaultList = {
 }
 
 const DefaultStrong = styled("strong", {
-	fontWeight: "bold",
+	"@layer": {
+		[library]: {
+			fontWeight: "bold",
+		},
+	},
 })
 const DefaultEm = styled("em", {
-	fontStyle: "italic",
+	"@layer": {
+		[library]: {
+			fontStyle: "italic",
+		},
+	},
 })
 const DefaultCode = styled("code", {
-	fontFamily: "monospace",
-	background: "#333",
-	color: "#fff",
-	padding: "0.2em 0.3em",
-	borderRadius: "0.2em",
+	"@layer": {
+		[library]: {
+			fontFamily: "monospace",
+			background: "#333",
+			color: "#fff",
+			padding: "0.2em 0.3em",
+			borderRadius: "0.2em",
+		},
+	},
 })
 const DefaultUnderline = styled("u", {
-	textDecoration: "underline",
+	"@layer": {
+		[library]: {
+			textDecoration: "underline",
+		},
+	},
 })
 const DefaultStrikeThrough = styled("s", {
-	textDecoration: "line-through",
+	"@layer": {
+		[library]: {
+			textDecoration: "line-through",
+		},
+	},
 })
 const DefaultSuper = styled("sup", {
-	fontSize: "0.8em",
-	verticalAlign: "super",
+	"@layer": {
+		[library]: {
+			fontSize: "0.8em",
+			verticalAlign: "super",
+		},
+	},
 })
 const DefaultSub = styled("sub", {
-	fontSize: "0.8em",
-	verticalAlign: "sub",
+	"@layer": {
+		[library]: {
+			fontSize: "0.8em",
+			verticalAlign: "sub",
+		},
+	},
 })
 const DefaultLink = styled(UniversalLink, {
-	textDecoration: "underline",
+	"@layer": {
+		[library]: {
+			textDecoration: "underline",
+		},
+	},
 })
 
 const defaultMarks = {

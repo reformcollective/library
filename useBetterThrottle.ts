@@ -1,5 +1,6 @@
 import { useEventListener } from "ahooks"
 import { useEffect, useRef, useState } from "react"
+import { isBrowser } from "./deviceDetection"
 
 /**
  * useThrottle, but throttling is also throttled.
@@ -8,7 +9,7 @@ import { useEffect, useRef, useState } from "react"
 export function useBetterThrottle<T>(value: T, msWait: number): T {
 	const [throttledValue, setThrottledValue] = useState(value)
 
-	const throttledUntil = useRef(Date.now() + msWait)
+	const throttledUntil = useRef(isBrowser ? Date.now() + msWait : 0)
 	const isWaiting = useRef(false)
 	const [refreshSignal, setRefreshSignal] = useState(0)
 

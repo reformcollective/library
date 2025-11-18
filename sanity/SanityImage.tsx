@@ -1,7 +1,7 @@
 "use client"
 
 import type { AssetMeta } from "library/sanity/assetMetadata"
-import { styled } from "library/styled"
+import { styled } from "library/styled/alpha"
 import { stegaClean } from "next-sanity"
 import { use } from "react"
 import { SanityImage } from "sanity-image"
@@ -9,11 +9,16 @@ import { dataset, projectId } from "@/sanity/lib/api"
 import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import StaticImage, {
 	type DefaultImageProps,
-	defaultImageStyles,
 	EagerContext,
 	prioritizeLoading,
 	type StaticImageProps,
 } from "../StaticImage"
+import {
+	aspectRatioVar,
+	defaultImageClass,
+	objectFitVar,
+	objectPositionVar,
+} from "../StaticImage.css"
 
 type SanityImageData<CropType, WithAlt extends "true" | "false"> = {
 	asset?: { _ref: string }
@@ -109,8 +114,11 @@ export default function SanityUniversalImage(
 	)
 }
 
-const DefaultSanityImage = styled(
-	// biome-ignore lint/suspicious/noExplicitAny: some projects, this fails. in others, it doesn't
-	SanityImage as any,
-	defaultImageStyles,
-) as unknown as typeof SanityImage
+const DefaultSanityImage = styled(SanityImage as typeof SanityImage<"img">, {
+	base: [defaultImageClass],
+	tokens: {
+		objectFit: { token: objectFitVar },
+		objectPosition: { token: objectPositionVar },
+		aspectRatio: { token: aspectRatioVar },
+	},
+})
