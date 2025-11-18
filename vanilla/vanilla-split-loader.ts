@@ -731,19 +731,21 @@ const buildVirtualModuleSource = (
 	const usedIdentifiers = new Set<string>()
 
 	for (const stmt of supportingStatements) {
-		collectDependenciesForNode(stmt).forEach((d) => usedIdentifiers.add(d))
+		collectDependenciesForNode(stmt).forEach((d) => {
+			usedIdentifiers.add(d)
+		})
 	}
 	for (const md of movedDecls) {
 		// We must parse initializerText because it might be transformed (e.g. styled replacement)
 		// and different from the original AST node
-		getDependenciesFromText(md.initializerText).forEach((d) =>
-			usedIdentifiers.add(d),
-		)
+		getDependenciesFromText(md.initializerText).forEach((d) => {
+			usedIdentifiers.add(d)
+		})
 	}
 	for (const ex of movedExprs) {
-		collectDependenciesForNode(ex.expression).forEach((d) =>
-			usedIdentifiers.add(d),
-		)
+		collectDependenciesForNode(ex.expression).forEach((d) => {
+			usedIdentifiers.add(d)
+		})
 	}
 
 	// only include imports that are referenced in the moved code
