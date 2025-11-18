@@ -69,9 +69,9 @@ export default function useAutoHideHeader(
 
 	useAnimation(
 		() => {
-			let lastScroll = 0
-			let isHovered = false
-			if (!wrapper) return
+			let lastScroll = window.lenis?.scroll ?? window.scrollY
+let isHovered = false
+if (!wrapper?.current) return
 
 			const props = {
 				ease: "power1.out",
@@ -81,7 +81,7 @@ export default function useAutoHideHeader(
 			const yTo = gsap.quickTo(wrapper.current, "y", props)
 
 			const onUpdate = () => {
-				const scroll = window.lenis?.scroll ?? 0
+				const scroll = window.lenis?.scroll ?? window.scrollY
 				const delta = scroll - lastScroll
 				lastScroll = scroll
 				const height = wrapper.current?.offsetHeight ?? 0
