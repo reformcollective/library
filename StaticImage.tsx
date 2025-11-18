@@ -110,7 +110,7 @@ export default function StaticImage({
 
 export const defaultImageConfig = {
 	base: [defaultImageClass],
-	variables: {
+	tokens: {
 		objectFit: { token: objectFitVar },
 		objectPosition: { token: objectPositionVar },
 		aspectRatio: { token: aspectRatioVar },

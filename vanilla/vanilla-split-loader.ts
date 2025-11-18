@@ -1113,22 +1113,16 @@ const transform = async (
 	await fs.writeFile(preProcessDebugPath, virtualSourceResolved)
 
 	// 5) write temp file mirroring the original relative path
-	const tmpRoot = path.join(rootContext, ".next", "cache", "vanilla-split")
+	const tmpRoot = path.join(rootContext, ".next", "vanilla")
 	const tmpFile = path
 		.join(tmpRoot, `${relPathNoExt}.css.ts`)
 		.replace(/\\/g, "/")
 	fsSync.mkdirSync(path.dirname(tmpFile), { recursive: true })
 	fsSync.writeFileSync(tmpFile, virtualSourceResolved, "utf8")
 
-	// 6) run VE plugin on temp file and delete it immediately after
+	// 6) run VE plugin on temp file (keep file on disk for debugging)
 	let veJs = ""
-	try {
-		veJs = await runVePluginOnTempFile(loaderThis, tmpFile, filePath, options)
-	} finally {
-		try {
-			fsSync.unlinkSync(tmpFile)
-		} catch {}
-	}
+	veJs = await runVePluginOnTempFile(loaderThis, tmpFile, filePath, options)
 
 	// 7) rewrite imports in VE output to tsconfig-safe specifiers
 	const veJsResolved = rewriteToTsconfig(veJs, tmpFile, rootContext)

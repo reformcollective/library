@@ -346,5 +346,5 @@ const AnimationWrapper = styled("div", {
 			},
 		},
 	},
-	variables: { alignment },
+	tokens: { alignment },
 })
