@@ -3,12 +3,11 @@
 import { gsap, ScrollTrigger } from "gsap/all"
 import type Lenis from "lenis"
 import type { LenisOptions } from "lenis"
+import "lenis/dist/lenis.css"
 import { type LenisRef, ReactLenis } from "lenis/react"
 import { useEffect, useRef, useState } from "react"
-import { useDeepCompareLayoutEffect } from "use-deep-compare"
 import { isBrowser } from "./deviceDetection"
 import TypedEventEmitter from "./TypedEventEmitter"
-import "lenis/dist/lenis.css"
 
 const locks: symbol[] = []
 const locksChange = new TypedEventEmitter<{ change: [] }>()
