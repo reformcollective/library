@@ -10,11 +10,9 @@ import type {
 import { defineArrayMember, defineField, type ImageDefinition } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
 
-const UniversalImage = lazy(() => import("./SanityImage"))
-
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
-		styled(UniversalImage, {
+		styled("img", {
 			width: 160,
 			height: 90,
 			borderRadius: "0.1875rem",
