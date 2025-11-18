@@ -699,6 +699,21 @@ const containsJsx = (node: ts.Node): boolean => {
 // =============================================================================
 
 /**
+ * Helper to parse a code snippet and find dependencies.
+ * Wraps the text in a variable declaration to ensure it parses as valid TS.
+ */
+const getDependenciesFromText = (text: string): Set<string> => {
+	const sf = ts.createSourceFile(
+		"temp.ts",
+		`const __TEMP__ = ${text}`,
+		ts.ScriptTarget.ES2020,
+		true,
+		ts.ScriptKind.TS,
+	)
+	return collectDependenciesForNode(sf)
+}
+
+/**
  * Builds the source code for the virtual .css.ts module by combining imports,
  * moved declarations, and moved expressions.
  * Only includes imports that are actually used in the moved code.
@@ -712,14 +727,26 @@ const buildVirtualModuleSource = (
 ): string => {
 	const parts: string[] = []
 
-	// collect all text from moved code to check which imports are used
-	const movedCodeText = [
-		...supportingStatements.map((s) => s.getText(sourceFile)),
-		...movedDecls.map((md) => md.initializerText),
-		...movedExprs.map((ex) => ex.text),
-	]
-		.join(" ")
-		.trim()
+	// Collect all identifiers used in the moved code
+	const usedIdentifiers = new Set<string>()
+
+	for (const stmt of supportingStatements) {
+		collectDependenciesForNode(stmt).forEach((d) => {
+			usedIdentifiers.add(d)
+		})
+	}
+	for (const md of movedDecls) {
+		// We must parse initializerText because it might be transformed (e.g. styled replacement)
+		// and different from the original AST node
+		getDependenciesFromText(md.initializerText).forEach((d) => {
+			usedIdentifiers.add(d)
+		})
+	}
+	for (const ex of movedExprs) {
+		collectDependenciesForNode(ex.expression).forEach((d) => {
+			usedIdentifiers.add(d)
+		})
+	}
 
 	// only include imports that are referenced in the moved code
 	for (const i of imports) {
@@ -736,7 +763,7 @@ const buildVirtualModuleSource = (
 
 		if (importClause.name) {
 			// default import
-			if (movedCodeText.includes(importClause.name.text)) {
+			if (usedIdentifiers.has(importClause.name.text)) {
 				isUsed = true
 			}
 		}
@@ -748,7 +775,7 @@ const buildVirtualModuleSource = (
 			// named imports
 			for (const el of importClause.namedBindings.elements) {
 				const localName = el.name.text
-				if (movedCodeText.includes(localName)) {
+				if (usedIdentifiers.has(localName)) {
 					isUsed = true
 					break
 				}
