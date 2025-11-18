@@ -17,7 +17,7 @@ export const createSectionPreview = (image: StaticImageData) =>
 			borderRadius: "0.1875rem",
 			objectFit: "cover !important" as "cover",
 		}),
-		{ src: image, alt: "", objectFit: "cover" },
+		{ src: image.src, alt: "" },
 	)
 
 export const universalImage = <
