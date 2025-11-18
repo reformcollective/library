@@ -62,7 +62,7 @@ export default function StaticImage({
 	loading,
 	sizes = "100vw",
 	quality = 90,
-	placeholder = "blur",
+	placeholder = "empty",
 	...otherProps
 }: StaticImageProps) {
 	if (!src) return null
