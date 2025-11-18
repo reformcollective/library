@@ -70,8 +70,8 @@ export default function useAutoHideHeader(
 	useAnimation(
 		() => {
 			let lastScroll = window.lenis?.scroll ?? window.scrollY
-let isHovered = false
-if (!wrapper?.current) return
+			let isHovered = false
+			if (!wrapper?.current) return
 
 			const props = {
 				ease: "power1.out",
