@@ -1,5 +1,3 @@
-"use client"
-
 import { gsap, ScrollTrigger } from "gsap/all"
 import type Lenis from "lenis"
 import type { LenisOptions } from "lenis"
