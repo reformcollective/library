@@ -24,6 +24,11 @@ gsap.config({
 	nullTargetWarn: false,
 })
 
+const socket =
+	process.env.NODE_ENV === "development"
+		? new WebSocket("ws://localhost:3000/_next/webpack-hmr")
+		: null
+
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
  * This hook will take care of cleaning up the animation and clearing inline styles when the component is unmounted or when the dependencies change.
@@ -81,6 +86,9 @@ export const useAnimation = <InputFn extends Creation>(
 	type OutputType =
 		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
 		ReturnType<InputFn> extends Function ? undefined : ReturnType<InputFn>
+
+	// devtools
+	const [hmrHash, setHmrHash] = useState<string | null>(null)
 
 	// inputs & options
 	const {
@@ -182,11 +190,26 @@ export const useAnimation = <InputFn extends Creation>(
 		shouldHydrateUtilities,
 		recreateOnResize ? innerWidth : null,
 		...dependencies,
-		/**
-		 * if we're in dev, also include the function contents so that we can rerun on fast refresh
-		 */
-		process.env.NODE_ENV === "development" ? createAnimations.toString() : null,
+		hmrHash,
 	])
+
+	useEffect(() => {
+		if (process.env.NODE_ENV === "development") {
+			const handler = (event: MessageEvent) => {
+				const message = JSON.parse(event.data) as
+					| { type: "unknown" }
+					| { type: "built"; hash: string }
+				if (message.type === "built") {
+					console.log("HMR hash updated:", message.hash)
+					setHmrHash(message.hash)
+				}
+			}
+			socket?.addEventListener("message", handler)
+			return () => {
+				socket?.removeEventListener("message", handler)
+			}
+		}
+	}, [])
 
 	return {
 		result: returnValue,

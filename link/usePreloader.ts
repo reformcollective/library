@@ -4,7 +4,7 @@ import { isBrowser } from "library/deviceDetection"
 import { sleep } from "library/functions"
 import { ScreenContext } from "library/ScreenContext"
 import { createScrollLock } from "library/Scroll"
-import { type RefObject, use, useEffect, useMemo, useState } from "react"
+import { type RefObject, use, useEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { instantScrollToAnchor } from "./util"
 
@@ -22,18 +22,14 @@ const DEBUG_BLOCK_THREAD_FOR_SECONDS = 0
  */
 const FORCE_PRELOADER_STATE = undefined as "loading" | "ready" | undefined
 
+const createDevKey = () => (FORCE_PRELOADER_STATE ? Math.random() : 0)
+
 // block the main thread for debugging
-const useBlockThread = (signal: unknown) => {
-	// biome-ignore lint/correctness/useExhaustiveDependencies: debug
-	useMemo(() => {
-		if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0) {
-			const start = performance.now()
-			while (
-				performance.now() - start <
-				DEBUG_BLOCK_THREAD_FOR_SECONDS * 1000
-			) {}
-		}
-	}, [signal])
+const useBlockThread = () => {
+	if (isBrowser && DEBUG_BLOCK_THREAD_FOR_SECONDS > 0) {
+		const start = performance.now()
+		while (performance.now() - start < DEBUG_BLOCK_THREAD_FOR_SECONDS * 1000) {}
+	}
 }
 
 const globalReadyPromises: Promise<unknown>[] = []
@@ -151,17 +147,17 @@ export const usePreloader = ({
 					ready: true,
 					completed: true,
 					isAtPageTop: true,
-					devKey: Math.random(),
+					devKey: createDevKey(),
 				}
 			: {
 					ready: false,
 					completed: false,
 					isAtPageTop: null,
-					devKey: Math.random(),
+					devKey: createDevKey(),
 				},
 	)
 
-	useBlockThread(output.ready)
+	useBlockThread()
 
 	// sync ALL our preloaders together so that no single preloader races to the finish line
 	const [animationReadyPromise] = useState(() => Promise.withResolvers())
@@ -285,7 +281,7 @@ export const usePreloader = ({
 						ready: false,
 						completed: false,
 						isAtPageTop: null,
-						devKey: Math.random(),
+						devKey: createDevKey(),
 					}),
 				1000,
 			)

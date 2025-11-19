@@ -21,8 +21,8 @@ export function horizontalLoop(items, config) {
 	let timeline
 	items = gsap.utils.toArray(items)
 	config = config || {}
-    // REFORM CHANGE: allow callers to opt out of internal window resize handling
-    const manageResize = config.manageResize !== false
+	// REFORM CHANGE: allow callers to opt out of internal window resize handling
+	const manageResize = config.manageResize !== false
 	gsap.context(() => {
 		// use a context so that if this is called from within another context or a gsap.matchMedia(), we can perform proper cleanup like the "resize" event handler on the window
 		let onChange = config.onChange,
@@ -166,13 +166,13 @@ export function horizontalLoop(items, config) {
 					? tl.time(times[curIndex], true)
 					: tl.progress(progress, true)
 			},
-            onResize = () => refresh(true),
+			onResize = () => refresh(true),
 			proxy
 		gsap.set(items, { x: 0 })
 		populateWidths()
 		populateTimeline()
 		populateOffsets()
-        if (manageResize) window.addEventListener("resize", onResize)
+		if (manageResize) window.addEventListener("resize", onResize)
 		function toIndex(index, vars) {
 			vars = vars || {}
 			Math.abs(index - curIndex) > length / 2 &&
@@ -256,12 +256,12 @@ export function horizontalLoop(items, config) {
 				// REFORM CHANGE: snap is optional, value is clamped
 				snap: !config.snap
 					? (value) => {
-						let current = draggable.x
-						const diff = current - value
-						if (Math.abs(diff) > 10_000) return current // stop immediately if velocity is ridiculous
-						const clampedDiff = gsap.utils.clamp(-1000, 1000, diff)
-						return current - clampedDiff
-					}
+							let current = draggable.x
+							const diff = current - value
+							if (Math.abs(diff) > 10_000) return current // stop immediately if velocity is ridiculous
+							const clampedDiff = gsap.utils.clamp(-1000, 1000, diff)
+							return current - clampedDiff
+						}
 					: function (value) {
 							let current = draggable.x
 							const diff = current - value
@@ -319,8 +319,8 @@ export function horizontalLoop(items, config) {
 		onChange && onChange(items[curIndex], curIndex)
 		timeline = tl
 		// REFORM CHANGE: better cleanup
-        return () => {
-            if (manageResize) window.removeEventListener("resize", onResize)
+		return () => {
+			if (manageResize) window.removeEventListener("resize", onResize)
 			try {
 				timeline && timeline.destroy && timeline.destroy()
 			} catch {}

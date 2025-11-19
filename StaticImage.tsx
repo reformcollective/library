@@ -1,10 +1,16 @@
 "use client"
 
-import { styled } from "library/styled"
+import { styled } from "library/styled/alpha"
 import type { PlaceholderValue } from "next/dist/shared/lib/get-img-props"
 import type { StaticImageData } from "next/image"
 import Image from "next/image"
 import { createContext, type ImgHTMLAttributes, use } from "react"
+import {
+	aspectRatioVar,
+	defaultImageClass,
+	objectFitVar,
+	objectPositionVar,
+} from "./StaticImage.css"
 
 export const EagerContext = createContext(false)
 export const EagerImages = ({ children }: { children: React.ReactNode }) => (
@@ -56,7 +62,7 @@ export default function StaticImage({
 	loading,
 	sizes = "100vw",
 	quality = 90,
-	placeholder = "blur",
+	placeholder = "empty",
 	...otherProps
 }: StaticImageProps) {
 	if (!src) return null
@@ -102,22 +108,14 @@ export default function StaticImage({
 	)
 }
 
-export const defaultImageStyles = ({
-	objectFit,
-	objectPosition,
-	aspectRatio,
-}: {
-	objectFit: "contain" | "cover"
-	objectPosition: string | undefined
-	aspectRatio: string | undefined
-}) => ({
-	display: "block",
-	objectFit,
-	objectPosition,
-	height: "auto",
-	width: "100%",
-	aspectRatio,
-})
+export const defaultImageConfig = {
+	base: [defaultImageClass],
+	tokens: {
+		objectFit: { token: objectFitVar },
+		objectPosition: { token: objectPositionVar },
+		aspectRatio: { token: aspectRatioVar },
+	} as const,
+}
 
-const DefaultImage = styled("img", defaultImageStyles)
-const DefaultNextImage = styled(Image, defaultImageStyles)
+const DefaultImage = styled("img", defaultImageConfig)
+const DefaultNextImage = styled(Image, defaultImageConfig)

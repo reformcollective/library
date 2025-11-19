@@ -1,18 +1,19 @@
-import { css, GlobalStyles, unresponsive } from "./styled"
+import { css } from "library/styled/alpha"
+import { reset } from "./layers.css"
 
-const reset = unresponsive(css`
+const style = css`
 	/* stylelint-disable */
-	@layer reset {
+	@layer ${reset} {
 		/***
-    The new CSS reset - version 1.11.3 (last updated 25.08.2024)
-    GitHub page: https://github.com/elad2412/the-new-css-reset
-    ***/
+	The new CSS reset - version 1.11.3 (last updated 25.08.2024)
+	GitHub page: https://github.com/elad2412/the-new-css-reset
+	***/
 
 		/*
-    Remove all the styles of the "User-Agent-Stylesheet", except for the 'display' property
-    - The "symbol *" part is to solve Firefox SVG sprite bug
-    - The "html" element is excluded, otherwise a bug in Chrome breaks the CSS hyphens property (https://github.com/elad2412/the-new-css-reset/issues/36)
-    */
+	Remove all the styles of the "User-Agent-Stylesheet", except for the 'display' property
+	- The "symbol *" part is to solve Firefox SVG sprite bug
+	- The "html" element is excluded, otherwise a bug in Chrome breaks the CSS hyphens property (https://github.com/elad2412/the-new-css-reset/issues/36)
+	*/
 
 		:where(abbr),
 		:where(address),
@@ -200,14 +201,14 @@ const reset = unresponsive(css`
 		}
 
 		/* fix the feature of 'hidden' attribute.
-       display:revert; revert to element instead of attribute */
+display:revert; revert to element instead of attribute */
 		:where([hidden]) {
 			display: none;
 		}
 
 		/* revert for bug in Chromium browsers
-       - fix for the content editable attribute will work properly.
-       - webkit-user-select: auto; added for Safari in case of using user-select:none on wrapper element*/
+- fix for the content editable attribute will work properly.
+- webkit-user-select: auto; added for Safari in case of using user-select:none on wrapper element*/
 		:where([contenteditable]:not([contenteditable="false"])) {
 			-moz-user-modify: read-write;
 			-webkit-user-modify: read-write;
@@ -233,6 +234,56 @@ const reset = unresponsive(css`
 		}
 	}
 	/* stylelint-enable */
-`)
 
-export const ResetStyles = () => <GlobalStyles>{reset}</GlobalStyles>
+	/* reform specific stuff */
+
+	/* hide scrollbars */
+	html {
+		font-family: sans-serif;
+		scrollbar-width: none;
+
+		body::-webkit-scrollbar {
+			display: none;
+		}
+	}
+
+	/* need this so that fonts match figma */
+	* {
+		text-rendering: geometricprecision;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	/**
+	 * Starting with iOS 26, Safari allows content beneath the UI chrome to be visible. Backdrops such as those used 
+	 * by dialogs must use position: absolute instead of position: fixed to cover the entire visual viewport. 
+	 * For this to work after the page was scrolled, the following style must be added to your global styles:
+	 */
+	body {
+		position: relative;
+	}
+
+	/**
+* this is a workaround for lvh being calculated incorrectly
+* - on iOS safari
+* - AND only in the webview
+* - AND only before the page has resized (sometimes)
+*
+* this will only be visible if lvh is calculated incorrectly
+* safari is such a good browser with no problems
+*/
+	@supports not (cursor: cell) {
+		body::before {
+			content: "";
+			pointer-events: none;
+			position: fixed;
+			top: 100lvh;
+			left: 0;
+			width: 100vw;
+			height: 100lvh;
+			background: red;
+			z-index: 999;
+		}
+	}
+`
+
+export const ResetStyles = () => <style>{style}</style>

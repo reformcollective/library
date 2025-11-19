@@ -116,7 +116,6 @@ export default function CustomTextOverflow({
 	// prompt a CSS solution if possible
 	if (ellipsis === "..." && truncatePosition === 0)
 		return (
-			// biome-ignore lint/complexity/noUselessFragments: not useless
 			<>
 				This component should only be used if you need a custom ellipsis or
 				custom truncation position. Otherwise, use CSS.

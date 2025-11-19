@@ -1,4 +1,5 @@
-import { css, f, styled } from "library/styled"
+import { library } from "library/layers.css"
+import { css, f, styled } from "library/styled/alpha"
 import { draftMode } from "next/headers"
 import { redirect } from "next/navigation"
 import type { GetSectionType } from "page"
@@ -12,7 +13,7 @@ export async function Redirect({ link }: GetSectionType<"redirect">) {
 				<p>
 					This page is configured as a redirect. If someone tries to navigate to
 					this page in any way, they will be redirected to{" "}
-					<a href={link}>{link}</a>
+					<Link href={link}>{link}</Link>
 				</p>
 				<br />
 				<p>You are seeing this message because you are in draft mode.</p>
@@ -24,18 +25,28 @@ export async function Redirect({ link }: GetSectionType<"redirect">) {
 	redirect(link as Parameters<typeof redirect>[0])
 }
 
-const Wrapper = styled("div", {
-	...f.unresponsive(css`
-		grid-column: main;
-		height: 100vh;
-		padding: 100px;
-		background: white;
-		color: black;
-		text-align: center;
-		overflow-wrap: break-word;
+const Wrapper = styled("div", [
+	{
+		"@layer": {
+			[library]: f.unresponsive(css`
+				grid-column: main;
+				height: 100vh;
+				padding: 100px;
+				background: white;
+				color: black;
+				text-align: center;
+				overflow-wrap: break-word;
+			`),
+		},
+	},
+])
 
-		a {
-			text-decoration: underline;
-		}
-	`),
-})
+const Link = styled("a", [
+	{
+		"@layer": {
+			[library]: f.unresponsive(css`
+				text-decoration: underline;
+			`),
+		},
+	},
+])

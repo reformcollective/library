@@ -29,6 +29,10 @@ type Config<TransitionNames = never, GroupNames = never> = {
 	 * this is only used for autocomplete & checking during development
 	 */
 	pageSectionGroups: GroupNames[]
+	/**
+	 * styling system to use
+	 */
+	stylingSystem: "vanilla" | "restyle" | "both"
 }
 
 const defaultConfig = {
@@ -38,6 +42,7 @@ const defaultConfig = {
 	transitionNames: [],
 	tabletBreakpoint: "tablet",
 	pageSectionGroups: [],
+	stylingSystem: "both",
 } as const satisfies Config
 
 export const defineLibraryConfig = <const TransitionNames, const GroupNames>(
