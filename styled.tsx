@@ -214,6 +214,7 @@ const convertCssToObject = (
 type Options = {
 	only?: "mobile" | "tablet" | "desktop" | "fullWidth"
 	scaleFully?: boolean
+	bigMobile?: boolean
 	applyStylesToAllBreakpoints?: boolean
 	designSizeOverride?: {
 		desktop?: number
@@ -248,6 +249,7 @@ function convertToResponsive(
 		selectorHash,
 		applyStylesToAllBreakpoints,
 		designSizeOverride,
+		bigMobile,
 	}: Options & {
 		selectorHash: number
 	},
@@ -292,8 +294,8 @@ function convertToResponsive(
 											100) *
 											desktopBreakpoint
 									).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
-								: only === "tablet" &&
-										libraryConfig.tabletBreakpoint === "largeMobile"
+								: only === "tablet" && 
+										(libraryConfig.tabletBreakpoint === "largeMobile" || bigMobile)
 									? `${(
 											(Number.parseFloat(
 												replacer(
@@ -354,7 +356,7 @@ function convertToResponsive(
 					[key]: value
 						?.toString()
 						.replaceAll(regex, (_: unknown, px: string) =>
-							libraryConfig.tabletBreakpoint === "tablet"
+							libraryConfig.tabletBreakpoint === "tablet" && !bigMobile
 								? `${replacer(px, designSizeOverride?.tablet ?? tabletDesignSize)}vw`
 								: `${(
 										(Number.parseFloat(
@@ -526,6 +528,10 @@ export const f = {
 	 */
 	mobile: (style: string, options?: Options) =>
 		f.responsive(style, { ...options, only: "mobile" }),
+
+	bigMobile: (style: string, options?: Options) => ({
+		...f.responsive(style, { ...options, bigMobile: true, designSizeOverride: { tablet: 700 }, only: "tablet" }),
+	}),
 
 	/**
 	 * apply responsively calculated styles to all breakpoints
