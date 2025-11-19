@@ -195,7 +195,7 @@ export const useAnimation = <InputFn extends Creation>(
 
 	useEffect(() => {
 		if (process.env.NODE_ENV === "development") {
-			socket?.addEventListener("message", (event) => {
+			const handler = (event: MessageEvent) => {
 				const message = JSON.parse(event.data) as
 					| { type: "unknown" }
 					| { type: "built"; hash: string }
@@ -203,7 +203,11 @@ export const useAnimation = <InputFn extends Creation>(
 					console.log("HMR hash updated:", message.hash)
 					setHmrHash(message.hash)
 				}
-			})
+			}
+			socket?.addEventListener("message", handler)
+			return () => {
+				socket?.removeEventListener("message", handler)
+			}
 		}
 	}, [])
 
