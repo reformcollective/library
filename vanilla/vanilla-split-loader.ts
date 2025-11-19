@@ -1201,7 +1201,10 @@ export default async function vanillaSplitLoader(
 
 	try {
 		// pass through pure vanilla-extract files untouched
-		if (this.resourcePath.endsWith(".css.ts")) {
+		if (
+			this.resourcePath.endsWith(".css.ts") ||
+			this.resourcePath.endsWith(".css.tsx")
+		) {
 			return callback(null, sourceCode)
 		}
 
