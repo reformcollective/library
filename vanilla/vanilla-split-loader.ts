@@ -1039,7 +1039,9 @@ const transform = async (
 	}
 
 	let unresolvedNames = computeUnresolved()
-	for (let i = 0; i < 5 && unresolvedNames.size > 0; i++) {
+	// Increased limit to 50 to handle deep dependency chains.
+	// The loop exits early if no new supporting statements are found.
+	for (let i = 0; i < 50 && unresolvedNames.size > 0; i++) {
 		const support = findSupportingStatements(
 			sourceFile,
 			unresolvedNames,
