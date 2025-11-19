@@ -6,8 +6,9 @@ import ClientOnly from "./ClientOnly"
 import { isBrowser } from "./deviceDetection"
 
 export default function Portal({ children }: { children: React.ReactNode }) {
-	return <ClientOnly>
+	return (
+		<ClientOnly>
 			<Suspense>{isBrowser && createPortal(children, document.body)}</Suspense>
 		</ClientOnly>
-	
+	)
 }
