@@ -294,8 +294,9 @@ function convertToResponsive(
 											100) *
 											desktopBreakpoint
 									).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
-								: only === "tablet" && 
-										(libraryConfig.tabletBreakpoint === "largeMobile" || bigMobile)
+								: only === "tablet" &&
+										(libraryConfig.tabletBreakpoint === "largeMobile" ||
+											bigMobile)
 									? `${(
 											(Number.parseFloat(
 												replacer(
@@ -533,7 +534,12 @@ export const f = {
 	 * Tablet/responsive tween size
 	 */
 	bigMobile: (style: string, options?: Options) => ({
-		...f.responsive(style, { ...options, bigMobile: true, designSizeOverride: { tablet: 700 }, only: "tablet" }),
+		...f.responsive(style, {
+			...options,
+			bigMobile: true,
+			designSizeOverride: { tablet: 700 },
+			only: "tablet",
+		}),
 	}),
 
 	/**
