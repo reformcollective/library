@@ -529,6 +529,9 @@ export const f = {
 	mobile: (style: string, options?: Options) =>
 		f.responsive(style, { ...options, only: "mobile" }),
 
+	/**
+	 * Tablet/responsive tween size
+	 */
 	bigMobile: (style: string, options?: Options) => ({
 		...f.responsive(style, { ...options, bigMobile: true, designSizeOverride: { tablet: 700 }, only: "tablet" }),
 	}),
