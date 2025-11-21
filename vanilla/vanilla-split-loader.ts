@@ -916,7 +916,6 @@ const handleVanillaExtractError = (
 const runVePluginOnTempFile = async (
 	originalThis: TurboLoaderContext<TurboLoaderOptions>,
 	tempFilePath: string,
-	originalFilePath: string,
 	loaderOptions: Partial<TurboLoaderOptions>,
 ): Promise<string> => {
 	return new Promise<string>((resolve, reject) => {
@@ -1113,7 +1112,7 @@ const transform = async (
 
 	// 6) run VE plugin on temp file (keep file on disk for debugging)
 	let veJs = ""
-	veJs = await runVePluginOnTempFile(loaderThis, tmpFile, filePath, options)
+	veJs = await runVePluginOnTempFile(loaderThis, tmpFile, options)
 
 	// 7) rewrite imports in VE output to tsconfig-safe specifiers
 	const veJsResolved = rewriteToTsconfig(veJs, tmpFile, rootContext)
