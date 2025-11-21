@@ -1,18 +1,17 @@
 import fsSync from "node:fs"
 import fs from "node:fs/promises"
 import path from "node:path"
-import turboLoaderRAW from "@vanilla-extract/turbopack-plugin"
+import turboLoaderRAW, {
+	type TurboLoaderContext,
+	type TurboLoaderOptions,
+} from "@vanilla-extract/turbopack-plugin"
 import ts from "typescript"
-import type { LoaderContext } from "webpack"
 
 type ModulesConfig = Record<string, string[]>
 
-type SplitOptions = {
-	nextEnv?: Record<string, string> | null
-}
-
 // @ts-expect-error turbopack loader shape has default export in some builds
 const turboLoader = turboLoaderRAW.default as typeof turboLoaderRAW
+
 // tracked functions that should be extracted to virtual .css.ts modules
 const TRACKED_MODULES: ModulesConfig = {
 	"@vanilla-extract/css": [
@@ -915,66 +914,28 @@ const handleVanillaExtractError = (
 }
 
 const runVePluginOnTempFile = async (
-	originalThis: LoaderContext<unknown>,
+	originalThis: TurboLoaderContext<TurboLoaderOptions>,
 	tempFilePath: string,
-	originalFilePath: string,
-	loaderOptions: SplitOptions,
+	loaderOptions: Partial<TurboLoaderOptions>,
 ): Promise<string> => {
 	return new Promise<string>((resolve, reject) => {
-		const mode = originalThis.mode ?? "development"
-		const rootContext = originalThis.rootContext
-		const originalDir = path.dirname(originalFilePath)
-
-		// wrap getResolve to always resolve from original file's directory
-		const getResolveWrapped = (options?: unknown) => {
-			// @ts-expect-error webpack types
-			const realGetResolve = originalThis.getResolve?.(options)
-			if (!realGetResolve) return undefined
-			return (
-				_context: string,
-				request: string,
-				cb: (err: Error | null, result?: string) => void,
-			) => {
-				realGetResolve(
-					originalDir,
-					request,
-					(err: Error | null, res?: string | false) =>
-						cb(err, (typeof res === "string" ? res : undefined) ?? undefined),
-				)
-			}
-		}
-
-		let captured: string | undefined
 		const modifiedThis = {
-			async: () => (err?: Error | null, content?: string) => {
-				if (err) {
-					handleVanillaExtractError(err, reject)
-					return
-				}
-				captured = content ?? ""
-				resolve(captured)
-			},
 			getOptions: () => ({
 				identifiers: process.env.NODE_ENV === "production" ? "short" : "debug",
 				outputCss: null,
 				nextEnv: loaderOptions?.nextEnv ?? null,
 			}),
-			getResolve: getResolveWrapped,
-			addDependency: (_file: string) => {},
-			mode,
-			rootContext,
+			getResolve: originalThis.getResolve,
+			rootContext: originalThis.rootContext,
 			resourcePath: tempFilePath,
-			resourceQuery: "",
-		}
+			fs: originalThis.fs,
+		} satisfies TurboLoaderContext<TurboLoaderOptions>
 
-		Promise.resolve(
-			// @ts-expect-error loader callable
-			turboLoader.call(modifiedThis),
-		)
-			.then(() => {
-				if (captured === undefined) resolve("")
+		Promise.resolve(turboLoader.call(modifiedThis))
+			.then((data) => {
+				resolve(data)
 			})
-			.catch(reject)
+			.catch((err: Error) => handleVanillaExtractError(err, reject))
 	})
 }
 
@@ -983,11 +944,11 @@ const runVePluginOnTempFile = async (
 // =============================================================================
 
 const transform = async (
-	loaderThis: LoaderContext<unknown>,
+	loaderThis: TurboLoaderContext<TurboLoaderOptions>,
 	rootContext: string,
 	filePath: string,
 	sourceCode: string,
-	options: SplitOptions,
+	options: Partial<TurboLoaderOptions>,
 ): Promise<{ code: string; movedNames: string[] }> => {
 	const isTsx = filePath.endsWith(".tsx") || filePath.endsWith(".jsx")
 	const sourceFile = ts.createSourceFile(
@@ -1151,7 +1112,7 @@ const transform = async (
 
 	// 6) run VE plugin on temp file (keep file on disk for debugging)
 	let veJs = ""
-	veJs = await runVePluginOnTempFile(loaderThis, tmpFile, filePath, options)
+	veJs = await runVePluginOnTempFile(loaderThis, tmpFile, options)
 
 	// 7) rewrite imports in VE output to tsconfig-safe specifiers
 	const veJsResolved = rewriteToTsconfig(veJs, tmpFile, rootContext)
@@ -1194,30 +1155,25 @@ const transform = async (
 // =============================================================================
 
 export default async function vanillaSplitLoader(
-	this: LoaderContext<unknown>,
+	this: TurboLoaderContext<TurboLoaderOptions>,
 	sourceCode: string,
 ) {
-	const callback = this.async()
-
-	try {
-		// pass through pure vanilla-extract files untouched
-		if (
-			this.resourcePath.endsWith(".css.ts") ||
-			this.resourcePath.endsWith(".css.tsx")
-		) {
-			return callback(null, sourceCode)
-		}
-
-		const options = this.getOptions ? (this.getOptions() as SplitOptions) : {}
-		const { code } = await transform(
-			this,
-			this.rootContext,
-			this.resourcePath,
-			sourceCode,
-			options,
-		)
-		callback(null, code)
-	} catch (e) {
-		callback(e as Error)
+	// pass through pure vanilla-extract files untouched
+	if (
+		this.resourcePath.endsWith(".css.ts") ||
+		this.resourcePath.endsWith(".css.tsx")
+	) {
+		return sourceCode
 	}
+
+	const options = this.getOptions ? this.getOptions() : {}
+	const { code } = await transform(
+		this,
+		this.rootContext,
+		this.resourcePath,
+		sourceCode,
+		options,
+	)
+
+	return code
 }
