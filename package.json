@@ -8,7 +8,6 @@
 		"@mux/blurup": "1.0.2",
 		"@mux/mux-video-react": "^0",
 		"@vanilla-extract/css": "^1",
-		"@vanilla-extract/integration": "8.0.4",
 		"@vanilla-extract/next-plugin": "link:/tmp/vanilla-temp/packages/next-plugin",
 		"@vanilla-extract/turbopack-plugin": "link:/tmp/vanilla-temp/packages/turbopack-plugin",
 		"ahooks": "^3",
@@ -28,8 +27,7 @@
 		"@types/stylis": "^4.2.7",
 		"@types/three": "^0.181",
 		"typescript": "^5.9.3",
-		"vitest": "4.0.8",
-		"webpack": "5.102.1"
+		"vitest": "4.0.8"
 	},
 	"scripts": {
 		"test": "vitest run",

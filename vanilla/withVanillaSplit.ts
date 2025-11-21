@@ -1,5 +1,6 @@
 import path from "node:path"
 import { createVanillaExtractPlugin } from "@vanilla-extract/next-plugin"
+import type { TurboLoaderOptions } from "@vanilla-extract/turbopack-plugin"
 import type { NextConfig } from "next"
 import type { TurbopackLoaderItem } from "next/dist/server/config-shared"
 
@@ -14,7 +15,9 @@ export const withVanillaSplit = (config: NextConfig): NextConfig => {
 		loaders: [
 			{
 				loader: path.resolve(__dirname, "vanilla-split-loader.ts"),
-				options: { nextEnv: config.env ?? null },
+				options: {
+					nextEnv: config.env ?? null,
+				} satisfies Partial<TurboLoaderOptions>,
 			} as TurbopackLoaderItem,
 		],
 	}
@@ -22,7 +25,9 @@ export const withVanillaSplit = (config: NextConfig): NextConfig => {
 		loaders: [
 			{
 				loader: path.resolve(__dirname, "vanilla-split-loader.ts"),
-				options: { nextEnv: config.env ?? null },
+				options: {
+					nextEnv: config.env ?? null,
+				} satisfies Partial<TurboLoaderOptions>,
 			} as TurbopackLoaderItem,
 		],
 	}
