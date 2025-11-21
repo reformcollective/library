@@ -282,38 +282,56 @@ function convertToResponsive(
 					...((output[hashedMedia[only]] ?? {}) as Record<string, string>),
 					[key]: value
 						?.toString()
-						.replaceAll(regex, (_: unknown, px: string) =>
-							only === "fullWidth" && !shouldScaleFully
-								? `${(
-										(Number.parseFloat(
-											replacer(
-												px,
-												designSizeOverride?.desktop ?? desktopDesignSize,
-											),
-										) /
-											100) *
-											desktopBreakpoint
-									).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
-								: only === "tablet" &&
-										(libraryConfig.tabletBreakpoint === "largeMobile" ||
-											bigMobile)
-									? `${(
-											(Number.parseFloat(
-												replacer(
-													px,
-													designSizeOverride?.mobile ?? mobileDesignSize,
-												),
-											) /
-												100) *
-												mobileBreakpoint
-										).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
-									: `${replacer(
+						.replaceAll(regex, (_: unknown, px: string) => {
+							// fullWidth behavior (unchanged)
+							if (only === "fullWidth" && !shouldScaleFully) {
+								return `${(
+									(Number.parseFloat(
+										replacer(
 											px,
-											designSizeOverride?.[
-												only === "fullWidth" ? "desktop" : only
-											] ?? designSizes[only],
-										)}vw`,
-						),
+											designSizeOverride?.desktop ?? desktopDesignSize,
+										),
+									) /
+										100) *
+										desktopBreakpoint
+								).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
+							}
+
+							// EXPLICIT bigMobile mode for tablet:
+							// treat tablet as a scaled-up mobile (same mobile design, but vw)
+							if (only === "tablet" && bigMobile) {
+								return `${replacer(
+									px,
+									designSizeOverride?.mobile ?? mobileDesignSize,
+								)}vw`
+							}
+
+							// Original "largeMobile" behavior based on global config (kept intact)
+							if (
+								only === "tablet" &&
+								!bigMobile &&
+								libraryConfig.tabletBreakpoint === "largeMobile"
+							) {
+								return `${(
+									(Number.parseFloat(
+										replacer(
+											px,
+											designSizeOverride?.mobile ?? mobileDesignSize,
+										),
+									) /
+										100) *
+										mobileBreakpoint
+								).toFixed(PIXEL_PRECISION)}px`.replace(".00px", "px")
+							}
+
+							// Default behavior for fullWidth/desktop/tablet/mobile
+							return `${replacer(
+								px,
+								designSizeOverride?.[
+									only === "fullWidth" ? "desktop" : only
+								] ?? designSizes[only],
+							)}vw`
+						}),
 				}
 			} else {
 				/**
@@ -356,23 +374,38 @@ function convertToResponsive(
 					...((output[hashedMedia.tablet] ?? {}) as Record<string, string>),
 					[key]: value
 						?.toString()
-						.replaceAll(regex, (_: unknown, px: string) =>
-							libraryConfig.tabletBreakpoint === "tablet" && !bigMobile
-								? `${replacer(px, designSizeOverride?.tablet ?? tabletDesignSize)}vw`
-								: `${(
-										(Number.parseFloat(
-											replacer(
-												px,
-												designSizeOverride?.mobile ?? mobileDesignSize,
-											),
-										) /
-											100) *
-											mobileBreakpoint
-									).toFixed(PIXEL_PRECISION)}px /* ${px} */`.replace(
-										".00px",
-										"px",
+						.replaceAll(regex, (_: unknown, px: string) => {
+							// When bigMobile is explicitly enabled, tablet uses mobile scaling
+							if (bigMobile) {
+								return `${replacer(
+									px,
+									designSizeOverride?.mobile ?? mobileDesignSize,
+								)}vw`
+							}
+
+							// Original "real tablet" behavior preserved
+							if (libraryConfig.tabletBreakpoint === "tablet") {
+								return `${replacer(
+									px,
+									designSizeOverride?.tablet ?? tabletDesignSize,
+								)}vw`
+							}
+
+							// Original "largeMobile" global behavior preserved
+							return `${(
+								(Number.parseFloat(
+									replacer(
+										px,
+										designSizeOverride?.mobile ?? mobileDesignSize,
 									),
-						),
+								) /
+									100) *
+									mobileBreakpoint
+							).toFixed(PIXEL_PRECISION)}px /* ${px} */`.replace(
+								".00px",
+								"px",
+							)
+						}),
 				}
 
 				/* convert mobile values */
@@ -393,6 +426,8 @@ function convertToResponsive(
 				scaleFully,
 				selectorHash: selectorHash,
 				applyStylesToAllBreakpoints,
+				designSizeOverride,
+				bigMobile,
 			})
 		}
 	}
@@ -509,6 +544,8 @@ export const f = {
 		...f.responsive(style, { ...options, only: "mobile" }),
 	}),
 
+
+
 	/**
 	 * apply responsive styles to full width breakpoint
 	 */
@@ -532,12 +569,14 @@ export const f = {
 
 	/**
 	 * Tablet/responsive tween size
+	 * Explicit opt-in: when used, tablet scales like "big mobile"
 	 */
 	bigMobile: (style: string, options?: Options) => ({
+		...f.responsive(style, { ...options, only: "mobile" }),
 		...f.responsive(style, {
 			...options,
 			bigMobile: true,
-			designSizeOverride: { tablet: 700 },
+			designSizeOverride: { tablet: 1024 },
 			only: "tablet",
 		}),
 	}),
