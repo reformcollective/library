@@ -136,6 +136,8 @@ forces `vw` scaling across *all* breakpoints, ignoring the step-based switching 
 ### variants
 variants are the primary way to define component api. keys in `variants` become props on your component.
 
+**note**: variant props are required by default unless you specify a default in `defaultVariants`.
+
 ```tsx
 // definition
 variants: {
@@ -143,6 +145,9 @@ variants: {
     primary: [{ background: "blue" }],
     danger: [{ background: "red" }]
   }
+},
+defaultVariants: {
+  intent: "primary" // optional because default is set
 }
 
 // usage
@@ -151,6 +156,8 @@ variants: {
 
 ### tokens (dynamic values)
 use `tokens` when you need to pass arbitrary runtime values (like coordinates, colors from an api, or exact dimensions) into your static css.
+
+**note**: token props are always required unless you mark them as optional.
 
 ```ts
 import { createVar } from "@vanilla-extract/css"
@@ -162,8 +169,10 @@ const Rotator = styled("div", {
   tokens: {
     // automatically creates/uses a var, specify a default unit
     angle: { token: rotationVar, unit: "deg" },
-	// shorthand
-	scale: scaleVar
+    // shorthand
+    scale: scaleVar,
+    // optional token
+    x: { token: createVar(), optional: true }
   },
   base: [{
     transform: `rotate(${rotationVar}) scale(${scaleVar})`
@@ -171,7 +180,7 @@ const Rotator = styled("div", {
 })
 
 // usage - passes 45 to the css variable
-<Rotator angle={45} />
+<Rotator angle={45} scale={1.2} />
 ```
 
 ### within (scoped selectors)
