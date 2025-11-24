@@ -41,12 +41,7 @@
 		}
 	},
 	"files": {
-		"includes": [
-			"**",
-			"!pnpm-lock.yaml",
-			"!gsapHelpers",
-			"!vanilla/turbopack-plugin.ts"
-		]
+		"includes": ["**", "!pnpm-lock.yaml", "!gsapHelpers", "!vanilla/*/dist"]
 	},
 	"vcs": {
 		"enabled": true,
