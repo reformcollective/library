@@ -187,6 +187,26 @@ within: {
 }
 ```
 
+### referencing components (`toString`)
+styled components implement a `toString` method that returns their unique class selector (e.g., `.Box_root__1x2y3z`). this allows you to target one component from within another's styles.
+
+```tsx
+const Icon = styled("span", {
+  base: [{ opacity: 0 }]
+})
+
+const Button = styled("button", {
+  base: [{
+    // using template literal interpolation calls .toString() automatically
+    [`&:hover ${Icon}`]: {
+      opacity: 1
+    }
+  }]
+})
+```
+
+this is extremely powerful for composition, allowing parent components to orchestrate child styles without prop drilling.
+
 ### the `as` prop
 at runtime, every styled component accepts an `as` prop to change the rendered element at runtime.
 this is used under the hood, but you should also be able to use it yourself
