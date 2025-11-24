@@ -33,7 +33,7 @@
 		"test": "vitest run",
 		"lint": "biome lint",
 		"format": "biome check --write",
-		"preinstall": "pnpm dlx gitpick RJWadley/vanilla-extract -b 65b2416 /tmp/vanilla-temp -f && cd /tmp/vanilla-temp && pnpm i && pnpm build"
+		"preinstall": "pnpm dlx gitpick RJWadley/vanilla-extract -b 2f40ad9 /tmp/vanilla-temp -f && cd /tmp/vanilla-temp && pnpm i && pnpm build"
 	},
 	"packageManager": "pnpm@10.22.0"
 }
