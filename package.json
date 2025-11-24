@@ -8,8 +8,8 @@
 		"@mux/blurup": "1.0.2",
 		"@mux/mux-video-react": "^0",
 		"@vanilla-extract/css": "^1",
-		"@vanilla-extract/next-plugin": "link:/tmp/vanilla-temp/packages/next-plugin",
-		"@vanilla-extract/turbopack-plugin": "link:/tmp/vanilla-temp/packages/turbopack-plugin",
+		"@vanilla-extract/next-plugin": "link:vanilla/next-plugin",
+		"@vanilla-extract/turbopack-plugin": "link:vanilla/turbopack-plugin",
 		"ahooks": "^3",
 		"browser-dtector": "4.1.0",
 		"class-variance-authority": "0.7.1",
@@ -32,8 +32,7 @@
 	"scripts": {
 		"test": "vitest run",
 		"lint": "biome lint",
-		"format": "biome check --write",
-		"preinstall": "pnpm dlx gitpick RJWadley/vanilla-extract -b 2f40ad9 /tmp/vanilla-temp -f && cd /tmp/vanilla-temp && pnpm i && pnpm build"
+		"format": "biome check --write"
 	},
 	"packageManager": "pnpm@10.22.0"
 }
