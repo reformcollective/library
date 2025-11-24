@@ -22,7 +22,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"@swc/core": "^1.13.5",
-		"@vanilla-extract/compiler": "*",
+		"@vanilla-extract/compiler": "workspace:*",
 		"@vanilla-extract/integration": "*"
 	},
 	"devDependencies": {

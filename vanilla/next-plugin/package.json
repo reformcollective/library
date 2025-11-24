@@ -21,7 +21,7 @@
 	"author": "SEEK",
 	"license": "MIT",
 	"dependencies": {
-		"@vanilla-extract/turbopack-plugin": "*",
+		"@vanilla-extract/turbopack-plugin": "workspace:*",
 		"@vanilla-extract/webpack-plugin": "*",
 		"semver": "^7.6.3"
 	},
