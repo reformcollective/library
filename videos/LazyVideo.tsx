@@ -1,8 +1,8 @@
 import { ScrollTrigger } from "gsap/all"
 import { type ReactNode, type Ref, useRef, useState } from "react"
-import { usePreloader } from "./link/usePreloader"
-import { useAnimation } from "./useAnimation"
-import { useCombinedRefs } from "./useCombinedRefs"
+import { usePreloader } from "../link/usePreloader"
+import { useAnimation } from "../useAnimation"
+import { useCombinedRefs } from "../useCombinedRefs"
 
 export function LazyVideo({
 	autoPlay,
