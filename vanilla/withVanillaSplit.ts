@@ -32,6 +32,5 @@ export const withVanillaSplit = (config: NextConfig): NextConfig => {
 		],
 	}
 
-	// @ts-expect-error - next-plugin will install next@12 which is obviously wrong
 	return withVanillaExtract(config)
 }
