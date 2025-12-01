@@ -20,19 +20,19 @@
 		"sonner": "^2",
 		"stylis": "4.3.6",
 		"use-deep-compare": "^1",
-		"zod": "^4.1.12"
+		"zod": "^4.1.13"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.3.5",
+		"@biomejs/biome": "2.3.8",
 		"@types/stylis": "^4.2.7",
 		"@types/three": "^0.181",
 		"typescript": "^5.9.3",
-		"vitest": "4.0.8"
+		"vitest": "4.0.14"
 	},
 	"scripts": {
 		"test": "vitest run",
 		"lint": "biome lint",
 		"format": "biome check --write"
 	},
-	"packageManager": "pnpm@10.22.0"
+	"packageManager": "pnpm@10.24.0"
 }
