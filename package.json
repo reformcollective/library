@@ -34,5 +34,10 @@
 		"lint": "biome lint",
 		"format": "biome check --write"
 	},
-	"packageManager": "pnpm@10.24.0"
+	"packageManager": "pnpm@10.24.0",
+	"pnpm": {
+		"overrides": {
+			"@vanilla-extract/turbopack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/turbopack-plugin@c1d4a88"
+		}
+	}
 }
