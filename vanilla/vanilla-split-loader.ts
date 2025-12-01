@@ -1114,9 +1114,6 @@ const transform = async (
 	let veJs = ""
 	veJs = await runVePluginOnTempFile(loaderThis, tmpFile, options)
 
-	// 5.1) delete temp file
-	await fs.unlink(tmpFile)
-
 	// 7) rewrite imports in VE output to tsconfig-safe specifiers
 	const veJsResolved = rewriteToTsconfig(veJs, tmpFile, rootContext)
 
