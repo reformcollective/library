@@ -1104,9 +1104,8 @@ const transform = async (
 
 	// 5) write temp file mirroring the original relative path
 	const tmpRoot = path.join(rootContext, ".next", "vanilla")
-    const dirId = crypto.randomUUID()
 	const tmpFile = path
-		.join(tmpRoot, dirId, `${relPathNoExt}.css.ts`)
+		.join(tmpRoot, `${relPathNoExt}.css.ts`)
 		.replace(/\\/g, "/")
 	fsSync.mkdirSync(path.dirname(tmpFile), { recursive: true })
 	fsSync.writeFileSync(tmpFile, virtualSourceResolved, "utf8")
@@ -1117,7 +1116,6 @@ const transform = async (
 
 	// 5.1) delete temp file
 	await fs.unlink(tmpFile)
-	await fs.rm(path.join(tmpRoot, dirId), { recursive: true })
 
 	// 7) rewrite imports in VE output to tsconfig-safe specifiers
 	const veJsResolved = rewriteToTsconfig(veJs, tmpFile, rootContext)
