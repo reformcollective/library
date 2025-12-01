@@ -149,7 +149,7 @@ export function BatterySaverVideo({
 							</PlayIconSvg>
 						</PlayButton>
 						<LowPowerMessage>
-							<br/>
+							<br />
 							Site paused by low power mode
 							<br />
 						</LowPowerMessage>
