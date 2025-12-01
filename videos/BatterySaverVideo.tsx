@@ -46,7 +46,7 @@ export function BatterySaverVideo({
 		// If we're already trying to play, return the existing promise
 		if (playPromiseRef.current) return playPromiseRef.current
 
-		// Get the original play method (stored during ref callback) or fallback
+		// Get the original play method
 		const originalPlay = HTMLMediaElement.prototype.play.bind(videoEl)
 
 		const run = async () => {
