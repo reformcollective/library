@@ -205,7 +205,7 @@ within: {
 ```
 
 ### referencing components (`toString`)
-styled components implement a `toString` method that returns their unique class selector (e.g., `.Box_root__1x2y3z`). this allows you to target one component from within another's styles.
+styled components implement a `toString` method that returns their unique class selector (e.g., `Box_root__1x2y3z`). this allows you to target one component from within another's styles.
 
 ```tsx
 const Icon = styled("span", {
@@ -215,7 +215,7 @@ const Icon = styled("span", {
 const Button = styled("button", {
   base: [{
     // using template literal interpolation calls .toString() automatically
-    [`&:hover ${Icon}`]: {
+    [`&:hover .${Icon}`]: {
       opacity: 1
     }
   }]
