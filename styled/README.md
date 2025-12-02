@@ -183,16 +183,24 @@ const Rotator = styled("div", {
 <Rotator angle={45} scale={1.2} />
 ```
 
-### within (scoped selectors)
-you can write selectors that target the current element in your css directly. this is recommended.
-in the event that you need to write an arbitrary selector, use `within` to write selectors that are
-automatically scoped to the component's class. prevents style leakage. you can also use `within` in
-`variants` and `compoundVariants`
+### within (targeting children)
+standard style blocks (like `base` or `variants`) **must** target the component itself using `&`.
+
+✅ **valid in `base`/`variants`**:
+- `&:hover`
+- `html[data-dark] &`
+- `${Component} > &`
+
+❌ **invalid in `base`/`variants`** (must use `within` to write these):
+- `& svg`
+- `& > *:hover`
+
+use `within` when you need to style descendants. these selectors are automatically scoped to the component's container to prevent leakage. you can also use `within` in `variants` and `compoundVariants`.
 
 ```ts
 within: {
   "& > *": { marginBottom: 10 }, // direct children
-  "span": { color: "red" } // any descendant span
+  "svg": { fill: "currentColor" } // descendant
 }
 ```
 
