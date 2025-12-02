@@ -14,7 +14,7 @@ export const refreshScrollLocks = () => {
 	locksChange.dispatchEvent("change")
 }
 
-export { useLenis}
+export { useLenis }
 
 /**
  * lock and unlock the scroller, without interfering with other tools that also lock the scroller
