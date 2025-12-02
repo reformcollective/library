@@ -2,7 +2,7 @@ import { gsap, ScrollTrigger } from "gsap/all"
 import type Lenis from "lenis"
 import type { LenisOptions } from "lenis"
 import "lenis/dist/lenis.css"
-import { type LenisRef, ReactLenis } from "lenis/react"
+import { type LenisRef, ReactLenis, useLenis } from "lenis/react"
 import { useEffect, useRef, useState } from "react"
 import { isBrowser } from "./deviceDetection"
 import TypedEventEmitter from "./TypedEventEmitter"
@@ -13,6 +13,8 @@ const locksChange = new TypedEventEmitter<{ change: [] }>()
 export const refreshScrollLocks = () => {
 	locksChange.dispatchEvent("change")
 }
+
+export { useLenis }
 
 /**
  * lock and unlock the scroller, without interfering with other tools that also lock the scroller
