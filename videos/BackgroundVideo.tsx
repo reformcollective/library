@@ -10,7 +10,7 @@ import type {
 	SanityImageCrop,
 	SanityImageHotspot,
 } from "@/sanity.types"
-import type { AssetMeta } from "./assetMetadata"
+import type { AssetMeta } from "../sanity/assetMetadata"
 
 type SanityPosterImage = {
 	asset?: {
