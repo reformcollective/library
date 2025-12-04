@@ -2,8 +2,8 @@ import { gsap, ScrollTrigger } from "gsap/all"
 import type Lenis from "lenis"
 import type { LenisOptions } from "lenis"
 import "lenis/dist/lenis.css"
-import { type LenisRef, ReactLenis, useLenis } from "lenis/react"
-import { useEffect, useRef, useState } from "react"
+import { ReactLenis, useLenis } from "lenis/react"
+import { useEffect, useState } from "react"
 import { isBrowser } from "./deviceDetection"
 import TypedEventEmitter from "./TypedEventEmitter"
 
@@ -132,23 +132,21 @@ ScrollTrigger.config({
 })
 
 export const SmoothScrollStyle = (config: LenisOptions) => {
-	const lenisRef = useRef<LenisRef>(null)
+	const [lenis, setLenis] = useState<Lenis | undefined>(undefined)
 
 	useEffect(() => {
 		function update(time: number) {
-			lenisRef.current?.lenis?.raf(time * 1000)
+			lenis?.raf(time * 1000)
 		}
 
 		gsap.ticker.add(update)
 
 		return () => gsap.ticker.remove(update)
-	}, [])
+	}, [lenis])
 
 	useEffect(() => {
-		const lenis = lenisRef.current?.lenis
-		if (!lenis) return
-
 		window.lenis = lenis
+		if (!lenis) return
 
 		let needsRefresh = false
 		let isMounted = true
@@ -188,12 +186,15 @@ export const SmoothScrollStyle = (config: LenisOptions) => {
 			locksChange.removeEventListener("change", onChange)
 			window.removeEventListener("resize", onResize)
 		}
-	}, [])
+	}, [lenis])
 
 	return (
 		<ReactLenis
 			root
-			ref={lenisRef}
+			ref={(ref) => {
+				ref?.lenis?.stop()
+				setLenis(ref?.lenis)
+			}}
 			options={{
 				...config,
 				autoRaf: false,
