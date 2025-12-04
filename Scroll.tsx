@@ -192,7 +192,7 @@ export const SmoothScrollStyle = (config: LenisOptions) => {
 		<ReactLenis
 			root
 			ref={(ref) => {
-				ref?.lenis?.stop()
+				if (ref?.lenis !== lenis) ref?.lenis?.stop()
 				setLenis(ref?.lenis)
 			}}
 			options={{
