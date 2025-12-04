@@ -327,9 +327,8 @@ function convertToResponsive(
 							// Default behavior for fullWidth/desktop/tablet/mobile
 							return `${replacer(
 								px,
-								designSizeOverride?.[
-									only === "fullWidth" ? "desktop" : only
-								] ?? designSizes[only],
+								designSizeOverride?.[only === "fullWidth" ? "desktop" : only] ??
+									designSizes[only],
 							)}vw`
 						}),
 				}
@@ -394,17 +393,11 @@ function convertToResponsive(
 							// Original "largeMobile" global behavior preserved
 							return `${(
 								(Number.parseFloat(
-									replacer(
-										px,
-										designSizeOverride?.mobile ?? mobileDesignSize,
-									),
+									replacer(px, designSizeOverride?.mobile ?? mobileDesignSize),
 								) /
 									100) *
 									mobileBreakpoint
-							).toFixed(PIXEL_PRECISION)}px /* ${px} */`.replace(
-								".00px",
-								"px",
-							)
+							).toFixed(PIXEL_PRECISION)}px /* ${px} */`.replace(".00px", "px")
 						}),
 				}
 
@@ -543,8 +536,6 @@ export const f = {
 		...f.responsive(style, { ...options, only: "tablet" }),
 		...f.responsive(style, { ...options, only: "mobile" }),
 	}),
-
-
 
 	/**
 	 * apply responsive styles to full width breakpoint
