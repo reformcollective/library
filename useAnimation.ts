@@ -216,7 +216,7 @@ export const useAnimation = <InputFn extends Creation>(
 			}
 		}
 	}, [])
-	useEffect(()=>{
+	useEffect(() => {
 		scheduleRevert.current = false
 	})
 
