@@ -183,21 +183,29 @@ const Rotator = styled("div", {
 <Rotator angle={45} scale={1.2} />
 ```
 
-### within (scoped selectors)
-you can write selectors that target the current element in your css directly. this is recommended.
-in the event that you need to write an arbitrary selector, use `within` to write selectors that are
-automatically scoped to the component's class. prevents style leakage. you can also use `within` in
-`variants` and `compoundVariants`
+### within (targeting children)
+standard style blocks (like `base` or `variants`) **must** target the component itself using `&`.
+
+✅ **valid in `base`/`variants`**:
+- `&:hover`
+- `html[data-dark] &`
+- `${Component} > &`
+
+❌ **invalid in `base`/`variants`** (must use `within` to write these):
+- `& svg`
+- `& > *:hover`
+
+use `within` when you need to style descendants. these selectors are automatically scoped to the component's container to prevent leakage. you can also use `within` in `variants` and `compoundVariants`.
 
 ```ts
 within: {
   "& > *": { marginBottom: 10 }, // direct children
-  "span": { color: "red" } // any descendant span
+  "svg": { fill: "currentColor" } // descendant
 }
 ```
 
 ### referencing components (`toString`)
-styled components implement a `toString` method that returns their unique class selector (e.g., `.Box_root__1x2y3z`). this allows you to target one component from within another's styles.
+styled components implement a `toString` method that returns their unique class selector (e.g., `Box_root__1x2y3z`). this allows you to target one component from within another's styles.
 
 ```tsx
 const Icon = styled("span", {
@@ -207,7 +215,7 @@ const Icon = styled("span", {
 const Button = styled("button", {
   base: [{
     // using template literal interpolation calls .toString() automatically
-    [`&:hover ${Icon}`]: {
+    [`&:hover .${Icon}`]: {
       opacity: 1
     }
   }]
