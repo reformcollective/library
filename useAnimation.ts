@@ -89,6 +89,7 @@ export const useAnimation = <InputFn extends Creation>(
 
 	// devtools
 	const [hmrHash, setHmrHash] = useState<string | null>(null)
+	const scheduleRevert = useRef(false)
 
 	// inputs & options
 	const {
@@ -170,20 +171,24 @@ export const useAnimation = <InputFn extends Creation>(
 		setContext(newContext)
 
 		return () => {
-			if (!newContext.isReverted)
-				switch (updateBehavior) {
-					case "kill":
-						newContext.kill()
-						runCleanups()
-						break
-					case "revert":
-						newContext.revert()
-						break
-					case "none":
-						break
-					default:
-						updateBehavior satisfies never
-				}
+			if (!newContext.isReverted) {
+				if (scheduleRevert.current) {
+					newContext.revert()
+				} else
+					switch (updateBehavior) {
+						case "kill":
+							newContext.kill()
+							runCleanups()
+							break
+						case "revert":
+							newContext.revert()
+							break
+						case "none":
+							break
+						default:
+							updateBehavior satisfies never
+					}
+			}
 		}
 	}, [
 		updateBehavior,
@@ -201,6 +206,7 @@ export const useAnimation = <InputFn extends Creation>(
 					| { type: "built"; hash: string }
 				if (message.type === "built") {
 					console.log("HMR hash updated:", message.hash)
+					scheduleRevert.current = true
 					setHmrHash(message.hash)
 				}
 			}
@@ -210,6 +216,9 @@ export const useAnimation = <InputFn extends Creation>(
 			}
 		}
 	}, [])
+	useEffect(() => {
+		scheduleRevert.current = false
+	})
 
 	return {
 		result: returnValue,
