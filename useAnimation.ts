@@ -90,9 +90,6 @@ export const useAnimation = <InputFn extends Creation>(
 	// devtools
 	const [hmrHash, setHmrHash] = useState<string | null>(null)
 	const scheduleRevert = useRef(false)
-	useLayoutEffect(() => {
-		scheduleRevert.current = true
-	}, [hmrHash])
 
 	// inputs & options
 	const {
@@ -209,6 +206,7 @@ export const useAnimation = <InputFn extends Creation>(
 					| { type: "built"; hash: string }
 				if (message.type === "built") {
 					console.log("HMR hash updated:", message.hash)
+					scheduleRevert.current = true
 					setHmrHash(message.hash)
 				}
 			}
