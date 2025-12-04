@@ -6,7 +6,7 @@ on:
       SECRETS_JSON:
         required: false
     inputs:
-      isSanity:
+      runOnGithubActions:
         required: true
         type: boolean
 
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   formatting:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
     steps:
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
@@ -52,7 +52,7 @@ jobs:
           fail-message: 'Looks like there may be formatting issues. Run "pnpm format" to fix them.'
 
   build:
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
     steps:
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
