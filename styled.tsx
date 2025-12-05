@@ -588,25 +588,27 @@ export const f = {
 		// Convert tablet vw values to clamped values
 		// This ensures scaling stops at 700px viewport width
 		const convertedTabletStyles: CSSObject = {}
-		
+
 		// Recursive function to convert vw values to clamp()
-		const convertValue = (value: string | number | CSSObject | undefined): string | number | CSSObject | undefined => {
+		const convertValue = (
+			value: string | number | CSSObject | undefined,
+		): string | number | CSSObject | undefined => {
 			if (typeof value === "string") {
 				// Replace vw units with clamp() that caps at MAX_SCALE_WIDTH
 				// Handle both positive and negative values, and handle calc() expressions
 				return value.replace(/(-?)(\d+\.?\d*)vw/g, (_match, sign, vwValue) => {
 					const vwNum = Number.parseFloat(vwValue)
 					const isNegative = sign === "-"
-					
+
 					// Calculate what the px value would be at MAX_SCALE_WIDTH
 					const maxPx = (vwNum / 100) * MAX_SCALE_WIDTH
-					
+
 					// For negative values, we need to flip the clamp bounds
 					if (isNegative) {
 						// clamp(minPx, -vw, 0) for negative values
 						return `clamp(-${maxPx.toFixed(PIXEL_PRECISION)}px, -${vwValue}vw, 0px)`
 					}
-					
+
 					// For positive values, use standard clamp
 					return `clamp(0px, ${vwValue}vw, ${maxPx.toFixed(PIXEL_PRECISION)}px)`
 				})
@@ -621,15 +623,17 @@ export const f = {
 			}
 			return value
 		}
-		
+
 		for (const [mediaKey, mediaContent] of Object.entries(tabletVwStyles)) {
 			if (typeof mediaContent === "object" && mediaContent !== null) {
 				const convertedContent: CSSObject = {}
-				
+
 				for (const [key, value] of Object.entries(mediaContent)) {
-					convertedContent[key] = convertValue(value as string | number | CSSObject | undefined)
+					convertedContent[key] = convertValue(
+						value as string | number | CSSObject | undefined,
+					)
 				}
-				
+
 				convertedTabletStyles[mediaKey] = convertedContent
 			} else {
 				convertedTabletStyles[mediaKey] = mediaContent
