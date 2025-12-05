@@ -565,7 +565,7 @@ export const f = {
 	 * Beyond 700px, values remain fixed. Use max-width + padding in components for centering.
 	 */
 	bigMobile: (style: string, options?: Options): CSSObject => {
-		const MAX_SCALE_WIDTH = 700 // Stop scaling at 700px viewport width
+		const MAX_SCALE_WIDTH = 550 // Stop scaling at 550px viewport width
 		const MOBILE_DESIGN = 375 // Mobile design size
 
 		// Generate mobile styles (unchanged - normal vw scaling)
