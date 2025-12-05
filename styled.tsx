@@ -561,16 +561,86 @@ export const f = {
 	/**
 	 * Tablet/responsive tween size
 	 * Explicit opt-in: when used, tablet scales like "big mobile"
+	 * Scales mobile design (375px) up to 700px viewport, then stops scaling.
+	 * Beyond 700px, values remain fixed. Use max-width + padding in components for centering.
 	 */
-	bigMobile: (style: string, options?: Options) => ({
-		...f.responsive(style, { ...options, only: "mobile" }),
-		...f.responsive(style, {
+	bigMobile: (style: string, options?: Options): CSSObject => {
+		const MAX_SCALE_WIDTH = 700 // Stop scaling at 700px viewport width
+		const MOBILE_DESIGN = 375 // Mobile design size
+
+		// Generate mobile styles (unchanged - normal vw scaling)
+		const mobileStyles = f.responsive(style, {
+			...options,
+			only: "mobile",
+		})
+
+		// Generate tablet styles with bigMobile scaling that caps at 700px
+		// We'll use clamp() to scale from 0 to the max size at 700px
+		const tabletVwStyles = f.responsive(style, {
 			...options,
 			bigMobile: true,
-			designSizeOverride: { tablet: 1024 },
+			designSizeOverride: {
+				mobile: MOBILE_DESIGN,
+			},
 			only: "tablet",
-		}),
-	}),
+		})
+
+		// Convert tablet vw values to clamped values
+		// This ensures scaling stops at 700px viewport width
+		const convertedTabletStyles: CSSObject = {}
+		
+		// Recursive function to convert vw values to clamp()
+		const convertValue = (value: string | number | CSSObject | undefined): string | number | CSSObject | undefined => {
+			if (typeof value === "string") {
+				// Replace vw units with clamp() that caps at MAX_SCALE_WIDTH
+				// Handle both positive and negative values, and handle calc() expressions
+				return value.replace(/(-?)(\d+\.?\d*)vw/g, (_match, sign, vwValue) => {
+					const vwNum = Number.parseFloat(vwValue)
+					const isNegative = sign === "-"
+					
+					// Calculate what the px value would be at MAX_SCALE_WIDTH
+					const maxPx = (vwNum / 100) * MAX_SCALE_WIDTH
+					
+					// For negative values, we need to flip the clamp bounds
+					if (isNegative) {
+						// clamp(minPx, -vw, 0) for negative values
+						return `clamp(-${maxPx.toFixed(PIXEL_PRECISION)}px, -${vwValue}vw, 0px)`
+					}
+					
+					// For positive values, use standard clamp
+					return `clamp(0px, ${vwValue}vw, ${maxPx.toFixed(PIXEL_PRECISION)}px)`
+				})
+			}
+			if (typeof value === "object" && value !== null) {
+				// Recursively handle nested objects
+				const nested: CSSObject = {}
+				for (const [k, v] of Object.entries(value)) {
+					nested[k] = convertValue(v as string | number | CSSObject | undefined)
+				}
+				return nested
+			}
+			return value
+		}
+		
+		for (const [mediaKey, mediaContent] of Object.entries(tabletVwStyles)) {
+			if (typeof mediaContent === "object" && mediaContent !== null) {
+				const convertedContent: CSSObject = {}
+				
+				for (const [key, value] of Object.entries(mediaContent)) {
+					convertedContent[key] = convertValue(value as string | number | CSSObject | undefined)
+				}
+				
+				convertedTabletStyles[mediaKey] = convertedContent
+			} else {
+				convertedTabletStyles[mediaKey] = mediaContent
+			}
+		}
+
+		return {
+			...mobileStyles,
+			...convertedTabletStyles,
+		}
+	},
 
 	/**
 	 * apply responsively calculated styles to all breakpoints
