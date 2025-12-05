@@ -1,4 +1,5 @@
 import type MuxVideoComponent from "@mux/mux-video-react"
+import { eases } from "library/eases"
 import Portal from "library/Portal"
 import { css, f, keyframes, styled } from "library/styled/alpha"
 import {
@@ -11,7 +12,6 @@ import {
 	useState,
 } from "react"
 import { MuxVideo } from "./MuxVideo"
-import { eases } from "library/eases"
 
 // Set to true to simulate NotAllowedError for testing
 const FORCE_FAIL = false
