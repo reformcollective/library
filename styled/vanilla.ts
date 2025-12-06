@@ -15,6 +15,7 @@ import {
 } from "styles/media"
 import { COMMENT, compile, DECLARATION, type Element, RULESET } from "stylis"
 import { isDesktop, isFull, isMobile, isTablet } from "./breakpoints.css"
+import { isBrowser } from "../deviceDetection"
 
 export type CSSObject = StyleRule
 export type CSSValue = string | number | StyleRule
@@ -23,6 +24,12 @@ if (libraryConfig.stylingSystem === "restyle")
 	throw new Error(
 		"this project is only configured to use the restyle styling system",
 	)
+
+if (isBrowser) {
+	throw new Error(
+		"style system was loaded in the browser! this will explode your bundle size!",
+	)
+}
 
 export function attrs<Props>(
 	Component: ComponentType<Props>,
