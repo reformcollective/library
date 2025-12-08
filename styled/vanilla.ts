@@ -258,7 +258,8 @@ const computeTerms = (px: number, mode: FMode, options?: FOptions) => {
 	const mobileSize = options?.designSizeOverride?.mobile ?? mobileDesignSize
 	const tabletSize = options?.designSizeOverride?.tablet ?? tabletDesignSize
 	const desktopSize = options?.designSizeOverride?.desktop ?? desktopDesignSize
-	const forceScaleFully = options?.scaleFully ?? mode === "scaledResponsive"
+	const forceScaleFully =
+		options?.scaleFully ?? (mode === "scaledResponsive" ? true : undefined)
 
 	const m = toVw(px, mobileSize)
 	const t =
