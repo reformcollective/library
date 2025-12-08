@@ -1,7 +1,7 @@
 import type MuxVideoComponent from "@mux/mux-video-react"
 import { eases } from "library/eases"
 import Portal from "library/Portal"
-import { css, f, keyframes, styled } from "library/styled/alpha"
+import { css, f, styled } from "library/styled/alpha"
 import {
 	type ComponentProps,
 	type Ref,
@@ -12,6 +12,7 @@ import {
 	useState,
 } from "react"
 import { MuxVideo } from "./MuxVideo"
+import { keyframes } from "@vanilla-extract/css"
 
 // Set to true to simulate NotAllowedError for testing
 const FORCE_FAIL = false
@@ -170,14 +171,14 @@ const Video = styled(
 	`),
 )
 
-const fadeIn = keyframes`
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-`
+const fadeIn = keyframes({
+	from: {
+		opacity: 0,
+	},
+	to: {
+		opacity: 1,
+	},
+})
 
 const LowPowerOverlay = styled(
 	"button",
