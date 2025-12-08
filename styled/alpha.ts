@@ -14,6 +14,8 @@ import type {
 
 export * from "./vanilla"
 
+export const css = String.raw
+
 export function compileTime<T>(getValue: () => T): T {
 	return getValue()
 }

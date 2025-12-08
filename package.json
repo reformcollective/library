@@ -5,6 +5,7 @@
 	"description": "collection of utilities and helpers for reform collective",
 	"//": "anything that the supermodule may also install should use the ^major syntax. this is so that pnpm can combine duplicate versions to prevent inflating the bundle. this doesn't apply to dev dependencies (e.g. biome)",
 	"dependencies": {
+		"@eslint/css-tree": "3.6.8",
 		"@mux/blurup": "1.0.2",
 		"@mux/mux-video-react": "^0",
 		"@sanity/image-url": "2.0.1",
