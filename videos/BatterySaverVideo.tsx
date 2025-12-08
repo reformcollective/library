@@ -1,6 +1,7 @@
 import type MuxVideoComponent from "@mux/mux-video-react"
+import { eases } from "library/eases"
 import Portal from "library/Portal"
-import { css, f, styled } from "library/styled/alpha"
+import { css, f, keyframes, styled } from "library/styled/alpha"
 import {
 	type ComponentProps,
 	type Ref,
@@ -169,6 +170,15 @@ const Video = styled(
 	`),
 )
 
+const fadeIn = keyframes`
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+`
+
 const LowPowerOverlay = styled(
 	"button",
 	f.unresponsive(css`
@@ -177,9 +187,11 @@ const LowPowerOverlay = styled(
 		display: grid;
 		place-content: center;
 		place-items: center;
-		background: rgb(0 0 0 / 30%);
+		background: rgb(0 0 0 / 5%);
 		cursor: pointer;
 		z-index: 9999;
+		backdrop-filter: blur(5px);
+		animation: ${fadeIn} 1s ${eases.cubic.inOut};
 	`),
 )
 
