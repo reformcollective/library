@@ -26,7 +26,11 @@ export function reconstructSource(
 	nodes: DependencyNode[],
 	options: ReconstructOptions = {},
 ): string {
-	const { exportNames = new Set(), transforms = new Map(), append = [] } = options
+	const {
+		exportNames = new Set(),
+		transforms = new Map(),
+		append = [],
+	} = options
 
 	const seenIds = new Set<number>()
 	const parts: string[] = []
@@ -52,7 +56,11 @@ export function reconstructSource(
 		// Add export if needed and not already exported
 		if (node.name && exportNames.has(node.name) && !node.exportInfo) {
 			// Only add export to variable/function/class declarations
-			if (node.kind === "variable" || node.kind === "function" || node.kind === "class") {
+			if (
+				node.kind === "variable" ||
+				node.kind === "function" ||
+				node.kind === "class"
+			) {
 				src = `export ${src}`
 			}
 		}
@@ -123,7 +131,11 @@ export function createImportDeclaration(
 			undefined,
 			ts.factory.createNamedImports(
 				names.map((n) =>
-					ts.factory.createImportSpecifier(false, undefined, ts.factory.createIdentifier(n)),
+					ts.factory.createImportSpecifier(
+						false,
+						undefined,
+						ts.factory.createIdentifier(n),
+					),
 				),
 			),
 		),
@@ -143,7 +155,11 @@ export function createReExportDeclaration(
 		false,
 		ts.factory.createNamedExports(
 			names.map((n) =>
-				ts.factory.createExportSpecifier(false, undefined, ts.factory.createIdentifier(n)),
+				ts.factory.createExportSpecifier(
+					false,
+					undefined,
+					ts.factory.createIdentifier(n),
+				),
 			),
 		),
 		ts.factory.createStringLiteral(fromPath),

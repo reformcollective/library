@@ -1,5 +1,3 @@
-// app/library/styled.reform.test-d.ts
-
 import { style } from "@vanilla-extract/css"
 import { styled } from "library/styled/alpha"
 import { Component, type ComponentProps, type FC } from "react"

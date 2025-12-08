@@ -621,10 +621,7 @@ function buildOriginalStatements(
 		statements.push(node.statement)
 		if (node.kind === "import") {
 			lastImportIdx = statements.length - 1
-		} else if (
-			isDirectivePrologue(node.statement) &&
-			lastImportIdx === -1
-		) {
+		} else if (isDirectivePrologue(node.statement) && lastImportIdx === -1) {
 			// Track directive prologues that come before any imports
 			lastDirectiveIdx = statements.length - 1
 		}

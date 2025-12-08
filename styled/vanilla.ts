@@ -1,6 +1,6 @@
-import type { StyleRule } from "@vanilla-extract/css"
-import * as csstree from "@eslint/css-tree"
 import config from "libraryConfig"
+import * as csstree from "@eslint/css-tree"
+import type { StyleRule } from "@vanilla-extract/css"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,

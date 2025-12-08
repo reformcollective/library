@@ -243,9 +243,9 @@ export function analyzeDependencies(
 
 		// 2. VARIABLES
 		if (ts.isVariableStatement(stmt)) {
-			const isExported = stmt.modifiers?.some(
-				(m) => m.kind === ts.SyntaxKind.ExportKeyword,
-			) ?? false
+			const isExported =
+				stmt.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ??
+				false
 
 			for (const decl of stmt.declarationList.declarations) {
 				if (!ts.isIdentifier(decl.name)) continue

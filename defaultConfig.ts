@@ -1,6 +1,6 @@
 /**
  * config schema and config defaults for the reform util library
- * see app/libraryConfig.ts for the actual config
+ * see libraryConfig.ts for the actual config
  */
 
 type Config<TransitionNames = never, GroupNames = never> = {

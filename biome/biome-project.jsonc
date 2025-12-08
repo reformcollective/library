@@ -3,8 +3,8 @@
 	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"root": true,
 	"plugins": [
-		"./app/library/biome/memoization.grit",
-		"./app/library/biome/forwardRef.grit"
+		"./library/biome/memoization.grit",
+		"./library/biome/forwardRef.grit"
 	],
 	"linter": {
 		"enabled": true,
@@ -45,7 +45,7 @@
 		}
 	},
 	"files": {
-		"includes": ["**", "!**/pnpm-lock.yaml", "!**/app/library"]
+		"includes": ["**", "!**/pnpm-lock.yaml", "!**/library"]
 	},
 	"vcs": {
 		"enabled": true,
