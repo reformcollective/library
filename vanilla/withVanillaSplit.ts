@@ -32,5 +32,12 @@ export const withVanillaSplit = (config: NextConfig): NextConfig => {
 		],
 	}
 
-	return withVanillaExtract(config)
+	const updatedConfig = withVanillaExtract(config)
+
+	// @ts-expect-error not safe but fine for now
+	updatedConfig.turbopack?.rules["vanilla.virtual.css"].loaders.unshift(
+		require.resolve("./css-loader.ts"),
+	)
+
+	return updatedConfig
 }

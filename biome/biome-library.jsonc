@@ -41,7 +41,7 @@
 		}
 	},
 	"files": {
-		"includes": ["**", "!pnpm-lock.yaml", "!gsapHelpers", "!vanilla/*/dist"]
+		"includes": ["**", "!pnpm-lock.yaml", "!gsapHelpers", "!vanilla/*"]
 	},
 	"vcs": {
 		"enabled": true,

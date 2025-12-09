@@ -1,4 +1,4 @@
-import { css } from "library/styled/alpha"
+import { compileTime, css } from "library/styled/alpha"
 import { reset } from "./layers.css"
 
 const style = css`
@@ -286,4 +286,6 @@ display:revert; revert to element instead of attribute */
 	}
 `
 
-export const ResetStyles = () => <style>{style}</style>
+const builtStyle = compileTime(() => style)
+
+export const ResetStyles = () => <style>{builtStyle}</style>

@@ -168,7 +168,7 @@ async function run() {
 			"**/node_modules/**",
 			"**/.next/**",
 			"**/dist/**",
-			"**/app/library/**",
+			"**/library/**",
 		],
 		onlyFiles: true,
 		expandDirectories: false,

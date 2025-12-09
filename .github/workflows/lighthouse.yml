@@ -4,7 +4,7 @@ on:
     secrets:
       SECRETS_JSON:
         required: false
-    inputs: 
+    inputs:
       runOnGithubActions:
         required: true
         type: boolean
@@ -60,7 +60,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
       # END INSTALLATION
-
       - name: Build
         if: github.event.action != 'closed'
         run: pnpm run build

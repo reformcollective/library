@@ -6,13 +6,24 @@ import turboLoaderRAW, {
 	type TurboLoaderOptions,
 } from "@vanilla-extract/turbopack-plugin"
 import ts from "typescript"
+import {
+	analyzeDependencies,
+	type DependencyGraph,
+	type DependencyNode,
+} from "./dependency-graph.ts"
+import {
+	createImportDeclaration,
+	createReExportDeclaration,
+	printSourceFile,
+	reconstructSource,
+} from "./source-builder.ts"
+
+// =============================================================================
+// Configuration
+// =============================================================================
 
 type ModulesConfig = Record<string, string[]>
 
-// @ts-expect-error turbopack loader shape has default export in some builds
-const turboLoader = turboLoaderRAW.default as typeof turboLoaderRAW
-
-// tracked functions that should be extracted to virtual .css.ts modules
 const TRACKED_MODULES: ModulesConfig = {
 	"@vanilla-extract/css": [
 		"style",
@@ -35,640 +46,82 @@ const TRACKED_MODULES: ModulesConfig = {
 		"globalKeyframes",
 		"globalLayer",
 	],
-	"library/styled/alpha": ["styled", "keyframes"],
+	"library/styled/alpha": ["styled", "keyframes", "compileTime"],
 }
 
-const SPLIT_STYLED_MODULE = "library/styled/alpha"
-const SPLIT_STYLED_IMPORT = "styled"
+const STYLED_MODULE = "library/styled/alpha"
+const STYLED_IMPORT = "styled"
 
-type ImportRegistry = {
-	trackedLocalNames: Set<string>
-	trackedLocalToModule: Map<string, string>
-	trackedLocalToImported: Map<string, string>
-	allImports: ts.ImportDeclaration[]
-}
-
-type MovedDeclaration = {
-	name: string
-	initializerText: string
-	initializer: ts.Expression
-	kind: "const" | "let"
-}
-
-type MovedExpression = {
-	text: string
-	expression: ts.Expression
-}
-
-type SplitResult = {
-	statements: ts.Statement[]
-	movedNames: string[]
-	reexportNames: string[]
-	movedDecls: MovedDeclaration[]
-	movedExprs: MovedExpression[]
-	supportingStatements: ts.Statement[]
-	needsWithComponentHelper: boolean
-}
+// @ts-expect-error turbopack loader shape has default export in some builds
+const turboLoader = turboLoaderRAW.default as typeof turboLoaderRAW
 
 // =============================================================================
-// TS factory helpers
+// Tracked import registry
 // =============================================================================
 
-const createNamedImport = (
-	names: string[],
-	fromPath: string,
-): ts.ImportDeclaration => {
-	const code = `import { ${names.join(", ")} } from ${JSON.stringify(fromPath)};`
-	const sf = ts.createSourceFile(
-		"i.ts",
-		code,
-		ts.ScriptTarget.ES2020,
-		false,
-		ts.ScriptKind.TS,
-	)
-	return sf.statements[0] as ts.ImportDeclaration
+interface TrackedRegistry {
+	/** Local names that are tracked imports (e.g., "style", "styled") */
+	trackedNames: Set<string>
+	/** Local name -> module specifier */
+	localToModule: Map<string, string>
+	/** Local name -> original imported name */
+	localToImported: Map<string, string>
 }
-
-const createReExport = (
-	names: string[],
-	fromPath: string,
-): ts.ExportDeclaration => {
-	return ts.factory.createExportDeclaration(
-		undefined,
-		false,
-		ts.factory.createNamedExports(
-			names.map((n) => ts.factory.createExportSpecifier(false, undefined, n)),
-		),
-		ts.factory.createStringLiteral(fromPath),
-		undefined,
-	)
-}
-
-// =============================================================================
-// Import registry
-// =============================================================================
 
 /**
- * Scans the source file for imports of tracked functions and builds a registry
- * mapping local names to their module/import names.
+ * Builds a registry of tracked imports from the dependency graph.
  */
-const buildImportRegistry = (sourceFile: ts.SourceFile): ImportRegistry => {
-	const trackedLocalNames = new Set<string>()
-	const trackedLocalToModule = new Map<string, string>()
-	const trackedLocalToImported = new Map<string, string>()
-	const allImports: ts.ImportDeclaration[] = []
+function buildTrackedRegistry(graph: DependencyGraph): TrackedRegistry {
+	const trackedNames = new Set<string>()
+	const localToModule = new Map<string, string>()
+	const localToImported = new Map<string, string>()
 
-	for (const stmt of sourceFile.statements) {
-		if (!ts.isImportDeclaration(stmt)) continue
+	for (const [name, node] of graph.nodes) {
+		if (node.kind !== "import" || !node.importInfo) continue
+		if (node.importInfo.isTypeOnly) continue
 
-		allImports.push(stmt)
+		const tracked = TRACKED_MODULES[node.importInfo.module]
+		if (!tracked) continue
 
-		const moduleSpecifier = (stmt.moduleSpecifier as ts.StringLiteral).text
-		const tracked = TRACKED_MODULES[moduleSpecifier]
-
-		if (!tracked || !stmt.importClause) continue
-
-		const { name: defaultImport, namedBindings } = stmt.importClause
-
-		// track default import if explicitly included
-		if (defaultImport && tracked.includes("default")) {
-			trackedLocalNames.add(defaultImport.text)
-			trackedLocalToModule.set(defaultImport.text, moduleSpecifier)
-			trackedLocalToImported.set(defaultImport.text, "default")
-		}
-
-		// track named imports
-		if (namedBindings && ts.isNamedImports(namedBindings)) {
-			for (const el of namedBindings.elements) {
-				const imported = (el.propertyName ?? el.name).text
-				const local = el.name.text
-				if (tracked.includes(imported)) {
-					trackedLocalNames.add(local)
-					trackedLocalToModule.set(local, moduleSpecifier)
-					trackedLocalToImported.set(local, imported)
-				}
-			}
+		if (tracked.includes(node.importInfo.importedName)) {
+			trackedNames.add(name)
+			localToModule.set(name, node.importInfo.module)
+			localToImported.set(name, node.importInfo.importedName)
 		}
 	}
 
-	return {
-		trackedLocalNames,
-		trackedLocalToModule,
-		trackedLocalToImported,
-		allImports,
-	}
+	return { trackedNames, localToModule, localToImported }
 }
 
 // =============================================================================
-// Styled component handling
+// Taint analysis
 // =============================================================================
+
+interface TaintResult {
+	/** All tainted node names (directly or transitively use tracked functions) */
+	tainted: Set<string>
+	/** Tainted functions/classes that can't be moved (should error) */
+	invalidTainted: DependencyNode[]
+}
 
 /**
- * Handles styled(Component, config) by splitting it into:
- * - Virtual module: Component___raw = styled('div', config)
- * - Original file: Component = withComponent(FirstArg, Component___raw)
+ * Computes which nodes are "tainted" by tracked function usage.
+ * A node is tainted if it directly calls a tracked function.
+ * Functions/classes that are tainted are invalid (can't move to .css.ts).
  */
-const handleStyledComponent = (
-	decl: ts.VariableDeclaration,
-	call: ts.CallExpression,
-	sourceFile: ts.SourceFile,
-	isConstList: boolean,
-): {
-	shouldMove: boolean
-	movedName?: string
-	movedInitializer?: string
-	kind?: "const" | "let"
-	newDecl?: ts.VariableDeclaration
-} => {
-	const args = call.arguments
-	const firstArg = args[0]
-	const baseName = (decl.name as ts.Identifier).text
-
-	// styled('tag', ...) -> move entirely to virtual module
-	const isStringTag =
-		firstArg &&
-		(ts.isStringLiteral(firstArg) ||
-			ts.isNoSubstitutionTemplateLiteral(firstArg))
-
-	if (isStringTag) {
-		// styled('tag', ...rest) -> include debugId as third arg when rest exists
-		const firstArgText = firstArg.getText(sourceFile)
-		const restArgs = args.slice(1)
-		const restArgsText = restArgs.map((a) => a.getText(sourceFile)).join(", ")
-		const movedInitializer =
-			restArgs.length > 0
-				? `styled(${firstArgText}, ${restArgsText}, ${JSON.stringify(baseName)})`
-				: `styled(${firstArgText})`
-
-		return {
-			shouldMove: true,
-			movedName: baseName,
-			movedInitializer,
-			kind: isConstList ? "const" : "let",
-		}
-	}
-
-	// styled(Component, ...) -> split into raw + wrapper
-	const rawName = `${baseName}___raw`
-	const restArgs = args.slice(1)
-
-	// build: styled('div', ...restArgs)
-	const restArgsText = restArgs.map((a) => a.getText(sourceFile)).join(", ")
-	const rawInitializer = restArgsText
-		? `styled("div", ${restArgsText}, ${JSON.stringify(baseName)})`
-		: `styled("div")`
-
-	// build: withComponent(FirstArg, rawName)
-	const newInit = ts.factory.createCallExpression(
-		ts.factory.createIdentifier("withComponent"),
-		undefined,
-		[
-			firstArg ?? ts.factory.createIdentifier("undefined"),
-			ts.factory.createIdentifier(rawName),
-		],
-	)
-
-	const newDecl = ts.factory.updateVariableDeclaration(
-		decl,
-		decl.name,
-		decl.exclamationToken,
-		decl.type,
-		newInit,
-	)
-
-	return {
-		shouldMove: true,
-		movedName: rawName,
-		movedInitializer: rawInitializer,
-		kind: isConstList ? "const" : "let",
-		newDecl,
-	}
-}
-
-// =============================================================================
-// Statement splitting
-// =============================================================================
-
-/**
- * Walks all statements in the source file and splits out tracked function calls
- * into declarations/expressions to be moved to the virtual module.
- */
-const splitDeclarations = (
-	sourceFile: ts.SourceFile,
-	registry: ImportRegistry,
-): SplitResult => {
-	const statements: ts.Statement[] = []
-	const movedNames: string[] = []
-	const reexportNames: string[] = []
-	const movedDecls: MovedDeclaration[] = []
-	const movedExprs: MovedExpression[] = []
-	let needsWithComponentHelper = false
-
-	for (const stmt of sourceFile.statements) {
-		// handle top-level expression statements (e.g., globalStyle(...))
-		if (ts.isExpressionStatement(stmt)) {
-			const expr = stmt.expression
-			// handle both call expressions and tagged template expressions
-			let ident: ts.Identifier | undefined
-			if (ts.isCallExpression(expr) && ts.isIdentifier(expr.expression)) {
-				ident = expr.expression
-			} else if (
-				ts.isTaggedTemplateExpression(expr) &&
-				ts.isIdentifier(expr.tag)
-			) {
-				ident = expr.tag
-			}
-			if (ident && registry.trackedLocalNames.has(ident.text)) {
-				movedExprs.push({
-					text: expr.getText(sourceFile),
-					expression: expr,
-				})
-				continue
-			}
-			statements.push(stmt)
-			continue
-		}
-
-		// only interested in variable statements from here
-		if (!ts.isVariableStatement(stmt)) {
-			statements.push(stmt)
-			continue
-		}
-
-		const isExported = (stmt.modifiers ?? []).some(
-			(m) => m.kind === ts.SyntaxKind.ExportKeyword,
-		)
-		const isConstList = (stmt.declarationList.flags & ts.NodeFlags.Const) !== 0
-		const keptDecls: ts.VariableDeclaration[] = []
-
-		for (const decl of stmt.declarationList.declarations) {
-			// skip non-identifier or uninitialized declarations
-			if (!ts.isIdentifier(decl.name) || !decl.initializer) {
-				keptDecls.push(decl)
-				continue
-			}
-
-			// check if initializer is a tracked function call
-			let trackedIdent: ts.Identifier | undefined
-			if (
-				ts.isCallExpression(decl.initializer) &&
-				ts.isIdentifier(decl.initializer.expression)
-			) {
-				trackedIdent = decl.initializer.expression
-			} else if (
-				ts.isTaggedTemplateExpression(decl.initializer) &&
-				ts.isIdentifier(decl.initializer.tag)
-			) {
-				trackedIdent = decl.initializer.tag
-			}
-			if (!trackedIdent || !registry.trackedLocalNames.has(trackedIdent.text)) {
-				keptDecls.push(decl)
-				continue
-			}
-
-			const calleeLocal = trackedIdent.text
-			const calleeModule = registry.trackedLocalToModule.get(calleeLocal)
-			const calleeImported = registry.trackedLocalToImported.get(calleeLocal)
-
-			const isStyledFromLib =
-				calleeModule === SPLIT_STYLED_MODULE &&
-				calleeImported === SPLIT_STYLED_IMPORT
-			const callExpr = ts.isCallExpression(decl.initializer)
-				? decl.initializer
-				: undefined
-
-			if (isStyledFromLib && callExpr) {
-				const result = handleStyledComponent(
-					decl,
-					callExpr,
-					sourceFile,
-					isConstList,
-				)
-				if (
-					result.shouldMove &&
-					result.movedName &&
-					result.movedInitializer &&
-					result.kind
-				) {
-					movedNames.push(result.movedName)
-					movedDecls.push({
-						name: result.movedName,
-						initializerText: result.movedInitializer,
-						initializer: callExpr,
-						kind: result.kind,
-					})
-					if (result.newDecl) {
-						keptDecls.push(result.newDecl)
-						needsWithComponentHelper = true
-					} else if (isExported) {
-						// styled('tag') was moved entirely, re-export it
-						reexportNames.push(decl.name.text)
-					}
-				}
-				continue
-			}
-
-			// non-styled tracked calls (style, keyframes, etc.) -> move to virtual module
-			movedNames.push(decl.name.text)
-			if (isExported) reexportNames.push(decl.name.text)
-			movedDecls.push({
-				name: decl.name.text,
-				initializerText: decl.initializer.getText(sourceFile),
-				initializer: decl.initializer,
-				kind: isConstList ? "const" : "let",
-			})
-		}
-
-		// if any declarations remain, keep the statement
-		if (keptDecls.length > 0) {
-			statements.push(
-				ts.factory.updateVariableStatement(
-					stmt,
-					stmt.modifiers,
-					ts.factory.updateVariableDeclarationList(
-						stmt.declarationList,
-						keptDecls,
-					),
-				),
-			)
-		}
-	}
-
-	return {
-		statements,
-		movedNames,
-		reexportNames,
-		movedDecls,
-		movedExprs,
-		supportingStatements: [],
-		needsWithComponentHelper,
-	}
-}
-
-// =============================================================================
-// Dependency analysis helpers
-// =============================================================================
-
-const GLOBAL_IDENTIFIERS = new Set<string>([
-	"Math",
-	"Number",
-	"String",
-	"Boolean",
-	"Object",
-	"Array",
-	"Set",
-	"Map",
-	"WeakMap",
-	"WeakSet",
-	"Date",
-	"BigInt",
-	"Symbol",
-	"Promise",
-	"RegExp",
-	"Intl",
-	"JSON",
-	"Reflect",
-	"Proxy",
-	"console",
-	"window",
-	"document",
-	"navigator",
-	"location",
-	"globalThis",
-	"self",
-])
-
-const extractBindingNames = (
-	binding: ts.BindingName,
-	names: string[],
-): void => {
-	if (ts.isIdentifier(binding)) {
-		names.push(binding.text)
-		return
-	}
-
-	for (const element of binding.elements) {
-		if (ts.isOmittedExpression(element)) continue
-		extractBindingNames(element.name, names)
-	}
-}
-
-const collectLocalNames = (
-	node: ts.Node | undefined,
-	locals: Set<string>,
-): void => {
-	if (!node) return
-
-	const visit = (current: ts.Node) => {
-		if (ts.isFunctionLike(current)) {
-			if (current.name && ts.isIdentifier(current.name)) {
-				locals.add(current.name.text)
-			}
-			for (const param of current.parameters) {
-				const paramNames: string[] = []
-				extractBindingNames(param.name, paramNames)
-				paramNames.forEach((name) => {
-					locals.add(name)
-				})
-			}
-		}
-
-		if (ts.isVariableDeclaration(current)) {
-			const declNames: string[] = []
-			extractBindingNames(current.name, declNames)
-			declNames.forEach((name) => {
-				locals.add(name)
-			})
-		}
-
-		if (ts.isCatchClause(current) && current.variableDeclaration) {
-			const catchNames: string[] = []
-			extractBindingNames(current.variableDeclaration.name, catchNames)
-			catchNames.forEach((name) => {
-				locals.add(name)
-			})
-		}
-
-		current.forEachChild(visit)
-	}
-
-	visit(node)
-}
-
-const isIdentifierInTypePosition = (identifier: ts.Identifier): boolean => {
-	let current: ts.Node | undefined = identifier
-	while (current) {
-		switch (current.kind) {
-			case ts.SyntaxKind.TypeReference:
-			case ts.SyntaxKind.TypeAliasDeclaration:
-			case ts.SyntaxKind.InterfaceDeclaration:
-			case ts.SyntaxKind.TypeLiteral:
-			case ts.SyntaxKind.MappedType:
-			case ts.SyntaxKind.TypePredicate:
-			case ts.SyntaxKind.TypeQuery:
-			case ts.SyntaxKind.TypeParameter:
-			case ts.SyntaxKind.ImportType:
-			case ts.SyntaxKind.ExpressionWithTypeArguments:
-				return true
-		}
-
-		if (ts.isImportClause(current) && current.isTypeOnly) return true
-		if (ts.isImportSpecifier(current) && current.isTypeOnly) return true
-
-		current = current.parent
-	}
-	return false
-}
-
-const shouldIncludeIdentifier = (identifier: ts.Identifier): boolean => {
-	const text = identifier.text
-	if (!text) return false
-	if (text === "undefined" || text === "NaN" || text === "Infinity")
-		return false
-
-	const parent = identifier.parent
-	if (!parent) return true
-
-	if (ts.isPropertyAccessExpression(parent) && parent.name === identifier) {
-		return false
-	}
-
-	if (
-		ts.isPropertyAssignment(parent) &&
-		parent.name === identifier &&
-		!ts.isComputedPropertyName(parent.name)
-	) {
-		return false
-	}
-
-	if (ts.isBindingElement(parent) && parent.name === identifier) {
-		return false
-	}
-
-	if (ts.isImportSpecifier(parent) && parent.name === identifier) {
-		return false
-	}
-
-	if (isIdentifierInTypePosition(identifier)) return false
-
-	return true
-}
-
-const collectDependenciesForNode = (node: ts.Node | undefined): Set<string> => {
-	const deps = new Set<string>()
-	if (!node) return deps
-
-	const locals = new Set<string>()
-	collectLocalNames(node, locals)
-
-	const visit = (current: ts.Node) => {
-		if (ts.isIdentifier(current)) {
-			if (!locals.has(current.text) && shouldIncludeIdentifier(current)) {
-				deps.add(current.text)
-			}
-			return
-		}
-
-		current.forEachChild(visit)
-	}
-
-	visit(node)
-	return deps
-}
-
-const _collectDependenciesFromSplitResult = (
-	result: SplitResult,
-): Set<string> => {
-	const deps = new Set<string>()
-	for (const md of result.movedDecls) {
-		for (const dep of collectDependenciesForNode(md.initializer)) {
-			deps.add(dep)
-		}
-	}
-	for (const expr of result.movedExprs) {
-		for (const dep of collectDependenciesForNode(expr.expression)) {
-			deps.add(dep)
-		}
-	}
-	return deps
-}
-
-const collectImportLocalNames = (
-	imports: ts.ImportDeclaration[],
-): Set<string> => {
-	const names = new Set<string>()
-	for (const decl of imports) {
-		const clause = decl.importClause
-		if (!clause) continue
-		if (clause.name) {
-			names.add(clause.name.text)
-		}
-		if (clause.namedBindings) {
-			if (ts.isNamespaceImport(clause.namedBindings)) {
-				names.add(clause.namedBindings.name.text)
-			} else if (ts.isNamedImports(clause.namedBindings)) {
-				for (const element of clause.namedBindings.elements) {
-					names.add(element.name.text)
-				}
-			}
-		}
-	}
-	return names
-}
-
-const getDeclaredNamesFromStatement = (stmt: ts.Statement): string[] => {
-	const names: string[] = []
-	if (ts.isVariableStatement(stmt)) {
-		for (const decl of stmt.declarationList.declarations) {
-			extractBindingNames(decl.name, names)
-		}
-	} else if (ts.isFunctionDeclaration(stmt) && stmt.name) {
-		names.push(stmt.name.text)
-	} else if (ts.isClassDeclaration(stmt) && stmt.name) {
-		names.push(stmt.name.text)
-	} else if (ts.isEnumDeclaration(stmt)) {
-		names.push(stmt.name.text)
-	}
-	return names
-}
-
-const findSupportingStatements = (
-	sourceFile: ts.SourceFile,
-	unresolvedNames: Set<string>,
-): ts.Statement[] => {
-	const supporting: ts.Statement[] = []
-	if (unresolvedNames.size === 0) return supporting
-
-	for (const stmt of sourceFile.statements) {
-		if (unresolvedNames.size === 0) break
-		const declared = getDeclaredNamesFromStatement(stmt)
-		if (declared.length === 0) continue
-		const matches = declared.filter((name) => unresolvedNames.has(name))
-		if (matches.length === 0) continue
-		supporting.push(stmt)
-		matches.forEach((name) => {
-			unresolvedNames.delete(name)
-		})
-	}
-
-	return supporting
-}
-
-const isTrackedStyledCall = (
-	stmt: ts.Statement,
-	registry: ImportRegistry,
-): boolean => {
+function isVariableFunctionLike(node: DependencyNode): boolean {
+	if (node.kind !== "variable") return false
+	const stmt = node.statement
 	if (!ts.isVariableStatement(stmt)) return false
+
 	for (const decl of stmt.declarationList.declarations) {
-		if (!decl.initializer) continue
+		if (!ts.isIdentifier(decl.name) || decl.name.text !== node.name) continue
+		const init = decl.initializer
+		if (!init) continue
 		if (
-			ts.isCallExpression(decl.initializer) &&
-			ts.isIdentifier(decl.initializer.expression) &&
-			registry.trackedLocalNames.has(decl.initializer.expression.text) &&
-			registry.trackedLocalToModule.get(decl.initializer.expression.text) ===
-				SPLIT_STYLED_MODULE &&
-			registry.trackedLocalToImported.get(decl.initializer.expression.text) ===
-				SPLIT_STYLED_IMPORT
+			ts.isArrowFunction(init) ||
+			ts.isFunctionExpression(init) ||
+			ts.isClassExpression(init)
 		) {
 			return true
 		}
@@ -676,215 +129,611 @@ const isTrackedStyledCall = (
 	return false
 }
 
-const containsJsx = (node: ts.Node): boolean => {
-	let found = false
-	const visit = (n: ts.Node) => {
-		if (
-			ts.isJsxElement(n) ||
-			ts.isJsxSelfClosingElement(n) ||
-			ts.isJsxFragment(n)
-		) {
-			found = true
-			return
+function computeTaintedNodes(
+	graph: DependencyGraph,
+	registry: TrackedRegistry,
+): TaintResult {
+	const tainted = new Set<string>()
+	const invalidTainted: DependencyNode[] = []
+
+	for (const [name, node] of graph.nodes) {
+		if (node.kind === "import") continue
+
+		// Check if this node directly depends on a tracked function
+		const usesTracked = node.dependsOn.some((dep) =>
+			registry.trackedNames.has(dep),
+		)
+
+		if (usesTracked) {
+			if (node.name) tainted.add(node.name)
+			else tainted.add(name) // expression statement key
+
+			// Functions and classes can't be moved to .css.ts
+			// Also catch arrow functions/function expressions assigned to variables
+			if (
+				node.kind === "function" ||
+				node.kind === "class" ||
+				isVariableFunctionLike(node)
+			) {
+				invalidTainted.push(node)
+			}
 		}
-		n.forEachChild(visit)
 	}
-	visit(node)
-	return found
+
+	return { tainted, invalidTainted }
 }
 
 // =============================================================================
-// Virtual module construction
+// Styled component handling
+// =============================================================================
+
+interface StyledTransform {
+	/** Original variable name */
+	originalName: string
+	/** Name for the raw component (e.g., "Button___raw") */
+	rawName: string
+	/** Source for the raw component in virtual module */
+	rawSource: string
+	/** The first argument to styled() that should be excluded from virtual deps */
+	excludedDep?: string
+	/** Whether this is a styled(Component) vs styled('tag') call */
+	needsWrapper: boolean
+}
+
+/**
+ * Analyzes styled() calls and produces transforms.
+ */
+function analyzeStyledCalls(
+	graph: DependencyGraph,
+	registry: TrackedRegistry,
+	tainted: Set<string>,
+): StyledTransform[] {
+	const transforms: StyledTransform[] = []
+
+	for (const name of tainted) {
+		const node = graph.nodes.get(name)
+		if (!node || node.kind !== "variable" || !node.name) continue
+
+		// Check if this is a styled() call
+		const styledLocal = Array.from(registry.trackedNames).find((local) => {
+			const mod = registry.localToModule.get(local)
+			const imp = registry.localToImported.get(local)
+			return mod === STYLED_MODULE && imp === STYLED_IMPORT
+		})
+
+		if (!styledLocal || !node.dependsOn.includes(styledLocal)) continue
+
+		// Parse the initializer to understand the call
+		const stmt = node.statement
+		if (!ts.isVariableStatement(stmt)) continue
+
+		const decl = stmt.declarationList.declarations.find(
+			(d) => ts.isIdentifier(d.name) && d.name.text === node.name,
+		)
+		if (!decl?.initializer || !ts.isCallExpression(decl.initializer)) continue
+
+		const call = decl.initializer
+		const args = call.arguments
+		const firstArg = args[0]
+
+		const isStringTag =
+			firstArg &&
+			(ts.isStringLiteral(firstArg) ||
+				ts.isNoSubstitutionTemplateLiteral(firstArg))
+
+		if (isStringTag) {
+			// styled('tag', config) -> move entirely, add debugId
+			const firstArgText = firstArg.getText(graph.sourceFile)
+			const restArgs = args.slice(1)
+			const restArgsText = restArgs
+				.map((a) => a.getText(graph.sourceFile))
+				.join(", ")
+
+			const rawSource =
+				restArgs.length > 0
+					? `export const ${node.name} = styled(${firstArgText}, ${restArgsText}, ${JSON.stringify(node.name)});`
+					: `export const ${node.name} = styled(${firstArgText});`
+
+			transforms.push({
+				originalName: node.name,
+				rawName: node.name,
+				rawSource,
+				needsWrapper: false,
+			})
+		} else {
+			// styled(Component, config) -> split into raw + wrapper
+			const rawName = `${node.name}___raw`
+			const restArgs = args.slice(1)
+			const restArgsText = restArgs
+				.map((a) => a.getText(graph.sourceFile))
+				.join(", ")
+
+			const rawSource = restArgsText
+				? `export const ${rawName} = styled("div", ${restArgsText}, ${JSON.stringify(node.name)});`
+				: `export const ${rawName} = styled("div");`
+
+			const excludedDep =
+				firstArg && ts.isIdentifier(firstArg) ? firstArg.text : undefined
+
+			transforms.push({
+				originalName: node.name,
+				rawName,
+				rawSource,
+				excludedDep,
+				needsWrapper: true,
+			})
+		}
+	}
+
+	return transforms
+}
+
+// =============================================================================
+// Partitioning
+// =============================================================================
+
+interface SplitPartition {
+	/** Nodes for the virtual .css.ts module */
+	virtual: DependencyNode[]
+	/** Nodes that stay in the original file */
+	original: DependencyNode[]
+	/** Names to re-export from original (tainted + exported) */
+	reexports: string[]
+	/** Names to import from virtual module */
+	imports: string[]
+}
+
+/**
+ * Computes the transitive closure of dependencies for a set of seeds.
+ */
+function getTransitiveClosure(
+	graph: DependencyGraph,
+	seeds: Set<string>,
+	exclude: Set<string> = new Set(),
+): Set<string> {
+	const closure = new Set<string>()
+	const queue = [...seeds]
+
+	while (queue.length > 0) {
+		const name = queue.pop()!
+		if (closure.has(name)) continue
+		// Only exclude non-seed dependencies (seeds themselves should always be included)
+		if (exclude.has(name) && !seeds.has(name)) continue
+
+		closure.add(name)
+
+		const node = graph.nodes.get(name)
+		if (!node) continue
+
+		for (const dep of node.dependsOn) {
+			// Exclude deps that aren't themselves seeds
+			const shouldExclude = exclude.has(dep) && !seeds.has(dep)
+			if (!closure.has(dep) && !shouldExclude) {
+				queue.push(dep)
+			}
+		}
+	}
+
+	return closure
+}
+
+/**
+ * Computes which nodes are used by nodes outside the virtual closure.
+ * Returns a set of names that need to stay in the original file.
+ */
+function computeOriginalDependencies(
+	graph: DependencyGraph,
+	virtualClosure: Set<string>,
+	wrappedNames: Set<string>,
+	excludedDeps: Set<string>,
+	tainted: Set<string>,
+): Set<string> {
+	const neededInOriginal = new Set<string>()
+
+	// Start with nodes that MUST be in original:
+	// 1. Nodes outside virtual closure (they're not moved)
+	// 2. Wrapped styled components (they stay with rewrite, but their ORIGINAL deps don't)
+	// 3. Excluded deps (first args of styled(Component) calls)
+	for (const node of graph.nodes.values()) {
+		const key = node.name ?? `__expr_${node.id}`
+		const inClosure = virtualClosure.has(key)
+
+		if (!inClosure || excludedDeps.has(key)) {
+			neededInOriginal.add(key)
+		}
+		// Wrapped names stay but their deps are handled specially below
+	}
+
+	// Now compute transitive closure of dependencies FROM original-only nodes
+	// Key insight: we should NOT follow deps of TAINTED nodes because their
+	// original declarations are being removed (replaced with imports from virtual)
+	const queue = [...neededInOriginal]
+	const visited = new Set<string>()
+
+	while (queue.length > 0) {
+		const name = queue.pop()!
+		if (visited.has(name)) continue
+		visited.add(name)
+
+		const node = graph.nodes.get(name)
+		if (!node) continue
+
+		// Don't follow deps of tainted nodes - their code is being replaced
+		// with imports from virtual, so their original deps aren't needed
+		const isTainted = tainted.has(name)
+		if (isTainted) {
+			continue
+		}
+
+		// Follow deps of non-tainted nodes
+		for (const dep of node.dependsOn) {
+			if (!visited.has(dep)) {
+				neededInOriginal.add(dep)
+				queue.push(dep)
+			}
+		}
+	}
+
+	// Wrapped components themselves need to stay (for the rewrite)
+	for (const name of wrappedNames) {
+		neededInOriginal.add(name)
+	}
+
+	return neededInOriginal
+}
+
+/**
+ * Partitions nodes between virtual and original modules.
+ */
+function partitionNodes(
+	graph: DependencyGraph,
+	tainted: Set<string>,
+	styledTransforms: StyledTransform[],
+): SplitPartition {
+	// Build exclusion set (first args of styled(Component) calls)
+	const excludedDeps = new Set<string>()
+	for (const t of styledTransforms) {
+		if (t.excludedDep) excludedDeps.add(t.excludedDep)
+	}
+
+	// Compute transitive closure for virtual module
+	const virtualClosure = getTransitiveClosure(graph, tainted, excludedDeps)
+
+	// Tainted names that have wrappers stay in original differently
+	const wrappedNames = new Set(
+		styledTransforms.filter((t) => t.needsWrapper).map((t) => t.originalName),
+	)
+
+	// Compute which nodes are actually needed in original
+	const neededInOriginal = computeOriginalDependencies(
+		graph,
+		virtualClosure,
+		wrappedNames,
+		excludedDeps,
+		tainted,
+	)
+
+	const virtual: DependencyNode[] = []
+	const original: DependencyNode[] = []
+	const reexports: string[] = []
+	const imports: string[] = []
+
+	for (const node of graph.ordered) {
+		const key = node.name ?? `__expr_${node.id}`
+		const inClosure = virtualClosure.has(key)
+		const isTainted = tainted.has(key)
+
+		if (inClosure) {
+			virtual.push(node)
+		}
+
+		// Original file keeps:
+		// - Nodes needed by other original nodes (computed above)
+		// - Wrapped styled components (they get rewritten)
+		// - But NOT tainted nodes (unless wrapped)
+		const isNeeded = neededInOriginal.has(key)
+		const isWrapped = wrappedNames.has(key)
+
+		if (isNeeded && (!isTainted || isWrapped)) {
+			original.push(node)
+		}
+
+		// Track what needs to be imported/re-exported
+		if (isTainted && node.name) {
+			// Only import runtime values (variables, functions, classes)
+			// Skip types, expressions, statements, exports
+			const isRuntimeValue =
+				node.kind === "variable" ||
+				node.kind === "function" ||
+				node.kind === "class"
+			if (isRuntimeValue) {
+				// For wrapped components, import the ___raw version
+				const transform = styledTransforms.find(
+					(t) => t.originalName === node.name,
+				)
+				if (transform?.needsWrapper) {
+					imports.push(transform.rawName)
+					// Also import the base component if it's tainted (moved to virtual)
+					if (transform.excludedDep && tainted.has(transform.excludedDep)) {
+						imports.push(transform.excludedDep)
+					}
+				} else {
+					imports.push(node.name)
+				}
+			}
+
+			if (node.exportInfo) {
+				reexports.push(node.name)
+			}
+		}
+	}
+
+	// Dedupe imports
+	return { virtual, original, reexports, imports: [...new Set(imports)] }
+}
+
+// =============================================================================
+// Source building
 // =============================================================================
 
 /**
- * Helper to parse a code snippet and find dependencies.
- * Wraps the text in a variable declaration to ensure it parses as valid TS.
+ * Builds the virtual module source code.
  */
-const getDependenciesFromText = (text: string): Set<string> => {
+function buildVirtualSource(
+	graph: DependencyGraph,
+	partition: SplitPartition,
+	tainted: Set<string>,
+	styledTransforms: StyledTransform[],
+): string {
+	// Build transforms map: tainted names get their raw source
+	const transforms = new Map<string, string>()
+	const append: string[] = []
+
+	for (const t of styledTransforms) {
+		if (t.needsWrapper) {
+			// Skip the original declaration, append the ___raw version
+			transforms.set(t.originalName, "") // empty = skip
+			append.push(t.rawSource)
+		} else {
+			// Replace with the transformed version
+			transforms.set(t.originalName, t.rawSource)
+		}
+	}
+
+	// Export names: all tainted variables (not expressions)
+	const exportNames = new Set<string>()
+	for (const name of tainted) {
+		const node = graph.nodes.get(name)
+		if (node && node.kind === "variable" && node.name) {
+			exportNames.add(node.name)
+		}
+	}
+
+	// Filter out empty transforms and reconstruct
+	const nodesToInclude = partition.virtual.filter((n) => {
+		if (n.name && transforms.get(n.name) === "") return false
+		return true
+	})
+
+	return reconstructSource(nodesToInclude, {
+		exportNames,
+		transforms,
+		append,
+	})
+}
+
+/**
+ * Checks if a statement is a directive prologue (e.g., "use client", "use strict")
+ */
+function isDirectivePrologue(stmt: ts.Statement): boolean {
+	if (!ts.isExpressionStatement(stmt)) return false
+	const expr = stmt.expression
+	return ts.isStringLiteral(expr) || ts.isNoSubstitutionTemplateLiteral(expr)
+}
+
+/**
+ * Builds the transformed original module statements.
+ */
+function buildOriginalStatements(
+	_graph: DependencyGraph,
+	partition: SplitPartition,
+	tainted: Set<string>,
+	styledTransforms: StyledTransform[],
+	importPath: string,
+): ts.Statement[] {
+	const statements: ts.Statement[] = []
+	const seenIds = new Set<number>()
+
+	// Maps for styled wrapper rewrites
+	const wrapperTransforms = new Map<string, StyledTransform>()
+	for (const t of styledTransforms) {
+		if (t.needsWrapper) {
+			wrapperTransforms.set(t.originalName, t)
+		}
+	}
+
+	// Track if we need withComponent helper
+	const needsWithComponent = wrapperTransforms.size > 0
+
+	// Find last import index for injection point (AFTER any directive prologues)
+	let lastImportIdx = -1
+	let lastDirectiveIdx = -1
+
+	for (const node of partition.original) {
+		if (seenIds.has(node.id)) continue
+		seenIds.add(node.id)
+
+		const key = node.name ?? `__expr_${node.id}`
+		const isTainted = tainted.has(key)
+
+		// Skip tainted nodes that aren't wrapped (they moved to virtual)
+		if (isTainted && !wrapperTransforms.has(key)) {
+			continue
+		}
+
+		// Handle wrapped styled components
+		if (node.name && wrapperTransforms.has(node.name)) {
+			const transform = wrapperTransforms.get(node.name)!
+			const stmt = node.statement as ts.VariableStatement
+
+			// Find the declaration
+			const decl = stmt.declarationList.declarations.find(
+				(d) => ts.isIdentifier(d.name) && d.name.text === node.name,
+			)
+			if (decl?.initializer && ts.isCallExpression(decl.initializer)) {
+				const firstArg = decl.initializer.arguments[0]
+
+				// Create: const Name = withComponent(FirstArg, Name___raw)
+				const newInit = ts.factory.createCallExpression(
+					ts.factory.createIdentifier("withComponent"),
+					undefined,
+					[
+						firstArg ?? ts.factory.createIdentifier("undefined"),
+						ts.factory.createIdentifier(transform.rawName),
+					],
+				)
+
+				const newDecl = ts.factory.updateVariableDeclaration(
+					decl,
+					decl.name,
+					decl.exclamationToken,
+					decl.type,
+					newInit,
+				)
+
+				const newDeclList = ts.factory.updateVariableDeclarationList(
+					stmt.declarationList,
+					[newDecl],
+				)
+
+				const newStmt = ts.factory.updateVariableStatement(
+					stmt,
+					stmt.modifiers,
+					newDeclList,
+				)
+
+				statements.push(newStmt)
+				if (node.kind === "import") lastImportIdx = statements.length - 1
+				continue
+			}
+		}
+
+		statements.push(node.statement)
+		if (node.kind === "import") {
+			lastImportIdx = statements.length - 1
+		} else if (isDirectivePrologue(node.statement) && lastImportIdx === -1) {
+			// Track directive prologues that come before any imports
+			lastDirectiveIdx = statements.length - 1
+		}
+	}
+
+	// Inject imports after last import, or after directives if no imports exist
+	const insertAt = lastImportIdx >= 0 ? lastImportIdx + 1 : lastDirectiveIdx + 1
+	const toInsert: ts.Statement[] = []
+
+	if (needsWithComponent) {
+		toInsert.push(
+			createImportDeclaration(
+				["withComponent"],
+				"library/styled/withComponent",
+			),
+		)
+	}
+
+	if (partition.imports.length > 0) {
+		toInsert.push(createImportDeclaration(partition.imports, importPath))
+	}
+
+	if (partition.reexports.length > 0) {
+		toInsert.push(createReExportDeclaration(partition.reexports, importPath))
+	}
+
+	statements.splice(insertAt, 0, ...toInsert)
+
+	return statements
+}
+
+// =============================================================================
+// Import path rewriting
+// =============================================================================
+
+/**
+ * Rewrites relative imports to tsconfig-safe specifiers.
+ */
+function rewriteToTsconfig(
+	code: string,
+	originalFilePath: string,
+	rootDir: string,
+): string {
 	const sf = ts.createSourceFile(
-		"temp.ts",
-		`const __TEMP__ = ${text}`,
+		"rewrite.ts",
+		code,
 		ts.ScriptTarget.ES2020,
 		true,
 		ts.ScriptKind.TS,
 	)
-	return collectDependenciesForNode(sf)
-}
 
-/**
- * Builds the source code for the virtual .css.ts module by combining imports,
- * moved declarations, and moved expressions.
- * Only includes imports that are actually used in the moved code.
- */
-const buildVirtualModuleSource = (
-	sourceFile: ts.SourceFile,
-	imports: ts.ImportDeclaration[],
-	movedDecls: MovedDeclaration[],
-	movedExprs: MovedExpression[],
-	supportingStatements: ts.Statement[],
-): string => {
-	const parts: string[] = []
+	const updates: Array<{ node: ts.ImportDeclaration; newSpec: string }> = []
 
-	// Collect all identifiers used in the moved code
-	const usedIdentifiers = new Set<string>()
+	for (const st of sf.statements) {
+		if (!ts.isImportDeclaration(st)) continue
+		const spec = (st.moduleSpecifier as ts.StringLiteral).text
+		if (!spec.startsWith("./") && !spec.startsWith("../")) continue
 
-	for (const stmt of supportingStatements) {
-		collectDependenciesForNode(stmt).forEach((d) => {
-			usedIdentifiers.add(d)
-		})
-	}
-	for (const md of movedDecls) {
-		// We must parse initializerText because it might be transformed (e.g. styled replacement)
-		// and different from the original AST node
-		getDependenciesFromText(md.initializerText).forEach((d) => {
-			usedIdentifiers.add(d)
-		})
-	}
-	for (const ex of movedExprs) {
-		collectDependenciesForNode(ex.expression).forEach((d) => {
-			usedIdentifiers.add(d)
-		})
+		const originalDir = path.dirname(originalFilePath)
+		const absolutePath = path.resolve(originalDir, spec).replace(/\\/g, "/")
+		const relRoot = path.relative(rootDir, absolutePath).replace(/\\/g, "/")
+		const newSpec = `@/${relRoot}`
+		updates.push({ node: st, newSpec })
 	}
 
-	// only include imports that are referenced in the moved code
-	for (const i of imports) {
-		const importText = i.getText(sourceFile)
-		const importClause = i.importClause
-		if (!importClause) {
-			// side-effect import, include it
-			parts.push(importText)
-			continue
-		}
+	if (updates.length === 0) return code
 
-		// check if any imported names are used in moved code
-		let isUsed = false
-
-		if (importClause.name) {
-			// default import
-			if (usedIdentifiers.has(importClause.name.text)) {
-				isUsed = true
+	const statements: ts.Statement[] = []
+	for (const st of sf.statements) {
+		if (ts.isImportDeclaration(st)) {
+			const upd = updates.find((u) => u.node === st)
+			if (upd) {
+				statements.push(
+					ts.factory.updateImportDeclaration(
+						st,
+						st.modifiers,
+						st.importClause,
+						ts.factory.createStringLiteral(upd.newSpec),
+						st.attributes,
+					),
+				)
+				continue
 			}
 		}
-
-		if (
-			importClause.namedBindings &&
-			ts.isNamedImports(importClause.namedBindings)
-		) {
-			// named imports
-			for (const el of importClause.namedBindings.elements) {
-				const localName = el.name.text
-				if (usedIdentifiers.has(localName)) {
-					isUsed = true
-					break
-				}
-			}
-		}
-
-		if (isUsed) {
-			parts.push(importText)
-		}
+		statements.push(st)
 	}
 
-	// ensure supporting statements are emitted in original source order
-	const units: Array<{ pos: number; text: string }> = []
-	for (const stmtNode of supportingStatements) {
-		let text = stmtNode.getText(sourceFile)
-		// avoid exporting functions/values from .css.ts that vanilla-extract can't serialize
-		if (/^\s*export\s+/.test(text)) {
-			text = text.replace(/^\s*export\s+/, "")
-		}
-		units.push({
-			pos: stmtNode.getStart(sourceFile),
-			text,
-		})
-	}
-	for (const md of movedDecls) {
-		units.push({
-			pos: md.initializer.getStart(),
-			text: `export ${md.kind} ${md.name} = ${md.initializerText};`,
-		})
-	}
-	for (const ex of movedExprs) {
-		const text = ex.text.endsWith(";") ? ex.text : `${ex.text};`
-		units.push({
-			pos: ex.expression.getStart(),
-			text,
-		})
-	}
-	units.sort((a, b) => a.pos - b.pos)
-	for (const u of units) {
-		parts.push(u.text)
-	}
-
-	return `${parts.join("\n")}\n`
-}
-
-// =============================================================================
-// Import injection
-// =============================================================================
-
-/**
- * Injects the virtual module import and re-exports into the transformed statements.
- * Also injects withComponent helper import if needed.
- */
-const injectImports = (
-	statements: ts.Statement[],
-	movedNames: string[],
-	reexportNames: string[],
-	importPath: string,
-	needsWithComponentHelper: boolean,
-): ts.Statement[] => {
-	const importDecl = createNamedImport(movedNames, importPath)
-
-	// find last import to insert after it
-	let lastImportIndex = -1
-	statements.forEach((st, i) => {
-		if (ts.isImportDeclaration(st)) lastImportIndex = i
-	})
-
-	const insertAt = lastImportIndex >= 0 ? lastImportIndex + 1 : 0
-	const newStatements = [...statements]
-
-	// inject withComponent helper if needed
-	if (needsWithComponentHelper) {
-		const helperImport = createNamedImport(
-			["withComponent"],
-			"library/styled/withComponent",
-		)
-		newStatements.splice(insertAt, 0, helperImport)
-	}
-
-	// inject virtual module import
-	const virtualImportAt = needsWithComponentHelper ? insertAt + 1 : insertAt
-	newStatements.splice(virtualImportAt, 0, importDecl)
-
-	// inject re-exports if needed
-	if (reexportNames.length > 0) {
-		const reexp = createReExport(reexportNames, importPath)
-		newStatements.splice(virtualImportAt + 1, 0, reexp)
-	}
-
-	return newStatements
+	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
+	const nextFile = ts.factory.updateSourceFile(sf, statements)
+	return printer.printFile(nextFile)
 }
 
 // =============================================================================
 // Vanilla-extract plugin integration
 // =============================================================================
 
-const handleVanillaExtractError = (
+function handleVanillaExtractError(
 	err: Error,
 	reject: (reason: Error) => void,
-): void => {
-	const rawMsg = (err && (err as Error).message) || String(err)
-	const stack = (err && (err as Error).stack) || ""
+): void {
+	const rawMsg = err?.message || String(err)
+	const stack = err?.stack || ""
+
 	if (rawMsg.includes("Styles were unable to be assigned to a file")) {
 		const offenderMatch =
 			stack.match(/\(([^)]+\.(?:ts|tsx))\)/) ||
 			stack.match(/at\s+.*?\s+\(([^)]+\.(?:ts|tsx))\)/) ||
 			stack.match(/\s(\/[^\s]+\.(?:ts|tsx))/)
+
 		const offender = offenderMatch?.[1] ?? "Unable to determine offending file!"
 		const offenderName = offender.split("/").pop() ?? offender
+
 		const message = [
 			"Styles were unable to be assigned to a file. You likely created styles outside of a '.css.ts' context",
 			"",
@@ -900,24 +749,23 @@ const handleVanillaExtractError = (
 			"",
 			`Offending file: ${offender}`,
 		].join("\n")
+
 		reject(new Error(message))
 		return
 	}
 
-	// eslint-disable-next-line no-console
 	console.error(err)
-	// eslint-disable-next-line no-console
 	console.warn(
 		"Encountered an error processing styles. The error message may or may not be helpful, talk to Robbie if you're stuck.",
 	)
 	reject(err)
 }
 
-const runVePluginOnTempFile = async (
+async function runVePluginOnTempFile(
 	originalThis: TurboLoaderContext<TurboLoaderOptions>,
 	tempFilePath: string,
 	loaderOptions: Partial<TurboLoaderOptions>,
-): Promise<string> => {
+): Promise<string> {
 	return new Promise<string>((resolve, reject) => {
 		const modifiedThis = {
 			getOptions: () => ({
@@ -932,9 +780,7 @@ const runVePluginOnTempFile = async (
 		} satisfies TurboLoaderContext<TurboLoaderOptions>
 
 		Promise.resolve(turboLoader.call(modifiedThis))
-			.then((data) => {
-				resolve(data)
-			})
+			.then(resolve)
 			.catch((err: Error) => handleVanillaExtractError(err, reject))
 	})
 }
@@ -943,197 +789,105 @@ const runVePluginOnTempFile = async (
 // Main transform
 // =============================================================================
 
-const transform = async (
+async function transform(
 	loaderThis: TurboLoaderContext<TurboLoaderOptions>,
 	rootContext: string,
 	filePath: string,
 	sourceCode: string,
 	options: Partial<TurboLoaderOptions>,
-): Promise<{ code: string; movedNames: string[] }> => {
+): Promise<{ code: string; movedNames: string[] }> {
 	const isTsx = filePath.endsWith(".tsx") || filePath.endsWith(".jsx")
-	const sourceFile = ts.createSourceFile(
-		filePath,
-		sourceCode,
-		ts.ScriptTarget.ES2020,
-		true,
-		isTsx ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-	)
 
-	// 1) build import registry
-	const registry = buildImportRegistry(sourceFile)
+	// 1) Build dependency graph
+	const graph = analyzeDependencies(sourceCode, { isTsx })
 
-	// 2) split declarations
-	const splitResult = splitDeclarations(sourceFile, registry)
+	// 2) Build tracked import registry
+	const registry = buildTrackedRegistry(graph)
 
-	// nothing to move? return original code unchanged
-	if (splitResult.movedNames.length === 0) {
+	// 3) Compute tainted nodes
+	const { tainted, invalidTainted } = computeTaintedNodes(graph, registry)
+
+	// 4) Error on tainted functions/classes (skip for library/styled files which are part of the system)
+	const isStyledLibrary = filePath.includes("library/styled/")
+	if (invalidTainted.length > 0 && !isStyledLibrary) {
+		const names = invalidTainted.map((n) => n.name ?? "anonymous").join(", ")
+		throw new Error(
+			`Cannot use style functions inside function/class body: ${names}. ` +
+				`Move style calls to module scope or a .css.ts file.`,
+		)
+	}
+
+	// 5) Early exit if nothing tainted
+	if (tainted.size === 0) {
 		return { code: sourceCode, movedNames: [] }
 	}
 
-	// 2.5) iteratively include supporting statements (and their own deps)
-	const importLocalNames = collectImportLocalNames(registry.allImports)
-	const movedNamesSet = new Set(splitResult.movedNames)
-	const includedSupport = new Set<ts.Statement>()
-	const declaredBySupport = new Set<string>()
+	// 6) Analyze styled() calls
+	const styledTransforms = analyzeStyledCalls(graph, registry, tainted)
 
-	const computeUnresolved = (): Set<string> => {
-		const deps = new Set<string>()
-		for (const md of splitResult.movedDecls) {
-			for (const dep of collectDependenciesForNode(md.initializer))
-				deps.add(dep)
-		}
-		for (const ex of splitResult.movedExprs) {
-			for (const dep of collectDependenciesForNode(ex.expression)) deps.add(dep)
-		}
-		for (const st of splitResult.supportingStatements) {
-			for (const dep of collectDependenciesForNode(st)) deps.add(dep)
-		}
-		const unresolved = new Set<string>()
-		for (const name of deps) {
-			if (movedNamesSet.has(name)) continue
-			if (importLocalNames.has(name)) continue
-			if (GLOBAL_IDENTIFIERS.has(name)) continue
-			if (declaredBySupport.has(name)) continue
-			unresolved.add(name)
-		}
-		return unresolved
-	}
+	// 7) Partition nodes
+	const partition = partitionNodes(graph, tainted, styledTransforms)
 
-	let unresolvedNames = computeUnresolved()
-	// Increased limit to 50 to handle deep dependency chains.
-	// The loop exits early if no new supporting statements are found.
-	for (let i = 0; i < 50 && unresolvedNames.size > 0; i++) {
-		const support = findSupportingStatements(
-			sourceFile,
-			unresolvedNames,
-		).filter(
-			(s) =>
-				!includedSupport.has(s) &&
-				!isTrackedStyledCall(s, registry) &&
-				!containsJsx(s),
-		)
-		if (support.length === 0) break
-		for (const st of support) {
-			includedSupport.add(st)
-			splitResult.supportingStatements.push(st)
-			for (const nm of getDeclaredNamesFromStatement(st)) {
-				declaredBySupport.add(nm)
-			}
-		}
-		unresolvedNames = computeUnresolved()
-	}
-
-	// 3) build virtual module source
-	const virtualSource = buildVirtualModuleSource(
-		sourceFile,
-		registry.allImports,
-		splitResult.movedDecls,
-		splitResult.movedExprs,
-		splitResult.supportingStatements,
+	// 8) Build virtual module source
+	const virtualSource = buildVirtualSource(
+		graph,
+		partition,
+		tainted,
+		styledTransforms,
 	)
 
-	// 4) rewrite imports in virtual module to be tsconfig-safe specifiers
-	const rewriteToTsconfig = (
-		code: string,
-		originalFilePath: string,
-		rootDir: string,
-	): string => {
-		const sf = ts.createSourceFile(
-			"rewrite.ts",
-			code,
-			ts.ScriptTarget.ES2020,
-			true,
-			ts.ScriptKind.TS,
-		)
-		const updates: Array<{ node: ts.ImportDeclaration; newSpec: string }> = []
-		for (const st of sf.statements) {
-			if (!ts.isImportDeclaration(st)) continue
-			const spec = (st.moduleSpecifier as ts.StringLiteral).text
-			if (!spec.startsWith("./") && !spec.startsWith("../")) continue
-			const originalDir = path.dirname(originalFilePath)
-			const absolutePath = path.resolve(originalDir, spec).replace(/\\/g, "/")
-			const relRoot = path.relative(rootDir, absolutePath).replace(/\\/g, "/")
-			const newSpec = `@/${relRoot}`
-			updates.push({ node: st, newSpec })
-		}
-		if (updates.length === 0) return code
-		const statements: ts.Statement[] = []
-		for (const st of sf.statements) {
-			if (ts.isImportDeclaration(st)) {
-				const upd = updates.find((u) => u.node === st)
-				if (upd) {
-					statements.push(
-						ts.factory.updateImportDeclaration(
-							st,
-							st.modifiers,
-							st.importClause,
-							ts.factory.createStringLiteral(upd.newSpec),
-							st.assertClause,
-						),
-					)
-					continue
-				}
-			}
-			statements.push(st)
-		}
-		const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
-		const nextFile = ts.factory.updateSourceFile(sf, statements)
-		return printer.printFile(nextFile)
-	}
+	// 9) Rewrite imports to tsconfig-safe specifiers
 	const virtualSourceResolved = rewriteToTsconfig(
 		virtualSource,
 		filePath,
 		rootContext,
 	)
 
-	// use relative path from rootContext for better class name prefixes
-	// e.g., app/sections/BrandedComps/index.tsx -> sections-BrandedComps-index
+	// Paths for debug and temp files
 	const relPath = path.relative(rootContext, filePath).replace(/\\/g, "/")
 	const relPathNoExt = relPath.replace(/\.(?:tsx|ts|jsx|js)$/i, "")
+	const virtualExt = isTsx ? ".css.tsx" : ".css.ts"
 
-	// write pre-process debug file
+	// Write pre-process debug file
 	const preProcessDebugPath = path.join(
 		rootContext,
 		".next",
 		"debug",
 		"pre-process",
-		`${relPathNoExt}.css.ts`,
+		`${relPathNoExt}${virtualExt}`,
 	)
 	await fs.mkdir(path.dirname(preProcessDebugPath), { recursive: true })
 	await fs.writeFile(preProcessDebugPath, virtualSourceResolved)
 
-	// 5) write temp file mirroring the original relative path
+	// 10) Write temp file
 	const tmpRoot = path.join(rootContext, ".next", "vanilla")
 	const tmpFile = path
-		.join(tmpRoot, `${relPathNoExt}.css.ts`)
+		.join(tmpRoot, `${relPathNoExt}${virtualExt}`)
 		.replace(/\\/g, "/")
 	fsSync.mkdirSync(path.dirname(tmpFile), { recursive: true })
 	fsSync.writeFileSync(tmpFile, virtualSourceResolved, "utf8")
 
-	// 6) run VE plugin on temp file (keep file on disk for debugging)
-	let veJs = ""
-	veJs = await runVePluginOnTempFile(loaderThis, tmpFile, options)
-
-	// 7) rewrite imports in VE output to tsconfig-safe specifiers
+	// 11) Run VE plugin
+	const veJs = await runVePluginOnTempFile(loaderThis, tmpFile, options)
 	const veJsResolved = rewriteToTsconfig(veJs, tmpFile, rootContext)
 
-	// 8) embed as data URL and inject imports
+	// 12) Embed as data URL and build original module
 	const jsBase64 = Buffer.from(veJsResolved, "utf8").toString("base64")
 	const importPath = `data:text/javascript;base64,${jsBase64}`
-	const newStatements = injectImports(
-		splitResult.statements,
-		splitResult.movedNames,
-		splitResult.reexportNames,
+
+	const newStatements = buildOriginalStatements(
+		graph,
+		partition,
+		tainted,
+		styledTransforms,
 		importPath,
-		splitResult.needsWithComponentHelper,
 	)
 
-	// 7) print final transformed source
-	const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
-	const updated = ts.factory.updateSourceFile(sourceFile, newStatements)
-	const printed = printer.printFile(updated)
+	// 13) Print final transformed source
+	const updated = ts.factory.updateSourceFile(graph.sourceFile, newStatements)
+	const printed = printSourceFile(updated)
 
-	// write final debug file (transformed source that gets passed to loader)
+	// Write final debug file
 	const finalDebugPath = path.join(
 		rootContext,
 		".next",
@@ -1146,7 +900,7 @@ const transform = async (
 
 	return {
 		code: printed,
-		movedNames: splitResult.movedNames,
+		movedNames: partition.imports,
 	}
 }
 
@@ -1158,11 +912,16 @@ export default async function vanillaSplitLoader(
 	this: TurboLoaderContext<TurboLoaderOptions>,
 	sourceCode: string,
 ) {
-	// pass through pure vanilla-extract files untouched
+	// Pass through pure vanilla-extract files untouched
 	if (
 		this.resourcePath.endsWith(".css.ts") ||
 		this.resourcePath.endsWith(".css.tsx")
 	) {
+		return sourceCode
+	}
+
+	// Skip styled library files - they ARE the style system, not consumers of it
+	if (this.resourcePath.includes("library/styled/")) {
 		return sourceCode
 	}
 
