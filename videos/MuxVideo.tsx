@@ -20,6 +20,7 @@ export function MuxVideo({
 	preloadTrackable?: boolean
 }) {
 	const localRef = useRef<HTMLVideoElement>(null)
+	const hasFinished = useRef<boolean>(false)
 
 	useEffect(() => {
 		if (autoPlay) {
@@ -44,7 +45,11 @@ export function MuxVideo({
 				const newTime = e.currentTarget.currentTime
 				const duration = e.currentTarget.duration
 				if (Math.abs(newTime - duration) < 0.01) {
-					e.currentTarget.dispatchEvent(new Event("ended"))
+					hasFinished.current = true
+					if (!hasFinished.current)
+						e.currentTarget.dispatchEvent(new Event("ended"))
+				} else {
+					hasFinished.current = false
 				}
 			}}
 			onEnded={(e) => {
