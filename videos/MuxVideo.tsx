@@ -21,9 +21,6 @@ export function MuxVideo({
 		if (autoPlay) {
 			localRef.current?.play().catch((e: Error) => {
 				if (e.name === "NotAllowedError") {
-					alert(
-						"tried to play video but was not allowed, falling back to metadata",
-					)
 					if (localRef.current) {
 						localRef.current.currentTime =
 							autoPlayFallbackTime ?? localRef.current?.duration
