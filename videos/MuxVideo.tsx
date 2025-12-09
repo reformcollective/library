@@ -7,5 +7,15 @@ export function MuxVideo({
 }: ComponentProps<typeof MuxVideoComponent> & {
 	ref?: Ref<HTMLVideoElement>
 }) {
-	return <MuxVideoComponent ref={ref} {...props} />
+	return (
+		<MuxVideoComponent
+			ref={ref}
+			preferPlayback="mse"
+			renditionOrder="desc"
+			_hlsConfig={{
+				backBufferLength: 0,
+			}}
+			{...props}
+		/>
+	)
 }
