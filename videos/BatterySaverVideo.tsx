@@ -4,7 +4,6 @@ import Portal from "library/Portal"
 import { css, f, styled } from "library/styled/alpha"
 import {
 	type ComponentProps,
-	type Ref,
 	useCallback,
 	useEffect,
 	useImperativeHandle,

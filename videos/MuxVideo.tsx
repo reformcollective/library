@@ -26,12 +26,20 @@ type ReformMuxVideoProps = Pick<
 
 // pseudo ended logic from mux/elements
 // copied here because mux doesn't fire this reliably either
-const DEFAULT_ENDED_MOE = 0.034;
-const isApproximatelyEqual = (x: number, y: number, moe = DEFAULT_ENDED_MOE) => Math.abs(x - y) <= moe;
-const isApproximatelyGTE = (x: number, y: number, moe = DEFAULT_ENDED_MOE) => x > y || isApproximatelyEqual(x, y, moe);
-export const isPseudoEnded = (mediaEl: HTMLMediaElement, moe = DEFAULT_ENDED_MOE) => {
-  return mediaEl.paused && isApproximatelyGTE(mediaEl.currentTime, mediaEl.duration, moe);
-};
+const DEFAULT_ENDED_MOE = 0.034
+const isApproximatelyEqual = (x: number, y: number, moe = DEFAULT_ENDED_MOE) =>
+	Math.abs(x - y) <= moe
+const isApproximatelyGTE = (x: number, y: number, moe = DEFAULT_ENDED_MOE) =>
+	x > y || isApproximatelyEqual(x, y, moe)
+export const isPseudoEnded = (
+	mediaEl: HTMLMediaElement,
+	moe = DEFAULT_ENDED_MOE,
+) => {
+	return (
+		mediaEl.paused &&
+		isApproximatelyGTE(mediaEl.currentTime, mediaEl.duration, moe)
+	)
+}
 
 export function MuxVideo({
 	ref,
