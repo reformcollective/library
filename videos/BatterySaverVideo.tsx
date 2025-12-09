@@ -29,6 +29,7 @@ type MuxVideoProps = ComponentProps<typeof MuxVideoComponent>
 
 interface BatterySaverVideoProps extends MuxVideoProps {
 	ref?: Ref<HTMLVideoElement | null>
+	preloadTrackable?: boolean
 }
 
 export function BatterySaverVideo({
