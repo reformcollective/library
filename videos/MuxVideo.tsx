@@ -36,6 +36,20 @@ export function MuxVideo({
 			ref={useCombinedRefs(localRef, ref)}
 			preferPlayback="mse"
 			renditionOrder="desc"
+			onTimeUpdate={(e) => {
+				const newTime = e.currentTarget.currentTime
+				const duration = e.currentTarget.duration
+				if (Math.abs(newTime - duration) < 0.01) {
+					e.currentTarget.dispatchEvent(new Event("ended"))
+				}
+			}}
+			onEnded={(e) => {
+				// NOTE: Browsers do not consistently fire an 'ended' event upon seeking to the
+				// end of the media while already paused. This was due to an ambiguity in the
+				// HTML specification, but is now more explicit.
+				// we reimplement these events manually to ensure they fire consistently
+				e.stopPropagation()
+			}}
 			_hlsConfig={{
 				backBufferLength: 0,
 			}}
