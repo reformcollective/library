@@ -21,7 +21,7 @@ type ReformMuxVideoProps = Pick<
 	ref?: Ref<HTMLVideoElement>
 	autoPlayFallbackTime?: number
 	onEnded?: (event: Event) => void
-	debug?: boolean
+	preloadTrackable?: boolean
 }
 
 // pseudo ended logic from mux/elements
@@ -39,7 +39,8 @@ export function MuxVideo({
 	autoPlayFallbackTime,
 	onEnded,
 	onTimeUpdate,
-	debug = false,
+	playbackId,
+	preloadTrackable,
 	...props
 }: ReformMuxVideoProps) {
 	const localRef = useRef<HTMLVideoElement>(null)
@@ -89,6 +90,8 @@ export function MuxVideo({
 				// this might help browsers upgrade quality when looping
 				backBufferLength: 0,
 			}}
+			playbackId={playbackId}
+			data-preload-track={playbackId}
 			{...props}
 		/>
 	)
