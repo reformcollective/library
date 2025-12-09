@@ -9,11 +9,15 @@ export function MuxVideo({
 	ref,
 	autoPlay,
 	autoPlayFallbackTime,
+	playbackId,
+	preloadTrackable,
 	...props
 }: ComponentProps<typeof MuxVideoComponent> & {
 	ref?: Ref<HTMLVideoElement>
 	autoplay?: ZodUndefined
 	autoPlayFallbackTime?: number
+	playbackId?: string
+	preloadTrackable?: boolean
 }) {
 	const localRef = useRef<HTMLVideoElement>(null)
 
@@ -53,6 +57,8 @@ export function MuxVideo({
 			_hlsConfig={{
 				backBufferLength: 0,
 			}}
+			playbackId={playbackId}
+			data-preload-track={preloadTrackable ? playbackId : undefined}
 			{...props}
 		/>
 	)
