@@ -269,15 +269,15 @@ const replacePxInAst = (
 ): void => {
 	csstree.walk(root, {
 		visit: "Declaration",
-		enter(node, item, list) {
+		enter(node) {
 			if (node.type !== "Declaration") return
+			
 			const nodeValueAsString = csstree.generate(node.value)
 			const newValue = nodeValueAsString.replaceAll(pixelRegex, (match) =>
 				transform(Number.parseFloat(match)),
 			)
 
 			if (newValue !== nodeValueAsString) {
-				// manually replacing the value
 				node.value = {
 					type: "Raw",
 					value: newValue,
