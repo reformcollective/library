@@ -1,4 +1,3 @@
-import type MuxVideoComponent from "@mux/mux-video-react"
 import { keyframes } from "@vanilla-extract/css"
 import { eases } from "library/eases"
 import Portal from "library/Portal"
@@ -25,18 +24,11 @@ const INTERACTION_EVENTS = [
 	"keydown",
 ] as const
 
-type MuxVideoProps = ComponentProps<typeof MuxVideoComponent>
-
-interface BatterySaverVideoProps extends MuxVideoProps {
-	ref?: Ref<HTMLVideoElement | null>
-}
-
 export function BatterySaverVideo({
 	ref,
-	autoplay,
 	autoPlay,
 	...props
-}: BatterySaverVideoProps) {
+}: ComponentProps<typeof MuxVideo>) {
 	"use no memo"
 	const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
 	const playPromiseRef = useRef<Promise<void> | null>(null)
@@ -113,10 +105,10 @@ export function BatterySaverVideo({
 	)
 
 	useEffect(() => {
-		if (autoPlay || autoplay) {
+		if (autoPlay) {
 			attemptPlay()
 		}
-	}, [autoPlay, autoplay, attemptPlay])
+	}, [autoPlay, attemptPlay])
 
 	const handleManualPlay = async () => {
 		const originalPlay = HTMLMediaElement.prototype.play.bind(videoEl)
