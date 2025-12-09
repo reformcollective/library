@@ -261,7 +261,7 @@ const hasUniformOutput = (rules: BreakpointRule[]): boolean =>
 			r.designSize === rules[0]?.designSize && r.output === rules[0]?.output,
 	)
 
-const pixelRegex = /\d+(\.\d+)?px/g
+const pixelRegex = /-?\d+(\.\d+)?px/g
 
 const replacePxInAst = (
 	root: csstree.CssNode,
