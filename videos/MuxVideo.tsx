@@ -10,7 +10,7 @@ export function MuxVideo({
 	return (
 		<MuxVideoComponent
 			ref={ref}
-			preferPlayback="mse"
+			preferPlayback="native"
 			renditionOrder="desc"
 			_hlsConfig={{
 				backBufferLength: 0,
