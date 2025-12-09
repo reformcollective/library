@@ -271,7 +271,7 @@ const replacePxInAst = (
 		visit: "Declaration",
 		enter(node) {
 			if (node.type !== "Declaration") return
-			
+
 			const nodeValueAsString = csstree.generate(node.value)
 			const newValue = nodeValueAsString.replaceAll(pixelRegex, (match) =>
 				transform(Number.parseFloat(match)),
