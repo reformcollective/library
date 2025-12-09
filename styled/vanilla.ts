@@ -261,21 +261,28 @@ const hasUniformOutput = (rules: BreakpointRule[]): boolean =>
 			r.designSize === rules[0]?.designSize && r.output === rules[0]?.output,
 	)
 
+const pixelRegex = /\d+(\.\d+)?px/g
+
 const replacePxInAst = (
 	root: csstree.CssNode,
 	transform: PxTransform,
 ): void => {
 	csstree.walk(root, {
-		visit: "Dimension",
-		enter(node, item, list) {
-			if (node.type !== "Dimension" || node.unit !== "px" || !list) return
-			list.replace(
-				item,
-				list.createItem({
-					type: "Raw",
-					value: transform(Number.parseFloat(node.value)),
-				}),
+		visit: "Declaration",
+		enter(node) {
+			if (node.type !== "Declaration") return
+
+			const nodeValueAsString = csstree.generate(node.value)
+			const newValue = nodeValueAsString.replaceAll(pixelRegex, (match) =>
+				transform(Number.parseFloat(match)),
 			)
+
+			if (newValue !== nodeValueAsString) {
+				node.value = {
+					type: "Raw",
+					value: newValue,
+				}
+			}
 		},
 	})
 }
