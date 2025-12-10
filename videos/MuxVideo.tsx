@@ -1,6 +1,7 @@
 "use client"
 
 import MuxVideoComponent from "@mux/mux-video-react"
+import { useRafInterval } from "ahooks"
 import { type ComponentProps, type Ref, useEffect, useRef } from "react"
 import { useCombinedRefs } from "../useCombinedRefs"
 
@@ -29,15 +30,14 @@ type ReformMuxVideoProps = Pick<
 const DEFAULT_ENDED_MOE = 0.034
 const isApproximatelyEqual = (x: number, y: number, moe = DEFAULT_ENDED_MOE) =>
 	Math.abs(x - y) <= moe
-const isApproximatelyGTE = (x: number, y: number, moe = DEFAULT_ENDED_MOE) =>
-	x > y || isApproximatelyEqual(x, y, moe)
 export const isPseudoEnded = (
 	mediaEl: HTMLMediaElement,
 	moe = DEFAULT_ENDED_MOE,
 ) => {
 	return (
-		mediaEl.paused &&
-		isApproximatelyGTE(mediaEl.currentTime, mediaEl.duration, moe)
+		mediaEl.currentTime >= mediaEl.duration ||
+		(mediaEl.paused &&
+			isApproximatelyEqual(mediaEl.currentTime, mediaEl.duration, moe))
 	)
 }
 
@@ -52,21 +52,47 @@ export function MuxVideo({
 	...props
 }: ReformMuxVideoProps) {
 	const localRef = useRef<HTMLVideoElement>(null)
-	const hasFinished = useRef<boolean>(false)
+	const playing = useRef<boolean>(false)
+
+	const checkEnded = () => {
+		if (!playing.current) return
+		if (!localRef.current) return
+
+		if (isPseudoEnded(localRef.current)) {
+			playing.current = false
+			const event = new Event("ended")
+			localRef.current.dispatchEvent(event)
+			onEnded?.(event)
+		}
+	}
+
+	useRafInterval(() => {
+		checkEnded()
+	}, 100)
 
 	useEffect(() => {
 		if (autoPlay) {
-			localRef.current?.play().catch((e: Error) => {
-				if (e.name === "NotAllowedError") {
-					if (localRef.current) {
-						localRef.current.currentTime =
-							autoPlayFallbackTime ?? localRef.current?.duration
-						localRef.current.preload = "metadata"
+			localRef.current
+				?.play()
+				.then(() => {
+					playing.current = true
+				})
+				.catch((e: Error) => {
+					if (e.name === "NotAllowedError") {
+						if (localRef.current) {
+							localRef.current.currentTime =
+								autoPlayFallbackTime ?? localRef.current?.duration
+							localRef.current.preload = "metadata"
+
+							// can't play, dispatch ended immediately
+							const event = new Event("ended")
+							localRef.current.dispatchEvent(event)
+							onEnded?.(event)
+						}
 					}
-				}
-			})
+				})
 		}
-	}, [autoPlay, autoPlayFallbackTime])
+	}, [autoPlay, autoPlayFallbackTime, onEnded])
 
 	return (
 		<MuxVideoComponent
@@ -74,18 +100,9 @@ export function MuxVideo({
 			preferPlayback="mse"
 			renditionOrder="desc"
 			onTimeUpdate={(e) => {
-				if (isPseudoEnded(e.currentTarget)) {
-					if (!hasFinished.current) {
-						hasFinished.current = true
-						const event = new Event("ended")
-						e.currentTarget.dispatchEvent(event)
-						onEnded?.(event)
-					}
-				} else {
-					hasFinished.current = false
-				}
-
+				playing.current = true
 				onTimeUpdate?.(e)
+				checkEnded()
 			}}
 			onEnded={(e) => {
 				// NOTE: Browsers do not consistently fire an 'ended' event upon seeking to the
