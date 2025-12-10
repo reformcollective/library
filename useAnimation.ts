@@ -154,6 +154,17 @@ export const useAnimation = <InputFn extends Creation>(
 		if (!shouldHydrateUtilities) return
 
 		const newContext = gsap.context((self) => {
+			const lenis = window.lenis
+
+			if (lenis && lenis.animatedScroll > 0.1 && updateBehavior === 'revert') {
+				const savedPosition = lenis.animatedScroll
+				lenis.scrollTo(0, { immediate: true, force: true })
+
+				requestAnimationFrame(() => {
+					lenis.scrollTo(savedPosition, { immediate: true, force: true })
+				})
+			}
+
 			const result = createAnimations({
 				context: self,
 				contextSafe: ((func) =>
