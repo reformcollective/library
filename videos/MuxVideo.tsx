@@ -9,6 +9,8 @@ type ReformMuxVideoProps = Pick<
 	ComponentProps<typeof MuxVideoComponent>,
 	| "autoPlay"
 	| "onTimeUpdate"
+	| "onPlay"
+	| "onPause"
 	| "playbackId"
 	| "onPlay"
 	| "className"
@@ -49,6 +51,8 @@ export function MuxVideo({
 	onTimeUpdate,
 	playbackId,
 	preloadTrackable,
+	onPlay,
+	onPause,
 	...props
 }: ReformMuxVideoProps) {
 	const localRef = useRef<HTMLVideoElement>(null)
@@ -99,8 +103,15 @@ export function MuxVideo({
 			ref={useCombinedRefs(localRef, ref)}
 			preferPlayback="mse"
 			renditionOrder="desc"
-			onTimeUpdate={(e) => {
+			onPlay={(e) => {
+				onPlay?.(e)
 				playing.current = true
+			}}
+			onPause={(e) => {
+				onPause?.(e)
+				playing.current = false
+			}}
+			onTimeUpdate={(e) => {
 				onTimeUpdate?.(e)
 				checkEnded()
 			}}
