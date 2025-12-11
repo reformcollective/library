@@ -1,4 +1,5 @@
 import gsap from "gsap"
+import { viewport } from "next-sanity/studio"
 import {
 	type DependencyList,
 	use,
@@ -10,7 +11,6 @@ import {
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
 import { useVH } from "./viewportUtils"
-import { viewport } from "next-sanity/studio"
 
 const useIsomorphicLayoutEffect =
 	typeof document !== "undefined" ? useLayoutEffect : useEffect
