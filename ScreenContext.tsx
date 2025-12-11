@@ -1,5 +1,6 @@
 "use client"
 
+import { viewport } from "next-sanity/studio"
 import {
 	createContext,
 	useCallback,
@@ -13,6 +14,7 @@ import {
 	mobileBreakpoint,
 	tabletBreakpoint,
 } from "styles/media"
+import { set } from "zod"
 
 type HydrationPhase =
 	| "hydrating-react"
@@ -24,6 +26,7 @@ type HydrationPhase =
  */
 export const ScreenContext = createContext({
 	innerWidth: 0,
+	viewportHeight: 0,
 	fullWidth: false,
 	desktop: false,
 	tablet: false,
@@ -59,6 +62,7 @@ export function ScreenProvider({ children }: Props) {
 	const [t, setT] = useState<boolean>(false)
 	const [m, setM] = useState<boolean>(true)
 	const [innerWidth, setInnerWidth] = useState(0)
+	const [viewportHeight, setViewportHeight] = useState(0)
 
 	/**
 	 * preloading utilities
@@ -78,6 +82,7 @@ export function ScreenProvider({ children }: Props) {
 		)
 		setFw(window.innerWidth > desktopBreakpoint)
 		setInnerWidth(window.innerWidth)
+		setViewportHeight(window.innerHeight)
 	}, [])
 
 	useEffect(() => {
@@ -155,6 +160,7 @@ export function ScreenProvider({ children }: Props) {
 				desktop: d,
 				tablet: t,
 				mobile: m,
+				viewportHeight,
 				shouldHydrateUtilities:
 					phase === "hydrating-utilities" || phase === "hydration-complete",
 				initComplete: phase === "hydration-complete",

@@ -10,6 +10,7 @@ import {
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
 import { useVH } from "./viewportUtils"
+import { viewport } from "next-sanity/studio"
 
 const useIsomorphicLayoutEffect =
 	typeof document !== "undefined" ? useLayoutEffect : useEffect
@@ -100,7 +101,8 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior = "revert",
 		unmountBehavior = "kill",
 	} = options ?? {}
-	const { innerWidth, shouldHydrateUtilities } = use(ScreenContext)
+	const { innerWidth, viewportHeight, shouldHydrateUtilities } =
+		use(ScreenContext)
 
 	const dependencies = [...deps, ...extraDeps]
 
@@ -155,16 +157,16 @@ export const useAnimation = <InputFn extends Creation>(
 		if (!shouldHydrateUtilities) return
 
 		const newContext = gsap.context((self) => {
-			const lenis = window.lenis
+			// const lenis = window.lenis
 
-			if (lenis && lenis.animatedScroll > 0.1 && updateBehavior === "revert") {
-				const savedPosition = lenis.animatedScroll
-				lenis.scrollTo(0, { immediate: true, force: true })
+			// if (lenis && lenis.animatedScroll > 0.1 && updateBehavior === "revert") {
+			// 	const savedPosition = lenis.animatedScroll
+			// 	lenis.scrollTo(0, { immediate: true, force: true })
 
-				requestAnimationFrame(() => {
-					lenis.scrollTo(savedPosition, { immediate: true, force: true })
-				})
-			}
+			// 	requestAnimationFrame(() => {
+			// 		lenis.scrollTo(savedPosition, { immediate: true, force: true })
+			// 	})
+			// }
 
 			const result = createAnimations({
 				context: self,
@@ -206,7 +208,8 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior,
 		shouldHydrateUtilities,
 		recreateOnResize ? innerWidth : null,
-		useVH(recreateOnResize ? 100 : 0),
+		viewportHeight,
+
 		...dependencies,
 		hmrHash,
 	])
