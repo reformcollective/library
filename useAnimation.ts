@@ -9,6 +9,7 @@ import {
 } from "react"
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
+import { useVH } from "./viewportUtils"
 
 const useIsomorphicLayoutEffect =
 	typeof document !== "undefined" ? useLayoutEffect : useEffect
@@ -156,7 +157,7 @@ export const useAnimation = <InputFn extends Creation>(
 		const newContext = gsap.context((self) => {
 			const lenis = window.lenis
 
-			if (lenis && lenis.animatedScroll > 0.1 && updateBehavior === 'revert') {
+			if (lenis && lenis.animatedScroll > 0.1 && updateBehavior === "revert") {
 				const savedPosition = lenis.animatedScroll
 				lenis.scrollTo(0, { immediate: true, force: true })
 
@@ -205,6 +206,7 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior,
 		shouldHydrateUtilities,
 		recreateOnResize ? innerWidth : null,
+		useVH(recreateOnResize ? 100 : 0),
 		...dependencies,
 		hmrHash,
 	])
