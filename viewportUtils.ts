@@ -1,5 +1,5 @@
-import config from "@/app/libraryConfig"
 import { use, useEffect, useState } from "react"
+import config from "@/app/libraryConfig"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,

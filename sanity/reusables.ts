@@ -1,4 +1,3 @@
-import type libraryConfig from "@/app/libraryConfig"
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
 import type {
@@ -8,6 +7,7 @@ import type {
 } from "sanity"
 import { defineArrayMember, defineField, type ImageDefinition } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
+import type libraryConfig from "@/app/libraryConfig"
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(

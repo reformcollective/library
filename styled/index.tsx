@@ -19,21 +19,12 @@
  *
  */
 
-import libraryConfig from "@/app/libraryConfig"
-import config from "@/app/libraryConfig"
 import {
 	type CSSObject,
 	styled as restyled,
 	keyframes as restyleKeyframes,
 } from "restyle"
 import type { KeyframesObject } from "restyle/keyframes"
-import media, {
-	desktopBreakpoint,
-	desktopDesignSize,
-	mobileBreakpoint,
-	mobileDesignSize,
-	tabletDesignSize,
-} from "@/app/styles/media"
 import {
 	COMMENT,
 	compile,
@@ -42,6 +33,15 @@ import {
 	IMPORT,
 	RULESET,
 } from "stylis"
+import libraryConfig from "@/app/libraryConfig"
+import config from "@/app/libraryConfig"
+import media, {
+	desktopBreakpoint,
+	desktopDesignSize,
+	mobileBreakpoint,
+	mobileDesignSize,
+	tabletDesignSize,
+} from "@/app/styles/media"
 
 if (libraryConfig.stylingSystem === "vanilla")
 	throw new Error(

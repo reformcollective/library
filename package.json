@@ -8,7 +8,7 @@
 		"@eslint/css-tree": "3.6.8",
 		"@mux/blurup": "1.0.2",
 		"@mux/mux-video-react": "^0",
-		"@sanity/image-url": "2.0.1",
+		"@sanity/image-url": "2.0.2",
 		"@vanilla-extract/css": "^1",
 		"@vanilla-extract/next-plugin": "*",
 		"@vanilla-extract/turbopack-plugin": "*",
@@ -36,7 +36,7 @@
 		"lint": "biome lint",
 		"format": "biome check --write"
 	},
-	"packageManager": "pnpm@10.24.0",
+	"packageManager": "pnpm@10.25.0",
 	"pnpm": {
 		"overrides": {
 			"@vanilla-extract/turbopack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/turbopack-plugin@c1d4a88"
