@@ -12,7 +12,7 @@ import {
 	desktopBreakpoint,
 	mobileBreakpoint,
 	tabletBreakpoint,
-} from "styles/media"
+} from "@/app/styles/media"
 
 type HydrationPhase =
 	| "hydrating-react"

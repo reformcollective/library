@@ -4,7 +4,7 @@ import {
 	desktopBreakpoint,
 	mobileBreakpoint,
 	tabletBreakpoint,
-} from "styles/media"
+} from "@/app/styles/media"
 
 export const isMobile = createVar()
 export const isTablet = createVar()

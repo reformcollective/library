@@ -3,7 +3,7 @@ import {
 	desktopBreakpoint,
 	mobileBreakpoint,
 	tabletBreakpoint,
-} from "styles/media"
+} from "@/app/styles/media"
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
 

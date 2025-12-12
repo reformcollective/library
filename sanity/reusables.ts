@@ -1,4 +1,4 @@
-import type libraryConfig from "libraryConfig"
+import type libraryConfig from "@/app/libraryConfig"
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
 import type {

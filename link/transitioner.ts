@@ -1,4 +1,4 @@
-import libraryConfig from "libraryConfig"
+import libraryConfig from "@/app/libraryConfig"
 import { ScrollTrigger } from "gsap/all"
 import { pathnameMatches, sleep } from "library/functions"
 import { createScrollLock } from "library/Scroll"

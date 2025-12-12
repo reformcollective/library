@@ -94,6 +94,7 @@ function emitWithin(anchorClass: string, entries?: WithinBlock) {
 function classFromStyleRules(input: StyleRules | undefined, debugId?: string) {
 	const flatInput = flattenArray(input)
 	const className = style(
+		// @ts-expect-error - within will be removed soon so I don't care
 		flatInput
 			.map((x) => (typeof x === "object" ? stripWithin(x) : x))
 			.filter(Boolean),

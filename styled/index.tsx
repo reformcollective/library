@@ -19,8 +19,8 @@
  *
  */
 
-import libraryConfig from "libraryConfig"
-import config from "libraryConfig"
+import libraryConfig from "@/app/libraryConfig"
+import config from "@/app/libraryConfig"
 import {
 	type CSSObject,
 	styled as restyled,
@@ -33,7 +33,7 @@ import media, {
 	mobileBreakpoint,
 	mobileDesignSize,
 	tabletDesignSize,
-} from "styles/media"
+} from "@/app/styles/media"
 import {
 	COMMENT,
 	compile,
@@ -466,6 +466,7 @@ export const styled = ((
 
 	if (style === undefined) return restyled(component)
 	if (typeof style === "function")
+		// @ts-expect-error legacy code
 		return restyled(component, (...props) =>
 			layerize(mergeStyles(style(...props))),
 		)
