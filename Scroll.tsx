@@ -2,7 +2,7 @@ import { gsap, ScrollTrigger } from "gsap/all"
 import type Lenis from "lenis"
 import type { LenisOptions } from "lenis"
 import "lenis/dist/lenis.css"
-import { ReactLenis, useLenis } from "lenis/react"
+import { type LenisRef, ReactLenis, useLenis } from "lenis/react"
 import { useEffect, useState } from "react"
 import { isBrowser } from "./deviceDetection"
 import TypedEventEmitter from "./TypedEventEmitter"
@@ -191,8 +191,7 @@ export const SmoothScrollStyle = (config: LenisOptions) => {
 	return (
 		<ReactLenis
 			root
-			// @ts-expect-error todo fix me
-			ref={(ref) => {
+			ref={(ref: LenisRef) => {
 				if (ref?.lenis !== lenis) ref?.lenis?.stop()
 				setLenis(ref?.lenis)
 			}}
