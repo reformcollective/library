@@ -1,5 +1,4 @@
-import { use, useEffect, useState } from "react"
-import config from "@/app/libraryConfig"
+import config from "app/libraryConfig"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -7,7 +6,8 @@ import {
 	mobileDesignSize,
 	tabletBreakpoint,
 	tabletDesignSize,
-} from "@/app/styles/media"
+} from "app/styles/media"
+import { use, useEffect, useState } from "react"
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext, useDebouncedEventListener } from "./ScreenContext"
 import { getMedia } from "./useMedia"

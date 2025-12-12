@@ -2,8 +2,7 @@
  * This plugin contains all the logic for setting up the singletons
  */
 
-import { type DocumentDefinition, definePlugin } from "sanity"
-import type { StructureResolver } from "sanity/structure"
+import { definePlugin } from "sanity"
 
 export const singletonPlugin = definePlugin((types: string[]) => {
 	return {
@@ -31,51 +30,3 @@ export const singletonPlugin = definePlugin((types: string[]) => {
 		},
 	}
 })
-
-// The StructureResolver is how we're changing the DeskTool structure to linking to document (named Singleton)
-// like how "Home" is handled.
-export const pageStructure = (
-	typeDefArray: DocumentDefinition[],
-): StructureResolver => {
-	return (S) => {
-		// Goes through all of the singletons that were provided and translates them into something the
-		// Structure tool can understand
-		const singletonItems = typeDefArray.map((typeDef) => {
-			return S.listItem()
-				.title(typeDef?.title ?? "Untitled")
-				.icon(typeDef.icon)
-				.child(
-					S.editor()
-						.id(typeDef.name)
-						.schemaType(typeDef.name)
-						.documentId(typeDef.name),
-				)
-		})
-
-		// The default root list items (except custom ones)
-		const nonSingletonItems = S.documentTypeListItems().filter(
-			(listItem) =>
-				!typeDefArray.find((singleton) => singleton.name === listItem.getId()),
-		)
-		const middleItems = ["media.tag", "assist.instruction.context"]
-			.map((id) => nonSingletonItems.find((item) => item.getId() === id))
-			.filter(Boolean)
-		const hiddenItems = ["mux.videoAsset"].map((id) =>
-			nonSingletonItems.find((item) => item.getId() === id),
-		)
-
-		const restOfItems = nonSingletonItems.filter(
-			(item) => !middleItems.includes(item) && !hiddenItems.includes(item),
-		)
-
-		return S.list()
-			.title("Content")
-			.items([
-				...singletonItems,
-				S.divider(),
-				...middleItems,
-				S.divider(),
-				...restOfItems,
-			])
-	}
-}

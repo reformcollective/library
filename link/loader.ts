@@ -1,5 +1,5 @@
+import type libraryConfig from "app/libraryConfig"
 import TypedEventEmitter from "library/TypedEventEmitter"
-import type libraryConfig from "@/app/libraryConfig"
 
 /**
  * transition names are configured in app/libraryConfig.ts

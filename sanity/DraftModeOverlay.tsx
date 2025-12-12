@@ -1,5 +1,6 @@
 "use client"
 
+import { disableDraftMode } from "library/sanity/disableDraftMode"
 import { siteURL } from "library/siteURL"
 import { useRouter } from "next/navigation"
 import {
@@ -9,7 +10,6 @@ import {
 import { VisualEditing } from "next-sanity/visual-editing"
 import { type ComponentProps, useEffect, useTransition } from "react"
 import { toast } from "sonner"
-import { disableDraftMode } from "./actions"
 
 export default function DraftModeOverlay(
 	props: ComponentProps<typeof VisualEditing>,

@@ -683,7 +683,7 @@ function rewriteToTsconfig(
 		const originalDir = path.dirname(originalFilePath)
 		const absolutePath = path.resolve(originalDir, spec).replace(/\\/g, "/")
 		const relRoot = path.relative(rootDir, absolutePath).replace(/\\/g, "/")
-		const newSpec = `@/${relRoot}`
+		const newSpec = `${relRoot}`
 		updates.push({ node: st, newSpec })
 	}
 

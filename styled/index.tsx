@@ -19,6 +19,15 @@
  *
  */
 
+import libraryConfig from "app/libraryConfig"
+import config from "app/libraryConfig"
+import media, {
+	desktopBreakpoint,
+	desktopDesignSize,
+	mobileBreakpoint,
+	mobileDesignSize,
+	tabletDesignSize,
+} from "app/styles/media"
 import {
 	type CSSObject,
 	styled as restyled,
@@ -33,15 +42,6 @@ import {
 	IMPORT,
 	RULESET,
 } from "stylis"
-import libraryConfig from "@/app/libraryConfig"
-import config from "@/app/libraryConfig"
-import media, {
-	desktopBreakpoint,
-	desktopDesignSize,
-	mobileBreakpoint,
-	mobileDesignSize,
-	tabletDesignSize,
-} from "@/app/styles/media"
 
 if (libraryConfig.stylingSystem === "vanilla")
 	throw new Error(
@@ -466,7 +466,7 @@ export const styled = ((
 
 	if (style === undefined) return restyled(component)
 	if (typeof style === "function")
-		// @ts-expect-error legacy code
+		// @ts-expect-error legacy so idk
 		return restyled(component, (...props) =>
 			layerize(mergeStyles(style(...props))),
 		)

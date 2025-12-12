@@ -9,7 +9,7 @@ import type {
 	internalGroqTypeReferenceTo,
 	SanityImageCrop,
 	SanityImageHotspot,
-} from "@/sanity.types"
+} from "sanity.types"
 import type { AssetMeta } from "../sanity/assetMetadata"
 
 type SanityPosterImage = {

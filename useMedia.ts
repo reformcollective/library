@@ -1,9 +1,9 @@
-import { use } from "react"
 import {
 	desktopBreakpoint,
 	mobileBreakpoint,
 	tabletBreakpoint,
-} from "@/app/styles/media"
+} from "app/styles/media"
+import { use } from "react"
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
 

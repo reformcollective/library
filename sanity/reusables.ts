@@ -1,3 +1,5 @@
+import { PlayIcon } from "@sanity/icons"
+import type libraryConfig from "app/libraryConfig"
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
 import type {
@@ -5,9 +7,13 @@ import type {
 	IntrinsicTypeName,
 	StrictDefinition,
 } from "sanity"
-import { defineArrayMember, defineField, type ImageDefinition } from "sanity"
+import {
+	defineArrayMember,
+	defineField,
+	defineType,
+	type ImageDefinition,
+} from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
-import type libraryConfig from "@/app/libraryConfig"
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
@@ -226,3 +232,17 @@ export function definePageSection<
 		secondary,
 	)
 }
+
+export const youtube = defineType({
+	name: "youtube",
+	type: "object",
+	title: "YouTube",
+	icon: PlayIcon,
+	fields: [
+		defineField({
+			name: "url",
+			type: "url",
+			title: "YouTube video URL",
+		}),
+	],
+})

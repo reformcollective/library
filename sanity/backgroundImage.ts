@@ -1,6 +1,6 @@
 import { css } from "library/styled/alpha"
+import { dataset, projectId } from "sanity/lib/api"
 import { buildSrcSet } from "sanity-image"
-import { dataset, projectId } from "@/sanity/lib/api"
 import type { AssetMeta } from "./assetMetadata"
 
 const baseUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/`

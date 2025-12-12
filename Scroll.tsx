@@ -191,6 +191,7 @@ export const SmoothScrollStyle = (config: LenisOptions) => {
 	return (
 		<ReactLenis
 			root
+			// @ts-expect-error todo fix me
 			ref={(ref) => {
 				if (ref?.lenis !== lenis) ref?.lenis?.stop()
 				setLenis(ref?.lenis)

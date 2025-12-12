@@ -1,6 +1,11 @@
 "use client"
 
 import {
+	desktopBreakpoint,
+	mobileBreakpoint,
+	tabletBreakpoint,
+} from "app/styles/media"
+import {
 	createContext,
 	useCallback,
 	useEffect,
@@ -8,11 +13,6 @@ import {
 	useState,
 	useTransition,
 } from "react"
-import {
-	desktopBreakpoint,
-	mobileBreakpoint,
-	tabletBreakpoint,
-} from "@/app/styles/media"
 
 type HydrationPhase =
 	| "hydrating-react"
