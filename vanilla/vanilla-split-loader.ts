@@ -52,8 +52,9 @@ const TRACKED_MODULES: ModulesConfig = {
 const STYLED_MODULE = "library/styled/alpha"
 const STYLED_IMPORT = "styled"
 
-// @ts-expect-error turbopack loader shape has default export in some builds
-const turboLoader = turboLoaderRAW.default as typeof turboLoaderRAW
+const turboLoader =
+	// @ts-expect-error turbopack loader shape has default export in some builds
+	(turboLoaderRAW.default as typeof turboLoaderRAW) ?? turboLoaderRAW
 
 // =============================================================================
 // Tracked import registry
@@ -295,8 +296,8 @@ function getTransitiveClosure(
 	const queue = [...seeds]
 
 	while (queue.length > 0) {
-		const name = queue.pop()!
-		if (closure.has(name)) continue
+		const name = queue.pop()
+		if (name === undefined || closure.has(name)) continue
 		// Only exclude non-seed dependencies (seeds themselves should always be included)
 		if (exclude.has(name) && !seeds.has(name)) continue
 
@@ -351,8 +352,8 @@ function computeOriginalDependencies(
 	const visited = new Set<string>()
 
 	while (queue.length > 0) {
-		const name = queue.pop()!
-		if (visited.has(name)) continue
+		const name = queue.pop()
+		if (name === undefined || visited.has(name)) continue
 		visited.add(name)
 
 		const node = graph.nodes.get(name)
@@ -453,9 +454,15 @@ function partitionNodes(
 				)
 				if (transform?.needsWrapper) {
 					imports.push(transform.rawName)
-					// Also import the base component if it's tainted (moved to virtual)
+					// Also import the base component if it's tainted AND not itself wrapped
+					// (wrapped components are created in original via withComponent, not imported)
 					if (transform.excludedDep && tainted.has(transform.excludedDep)) {
-						imports.push(transform.excludedDep)
+						const isExcludedDepWrapped = styledTransforms.some(
+							(t) => t.needsWrapper && t.originalName === transform.excludedDep,
+						)
+						if (!isExcludedDepWrapped) {
+							imports.push(transform.excludedDep)
+						}
 					}
 				} else {
 					imports.push(node.name)
@@ -572,8 +579,8 @@ function buildOriginalStatements(
 		}
 
 		// Handle wrapped styled components
-		if (node.name && wrapperTransforms.has(node.name)) {
-			const transform = wrapperTransforms.get(node.name)!
+		const transform = node.name ? wrapperTransforms.get(node.name) : undefined
+		if (transform) {
 			const stmt = node.statement as ts.VariableStatement
 
 			// Find the declaration
