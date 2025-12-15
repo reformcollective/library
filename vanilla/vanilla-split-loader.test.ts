@@ -494,7 +494,7 @@ export { Something, SomethingElse, SomethingElseElse }`
 				/import \{([^}]+)\} from "data:text\/javascript/,
 			)
 			expect(importMatch).toBeTruthy()
-			const importedNames = importMatch?.[1].split(",").map((s) => s.trim())
+			const importedNames = importMatch?.[1]?.split(",").map((s) => s.trim())
 
 			// Should import Something (base, string tag - moved to virtual)
 			expect(importedNames).toContain("Something")
