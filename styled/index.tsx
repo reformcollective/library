@@ -19,21 +19,21 @@
  *
  */
 
-import libraryConfig from "libraryConfig"
-import config from "libraryConfig"
-import {
-	type CSSObject,
-	styled as restyled,
-	keyframes as restyleKeyframes,
-} from "restyle"
-import type { KeyframesObject } from "restyle/keyframes"
+import libraryConfig from "app/libraryConfig"
+import config from "app/libraryConfig"
 import media, {
 	desktopBreakpoint,
 	desktopDesignSize,
 	mobileBreakpoint,
 	mobileDesignSize,
 	tabletDesignSize,
-} from "styles/media"
+} from "app/styles/media"
+import {
+	type CSSObject,
+	styled as restyled,
+	keyframes as restyleKeyframes,
+} from "restyle"
+import type { KeyframesObject } from "restyle/keyframes"
 import {
 	COMMENT,
 	compile,
@@ -466,6 +466,7 @@ export const styled = ((
 
 	if (style === undefined) return restyled(component)
 	if (typeof style === "function")
+		// @ts-expect-error legacy so idk
 		return restyled(component, (...props) =>
 			layerize(mergeStyles(style(...props))),
 		)

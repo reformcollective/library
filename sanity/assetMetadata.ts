@@ -3,6 +3,7 @@ import { sleep } from "library/functions"
 import { defineQuery, stegaClean } from "next-sanity"
 import { cache } from "react"
 import { sanityFetch } from "sanity/lib/live"
+import { resolveLink } from "sanity/lib/slug-resolver"
 import { z } from "zod"
 
 export const getBlurUp = cache(async (playbackId: string) =>
@@ -139,14 +140,14 @@ export const fetchAssetMeta = async <InputType>(
 		}
 
 		if (isLink) {
-			const { data: link } = await sanityFetch({
+			const { data: linkedItem } = await sanityFetch({
 				query: linkQuery,
 				params: { asset: linkParse.internalLink._ref },
 			})
 
 			return {
 				...input,
-				internalSlug: link?.slug?.current,
+				internalSlug: resolveLink(linkedItem),
 			} as Output
 		}
 

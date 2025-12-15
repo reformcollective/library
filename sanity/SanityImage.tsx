@@ -4,9 +4,9 @@ import type { AssetMeta } from "library/sanity/assetMetadata"
 import { styled } from "library/styled/alpha"
 import { stegaClean } from "next-sanity"
 import { use } from "react"
+import { dataset, projectId } from "sanity/lib/api"
+import type { SanityImageCrop, SanityImageHotspot } from "sanity.types"
 import { SanityImage } from "sanity-image"
-import { dataset, projectId } from "@/sanity/lib/api"
-import type { SanityImageCrop, SanityImageHotspot } from "@/sanity.types"
 import StaticImage, {
 	type DefaultImageProps,
 	EagerContext,

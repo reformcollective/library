@@ -1,6 +1,6 @@
-import config from "libraryConfig"
 import * as csstree from "@eslint/css-tree"
 import type { StyleRule } from "@vanilla-extract/css"
+import config from "app/libraryConfig"
 import {
 	desktopBreakpoint,
 	desktopDesignSize,
@@ -8,7 +8,7 @@ import {
 	mobileDesignSize,
 	tabletBreakpoint,
 	tabletDesignSize,
-} from "styles/media"
+} from "app/styles/media"
 import { isBrowser } from "../deviceDetection"
 import { isDesktop, isFull, isMobile, isTablet } from "./breakpoints.css"
 
