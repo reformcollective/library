@@ -12,12 +12,12 @@ import {
 import { isBrowser } from "../deviceDetection"
 import { isDesktop, isFull, isMobile, isTablet } from "./breakpoints.css"
 
-if (config.stylingSystem === "restyle")
+if (config.stylingSystem === "restyle" && process.env.NODE_ENV === 'development')
 	throw new Error(
 		"this project is only configured to use the restyle styling system",
 	)
 
-if (isBrowser)
+if (isBrowser && process.env.NODE_ENV === 'development')
 	throw new Error(
 		"style system was loaded in the browser! this will explode your bundle size!",
 	)

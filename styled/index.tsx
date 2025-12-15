@@ -43,7 +43,7 @@ import {
 	RULESET,
 } from "stylis"
 
-if (libraryConfig.stylingSystem === "vanilla")
+if (libraryConfig.stylingSystem === "vanilla" && process.env.NODE_ENV === 'development')
 	throw new Error(
 		"this project is only configured to use the vanilla styling system",
 	)
