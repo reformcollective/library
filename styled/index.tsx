@@ -43,7 +43,7 @@ import {
 	RULESET,
 } from "stylis"
 
-if (libraryConfig.stylingSystem === "vanilla")
+if (libraryConfig.stylingSystem === "vanilla" && process.env.NODE_ENV === 'development')
 	throw new Error(
 		"this project is only configured to use the vanilla styling system",
 	)
@@ -466,7 +466,6 @@ export const styled = ((
 
 	if (style === undefined) return restyled(component)
 	if (typeof style === "function")
-		// @ts-expect-error legacy so idk
 		return restyled(component, (...props) =>
 			layerize(mergeStyles(style(...props))),
 		)

@@ -20,6 +20,8 @@ type ReformMuxVideoProps = Pick<
 	| "playsInline"
 	| "preload"
 	| "onSeeked"
+	| "controls"
+	| "poster"
 > & {
 	ref?: Ref<HTMLVideoElement>
 	autoPlayFallbackTime?: number
