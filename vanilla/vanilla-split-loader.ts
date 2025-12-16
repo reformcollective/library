@@ -253,8 +253,20 @@ function analyzeStyledCalls(
 				? `export const ${rawName} = styled("div", ${restArgsText}, ${JSON.stringify(node.name)});`
 				: `export const ${rawName} = styled("div");`
 
-			const excludedDep =
-				firstArg && ts.isIdentifier(firstArg) ? firstArg.text : undefined
+			// Extract the component identifier from the first arg
+			// Handles: Component, Component as Type, Component as typeof Component<T>
+			let excludedDep: string | undefined
+			if (firstArg) {
+				if (ts.isIdentifier(firstArg)) {
+					excludedDep = firstArg.text
+				} else if (ts.isAsExpression(firstArg)) {
+					// Handle "Component as typeof Component<T>"
+					const expr = firstArg.expression
+					if (ts.isIdentifier(expr)) {
+						excludedDep = expr.text
+					}
+				}
+			}
 
 			transforms.push({
 				originalName: node.name,
