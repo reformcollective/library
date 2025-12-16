@@ -13,6 +13,7 @@ import {
 	useState,
 	useTransition,
 } from "react"
+import { getVH } from "./viewportUtils"
 
 type HydrationPhase =
 	| "hydrating-react"
@@ -80,7 +81,7 @@ export function ScreenProvider({ children }: Props) {
 		)
 		setFw(window.innerWidth > desktopBreakpoint)
 		setInnerWidth(window.innerWidth)
-		setViewportHeight(window.innerHeight)
+		setViewportHeight(getVH(100))
 	}, [])
 
 	useEffect(() => {
