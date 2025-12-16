@@ -7,6 +7,7 @@ import { createScrollLock } from "library/Scroll"
 import { type RefObject, use, useEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { instantScrollToAnchor } from "./util"
+import config from "app/libraryConfig"
 
 /**
  * if you're making a preloader, set this to a number of seconds to manually block the main thread for debugging
@@ -165,10 +166,16 @@ export const usePreloader = ({
 	// sync ALL our preloaders together so that no single preloader races to the finish line
 	const [animationReadyPromise] = useState(() => Promise.withResolvers())
 	const [animationCompletePromise] = useState(() => Promise.withResolvers())
+
 	useEffect(() => {
+		if (config.overridePreloaderResolvers) return
 		globalReadyPromises.push(animationReadyPromise.promise)
 		globalCompletePromises.push(animationCompletePromise.promise)
-	}, [animationReadyPromise, animationCompletePromise])
+	}, [
+		animationReadyPromise,
+		animationCompletePromise,
+		config.overridePreloaderResolvers,
+	])
 
 	useAsyncEffect(async () => {
 		if (!initComplete) return
@@ -301,6 +308,7 @@ export const usePreloader = ({
 		beforeComplete,
 		animationReadyPromise,
 		animationCompletePromise,
+		config.overridePreloaderResolvers,
 	])
 
 	if (FORCE_PRELOADER_STATE === "loading")
