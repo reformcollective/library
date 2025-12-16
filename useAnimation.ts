@@ -223,7 +223,7 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior,
 		shouldHydrateUtilities,
 		recreateOnResize ? innerWidth : null,
-		viewportHeight,
+		recreateOnResize ? viewportHeight : null,
 
 		...dependencies,
 		hmrHash,
