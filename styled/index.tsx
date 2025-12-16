@@ -19,21 +19,21 @@
  *
  */
 
-import libraryConfig from "libraryConfig"
-import config from "libraryConfig"
-import {
-	type CSSObject,
-	styled as restyled,
-	keyframes as restyleKeyframes,
-} from "restyle"
-import type { KeyframesObject } from "restyle/keyframes"
+import libraryConfig from "app/libraryConfig"
+import config from "app/libraryConfig"
 import media, {
 	desktopBreakpoint,
 	desktopDesignSize,
 	mobileBreakpoint,
 	mobileDesignSize,
 	tabletDesignSize,
-} from "styles/media"
+} from "app/styles/media"
+import {
+	type CSSObject,
+	styled as restyled,
+	keyframes as restyleKeyframes,
+} from "restyle"
+import type { KeyframesObject } from "restyle/keyframes"
 import {
 	COMMENT,
 	compile,
@@ -43,7 +43,10 @@ import {
 	RULESET,
 } from "stylis"
 
-if (libraryConfig.stylingSystem === "vanilla")
+if (
+	libraryConfig.stylingSystem === "vanilla" &&
+	process.env.NODE_ENV === "development"
+)
 	throw new Error(
 		"this project is only configured to use the vanilla styling system",
 	)

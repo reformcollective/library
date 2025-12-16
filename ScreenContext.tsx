@@ -2,6 +2,11 @@
 
 import { viewport } from "next-sanity/studio"
 import {
+	desktopBreakpoint,
+	mobileBreakpoint,
+	tabletBreakpoint,
+} from "app/styles/media"
+import {
 	createContext,
 	useCallback,
 	useEffect,
@@ -9,12 +14,6 @@ import {
 	useState,
 	useTransition,
 } from "react"
-import {
-	desktopBreakpoint,
-	mobileBreakpoint,
-	tabletBreakpoint,
-} from "styles/media"
-import { set } from "zod"
 
 type HydrationPhase =
 	| "hydrating-react"

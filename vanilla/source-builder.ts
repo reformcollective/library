@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: generated code */
 import ts from "typescript"
 import type { DependencyNode } from "./dependency-graph.ts"
 

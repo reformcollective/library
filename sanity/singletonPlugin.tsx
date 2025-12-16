@@ -69,7 +69,7 @@ export const pageStructure = (
 		)
 
 		return S.list()
-			.title("Content")
+			.title("Content Types")
 			.items([
 				...singletonItems,
 				S.divider(),

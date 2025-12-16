@@ -1,7 +1,7 @@
-import { env } from "env"
+import { env } from "app/env"
 import { siteURL } from "library/siteURL"
 import { createDataAttribute } from "next-sanity"
-import { studioUrl } from "@/sanity/lib/api"
+import { studioUrl } from "sanity/lib/api"
 
 export const createSanityDataAttribute = ({
 	documentId,
