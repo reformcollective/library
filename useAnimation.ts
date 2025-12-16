@@ -165,6 +165,8 @@ export const useAnimation = <InputFn extends Creation>(
 				lenis &&
 				// we're not already at the top of the page
 				lenis.animatedScroll > 0.1 &&
+				// this animation is expecting to be cleaned up
+				updateBehavior === "revert" &&
 				// there's not already a microtask waiting
 				!microtaskWaiting
 			) {
