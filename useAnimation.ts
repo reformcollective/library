@@ -1,5 +1,5 @@
 import gsap from "gsap"
-import { viewport } from "next-sanity/studio"
+import { ScrollTrigger } from "gsap/all"
 import {
 	type DependencyList,
 	use,
@@ -10,7 +10,8 @@ import {
 } from "react"
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
-import { useVH } from "./viewportUtils"
+
+let microtaskWaiting = false
 
 const useIsomorphicLayoutEffect =
 	typeof document !== "undefined" ? useLayoutEffect : useEffect
@@ -157,16 +158,30 @@ export const useAnimation = <InputFn extends Creation>(
 		if (!shouldHydrateUtilities) return
 
 		const newContext = gsap.context((self) => {
-			// const lenis = window.lenis
+			const lenis = window.lenis
 
-			// if (lenis && lenis.animatedScroll > 0.1 && updateBehavior === "revert") {
-			// 	const savedPosition = lenis.animatedScroll
-			// 	lenis.scrollTo(0, { immediate: true, force: true })
-
-			// 	requestAnimationFrame(() => {
-			// 		lenis.scrollTo(savedPosition, { immediate: true, force: true })
-			// 	})
-			// }
+			if (
+				// lenis exists
+				lenis &&
+				// we're not already at the top of the page
+				lenis.animatedScroll > 0.1 &&
+				// there's not already a microtask waiting
+				!microtaskWaiting
+			) {
+				microtaskWaiting = true
+				queueMicrotask(() => {
+					const savedPosition = lenis.animatedScroll
+					lenis.scrollTo(0, {
+						immediate: true,
+						force: true,
+						onComplete: () => {
+							microtaskWaiting = false
+							ScrollTrigger.refresh()
+							lenis.scrollTo(savedPosition, { immediate: true, force: true })
+						},
+					})
+				})
+			}
 
 			const result = createAnimations({
 				context: self,

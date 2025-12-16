@@ -1,6 +1,5 @@
 "use client"
 
-import { viewport } from "next-sanity/studio"
 import {
 	desktopBreakpoint,
 	mobileBreakpoint,
