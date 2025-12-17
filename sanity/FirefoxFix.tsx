@@ -7,9 +7,8 @@ let hasWarned = false
 
 const checkZeroWidthChars = (startNode: Node = document.body) => {
 	const isFirefox = navigator.userAgent.toLowerCase().includes("firefox")
-	console.log("isFirefox", isFirefox)
 
-	if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === "development") {
 		if (isFirefox) {
 			const walk = (node: Node) => {
 				if (node.nodeType === Node.TEXT_NODE) {
@@ -24,13 +23,10 @@ const checkZeroWidthChars = (startNode: Node = document.body) => {
 
 						if (letterSpacing < 0) {
 							hasWarned = true
-							console.warn(
-								"Steganography detected with negative letter spacing",
-								letterSpacing,
+							console.error(
+								"Steganography detected with negative letter spacing!",
+                "You MUST use stegaClean() to remove the zero width characters.",
 								parent,
-							)
-							throw new Error(
-								`Steganography detected with negative letter spacing`,
 							)
 						}
 					}
@@ -49,7 +45,7 @@ export const FirefoxFix = () => {
 		checkZeroWidthChars()
 	}, 1000)
 	useHMR(() => {
-		hasWarned = true
+		hasWarned = false
 	})
 
 	return null
