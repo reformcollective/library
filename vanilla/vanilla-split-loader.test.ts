@@ -371,6 +371,47 @@ export const Button = styled("button", { color: STYLE_CONST })`
 			// STYLE_CONST should NOT be in original since only Button uses it
 			expect(result).not.toContain("const STYLE_CONST")
 		})
+
+		it("should preserve external component import for styled(Component)", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { styled } from "library/styled/alpha"
+import { ExternalComponent } from "external-lib"
+
+export const Styled = styled(ExternalComponent, { color: "red" })`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			// The external import MUST be preserved in original for withComponent
+			expect(result).toContain('from "external-lib"')
+			expect(result).toContain("ExternalComponent")
+			expect(result).toContain("withComponent(ExternalComponent")
+		})
+
+		it("should preserve external component import with type cast", async () => {
+			await using tmpDir = new TempDir()
+			// This mimics the SanityImage pattern: styled(Component as typeof Component<"img">, ...)
+			const source = `import { styled } from "library/styled/alpha"
+import { SanityImage } from "sanity-image"
+
+const DefaultSanityImage = styled(SanityImage as typeof SanityImage<"img">, { color: "red" })`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			// The external import MUST be preserved in original for withComponent
+			expect(result).toContain('from "sanity-image"')
+			expect(result).toContain("SanityImage")
+			expect(result).toContain("withComponent(SanityImage")
+		})
 	})
 
 	describe("type declarations", () => {
@@ -494,7 +535,7 @@ export { Something, SomethingElse, SomethingElseElse }`
 				/import \{([^}]+)\} from "data:text\/javascript/,
 			)
 			expect(importMatch).toBeTruthy()
-			const importedNames = importMatch?.[1].split(",").map((s) => s.trim())
+			const importedNames = importMatch?.[1]?.split(",").map((s) => s.trim())
 
 			// Should import Something (base, string tag - moved to virtual)
 			expect(importedNames).toContain("Something")

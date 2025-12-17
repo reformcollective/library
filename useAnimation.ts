@@ -1,4 +1,5 @@
 import gsap from "gsap"
+import { ScrollTrigger } from "gsap/all"
 import {
 	type DependencyList,
 	use,
@@ -9,6 +10,8 @@ import {
 } from "react"
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
+
+let microtaskWaiting = false
 
 const useIsomorphicLayoutEffect =
 	typeof document !== "undefined" ? useLayoutEffect : useEffect
@@ -99,7 +102,8 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior = "revert",
 		unmountBehavior = "kill",
 	} = options ?? {}
-	const { innerWidth, shouldHydrateUtilities } = use(ScreenContext)
+	const { innerWidth, viewportHeight, shouldHydrateUtilities } =
+		use(ScreenContext)
 
 	const dependencies = [...deps, ...extraDeps]
 
@@ -154,6 +158,33 @@ export const useAnimation = <InputFn extends Creation>(
 		if (!shouldHydrateUtilities) return
 
 		const newContext = gsap.context((self) => {
+			const lenis = window.lenis
+
+			if (
+				// lenis exists
+				lenis &&
+				// we're not already at the top of the page
+				lenis.animatedScroll > 0.1 &&
+				// this animation is expecting to be cleaned up
+				updateBehavior === "revert" &&
+				// there's not already a microtask waiting
+				!microtaskWaiting
+			) {
+				microtaskWaiting = true
+				queueMicrotask(() => {
+					const savedPosition = lenis.animatedScroll
+					lenis.scrollTo(0, {
+						immediate: true,
+						force: true,
+						onComplete: () => {
+							microtaskWaiting = false
+							ScrollTrigger.refresh()
+							lenis.scrollTo(savedPosition, { immediate: true, force: true })
+						},
+					})
+				})
+			}
+
 			const result = createAnimations({
 				context: self,
 				contextSafe: ((func) =>
@@ -194,6 +225,8 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior,
 		shouldHydrateUtilities,
 		recreateOnResize ? innerWidth : null,
+		recreateOnResize ? viewportHeight : null,
+
 		...dependencies,
 		hmrHash,
 	])
