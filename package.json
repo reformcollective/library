@@ -15,7 +15,7 @@
 		"ahooks": "^3",
 		"browser-dtector": "^4",
 		"class-variance-authority": "^0.7",
-		"lenis": "^1",	
+		"lenis": "^1",
 		"minisearch": "^7",
 		"restyle": "^3",
 		"rxjs": "^7",
