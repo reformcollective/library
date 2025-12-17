@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: needed for this use case */
+/** biome-ignore-all lint/plugin/memoization: needed for this use case */
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/all"
 import {
@@ -5,6 +7,7 @@ import {
 	use,
 	useEffect,
 	useLayoutEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react"
@@ -86,6 +89,7 @@ export const useAnimation = <InputFn extends Creation>(
 		extraDeps?: DependencyList
 	},
 ) => {
+	"use no memo"
 	type OutputType =
 		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
 		ReturnType<InputFn> extends Function ? undefined : ReturnType<InputFn>
@@ -154,6 +158,24 @@ export const useAnimation = <InputFn extends Creation>(
 	}, [unmountBehavior])
 
 	// actual animation creation
+	const finalDeps = [
+		updateBehavior,
+		shouldHydrateUtilities,
+		recreateOnResize ? innerWidth : null,
+		recreateOnResize ? viewportHeight : null,
+		...dependencies,
+		hmrHash,
+	]
+	const latestCleanup = useRef<(() => unknown) | null>(null)
+	useMemo(() => {
+		// when this fires, it indicates that we're about to render a new animation
+		// we clean up the previous animation here, because if we did it in a proper cleanup function
+		// it would run *after* our new DOM is committed and it's critical we clean up *before* the new DOM is committed
+		if (latestCleanup.current) {
+			latestCleanup.current()
+			latestCleanup.current = null
+		}
+	}, finalDeps)
 	useIsomorphicLayoutEffect(() => {
 		if (!shouldHydrateUtilities) return
 
@@ -201,7 +223,7 @@ export const useAnimation = <InputFn extends Creation>(
 
 		setContext(newContext)
 
-		return () => {
+		latestCleanup.current = () => {
 			if (!newContext.isReverted) {
 				if (scheduleRevert.current) {
 					newContext.revert()
@@ -221,15 +243,7 @@ export const useAnimation = <InputFn extends Creation>(
 					}
 			}
 		}
-	}, [
-		updateBehavior,
-		shouldHydrateUtilities,
-		recreateOnResize ? innerWidth : null,
-		recreateOnResize ? viewportHeight : null,
-
-		...dependencies,
-		hmrHash,
-	])
+	}, finalDeps)
 
 	useEffect(() => {
 		if (process.env.NODE_ENV === "development") {
