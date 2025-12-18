@@ -6,6 +6,7 @@ import { defineLive } from "next-sanity/live"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
 import { Toaster } from "sonner"
+import { FirefoxFix } from "./FirefoxFix"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
 
 /**
@@ -65,6 +66,7 @@ export const LibraryLive = async () => {
 	return (
 		<LiveWrapper>
 			<Toaster />
+			<FirefoxFix />
 			{isDraftMode && <DraftModeOverlay />}
 			<InternalLive onError={handleError} refreshOnFocus={false} />
 		</LiveWrapper>

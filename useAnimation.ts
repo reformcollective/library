@@ -13,6 +13,7 @@ import {
 } from "react"
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
+import { useHMR } from "./useHMR"
 
 let microtaskWaiting = false
 
@@ -29,11 +30,6 @@ type Creation = (arg: {
 gsap.config({
 	nullTargetWarn: false,
 })
-
-const socket =
-	process.env.NODE_ENV === "development"
-		? new WebSocket("ws://localhost:3000/_next/webpack-hmr")
-		: null
 
 /**
  * A utility hook that abstracts away the react boilerplate of gsap animation.
@@ -245,24 +241,10 @@ export const useAnimation = <InputFn extends Creation>(
 		}
 	}, finalDeps)
 
-	useEffect(() => {
-		if (process.env.NODE_ENV === "development") {
-			const handler = (event: MessageEvent) => {
-				const message = JSON.parse(event.data) as
-					| { type: "unknown" }
-					| { type: "built"; hash: string }
-				if (message.type === "built") {
-					console.log("HMR hash updated:", message.hash)
-					scheduleRevert.current = true
-					setHmrHash(message.hash)
-				}
-			}
-			socket?.addEventListener("message", handler)
-			return () => {
-				socket?.removeEventListener("message", handler)
-			}
-		}
-	}, [])
+	useHMR((hash) => {
+		scheduleRevert.current = true
+		setHmrHash(hash)
+	})
 	useEffect(() => {
 		scheduleRevert.current = false
 	})
