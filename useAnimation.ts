@@ -1,15 +1,21 @@
+/** biome-ignore-all lint/correctness/useExhaustiveDependencies: needed for this use case */
+/** biome-ignore-all lint/plugin/memoization: needed for this use case */
 import gsap from "gsap"
+import { ScrollTrigger } from "gsap/all"
 import {
 	type DependencyList,
 	use,
 	useEffect,
 	useLayoutEffect,
+	useMemo,
 	useRef,
 	useState,
 } from "react"
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
 import { useHMR } from "./useHMR"
+
+let microtaskWaiting = false
 
 const useIsomorphicLayoutEffect =
 	typeof document !== "undefined" ? useLayoutEffect : useEffect
@@ -79,6 +85,7 @@ export const useAnimation = <InputFn extends Creation>(
 		extraDeps?: DependencyList
 	},
 ) => {
+	"use no memo"
 	type OutputType =
 		// biome-ignore lint/complexity/noBannedTypes: need to use Function to type the hook exactly
 		ReturnType<InputFn> extends Function ? undefined : ReturnType<InputFn>
@@ -95,7 +102,8 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior = "revert",
 		unmountBehavior = "kill",
 	} = options ?? {}
-	const { innerWidth, shouldHydrateUtilities } = use(ScreenContext)
+	const { innerWidth, viewportHeight, shouldHydrateUtilities } =
+		use(ScreenContext)
 
 	const dependencies = [...deps, ...extraDeps]
 
@@ -146,10 +154,55 @@ export const useAnimation = <InputFn extends Creation>(
 	}, [unmountBehavior])
 
 	// actual animation creation
+	const finalDeps = [
+		updateBehavior,
+		shouldHydrateUtilities,
+		recreateOnResize ? innerWidth : null,
+		recreateOnResize ? viewportHeight : null,
+		...dependencies,
+		hmrHash,
+	]
+	const latestCleanup = useRef<(() => unknown) | null>(null)
+	useMemo(() => {
+		// when this fires, it indicates that we're about to render a new animation
+		// we clean up the previous animation here, because if we did it in a proper cleanup function
+		// it would run *after* our new DOM is committed and it's critical we clean up *before* the new DOM is committed
+		if (latestCleanup.current) {
+			latestCleanup.current()
+			latestCleanup.current = null
+		}
+	}, finalDeps)
 	useIsomorphicLayoutEffect(() => {
 		if (!shouldHydrateUtilities) return
 
 		const newContext = gsap.context((self) => {
+			const lenis = window.lenis
+
+			if (
+				// lenis exists
+				lenis &&
+				// we're not already at the top of the page
+				lenis.animatedScroll > 0.1 &&
+				// this animation is expecting to be cleaned up
+				updateBehavior === "revert" &&
+				// there's not already a microtask waiting
+				!microtaskWaiting
+			) {
+				microtaskWaiting = true
+				queueMicrotask(() => {
+					const savedPosition = lenis.animatedScroll
+					lenis.scrollTo(0, {
+						immediate: true,
+						force: true,
+						onComplete: () => {
+							microtaskWaiting = false
+							ScrollTrigger.refresh()
+							lenis.scrollTo(savedPosition, { immediate: true, force: true })
+						},
+					})
+				})
+			}
+
 			const result = createAnimations({
 				context: self,
 				contextSafe: ((func) =>
@@ -166,7 +219,7 @@ export const useAnimation = <InputFn extends Creation>(
 
 		setContext(newContext)
 
-		return () => {
+		latestCleanup.current = () => {
 			if (!newContext.isReverted) {
 				if (scheduleRevert.current) {
 					newContext.revert()
@@ -186,13 +239,7 @@ export const useAnimation = <InputFn extends Creation>(
 					}
 			}
 		}
-	}, [
-		updateBehavior,
-		shouldHydrateUtilities,
-		recreateOnResize ? innerWidth : null,
-		...dependencies,
-		hmrHash,
-	])
+	}, finalDeps)
 
 	useHMR((hash) => {
 		scheduleRevert.current = true
