@@ -313,8 +313,9 @@ test("components that return non-element react nodes are allowed", () => {
 })
 
 test("async components are allowed", () => {
-	const Component: (props: { className?: string }) => Promise<React.ReactNode> =
-		() => Promise.resolve(null)
+	const Component: (props: {
+		className?: string
+	}) => Promise<React.ReactNode> = () => Promise.resolve(null)
 	const _Extended = styled(Component, { color: "red" })
 })
 

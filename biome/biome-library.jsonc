@@ -10,8 +10,8 @@
 			"style": {
 				"useSelfClosingElements": {
 					"level": "info",
-					"fix": "safe"
-				}
+					"fix": "safe",
+				},
 			},
 			"correctness": {
 				"useExhaustiveDependencies": {
@@ -21,31 +21,31 @@
 							{
 								"name": "useAnimation",
 								"closureIndex": 0,
-								"dependenciesIndex": 1
+								"dependenciesIndex": 1,
 							},
 							{
 								"name": "useAsyncEffect",
 								"closureIndex": 0,
-								"dependenciesIndex": 1
-							}
-						]
-					}
-				}
-			}
-		}
+								"dependenciesIndex": 1,
+							},
+						],
+					},
+				},
+			},
+		},
 	},
 	"javascript": {
 		"formatter": {
 			// library can use regardless due to general lack of css
-			"semicolons": "asNeeded"
-		}
+			"semicolons": "asNeeded",
+		},
 	},
 	"files": {
-		"includes": ["**", "!pnpm-lock.yaml", "!gsapHelpers"]
+		"includes": ["**", "!pnpm-lock.yaml", "!gsapHelpers"],
 	},
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
-		"useIgnoreFile": true
-	}
+		"useIgnoreFile": true,
+	},
 }

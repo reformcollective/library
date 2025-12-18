@@ -130,13 +130,11 @@ const Wrapper = styled(
 			width: 100%;
 			height: ${height}px;
 
-			${
-				touchscreenMode &&
-				css`
+			${touchscreenMode &&
+			css`
 				height: fit-content;
 				overflow-x: auto;
-			`
-			}
+			`}
 		`),
 )
 
@@ -153,12 +151,10 @@ const Inner = styled(
 				width: fit-content;
 			}
 
-			${
-				touchscreenMode &&
-				css`
+			${touchscreenMode &&
+			css`
 				width: fit-content;
 				height: fit-content;
-			`
-			}
+			`}
 		`),
 )
