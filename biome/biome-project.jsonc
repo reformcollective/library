@@ -4,7 +4,7 @@
 	"root": true,
 	"plugins": [
 		"./library/biome/memoization.grit",
-		"./library/biome/forwardRef.grit",
+		"./library/biome/forwardRef.grit"
 	],
 	"linter": {
 		"enabled": true,
@@ -13,8 +13,8 @@
 			"style": {
 				"useSelfClosingElements": {
 					"level": "info",
-					"fix": "safe",
-				},
+					"fix": "safe"
+				}
 			},
 			"correctness": {
 				"useUniqueElementIds": "off",
@@ -25,31 +25,31 @@
 							{
 								"name": "useAnimation",
 								"closureIndex": 0,
-								"dependenciesIndex": 1,
+								"dependenciesIndex": 1
 							},
 							{
 								"name": "useAsyncEffect",
 								"closureIndex": 0,
-								"dependenciesIndex": 1,
-							},
-						],
-					},
-				},
-			},
-		},
+								"dependenciesIndex": 1
+							}
+						]
+					}
+				}
+			}
+		}
 	},
 	"javascript": {
 		"formatter": {
 			// using prettier instead of biome's formatter until biome formats css
-			"enabled": false,
-		},
+			"enabled": false
+		}
 	},
 	"files": {
-		"includes": ["**", "!**/pnpm-lock.yaml", "!**/library"],
+		"includes": ["**", "!**/pnpm-lock.yaml", "!**/library"]
 	},
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
-		"useIgnoreFile": true,
-	},
+		"useIgnoreFile": true
+	}
 }

@@ -22,8 +22,9 @@ export default function nativeSmoothPin({
 		animation-name: ${startGoopAnimation}, ${endGoopAnimation};
 		/* stylelint-disable-next-line plugin/use-baseline */
 		animation-timeline: view(y);
-		${containerAware
-			? css`
+		${
+			containerAware
+				? css`
 					/* stylelint-disable-next-line plugin/use-baseline */
 					animation-range:
 						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) entry-crossing
@@ -32,13 +33,14 @@ export default function nativeSmoothPin({
 							entry-crossing
 							calc(100vh + 100cqh - ${top} - 100% + ${goopLevel}px);
 				`
-			: css`
+				: css`
 					/* stylelint-disable-next-line plugin/use-baseline */
 					animation-range:
 						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) entry-crossing
 							calc(100dvh - ${top} + ${goopLevel}px),
 						exit-crossing calc(calc(-1 * ${top}) - ${goopLevel}px) exit-crossing
 							calc(calc(-1 * ${top}) + ${goopLevel}px);
-				`}
+				`
+		}
 	`
 }

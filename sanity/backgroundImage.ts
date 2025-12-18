@@ -35,8 +35,9 @@ export const sanityImageToBackgroundImage = (
 		const [url, size] = src.split(" ")
 		return url && size && url !== "" && size !== ""
 			? css`
-					@media (min-width: ${Number.parseInt(size, 10) /
-						(2 * scaleFactor)}px) {
+					@media (min-width: ${
+						Number.parseInt(size, 10) / (2 * scaleFactor)
+					}px) {
 						background-image: url(${url});
 					}
 				`

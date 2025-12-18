@@ -318,34 +318,31 @@ test.fails("generic types are preserved with tokens config", () => {
 
 // ---------- generics with multiple generics and variants ----------
 
-test.fails(
-	"generic types with multiple generics are preserved with variants",
-	() => {
-		const Component = <
-			SomeText extends string,
-			AnotherText extends string,
-		>(_props: {
-			id: `id-${SomeText}-${AnotherText}`
-			one: NoInfer<SomeText>
-			two: NoInfer<AnotherText>
-			className?: string
-		}) => <></>
+test.fails("generic types with multiple generics are preserved with variants", () => {
+	const Component = <
+		SomeText extends string,
+		AnotherText extends string,
+	>(_props: {
+		id: `id-${SomeText}-${AnotherText}`
+		one: NoInfer<SomeText>
+		two: NoInfer<AnotherText>
+		className?: string
+	}) => <></>
 
-		const Extended = styled(Component, {
-			base: [{}],
-			variants: { size: { small: [{}], large: [{}] } },
-			defaultVariants: { size: "small" },
-		} as const)
+	const Extended = styled(Component, {
+		base: [{}],
+		variants: { size: { small: [{}], large: [{}] } },
+		defaultVariants: { size: "small" },
+	} as const)
 
-		const _ok = (
-			<>
-				<Component<"a", "b"> id="id-a-b" one="a" two="b" />
-				<Extended<"a", "b"> id="id-a-b" one="a" two="b" />
-				<Extended<"a", "b"> id="id-a-b" one="a" two="b" size="large" />
-			</>
-		)
-	},
-)
+	const _ok = (
+		<>
+			<Component<"a", "b"> id="id-a-b" one="a" two="b" />
+			<Extended<"a", "b"> id="id-a-b" one="a" two="b" />
+			<Extended<"a", "b"> id="id-a-b" one="a" two="b" size="large" />
+		</>
+	)
+})
 
 // test("errors on config are reported in the right place", () => {
 // 	const SmokeBox = styled(

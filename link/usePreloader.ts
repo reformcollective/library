@@ -1,4 +1,5 @@
 import { useAsyncEffect } from "ahooks"
+import config from "app/libraryConfig"
 import gsap, { ScrollTrigger } from "gsap/all"
 import { isBrowser } from "library/deviceDetection"
 import { sleep } from "library/functions"
@@ -7,7 +8,6 @@ import { createScrollLock } from "library/Scroll"
 import { type RefObject, use, useEffect, useState } from "react"
 import { flushSync } from "react-dom"
 import { instantScrollToAnchor } from "./util"
-import config from "app/libraryConfig"
 
 /**
  * if you're making a preloader, set this to a number of seconds to manually block the main thread for debugging
