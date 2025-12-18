@@ -1,3 +1,5 @@
+"use client"
+
 import MuxVideo from "@mux/mux-video-react"
 import { browserData } from "library/deviceDetection"
 import { library } from "library/layers.css"

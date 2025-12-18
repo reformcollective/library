@@ -1,4 +1,5 @@
 import { useAsyncEffect } from "ahooks"
+import config from "app/libraryConfig"
 import gsap, { ScrollTrigger } from "gsap/all"
 import { isBrowser } from "library/deviceDetection"
 import { sleep } from "library/functions"
@@ -165,7 +166,9 @@ export const usePreloader = ({
 	// sync ALL our preloaders together so that no single preloader races to the finish line
 	const [animationReadyPromise] = useState(() => Promise.withResolvers())
 	const [animationCompletePromise] = useState(() => Promise.withResolvers())
+
 	useEffect(() => {
+		if (config.overridePreloaderResolvers) return
 		globalReadyPromises.push(animationReadyPromise.promise)
 		globalCompletePromises.push(animationCompletePromise.promise)
 	}, [animationReadyPromise, animationCompletePromise])

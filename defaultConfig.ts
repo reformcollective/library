@@ -39,6 +39,11 @@ type Config<TransitionNames = never, GroupNames = never> = {
 	 * "media" will wrap entire statements in a media query based on breakpoints
 	 */
 	vanillaExtractEngine: "calc" | "media"
+	/**
+	 * if true, override any preloader resolvers that have already been registered
+	 * in most cases you won't want to use this
+	 */
+	overridePreloaderResolvers?: boolean
 }
 
 const defaultConfig = {
@@ -50,6 +55,7 @@ const defaultConfig = {
 	pageSectionGroups: [],
 	stylingSystem: "both",
 	vanillaExtractEngine: "calc",
+	overridePreloaderResolvers: false,
 } as const satisfies Config
 
 export const defineLibraryConfig = <const TransitionNames, const GroupNames>(
