@@ -105,7 +105,7 @@ export const resolveRoute = (
 }
 
 /**
- * a link that navigates when clicked, using the specified transition
+ * a link that navigates when clicked, using the specified transition.
  * @returns
  */
 export default function UniversalLink({
