@@ -171,11 +171,7 @@ export const usePreloader = ({
 		if (config.overridePreloaderResolvers) return
 		globalReadyPromises.push(animationReadyPromise.promise)
 		globalCompletePromises.push(animationCompletePromise.promise)
-	}, [
-		animationReadyPromise,
-		animationCompletePromise,
-		config.overridePreloaderResolvers,
-	])
+	}, [animationReadyPromise, animationCompletePromise, config])
 
 	useAsyncEffect(async () => {
 		if (!initComplete) return
