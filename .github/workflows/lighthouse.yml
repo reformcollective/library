@@ -55,6 +55,8 @@ jobs:
         with:
           key: ${{ github.repository }}-wireit-cache
           path: ./.wireit
+      - run: export WIREIT_CACHE=local
+      - run: export WIREIT_PARALLEL=infinity
       - name: Install dependencies
         run: pnpm install
         # end installation
