@@ -26,7 +26,7 @@ concurrency:
 jobs:
   run:
     timeout-minutes: 15
-    runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
+    runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-16vcpu-ubuntu-2404-arm' }}
     steps:
       # begin installation
       - name: Load .env file

@@ -16,7 +16,7 @@ on:
 
 jobs:
   formatting:
-    runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
+    runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-16vcpu-ubuntu-2404-arm' }}
     steps:
       # begin installation
       - name: Load .env file
@@ -67,7 +67,7 @@ jobs:
           fail-message: 'Looks like there may be formatting issues. Run "pnpm format" to fix them.'
 
   build:
-    runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
+    runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-16vcpu-ubuntu-2404-arm' }}
     steps:
       # begin installation
       - name: Load .env file
