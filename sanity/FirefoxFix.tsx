@@ -40,7 +40,7 @@ export const FirefoxFix = () => {
 	useInterval(() => {
 		checkZeroWidthChars()
 	}, 1000)
-	useHMR(() => {
+	useHMR("postbuild", () => {
 		hasWarned = false
 	})
 
