@@ -41,7 +41,7 @@ jobs:
           key: ${{ github.repository }}-next-cache
           path: ./.next
       - name: Install dependencies
-        run: pnpm install || echo 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
+        run: pnpm install
         # end installation
 
       # lint
@@ -87,7 +87,7 @@ jobs:
           key: ${{ github.repository }}-next-cache
           path: ./.next
       - name: Install dependencies
-        run: pnpm install || echo 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
+        run: pnpm install
       # end installation
 
       # running a build will also check types
