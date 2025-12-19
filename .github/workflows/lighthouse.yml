@@ -65,7 +65,7 @@ jobs:
 
       - name: Serve
         if: github.event.action != 'closed'
-        run: PORT=3000 pnpm run serve & exit 0
+        run: PORT=3000 (pnpm run serve || pnpm run start) & exit 0
 
       - name: Wait for server...
         if: github.event.action != 'closed'
