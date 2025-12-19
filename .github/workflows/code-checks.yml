@@ -40,6 +40,11 @@ jobs:
         with:
           key: ${{ github.repository }}-next-cache
           path: ./.next
+      - name: Mount wireit cache
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-wireit-cache
+          path: ./.wireit
       - name: Install dependencies
         run: pnpm install
         # end installation
@@ -86,9 +91,14 @@ jobs:
         with:
           key: ${{ github.repository }}-next-cache
           path: ./.next
+      - name: Mount wireit cache
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-wireit-cache
+          path: ./.wireit
       - name: Install dependencies
         run: pnpm install
-      # end installation
+        # end installation
 
       # running a build will also check types
       - run: pnpm run build
