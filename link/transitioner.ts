@@ -110,11 +110,15 @@ export const useTransitioner = () => {
 			loader.dispatchEvent("start", eventPayload)
 
 			// capture animations before state change so we can detect new ones
-			const animationsBeforeBefore = document.body.getAnimations({ subtree: true })
+			const animationsBeforeBefore = document.body.getAnimations({
+				subtree: true,
+			})
 			flushSync(() => {
 				setIsAnimating("before")
 			})
-			const animationsAfterBefore = document.body.getAnimations({ subtree: true })
+			const animationsAfterBefore = document.body.getAnimations({
+				subtree: true,
+			})
 			const newBeforeAnimations = animationsAfterBefore.filter(
 				(a) => !animationsBeforeBefore.includes(a),
 			)
@@ -162,11 +166,15 @@ export const useTransitioner = () => {
 			if (!isInstant) await sleep(10)
 
 			// capture animations before state change so we can detect new ones
-			const animationsBeforeAfter = document.body.getAnimations({ subtree: true })
+			const animationsBeforeAfter = document.body.getAnimations({
+				subtree: true,
+			})
 			flushSync(() => {
 				setIsAnimating("after")
 			})
-			const animationsAfterAfter = document.body.getAnimations({ subtree: true })
+			const animationsAfterAfter = document.body.getAnimations({
+				subtree: true,
+			})
 			const newAfterAnimations = animationsAfterAfter.filter(
 				(a) => !animationsBeforeAfter.includes(a),
 			)
