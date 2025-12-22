@@ -109,13 +109,23 @@ export const useTransitioner = () => {
 			} as const
 			loader.dispatchEvent("start", eventPayload)
 
+			// capture animations before state change so we can detect new ones
+			const animationsBeforeBefore = document.body.getAnimations({ subtree: true })
 			flushSync(() => {
 				setIsAnimating("before")
 			})
+			const animationsAfterBefore = document.body.getAnimations({ subtree: true })
+			const newBeforeAnimations = animationsAfterBefore.filter(
+				(a) => !animationsBeforeBefore.includes(a),
+			)
+
 			const beforeAnimations = allAnimations.map(({ animateBefore }) =>
 				animateBefore?.(),
 			)
-			await Promise.all(beforeAnimations)
+			await Promise.all([
+				...beforeAnimations,
+				...newBeforeAnimations.map((a) => a.finished),
+			])
 			if (signal?.aborted) return
 
 			router.push(to as Parameters<typeof router.prefetch>[0])
@@ -150,13 +160,24 @@ export const useTransitioner = () => {
 			document.body.inert = true // prevent navigation before we're done animating in
 
 			if (!isInstant) await sleep(10)
+
+			// capture animations before state change so we can detect new ones
+			const animationsBeforeAfter = document.body.getAnimations({ subtree: true })
 			flushSync(() => {
 				setIsAnimating("after")
 			})
+			const animationsAfterAfter = document.body.getAnimations({ subtree: true })
+			const newAfterAnimations = animationsAfterAfter.filter(
+				(a) => !animationsBeforeAfter.includes(a),
+			)
+
 			const afterAnimations = allAnimations.map(({ animateAfter }) =>
 				animateAfter?.(),
 			)
-			await Promise.all(afterAnimations)
+			await Promise.all([
+				...afterAnimations,
+				...newAfterAnimations.map((a) => a.finished),
+			])
 
 			flushSync(() => {
 				setIsAnimating(false)
