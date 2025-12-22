@@ -241,7 +241,7 @@ export const useAnimation = <InputFn extends Creation>(
 		}
 	}, finalDeps)
 
-	useHMR("prebuild", (hash) => {
+	useHMR("postbuild", (hash) => {
 		scheduleRevert.current = true
 		setHmrHash(hash)
 	})
