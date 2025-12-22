@@ -26,7 +26,6 @@ export const defaultImageClass = style({
 			objectFit: objectFitVar,
 			objectPosition: objectPositionVar,
 			height: "auto",
-			width: "100%",
 			aspectRatio: aspectRatioVar,
 		},
 	},
