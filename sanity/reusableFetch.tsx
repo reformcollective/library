@@ -17,6 +17,7 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	client,
 	serverToken: token,
 	browserToken: token,
+	fetchOptions: { revalidate: Infinity },
 })
 
 /**
@@ -29,27 +30,27 @@ export async function libraryFetch<const QueryString extends string>({
 	query,
 	params = {},
 	perspective,
-	stega,
+	disableStega,
 }: {
 	query: QueryString
 	params?: QueryParams | Promise<QueryParams>
 	perspective?: Exclude<ClientPerspective, "raw">
 	/**
-	 * Good to know: Always set stega: false when calling sanityFetch within these:
+	 * Good to know: Always disable stega when calling sanityFetch within these:
 	 *
 	 * generateMetadata
 	 * generateViewport
 	 * generateSitemaps
 	 * generateImageMetadata
 	 *
-	 * otherwise, stega should be true
+	 * otherwise, stega should be undefined
 	 */
-	stega?: boolean
+	disableStega?: boolean
 }) {
 	const { data, sourceMap, tags } = await internalFetch({
 		query,
 		params,
-		stega: stega ?? true,
+		stega: disableStega ? false : undefined, // default to false
 		perspective,
 	})
 
@@ -68,7 +69,32 @@ export const LibraryLive = async () => {
 			<Toaster />
 			<FirefoxFix />
 			{isDraftMode && <DraftModeOverlay />}
-			<InternalLive onError={handleError} refreshOnFocus={false} />
+			<InternalLive
+				onError={handleError}
+				refreshOnFocus={false}
+				refreshOnMount={false}
+				refreshOnReconnect={false}
+				intervalOnGoAway={false}
+			/>
 		</LiveWrapper>
 	)
+}
+
+/**
+ * sanity live handles revalidation
+ */
+if (client.config().useCdn !== true) {
+	throw new Error("useCdn must be true!")
+}
+
+/**
+ * validate sanity versions
+ */
+import semver from "semver"
+import { dependencies } from "../../package.json"
+if (!semver.satisfies(dependencies["next-sanity"], "^12.0.0")) {
+	throw new Error("next-sanity must satisfy version ^12.0.0!")
+}
+if (!semver.satisfies(dependencies.sanity, "^5.0.0")) {
+	throw new Error("next-sanity must satisfy version ^5.0.0!")
 }
