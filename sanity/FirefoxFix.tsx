@@ -8,6 +8,8 @@ let hasWarned = false
 const checkZeroWidthChars = (startNode: Node = document.body) => {
 	if (process.env.NODE_ENV === "development") {
 		const walk = (node: Node) => {
+			if (window.lenis?.isScrolling) return
+			
 			if (node.nodeType === Node.TEXT_NODE) {
 				const parent = node.parentElement
 				// biome-ignore lint/suspicious/noMisleadingCharacterClass: from sanity
