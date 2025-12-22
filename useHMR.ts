@@ -62,19 +62,24 @@ export const useHMR =
 
 export const useSteadyHotScroll =
 	process.env.NODE_ENV === "development"
-		? () => {
-				const latestScroll = useRef(0)
-				let latestScrollTimeout: NodeJS.Timeout | null = null
+		? 		() => {
+			const latestScroll = useRef(0)
+			let rafId: number | null = null
 
-				useHMR("prebuild", () => {
-					if (latestScrollTimeout) clearTimeout(latestScrollTimeout)
-					latestScroll.current = window.scrollY
-				})
+			useHMR("prebuild", () => {
+				if (rafId) cancelAnimationFrame(rafId)
+				latestScroll.current = window.scrollY
+			})
 
-				useHMR("postbuild", () => {
-					latestScrollTimeout = setTimeout(() => {
-						window.scrollTo({ top: latestScroll.current, behavior: "instant" })
-					}, 100)
-				})
+			useHMR("postbuild", () => {
+				const startTime = performance.now()
+				const scrollEveryFrame = () => {
+					window.scrollTo({ top: latestScroll.current, behavior: "instant" })
+					if (performance.now() - startTime < 1000) {
+						rafId = requestAnimationFrame(scrollEveryFrame)
+					}
+				}
+				scrollEveryFrame()
+			})
 			}
 		: () => {}
