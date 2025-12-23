@@ -1,9 +1,8 @@
-import { useClientOnly } from "library/ClientOnly"
-import { browserData, isBrowser } from "library/deviceDetection"
+import { browserData } from "library/deviceDetection"
 import { useBrowserData } from "library/deviceDetection/react"
 import { css, f, fresponsive, styled } from "library/styled/alpha"
 
-import { getVH } from "library/viewportUtils"
+import { useVH } from "library/viewportUtils"
 import {
 	type CSSProperties,
 	type ReactNode,
@@ -12,10 +11,10 @@ import {
 	useRef,
 } from "react"
 
-export const getSafariOversizeHeight = () => {
-	if (!isBrowser) return undefined
+export const useSafariOversizeHeight = () => {
 	if (!browserData.isIOS) return undefined
-	const screenHeight = getVH(100)
+	const screenHeight = useVH(100)
+	if (!screenHeight) return undefined
 
 	/* the maximum potential size of the viewport boundary */
 	const boundarySize = window.outerHeight - screenHeight
@@ -48,7 +47,7 @@ export function FullViewport({
 
 	const { isIOS } = useBrowserData()
 	const hideSticky = isIOS === false
-	const height = useClientOnly(getSafariOversizeHeight())
+	const height = useSafariOversizeHeight()
 
 	return (
 		<>
