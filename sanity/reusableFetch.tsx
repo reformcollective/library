@@ -92,6 +92,7 @@ if (client.config().useCdn !== true) {
  */
 import semver from "semver"
 import { dependencies } from "../../package.json"
+
 if (!semver.satisfies(dependencies["next-sanity"], "^12.0.0")) {
 	throw new Error("next-sanity must satisfy version ^12.0.0!")
 }
