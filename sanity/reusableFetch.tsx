@@ -50,7 +50,7 @@ export async function libraryFetch<const QueryString extends string>({
 	const { data, sourceMap, tags } = await internalFetch({
 		query,
 		params,
-		stega: disableStega ? false : undefined, // default to false
+		stega: disableStega ? false : undefined,
 		perspective,
 	})
 
