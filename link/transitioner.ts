@@ -132,10 +132,10 @@ export const useTransitioner = () => {
 			])
 			if (signal?.aborted) return
 
+			const existingHref = window.location.href
 			router.push(to as Parameters<typeof router.prefetch>[0])
 
 			// check for href changes with a timeout
-			const existingHref = window.location.href
 			const timeout = new Promise((_, reject) =>
 				setTimeout(() => {
 					if (!signal?.aborted) reject(new Error("Navigation timeout"))
