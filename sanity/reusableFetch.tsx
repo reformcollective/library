@@ -72,8 +72,8 @@ export const LibraryLive = async () => {
 			<InternalLive
 				onError={handleError}
 				refreshOnFocus={false}
-				refreshOnMount={false}
-				refreshOnReconnect={false}
+				refreshOnMount={true}
+				refreshOnReconnect={true}
 				intervalOnGoAway={false}
 			/>
 		</LiveWrapper>
