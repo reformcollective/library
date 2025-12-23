@@ -12,8 +12,8 @@ import {
 } from "react"
 
 export const useSafariOversizeHeight = () => {
-	if (!browserData.isIOS) return undefined
 	const screenHeight = useVH(100)
+	if (!browserData.isIOS) return undefined
 	if (!screenHeight) return undefined
 
 	/* the maximum potential size of the viewport boundary */
