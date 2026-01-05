@@ -21,7 +21,7 @@ concurrency:
 jobs:
   lighthouse:
     timeout-minutes: 15
-    runs-on: blacksmith-4vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     steps:
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
