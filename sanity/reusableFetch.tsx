@@ -69,13 +69,16 @@ export const LibraryLive = async () => {
 			<Toaster />
 			<FirefoxFix />
 			{isDraftMode && <DraftModeOverlay />}
-			<InternalLive
-				onError={handleError}
-				refreshOnFocus={false}
-				refreshOnMount={true}
-				refreshOnReconnect={true}
-				intervalOnGoAway={false}
-			/>
+			{/* Only load the live listener if we are in preview mode */}
+			{process.env.NODE_ENV === "development" || isDraftMode ? (
+				<InternalLive
+					onError={handleError}
+					refreshOnFocus={false}
+					refreshOnMount={true}
+					refreshOnReconnect={true}
+					intervalOnGoAway={false}
+				/>
+			) : null}
 		</LiveWrapper>
 	)
 }
