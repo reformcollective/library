@@ -89,7 +89,7 @@ if (client.config().useCdn !== true) {
 
 /**
  * validate sanity versions - read actual installed versions from node_modules
-*/
+ */
 import { version as nextSanityVersion } from "next-sanity/package.json"
 import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
