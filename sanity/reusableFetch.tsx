@@ -88,14 +88,19 @@ if (client.config().useCdn !== true) {
 }
 
 /**
- * validate sanity versions
- */
+ * validate sanity versions - read actual installed versions from node_modules
+*/
+import { version as nextSanityVersion } from "next-sanity/package.json"
+import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
-import { dependencies } from "../../package.json"
 
-if (!semver.satisfies(dependencies["next-sanity"], "^12.0.0")) {
-	throw new Error("next-sanity must satisfy version ^12.0.0!")
+if (!semver.satisfies(nextSanityVersion, "^12.0.0")) {
+	throw new Error(
+		`next-sanity must satisfy version ^12.0.0! (installed: ${nextSanityVersion})`,
+	)
 }
-if (!semver.satisfies(dependencies.sanity, "^5.0.0")) {
-	throw new Error("next-sanity must satisfy version ^5.0.0!")
+if (!semver.satisfies(sanityVersion, "^5.0.0")) {
+	throw new Error(
+		`sanity must satisfy version ^5.0.0! (installed: ${sanityVersion})`,
+	)
 }
