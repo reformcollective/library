@@ -30,7 +30,9 @@ function broadcast(data: string) {
 }
 
 function startUpstreamSubscription() {
-	if (sanitySubscription) return
+	if (sanitySubscription) {
+		console.log("🔗 Adding new client to live proxy")
+		return}
 
 	console.log("⚡️ Opening shared upstream connection to Sanity...")
 
@@ -61,7 +63,6 @@ export async function GET(request: Request) {
 	const responseStream = new TransformStream()
 	const writer = responseStream.writable.getWriter()
 
-	console.log("🔗 Adding new client to live proxy")
 	connectedClients.add(writer)
 	startUpstreamSubscription()
 
