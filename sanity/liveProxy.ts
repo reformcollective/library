@@ -51,6 +51,11 @@ function stopUpstreamSubscription() {
 // ------------------------------------------------------------------
 // ROUTE HANDLER
 // ------------------------------------------------------------------
+
+// close connections before vercel's hard timeout (300s on pro, 60s on hobby)
+// this lets the client's native EventSource auto-reconnect handle it gracefully
+const MAX_CONNECTION_MS = 280_000
+
 export async function GET(request: Request) {
 	const responseStream = new TransformStream()
 	const writer = responseStream.writable.getWriter()
@@ -58,10 +63,18 @@ export async function GET(request: Request) {
 	connectedClients.add(writer)
 	startUpstreamSubscription()
 
-	request.signal.addEventListener("abort", () => {
+	const cleanup = () => {
 		connectedClients.delete(writer)
 		writer.close().catch(() => {})
 		stopUpstreamSubscription()
+	}
+
+	// proactive graceful shutdown before vercel kills us
+	const timeout = setTimeout(cleanup, MAX_CONNECTION_MS)
+
+	request.signal.addEventListener("abort", () => {
+		clearTimeout(timeout)
+		cleanup()
 	})
 
 	return new Response(responseStream.readable, {
