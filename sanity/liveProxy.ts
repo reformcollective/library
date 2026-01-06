@@ -49,14 +49,6 @@ function startUpstreamSubscription() {
 	})
 }
 
-function stopUpstreamSubscription() {
-	if (connectedClients.size === 0 && sanitySubscription) {
-		console.log("💤 Closing upstream Sanity connection.")
-		sanitySubscription.unsubscribe()
-		sanitySubscription = null
-	}
-}
-
 // ------------------------------------------------------------------
 // ROUTE HANDLER
 // ------------------------------------------------------------------
@@ -69,6 +61,7 @@ export async function GET(request: Request) {
 	const responseStream = new TransformStream()
 	const writer = responseStream.writable.getWriter()
 
+	console.log("🔗 Adding new client to live proxy")
 	connectedClients.add(writer)
 	startUpstreamSubscription()
 
@@ -81,7 +74,6 @@ export async function GET(request: Request) {
 	const cleanup = () => {
 		connectedClients.delete(writer)
 		writer.close().catch(() => {})
-		stopUpstreamSubscription()
 	}
 
 	// proactive graceful shutdown before vercel kills us
