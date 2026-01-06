@@ -32,7 +32,8 @@ function broadcast(data: string) {
 function startUpstreamSubscription() {
 	if (sanitySubscription) {
 		console.log("🔗 Adding new client to live proxy")
-		return}
+		return
+	}
 
 	console.log("⚡️ Opening shared upstream connection to Sanity...")
 
