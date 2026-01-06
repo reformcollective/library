@@ -55,7 +55,7 @@ function startUpstreamSubscription() {
 
 // close connections before vercel's hard timeout (300s on pro, 60s on hobby)
 // this lets the client's native EventSource auto-reconnect handle it gracefully
-const MAX_CONNECTION_MS = 50_000
+const MAX_CONNECTION_MS = 280_000
 
 export async function GET(request: Request) {
 	const responseStream = new TransformStream()
