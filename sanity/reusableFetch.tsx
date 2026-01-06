@@ -3,11 +3,15 @@ import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
 import type { ClientPerspective, QueryParams } from "next-sanity"
 import { defineLive } from "next-sanity/live"
+import { version as nextSanityVersion } from "next-sanity/package.json"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
+import { version as sanityVersion } from "sanity/package.json"
+import semver from "semver"
 import { Toaster } from "sonner"
 import { FirefoxFix } from "./FirefoxFix"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
+import { SanityLiveProxy } from "./SanityLiveProxy"
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
@@ -70,7 +74,7 @@ export const LibraryLive = async () => {
 			<FirefoxFix />
 			{isDraftMode && <DraftModeOverlay />}
 			{/* Only load the live listener if we are in preview mode */}
-			{process.env.NODE_ENV === "development" || isDraftMode ? (
+			{isDraftMode ? (
 				<InternalLive
 					onError={handleError}
 					refreshOnFocus={false}
@@ -78,7 +82,9 @@ export const LibraryLive = async () => {
 					refreshOnReconnect={true}
 					intervalOnGoAway={false}
 				/>
-			) : null}
+			) : (
+				<SanityLiveProxy />
+			)}
 		</LiveWrapper>
 	)
 }
@@ -93,10 +99,6 @@ if (client.config().useCdn !== true) {
 /**
  * validate sanity versions - read actual installed versions from node_modules
  */
-import { version as nextSanityVersion } from "next-sanity/package.json"
-import { version as sanityVersion } from "sanity/package.json"
-import semver from "semver"
-
 if (!semver.satisfies(nextSanityVersion, "^12.0.0")) {
 	throw new Error(
 		`next-sanity must satisfy version ^12.0.0! (installed: ${nextSanityVersion})`,
