@@ -12,6 +12,7 @@
 		"@vanilla-extract/css": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/css@edaedbb",
 		"@vanilla-extract/next-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/next-plugin@edaedbb",
 		"@vanilla-extract/turbopack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/turbopack-plugin@edaedbb",
+		"@types/semver": "^7",
 		"ahooks": "^3",
 		"browser-dtector": "^4",
 		"class-variance-authority": "^0.7",
@@ -20,6 +21,7 @@
 		"restyle": "^3",
 		"rxjs": "^7",
 		"sanity-image": "^1",
+		"semver": "^7",
 		"sonner": "^2",
 		"stylis": "^4",
 		"use-deep-compare": "^1",
@@ -36,5 +38,5 @@
 		"lint": "biome lint",
 		"format": "biome check --write"
 	},
-	"packageManager": "pnpm@10.26.0"
+	"packageManager": "pnpm@10.26.1"
 }
