@@ -9,6 +9,48 @@ Removed patches that are unsafe or no longer needed.
 You should update the respective packages to their production versions
 
 
+# 2026-01-05
+
+## Sanity Version Requirements
+The library now strictly enforces Sanity v5 and Next-Sanity v12. It also enforces that useCdn is `true`.
+
+**Migration Advice**
+Upgrade your project's Sanity dependencies:
+```bash
+pnpm add next-sanity@latest sanity@latest
+```
+
+
+# 2025-12-18
+
+## Experimental React Features (`useEffectEvent`)
+The library's `useHMR` hook now uses the experimental `useEffectEvent` API. While this is available in React 19, it may require additional type declarations or configuration if your environment doesn't recognize it yet.
+
+**Migration Advice**
+Ensure you are on React 19. If you still see type errors, you may need a specific version of `@types/react`.
+
+
+# 2025-12-17
+
+## Package Version Overrides
+The library now requires specific builds of `@vanilla-extract` to support the "split" loading system in Turbopack. These versions are not yet on the main npm registry and must be overridden in your root `package.json`.
+
+**Migration Advice**
+Add the following overrides to your root `package.json`:
+```json
+"pnpm": {
+  "overrides": {
+    "@vanilla-extract/compiler": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/compiler@edaedbb",
+    "@vanilla-extract/css": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/css@edaedbb",
+    "@vanilla-extract/integration": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/integration@edaedbb",
+    "@vanilla-extract/next-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/next-plugin@edaedbb",
+    "@vanilla-extract/turbopack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/turbopack-plugin@edaedbb",
+    "@vanilla-extract/webpack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/webpack-plugin@edaedbb"
+  }
+}
+```
+
+
 # 2025-12-12
 
 ## Slug Resolvers (`resolveLink`)
@@ -42,24 +84,47 @@ If this is too large an undertaking, or if several people are working in tandem 
 ```
 
 
+# 2025-11-25
+
+## `BackgroundVideo` File Move
+The `BackgroundVideo` component was moved from the `sanity/` directory to a new `videos/` directory within the library.
+
+**Migration Advice**
+Update any imports in your project:
+```typescript
+// Old
+import { BackgroundVideo } from "library/sanity/BackgroundVideo"
+// New
+import { BackgroundVideo } from "library/videos/BackgroundVideo"
+```
 
 
 # 2025-10-10
 
-## New Style System & `withVanillaSplit`
-Introduced the `withVanillaSplit` Next.js plugin to support the newer styling system.
+## Next.js 16 & `withVanillaSplit`
+Introduced the `withVanillaSplit` Next.js plugin to support the newer styling system. This plugin and the newer styling system rely on Turbopack features only available in **Next.js 16 or greater**.
 
 **Migration Advice**
-Wrap your `next.config.ts` with the plugin:
+Upgrade to Next.js 16 and wrap your `next.config.ts`:
 ```typescript
 import { withVanillaSplit } from "library/vanilla/withVanillaSplit"
 export default withVanillaSplit(nextConfig)
 ```
 
 
-
-
 # 2025-08-20
+
+## Fetching API Renames
+To avoid naming conflicts with Sanity's official exports, the library renamed its core fetching utilities.
+
+*   `sanityFetch` → `libraryFetch`
+*   `SanityLive` → `LibraryLive`
+
+**Migration Advice**
+The simplest path is to update your `sanity/lib/live.ts` to act as a bridge so you don't have to rename every usage in your app:
+```typescript
+export { libraryFetch as sanityFetch, LibraryLive as SanityLive } from "library/sanity/reusableFetch"
+```
 
 ## Grid API Change
 
@@ -68,8 +133,6 @@ export default withVanillaSplit(nextConfig)
 
 **Migration Advice**
 Replace the scalefully option with the corresponding source design sizes in your `layout.tsx` file.
-
-
 
 
 # 2025-06-09
