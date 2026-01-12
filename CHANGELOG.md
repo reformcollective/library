@@ -1,3 +1,14 @@
+# 2026-01-12
+
+## Removed outdated patches
+
+Removed patches that are unsafe or no longer needed.
+
+**Migration Advice**
+
+You should update the respective packages to their production versions
+
+
 # 2025-12-12
 
 ## Slug Resolvers (`resolveLink`)
