@@ -84,6 +84,21 @@ If this is too large an undertaking, or if several people are working in tandem 
 ```
 
 
+# 2025-12-03
+
+## Workflow Input Changes (`runOnGithubActions`)
+The library's CI workflows now require the `runOnGithubActions` input. This boolean controls which runner to use (GitHub Actions' `ubuntu-latest` vs Blacksmith's `blacksmith-4vcpu-ubuntu-2204`).
+
+The input `isSanity` has also been removed.
+
+**Migration Advice**
+Update your workflow callers to pass the new input:
+```yaml
+with:
+  runOnGithubActions: false  # use Blacksmith runners
+```
+
+
 # 2025-11-25
 
 ## `BackgroundVideo` File Move
