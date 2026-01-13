@@ -469,7 +469,8 @@ export const styled = ((
 
 	if (style === undefined) return restyled(component)
 	if (typeof style === "function")
-		return restyled(component, (...props) =>
+		// biome-ignore lint/suspicious/noExplicitAny: legacy, don't care
+		return restyled(component, (...props: any[]) =>
 			layerize(mergeStyles(style(...props))),
 		)
 	return restyled(component, layerize(mergeStyles(style)))
