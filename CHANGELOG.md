@@ -12,7 +12,9 @@ You should update the respective packages to their production versions
 # 2026-01-05
 
 ## Sanity Version Requirements
-The library now strictly enforces Sanity v5 and Next-Sanity v12. It also enforces that useCdn is `true`.
+The library now strictly enforces Sanity v5 and Next-Sanity v12.
+The library now enforces `useCdn: true`
+The `stega` option has been removed and replaced with `disableStega`.
 
 **Migration Advice**
 Upgrade your project's Sanity dependencies:
@@ -117,7 +119,7 @@ import { BackgroundVideo } from "library/videos/BackgroundVideo"
 # 2025-10-10
 
 ## Next.js 16 & `withVanillaSplit`
-Introduced the `withVanillaSplit` Next.js plugin to support the newer styling system. This plugin and the newer styling system rely on Turbopack features only available in **Next.js 16 or greater**.
+Introduced the `withVanillaSplit` Next.js plugin to support the newer styling system. This plugin and the newer styling system rely on Turbopack features only available in **Next.js 16 or greater**. You'll also need to install `@vanilla-extract/css`
 
 **Migration Advice**
 Upgrade to Next.js 16 and wrap your `next.config.ts`:
