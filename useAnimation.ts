@@ -92,7 +92,6 @@ export const useAnimation = <InputFn extends Creation>(
 
 	// devtools
 	const [hmrHash, setHmrHash] = useState<string | null>(null)
-	const scheduleRevert = useRef(false)
 
 	// inputs & options
 	const {
@@ -221,32 +220,26 @@ export const useAnimation = <InputFn extends Creation>(
 
 		latestCleanup.current = () => {
 			if (!newContext.isReverted) {
-				if (scheduleRevert.current) {
-					newContext.revert()
-				} else
-					switch (updateBehavior) {
-						case "kill":
-							newContext.kill()
-							runCleanups()
-							break
-						case "revert":
-							newContext.revert()
-							break
-						case "none":
-							break
-						default:
-							updateBehavior satisfies never
-					}
+				switch (updateBehavior) {
+					case "kill":
+						newContext.kill()
+						runCleanups()
+						break
+					case "revert":
+						newContext.revert()
+						break
+					case "none":
+						break
+					default:
+						updateBehavior satisfies never
+				}
 			}
 		}
 	}, finalDeps)
 
 	useHMR("postbuild", (hash) => {
-		scheduleRevert.current = true
 		setHmrHash(hash)
-	})
-	useEffect(() => {
-		scheduleRevert.current = false
+		context.revert()
 	})
 
 	return {
