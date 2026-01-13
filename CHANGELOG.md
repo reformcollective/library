@@ -12,7 +12,9 @@ You should update the respective packages to their production versions
 # 2026-01-05
 
 ## Sanity Version Requirements
-The library now strictly enforces Sanity v5 and Next-Sanity v12. It also enforces that useCdn is `true`.
+The library now strictly enforces Sanity v5 and Next-Sanity v12.
+The library now enforces `useCdn: true`
+The `stega` option has been removed and replaced with `disableStega`.
 
 **Migration Advice**
 Upgrade your project's Sanity dependencies:
@@ -84,6 +86,21 @@ If this is too large an undertaking, or if several people are working in tandem 
 ```
 
 
+# 2025-12-03
+
+## Workflow Input Changes (`runOnGithubActions`)
+The library's CI workflows now require the `runOnGithubActions` input. This boolean controls which runner to use (GitHub Actions' `ubuntu-latest` vs Blacksmith's `blacksmith-4vcpu-ubuntu-2204`).
+
+The input `isSanity` has also been removed.
+
+**Migration Advice**
+Update your workflow callers to pass the new input:
+```yaml
+with:
+  runOnGithubActions: false  # use Blacksmith runners
+```
+
+
 # 2025-11-25
 
 ## `BackgroundVideo` File Move
@@ -102,7 +119,7 @@ import { BackgroundVideo } from "library/videos/BackgroundVideo"
 # 2025-10-10
 
 ## Next.js 16 & `withVanillaSplit`
-Introduced the `withVanillaSplit` Next.js plugin to support the newer styling system. This plugin and the newer styling system rely on Turbopack features only available in **Next.js 16 or greater**.
+Introduced the `withVanillaSplit` Next.js plugin to support the newer styling system. This plugin and the newer styling system rely on Turbopack features only available in **Next.js 16 or greater**. You'll also need to install `@vanilla-extract/css`
 
 **Migration Advice**
 Upgrade to Next.js 16 and wrap your `next.config.ts`:
