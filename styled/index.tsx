@@ -322,7 +322,7 @@ function convertToResponsive(
 				}
 			} else {
 				/**
-				 * generate media queries for each breakpoint
+				 * generate media queries for each breakpoint.
 				 */
 				output[hashedMedia.fullWidth] = {
 					...((output[hashedMedia.fullWidth] ?? {}) as Record<string, string>),
