@@ -471,6 +471,8 @@ export const styled = ((
 	if (typeof style === "function")
 		// biome-ignore lint/suspicious/noExplicitAny: legacy, don't care
 		return restyled(component, (...props: any[]) =>
+			// biome-ignore lint/suspicious/noTsIgnore: me when I don't care
+			// @ts-ignore the types are obviously wrong here because we're casting all over
 			layerize(mergeStyles(style(...props))),
 		)
 	return restyled(component, layerize(mergeStyles(style)))
