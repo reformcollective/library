@@ -287,7 +287,7 @@ const replacePxInAst = (
 			// Post-process to fix any spacing issues with calc expressions
 			// This handles cases like "0calc(" -> "0 calc("
 			const fixedValue = newValue.replace(
-				/(\w|\d|%|px|em|rem|vw|vh|\)|"|\')calc\(/g,
+				/(\w|\d|%|px|em|rem|vw|vh|\)|"|')calc\(/g,
 				"$1 calc(",
 			)
 
