@@ -312,7 +312,7 @@ const parseWrappedCss = (cssText: string): csstree.CssNode | null => {
 
 const unwrapGeneratedCss = (generated: string): string => generated.slice(2, -1)
 
-const toInjectedStyleRule = (cssText: string) => ({
+const toInjectedStyleRule = (cssText: string): StyleRule => ({
 	[getInjectionKey()]: `ignored;${cssText}`,
 })
 
