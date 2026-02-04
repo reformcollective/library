@@ -71,9 +71,7 @@ const assetQuery = defineQuery(`
 `)
 
 const linkQuery = defineQuery(`
-	*[_id == $asset && defined(slug.current)][0] {
-		slug
-	}
+	*[_id == $asset && defined(slug.current)][0]
 `)
 
 export type DeepAssetMeta<T> = T extends { asset?: { _ref?: string } }
