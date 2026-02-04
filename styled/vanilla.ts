@@ -277,10 +277,10 @@ const replacePxInAst = (
 
 			const nodeValueAsString = csstree.generate(node.value)
 
-			// Replace px values and ensure proper spacing
+			// Replace px values
 			const newValue = nodeValueAsString.replaceAll(pixelRegex, (match) => {
 				const transformedValue = transform(Number.parseFloat(match))
-				// Ensure calc expressions have proper spacing when generated
+				// Transform px values (spacing for calc expressions is handled in post-processing below)
 				return transformedValue
 			})
 
@@ -312,7 +312,7 @@ const parseWrappedCss = (cssText: string): csstree.CssNode | null => {
 
 const unwrapGeneratedCss = (generated: string): string => generated.slice(2, -1)
 
-const toInjectedStyleRule = (cssText: string) => ({
+const toInjectedStyleRule = (cssText: string): StyleRule => ({
 	[getInjectionKey()]: `ignored;${cssText}`,
 })
 
