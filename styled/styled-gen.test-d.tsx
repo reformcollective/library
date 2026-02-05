@@ -273,7 +273,7 @@ test("type is preserved when className is unconventional", () => {
 		{
 			type?: string
 			onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
-			className?: string | ((state: { checked: boolean}) => string | undefined)
+			className?: string | ((state: { checked: boolean }) => string | undefined)
 		} & React.RefAttributes<HTMLInputElement>
 	>
 	const StyledInput = styled(CustomComponent, {
@@ -291,12 +291,12 @@ test("type is preserved when className is unconventional", () => {
 			<CustomComponent
 				type="text"
 				onChange={(_event) => null}
-				className={(state) => state.checked ? "enabled" : 'disabled'}
+				className={(state) => (state.checked ? "enabled" : "disabled")}
 			/>
 			<StyledInput
 				type="text"
 				onChange={(_event) => null}
-				className={(state) => state.checked ? "enabled" : 'disabled'}
+				className={(state) => (state.checked ? "enabled" : "disabled")}
 			/>
 		</>
 	)
