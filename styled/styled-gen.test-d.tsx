@@ -280,7 +280,6 @@ test("type is preserved when className is unconventional", () => {
 		base: [{ padding: "4px" }],
 	})
 
-	// same usage as Field.Control directly - type, placeholder, value, onChange, required, className
 	const _ok = (
 		<>
 			<CustomComponent
