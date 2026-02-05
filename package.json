@@ -28,7 +28,6 @@
 		"zod": "^4"
 	},
 	"devDependencies": {
-		"@base-ui/react": "^1.0.0",
 		"@biomejs/biome": "^2",
 		"@types/stylis": "^4",
 		"typescript": "^5",
