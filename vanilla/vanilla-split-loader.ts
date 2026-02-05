@@ -211,9 +211,16 @@ function analyzeStyledCalls(
 		const decl = stmt.declarationList.declarations.find(
 			(d) => ts.isIdentifier(d.name) && d.name.text === node.name,
 		)
-		if (!decl?.initializer || !ts.isCallExpression(decl.initializer)) continue
+		if (!decl?.initializer) continue
 
-		const call = decl.initializer
+		// unwrap type assertion: styled(...) as typeof X
+		let innerExpr = decl.initializer
+		if (ts.isAsExpression(innerExpr)) {
+			innerExpr = innerExpr.expression
+		}
+		if (!ts.isCallExpression(innerExpr)) continue
+
+		const call = innerExpr
 		const args = call.arguments
 		const firstArg = args[0]
 
@@ -253,17 +260,33 @@ function analyzeStyledCalls(
 				? `export const ${rawName} = styled("div", ${restArgsText}, ${JSON.stringify(node.name)});`
 				: `export const ${rawName} = styled("div");`
 
-			// Extract the component identifier from the first arg
-			// Handles: Component, Component as Type, Component as typeof Component<T>
+			// Extract the component identifier from the first arg for exclusion from virtual deps.
+			// Handles: Component, Menu.Trigger, Thing.Menu.Trigger, Component as Type
 			let excludedDep: string | undefined
 			if (firstArg) {
 				if (ts.isIdentifier(firstArg)) {
 					excludedDep = firstArg.text
+				} else if (ts.isPropertyAccessExpression(firstArg)) {
+					// compound component: Menu.Trigger, Thing.Menu.Trigger - exclude root
+					let expr: ts.Expression = firstArg
+					while (ts.isPropertyAccessExpression(expr)) {
+						expr = expr.expression
+					}
+					if (ts.isIdentifier(expr)) {
+						excludedDep = expr.text
+					}
 				} else if (ts.isAsExpression(firstArg)) {
-					// Handle "Component as typeof Component<T>"
 					const expr = firstArg.expression
 					if (ts.isIdentifier(expr)) {
 						excludedDep = expr.text
+					} else if (ts.isPropertyAccessExpression(expr)) {
+						let inner: ts.Expression = expr
+						while (ts.isPropertyAccessExpression(inner)) {
+							inner = inner.expression
+						}
+						if (ts.isIdentifier(inner)) {
+							excludedDep = inner.text
+						}
 					}
 				}
 			}
@@ -599,11 +622,20 @@ function buildOriginalStatements(
 			const decl = stmt.declarationList.declarations.find(
 				(d) => ts.isIdentifier(d.name) && d.name.text === node.name,
 			)
-			if (decl?.initializer && ts.isCallExpression(decl.initializer)) {
-				const firstArg = decl.initializer.arguments[0]
+			if (!decl?.initializer) continue
 
-				// Create: const Name = withComponent(FirstArg, Name___raw)
-				const newInit = ts.factory.createCallExpression(
+			let innerExpr = decl.initializer
+			let typeAssertion: ts.TypeNode | undefined
+			if (ts.isAsExpression(innerExpr)) {
+				typeAssertion = innerExpr.type
+				innerExpr = innerExpr.expression
+			}
+
+			if (ts.isCallExpression(innerExpr)) {
+				const firstArg = innerExpr.arguments[0]
+
+				// Create: const Name = withComponent(FirstArg, Name___raw) [as Type]
+				let newInit: ts.Expression = ts.factory.createCallExpression(
 					ts.factory.createIdentifier("withComponent"),
 					undefined,
 					[
@@ -611,6 +643,9 @@ function buildOriginalStatements(
 						ts.factory.createIdentifier(transform.rawName),
 					],
 				)
+				if (typeAssertion) {
+					newInit = ts.factory.createAsExpression(newInit, typeAssertion)
+				}
 
 				const newDecl = ts.factory.updateVariableDeclaration(
 					decl,

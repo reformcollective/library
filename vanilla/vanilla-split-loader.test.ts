@@ -596,6 +596,129 @@ export const Button = styled(BaseButton, { color: "red" })`
 			// BaseButton import should stay in original
 			expect(result).toContain('import BaseButton from "./BaseButton"')
 		})
+
+		it("should handle styled(Menu.Trigger) compound component", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { styled } from "library/styled/alpha"
+import * as Menu from "@radix-ui/react-menu"
+
+const StyledMenuTrigger = styled(Menu.Trigger, { color: "red" })`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			expect(result).toContain("withComponent")
+			expect(result).toContain("StyledMenuTrigger___raw")
+			expect(result).toContain("Menu.Trigger")
+			expect(result).toContain('from "@radix-ui/react-menu"')
+		})
+
+		it("should handle styled(Menu.Trigger) with type assertion", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { styled } from "library/styled/alpha"
+import * as Menu from "@radix-ui/react-menu"
+
+const StyledMenuTrigger = styled(Menu.Trigger, { color: "red" }) as typeof Menu.Trigger`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			expect(result).toContain("withComponent")
+			expect(result).toContain("StyledMenuTrigger___raw")
+			expect(result).toContain("Menu.Trigger")
+			expect(result).toContain("as typeof Menu.Trigger")
+			expect(result).toContain('from "@radix-ui/react-menu"')
+		})
+
+		it("should handle styled(Thing.Menu.Trigger) with type assertion", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { styled } from "library/styled/alpha"
+import * as Thing from "./thing"
+
+const StyledThingMenuTrigger = styled(Thing.Menu.Trigger, { color: "red" }) as typeof Thing.Menu.Trigger`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			expect(result).toContain("withComponent")
+			expect(result).toContain("StyledThingMenuTrigger___raw")
+			expect(result).toContain("Thing.Menu.Trigger")
+			expect(result).toContain("as typeof Thing.Menu.Trigger")
+			expect(result).toContain('from "./thing"')
+		})
+
+		it("should handle styled(Thing.Menu.Trigger) nested compound component", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { styled } from "library/styled/alpha"
+import * as Thing from "./thing"
+
+const StyledThingMenuTrigger = styled(Thing.Menu.Trigger, { color: "red" })`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			expect(result).toContain("withComponent")
+			expect(result).toContain("StyledThingMenuTrigger___raw")
+			expect(result).toContain("Thing.Menu.Trigger")
+			expect(result).toContain('from "./thing"')
+		})
+
+		it("should handle StyledInput pattern: styled(Field.Control, f.responsive(css)) as typeof Field.Control", async () => {
+			await using tmpDir = new TempDir()
+			const source = `"use client";
+
+import { css, f, styled } from "library/styled/alpha";
+import { colors } from "app/styles/colors.css";
+import { Field } from "@base-ui/react/field";
+
+function FormStep() {
+  return (
+    <Field.Root>
+      <StyledInput type="text" placeholder="test" />
+    </Field.Root>
+  );
+}
+
+const StyledInput = styled(Field.Control, {
+  base: [
+    f.responsive(css\`
+      color: \${colors.pureWhite};
+    \`),
+  ],
+}) as typeof Field.Control;`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/form-step.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			expect(result).toContain("withComponent")
+			expect(result).toContain("StyledInput___raw")
+			expect(result).toContain("Field.Control")
+			expect(result).toContain("as typeof Field.Control")
+			expect(result).toContain('from "@base-ui/react/field"')
+			expect(result).toContain("<StyledInput")
+			// styled/css/f/colors move to virtual; Field stays in original for withComponent
+			expect(result).not.toContain('from "library/styled/alpha"')
+		})
 	})
 
 	describe("error handling", () => {
