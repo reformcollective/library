@@ -1,4 +1,5 @@
 import { style } from "@vanilla-extract/css"
+import { Field } from "@base-ui/react/field"
 import { styled } from "library/styled/alpha"
 import { Component, type ComponentProps, type FC } from "react"
 import { expectTypeOf, test } from "vitest"
@@ -263,6 +264,55 @@ test("component targets must accept className", () => {
 test("unrelated DOM props still forward", () => {
 	const Btn = styled("button", { base: [{}] } as const)
 	const _ok = <Btn disabled aria-label="x" />
+})
+
+// ---------- Base UI Field.Control + styled ----------
+
+test("styled(Field.Control) accepts input props when used with type assertion", () => {
+	const StyledInput = styled(Field.Control, {
+		base: [{ padding: "4px" }],
+	}) as typeof Field.Control
+
+	const handleChange = (_key: string, _value: string) => {}
+
+	const _ok = (
+		<Field.Root>
+			<StyledInput
+				type="text"
+				placeholder="Enter Number"
+				value=""
+				onChange={(e) => handleChange("posPerMonth", e.target.value)}
+				required
+				className="custom"
+			/>
+		</Field.Root>
+	)
+})
+
+test("styled(Field.Control) without type assertion: input props work at usage site", () => {
+	const StyledInput = styled(Field.Control, {
+		base: [{ padding: "4px" }],
+	})
+
+	// biome-ignore lint/suspicious/noExplicitAny: used for test
+	expectTypeOf(StyledInput).not.toExtend<any>()
+	expectTypeOf(StyledInput).toExtend<typeof Field.Control>()
+
+	const handleChange = (_key: string, _value: string) => {}
+
+	// same usage as Field.Control directly - type, placeholder, value, onChange, required, className
+	const _ok = (
+		<Field.Root>
+			<StyledInput
+				type="text"
+				placeholder="Enter Number"
+				value=""
+				onChange={(e) => handleChange("posPerMonth", e.target.value)}
+				required
+				className="custom"
+			/>
+		</Field.Root>
+	)
 })
 
 // ---------- generics preservation with variants ----------
