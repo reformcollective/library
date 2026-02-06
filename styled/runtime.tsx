@@ -78,11 +78,11 @@ export function runtimeStyled({
 		const mergedClassName =
 			typeof className === "function"
 				? (state: unknown) => cx(resolved, className(state))
-				: cx(resolved, className)
+				: // @ts-expect-error
+				  cx(resolved, className)
 		return (
 			// @ts-expect-error
 			<Render
-				// @ts-expect-error
 				className={mergedClassName}
 				// @ts-expect-error
 				style={{ ...style, ...tokenStyle }}
