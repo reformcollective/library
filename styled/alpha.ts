@@ -26,7 +26,7 @@ export function compileTime<T>(getValue: () => T): T {
 // Overload: intrinsic tag (e.g., 'div')
 export function styled<
 	Tag extends keyof JSX.IntrinsicElements,
-	_Props extends { className?: string },
+	_Props extends { className?: unknown },
 	const Variants extends VariantsSchema = never,
 	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,
@@ -41,7 +41,7 @@ export function styled<
 // Overload: component target (function)
 export function styled<
 	_Tag extends keyof JSX.IntrinsicElements,
-	Props extends { className?: string },
+	Props extends { className?: unknown },
 	const Variants extends VariantsSchema = never,
 	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,
@@ -54,7 +54,7 @@ export function styled<
 // Overload: component target (class)
 export function styled<
 	_Tag extends keyof JSX.IntrinsicElements,
-	Props extends { className?: string },
+	Props extends { className?: unknown },
 	const Variants extends VariantsSchema = never,
 	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,
@@ -69,7 +69,7 @@ export function styled<
 // the last overload
 export function styled<
 	Tag extends keyof JSX.IntrinsicElements,
-	Props extends { className?: string },
+	Props extends { className?: unknown },
 	const Variants extends VariantsSchema = never,
 	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,
@@ -82,7 +82,7 @@ export function styled<
 // Implementation
 export function styled<
 	Tag extends keyof JSX.IntrinsicElements,
-	Props extends { className?: string },
+	Props extends { className?: unknown },
 	const Variants extends VariantsSchema = never,
 	const Tokens extends TokensSchema = never,
 	const DefaultVariants extends DefaultVariantsSchema<Variants> = never,

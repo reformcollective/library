@@ -104,8 +104,11 @@ export type StyledOutProps<
 		: VariantProps<Variants, DefaultVariants>) &
 	([Tokens] extends [never] ? unknown : TokenProps<Tokens>)
 
+/** className from Props is preserved so Base UI-style function className works */
 export type StyledComponent<Props> = (
-	props: Props & { className?: string },
+	props: Props extends { className?: infer C }
+		? Omit<Props, "className"> & { className?: C }
+		: Props & { className?: string },
 ) => JSX.Element
 
 export type FunctionComponent<Props> = (
