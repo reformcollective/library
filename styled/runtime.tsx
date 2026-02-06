@@ -79,7 +79,7 @@ export function runtimeStyled({
 			typeof className === "function"
 				? (state: unknown) => cx(resolved, className(state))
 				: // @ts-expect-error
-				  cx(resolved, className)
+					cx(resolved, className)
 		return (
 			// @ts-expect-error
 			<Render
