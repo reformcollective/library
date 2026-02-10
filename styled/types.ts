@@ -108,7 +108,7 @@ export type StyledOutProps<
 export type StyledComponent<Props> = (
 	props: Props extends { className?: infer C }
 		? Omit<Props, "className"> & { className?: C }
-		: Props & { className?: string },
+		: never,
 ) => JSX.Element
 
 export type FunctionComponent<Props> = (

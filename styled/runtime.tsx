@@ -94,7 +94,7 @@ export function runtimeStyled({
 	}
 
 	Component.toString = () => {
-		return cvaBase
+		return `.${cvaBase}`
 	}
 
 	return Component
