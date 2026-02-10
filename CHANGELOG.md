@@ -1,3 +1,16 @@
+
+
+# 2026-02-10
+
+## Component.toString returns className with leading period
+
+`Component.toString` now returns the className with a period to align with styled-components, e.g. `".generated-class"`.
+
+**Migration Advice**
+
+Audit your codebases for usage of `toString` or template literals like `` `${MyComponent}` `` to ensure you don't have any usage in the previous format.
+
+
 # 2026-01-12
 
 ## Removed outdated patches
