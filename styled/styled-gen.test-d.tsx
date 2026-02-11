@@ -265,6 +265,13 @@ test("unrelated DOM props still forward", () => {
 	const _ok = <Btn disabled aria-label="x" />
 })
 
+// ---------- selector via toString() ----------
+
+test("styled components return a class selector when stringified", () => {
+	const WrapperWithToString = styled("div", "")
+	expectTypeOf(WrapperWithToString.toString()).toExtend<string>()
+})
+
 // ---------- Base UI Field.Control + styled ----------
 
 test("type is preserved when className is unconventional", () => {
