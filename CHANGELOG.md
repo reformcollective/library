@@ -10,6 +10,35 @@
 
 Audit your codebases for usage of `toString` or template literals like `` `${MyComponent}` `` to ensure you don't have any usage in the previous format.
 
+## Removed `within` block
+
+The styled API no longer supports the `within` option for scoped child selectors. Use arbitrary selectors inside **string/template styles only** (e.g. `css\`...\`` or string entries in `base`/variant arrays).
+
+**Migration Advice**
+
+Replace `within` blocks with selector syntax inside string or template style blocks. Object-style rules only accept vanilla-extract style (camelCase CSS properties); for any descendant or arbitrary selectors, use string/template styles:
+
+```ts
+// before (within is removed)
+within: {
+  "& > *": { marginBottom: 10 },
+  "svg": { fill: "currentColor" },
+}
+
+// after — use string/template styles only for selectors
+base: [
+  { display: "grid" },
+  css`
+    & > * {
+      margin-bottom: 10px;
+    }
+    svg {
+      fill: currentColor;
+    }
+  `,
+]
+```
+
 
 # 2026-01-12
 

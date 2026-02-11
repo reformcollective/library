@@ -325,13 +325,8 @@ const AnimationWrapper = styled("div", {
 				display: grid;
 				place-items: ${alignment};
 				place-content: ${alignment};
-			`),
-		},
-	},
-	within: {
-		"> *": {
-			"@layer": {
-				[library]: unresponsive(css`
+
+				> * {
 					grid-area: 1 / 1 / 2 / 2;
 					min-width: 100%;
 					min-height: 100%;
@@ -342,8 +337,8 @@ const AnimationWrapper = styled("div", {
 					&:empty {
 						pointer-events: none;
 					}
-				`),
-			},
+				}
+			`),
 		},
 	},
 	tokens: { alignment },

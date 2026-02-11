@@ -332,18 +332,11 @@ const Row = styled("div", [
 				display: flex;
 				width: 100%;
 				overflow: hidden;
+
+				& > * {
+					flex-shrink: 0;
+				}
 			`),
-		},
-	},
-	{
-		within: {
-			"& > *": {
-				"@layer": {
-					[library]: fresponsive(css`
-						flex-shrink: 0;
-					`),
-				},
-			},
 		},
 	},
 ])
@@ -361,18 +354,11 @@ const TwoButtons = styled("div", [
 const OneButton = styled(TwoButtons, [
 	{
 		"@layer": {
-			[library]: fresponsive(css``),
-		},
-	},
-	{
-		within: {
-			"& > *:first-child": {
-				"@layer": {
-					[library]: fresponsive(css`
-						scale: -1 1;
-					`),
-				},
-			},
+			[library]: fresponsive(css`
+				& > *:first-child {
+					scale: -1 1;
+				}
+			`),
 		},
 	},
 ])

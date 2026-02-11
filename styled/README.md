@@ -92,12 +92,6 @@ const Card = styled("article", {
 		// maps the `rotation` prop to a css variable
 		rotation: { token: createVar(), unit: "deg" },
 	},
-
-	// 6. within (scoped arbitrary child selectors)
-	within: {
-		"& *:hover": { transform: "translateY(-2px)" },
-		h2: { fontSize: 24, marginBottom: 8 },
-	},
 })
 ```
 
@@ -191,33 +185,23 @@ const Rotator = styled("div", {
 <Rotator angle={45} scale={1.2} />
 ```
 
-### within (targeting children)
+### arbitrary selectors
 
-standard style blocks (like `base` or `variants`) **must** target the component itself using `&`.
-
-✅ **valid in `base`/`variants`**:
-
-- `&:hover`
-- `html[data-dark] &`
-- `${Component} > &`
-
-❌ **invalid in `base`/`variants`** (must use `within` to write these):
-
-- `& svg`
-- `& > *:hover`
-
-use `within` when you need to style descendants. these selectors are automatically scoped to the component's container to prevent leakage. you can also use `within` in `variants` and `compoundVariants`.
+in **string styles** (e.g. `css\`...\`` or string entries in style arrays) you can use arbitrary selectors—descendant selectors, pseudo-elements, child combinators, etc. **Object styles** follow the rules of vanilla extract.
 
 ```ts
-within: {
-  "& > *": { marginBottom: 10 }, // direct children
-  "svg": { fill: "currentColor" } // descendant
-}
+base: [
+  css`
+    & > * {
+      color: orange;
+    }
+  `,
+]
 ```
 
 ### referencing components (`toString`)
 
-styled components implement a `toString` method that returns their unique class selector (e.g., `Box_root__1x2y3z`). this allows you to target one component from within another's styles.
+styled components implement a `toString` method that returns their unique class selector (e.g. `.Icon__1x2y3z`).
 
 ```tsx
 const Icon = styled("span", {
@@ -226,12 +210,11 @@ const Icon = styled("span", {
 
 const Button = styled("button", {
 	base: [
-		{
-			// using template literal interpolation calls .toString() automatically
-			[`&:hover .${Icon}`]: {
-				opacity: 1,
-			},
-		},
+		css`
+			&:hover ${Icon} {
+				opacity: 1;
+			}
+		`,
 	],
 })
 ```
