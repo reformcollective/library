@@ -1,15 +1,8 @@
-import type {
-	createVar,
-	GlobalStyleRule,
-	StyleRule as PlainRule,
-} from "@vanilla-extract/css"
+import type { createVar, StyleRule as PlainRule } from "@vanilla-extract/css"
 import type { JSX, ReactNode } from "react"
 
-type GlobalStyleRules = GlobalStyleRule | GlobalStyleRules[]
-export type WithinBlock = Record<string, GlobalStyleRules>
-export type WithinRule = PlainRule & { within?: WithinBlock }
+export type StyleRules = PlainRule | string | StyleRules[]
 
-export type StyleRules = WithinRule | string | StyleRules[]
 type CompoundVariant<Props> = Props & {
 	base: StyleRules
 }
@@ -64,8 +57,6 @@ export type GenericConfig<
 > = {
 	/** The base style rule applied to the component. */
 	base?: StyleRules
-	/** Component-specific selectors, e.g., { '&:hover': { ... } } */
-	within?: WithinBlock
 	/** Variant definitions. */
 	variants?: Variants
 	/** Default values for variants. */
