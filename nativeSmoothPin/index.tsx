@@ -11,6 +11,10 @@ export default function nativeSmoothPin({
 	goopLevel?: number
 	goopType?: "start" | "end" | "both"
 	top: string
+	/**
+	 * add container-type: size to the element that contains your sticky element
+	 * this let's us measure the size of that element in CSS.
+	 */
 	containerAware?: boolean
 }) {
 	const top = Number.parseFloat(topInput) === 0 ? "0.1px" : topInput
