@@ -16,15 +16,21 @@ export default function nativeSmoothPin({
 	const top = Number.parseFloat(topInput) === 0 ? "0.1px" : topInput
 
 	const negativeTop = Number.parseFloat(top) <= 0
-	if (negativeTop && !containerAware) {
-		throw new Error(
-			"nativeSmoothPin: top must be greater than 0 when containerAware is false",
-		)
+	if (negativeTop) {
+		if (!containerAware)
+			console.error(
+				"nativeSmoothPin: top must be greater than 0 when containerAware is false",
+			)
+	} else {
+		if (containerAware)
+			console.warn(
+				"nativeSmoothPin: containerAware is true, but you don't need it",
+			)
 	}
 
-	if (negativeTop) {
+	if (negativeTop && goopType !== "start") {
 		console.warn(
-			"nativeSmoothPin: top is less than or equal to 0, nativeSmoothPin will not work if your sticky element is taller than the viewport",
+			"nativeSmoothPin: top is less than or equal to 0, nativeSmoothPin will not work for 'end' if your sticky element is taller than the viewport",
 		)
 	}
 
@@ -42,19 +48,20 @@ export default function nativeSmoothPin({
 				? css`
 					/* stylelint-disable-next-line plugin/use-baseline */
 					animation-range:
-						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) entry-crossing
-							calc(100dvh - ${top} + ${goopLevel}px),
-						entry-crossing calc(100vh + 100cqh - ${top} - 100% - ${goopLevel}px)
-							entry-crossing
-							calc(100vh + 100cqh - ${top} - 100% + ${goopLevel}px);
+						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) 
+						entry-crossing calc(100dvh - ${top} + ${goopLevel}px),
+
+						entry calc(100vh + 100cqh - ${top} - 100% - ${goopLevel}px)
+						entry calc(100vh + 100cqh - ${top} - 100% + ${goopLevel}px);
 				`
 				: css`
 					/* stylelint-disable-next-line plugin/use-baseline */
 					animation-range:
-						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) entry-crossing
-							calc(100dvh - ${top} + ${goopLevel}px),
-						exit-crossing calc(calc(-1 * ${top}) - ${goopLevel}px) exit-crossing
-							calc(calc(-1 * ${top}) + ${goopLevel}px);
+						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) 
+						entry-crossing calc(100dvh - ${top} + ${goopLevel}px),
+
+						exit-crossing calc(calc(-1 * ${top}) - ${goopLevel}px) 
+						exit-crossing calc(calc(-1 * ${top}) + ${goopLevel}px);
 				`
 		}
 	`
