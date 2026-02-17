@@ -246,3 +246,38 @@ export const youtube = defineType({
 		}),
 	],
 })
+
+export const video = defineType({
+	name: "video",
+	type: "object",
+	title: "Video",
+	icon: PlayIcon,
+	fields: [
+		defineField({
+			name: "sourceType",
+			type: "string",
+			title: "Source Type",
+			options: {
+				list: [
+					{ title: "URL (YouTube, Vimeo, Wistia, etc.)", value: "url" },
+					{ title: "Mux Upload", value: "mux" },
+				],
+				layout: "radio",
+			},
+			initialValue: "url",
+		}),
+		defineField({
+			name: "url",
+			type: "url",
+			title: "Video URL",
+			description: "YouTube, Vimeo, Wistia, or any direct video URL",
+			hidden: ({ parent }) => parent?.sourceType !== "url",
+		}),
+		defineField({
+			name: "muxVideo",
+			type: "mux.video",
+			title: "Mux Video",
+			hidden: ({ parent }) => parent?.sourceType !== "mux",
+		}),
+	],
+})
