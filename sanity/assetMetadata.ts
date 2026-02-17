@@ -117,10 +117,12 @@ export const fetchAssetMeta = async <InputType>(
 
 			const meta = "metadata" in asset ? asset.metadata : null
 
-			const cleanPlaybackId = asset?._type === "mux.videoAsset" && asset.playbackId
-				? stegaClean(asset.playbackId)
-				: undefined
-			const thumbTime = asset?._type === "mux.videoAsset" ? asset.thumbTime : undefined
+			const cleanPlaybackId =
+				asset?._type === "mux.videoAsset" && asset.playbackId
+					? stegaClean(asset.playbackId)
+					: undefined
+			const thumbTime =
+				asset?._type === "mux.videoAsset" ? asset.thumbTime : undefined
 			const videoThumbnailUrl = cleanPlaybackId
 				? `https://image.mux.com/${cleanPlaybackId}/thumbnail.jpg${thumbTime != null ? `?time=${thumbTime}` : ""}`
 				: undefined
