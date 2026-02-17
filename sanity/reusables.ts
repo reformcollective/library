@@ -269,7 +269,7 @@ const videoSourceValidation: Record<string, RegExp> = {
 }
 
 const videoSourceTypes = [
-	{ title: "Mux Video", value: "mux" },
+	{ title: "Upload a File", value: "mux" },
 	{ title: "YouTube", value: "youtube" },
 	{ title: "Vimeo", value: "vimeo" },
 	{ title: "Wistia", value: "wistia" },

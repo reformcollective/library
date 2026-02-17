@@ -6,29 +6,26 @@ import type { Video } from "sanity.types"
 
 type VideoEmbedProps = {
 	className?: string
-	url?: string | null
-	playbackId?: string | null
-	thumbnail?: string | null
+	video: DeepAssetMeta<Video>
 }
 
-/**
- * Extract VideoEmbed props from a generic `video` schema object.
- */
-export function getVideoProps(video: DeepAssetMeta<Video>): VideoEmbedProps {
+function getVideoSrc(video: DeepAssetMeta<Video>) {
 	if (video.sourceType === "mux") {
+		const playbackId = video.muxVideo?.data?.playbackId
 		return {
-			playbackId: video.muxVideo?.data?.playbackId,
+			src: playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : null,
 			thumbnail: video.muxVideo?.data?.videoThumbnailUrl,
 		}
 	}
-	return { url: video.url }
+	return { src: video.url, thumbnail: null }
 }
 
 /**
  * A React component for playing a variety of URLs, including file paths, HLS, DASH, YouTube, Vimeo, Wistia and Mux.
+ * Accepts a Sanity `video` schema object directly.
  */
-export function VideoEmbed({ className, url, playbackId, thumbnail }: VideoEmbedProps) {
-	const src = url || (playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : null)
+export function VideoEmbed({ className, video }: VideoEmbedProps) {
+	const { src, thumbnail } = getVideoSrc(video)
 	if (!src) return null
 
 	return (
@@ -44,7 +41,6 @@ const Embed = styled(
 	"div",
 	fresponsive(css`
 		width: 100%;
-		aspect-ratio: 16 / 9;
 
 		> div {
 			width: 100% !important;
