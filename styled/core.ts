@@ -1,13 +1,7 @@
-import { globalStyle, style } from "@vanilla-extract/css"
+import { style } from "@vanilla-extract/css"
 import { addFunctionSerializer } from "@vanilla-extract/css/functionSerializer"
 import { type RuntimeArgs, runtimeStyled } from "./runtime"
-import type {
-	StyledInput,
-	StyledOptions,
-	StyleRules,
-	WithinBlock,
-	WithinRule,
-} from "./types"
+import type { StyledInput, StyledOptions, StyleRules } from "./types"
 
 // normalize input into a config object
 function isStyledOptions(input: StyledInput): input is StyledOptions {
@@ -19,7 +13,6 @@ function isStyledOptions(input: StyledInput): input is StyledOptions {
 			"defaults" in input ||
 			"defaultVariants" in input ||
 			"tokens" in input ||
-			"within" in input ||
 			"compoundVariants" in input ||
 			"compounds" in input) &&
 		Object.keys(input).find(
@@ -29,7 +22,6 @@ function isStyledOptions(input: StyledInput): input is StyledOptions {
 				key !== "defaults" &&
 				key !== "defaultVariants" &&
 				key !== "tokens" &&
-				key !== "within" &&
 				key !== "compoundVariants" &&
 				key !== "compounds",
 		) === undefined
@@ -51,63 +43,9 @@ function flattenArray<T>(input: T): InfinitelyFlattened<T>[] {
 	) as InfinitelyFlattened<T>[]
 }
 
-// pull any `within` blocks off a style object (non-destructive)
-function extractWithinFromObject(rule: WithinRule) {
-	return rule.within
-}
-
-// remove `within` from a style object (non-destructive)
-function stripWithin(rule: WithinRule): Exclude<WithinRule, "within"> {
-	const out = {}
-	for (const [k, v] of Object.entries(rule || {})) {
-		if (k === "within") continue
-		// @ts-expect-error - we know k is a string
-		out[k] = v
-	}
-	return out
-}
-
-function normalizeWithinSelector(rootSelector: string, key: string) {
-	const trimmed = String(key ?? "").trim()
-	if (!trimmed) return rootSelector
-	// replace ALL occurrences of '&' with the root selector (not just leading)
-	if (trimmed.includes("&")) return trimmed.replaceAll("&", rootSelector)
-	// pseudo starting tokens should attach to root without a space
-	if (trimmed.startsWith(":")) return `${rootSelector}${trimmed}`
-	// default: scope the selector under the root with a space
-	return `${rootSelector} ${trimmed}`
-}
-
-function emitWithin(anchorClass: string, entries?: WithinBlock) {
-	if (!entries) return
-
-	for (const [rawKey, rawStyle] of Object.entries(entries)) {
-		const selector = normalizeWithinSelector(anchorClass, rawKey)
-		for (const block of flattenArray(rawStyle)) {
-			if (!block) continue
-			globalStyle(selector, block)
-		}
-	}
-}
-
-// generate a classname from StyleRules and emit any `within` blocks as global styles
 function classFromStyleRules(input: StyleRules | undefined, debugId?: string) {
 	const flatInput = flattenArray(input)
-	const className = style(
-		flatInput
-			.map((x) => (typeof x === "object" ? stripWithin(x) : x))
-			.filter(Boolean),
-		debugId,
-	)
-
-	const withinBlocks = flatInput
-		.filter((x) => typeof x === "object")
-		.map(extractWithinFromObject)
-	for (const block of withinBlocks) {
-		emitWithin(className, block)
-	}
-
-	return className
+	return style(flatInput.filter(Boolean), debugId)
 }
 
 function processTokens(tokens: StyledOptions["tokens"]) {
@@ -138,9 +76,8 @@ export function styledCore(tag: string, input: StyledInput, debugId?: string) {
 		config.base,
 		debugId ? debugId : undefined,
 	)
-	if (config.within) emitWithin(baseClass, config.within)
 
-	// 2) variants → classes + emit variant-level within anchored to base + variant
+	// 2) variants → classes
 	const cvaVariants: Record<string, Record<string, string | null>> = {}
 	for (const [variantName, options] of Object.entries(config.variants ?? {})) {
 		const compiled: Record<string, string> = {}
@@ -154,7 +91,7 @@ export function styledCore(tag: string, input: StyledInput, debugId?: string) {
 		cvaVariants[variantName] = compiled
 	}
 
-	// 2.1) compoundVariants → classes + emit compound-level within anchored to base + variant
+	// 2.1) compoundVariants → classes
 	const compounds = config.compoundVariants
 		?.map((compound, index) => {
 			if (!compound?.base) return compound

@@ -75,11 +75,15 @@ export function runtimeStyled({
 		const Render = props.as ?? tag
 		// @ts-expect-error
 		const resolved = resolve(props)
+		const mergedClassName =
+			typeof className === "function"
+				? (state: unknown) => cx(resolved, className(state))
+				: // @ts-expect-error
+					cx(resolved, className)
 		return (
 			// @ts-expect-error
 			<Render
-				// @ts-expect-error
-				className={cx(resolved, className)}
+				className={mergedClassName}
 				// @ts-expect-error
 				style={{ ...style, ...tokenStyle }}
 				{...domProps}
@@ -90,7 +94,7 @@ export function runtimeStyled({
 	}
 
 	Component.toString = () => {
-		return cvaBase
+		return `.${cvaBase}`
 	}
 
 	return Component

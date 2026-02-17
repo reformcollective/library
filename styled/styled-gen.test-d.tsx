@@ -265,6 +265,50 @@ test("unrelated DOM props still forward", () => {
 	const _ok = <Btn disabled aria-label="x" />
 })
 
+// ---------- selector via toString() ----------
+
+test("styled components return a class selector when stringified", () => {
+	const WrapperWithToString = styled("div", "")
+	expectTypeOf(WrapperWithToString.toString()).toExtend<string>()
+})
+
+// ---------- Base UI Field.Control + styled ----------
+
+test("type is preserved when className is unconventional", () => {
+	const CustomComponent = (() =>
+		null) as unknown as React.ForwardRefExoticComponent<
+		{
+			type?: string
+			onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+			className?: string | ((state: { checked: boolean }) => string | undefined)
+		} & React.RefAttributes<HTMLInputElement>
+	>
+	const StyledInput = styled(CustomComponent, {
+		base: [{ padding: "4px" }],
+	})
+
+	const _ok = (
+		<>
+			<CustomComponent
+				type="text"
+				onChange={(_event) => null}
+				className="custom"
+			/>
+			<StyledInput type="text" onChange={(_event) => null} className="custom" />
+			<CustomComponent
+				type="text"
+				onChange={(_event) => null}
+				className={(state) => (state.checked ? "enabled" : "disabled")}
+			/>
+			<StyledInput
+				type="text"
+				onChange={(_event) => null}
+				className={(state) => (state.checked ? "enabled" : "disabled")}
+			/>
+		</>
+	)
+})
+
 // ---------- generics preservation with variants ----------
 
 test.fails("generic types are preserved with variants config", () => {

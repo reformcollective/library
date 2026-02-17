@@ -276,14 +276,25 @@ const replacePxInAst = (
 			if (node.type !== "Declaration") return
 
 			const nodeValueAsString = csstree.generate(node.value)
-			const newValue = nodeValueAsString.replaceAll(pixelRegex, (match) =>
-				transform(Number.parseFloat(match)),
+
+			// Replace px values
+			const newValue = nodeValueAsString.replaceAll(pixelRegex, (match) => {
+				const transformedValue = transform(Number.parseFloat(match))
+				// Transform px values (spacing for calc expressions is handled in post-processing below)
+				return transformedValue
+			})
+
+			// Post-process to fix any spacing issues with calc expressions
+			// This handles cases like "0calc(" -> "0 calc("
+			const fixedValue = newValue.replace(
+				/(\w|\d|%|px|em|rem|vw|vh|\)|"|')calc\(/g,
+				"$1 calc(",
 			)
 
-			if (newValue !== nodeValueAsString) {
+			if (fixedValue !== nodeValueAsString) {
 				node.value = {
 					type: "Raw",
-					value: newValue,
+					value: fixedValue,
 				}
 			}
 		},
@@ -301,10 +312,9 @@ const parseWrappedCss = (cssText: string): csstree.CssNode | null => {
 
 const unwrapGeneratedCss = (generated: string): string => generated.slice(2, -1)
 
-const toInjectedStyleRule = (cssText: string) =>
-	({
-		[getInjectionKey()]: `ignored;${cssText}`,
-	}) as unknown as StyleRule
+const toInjectedStyleRule = (cssText: string): StyleRule => ({
+	[getInjectionKey()]: `ignored;${cssText}`,
+})
 
 // =============================================================================
 // Calc Engine
