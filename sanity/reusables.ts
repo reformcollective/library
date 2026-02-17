@@ -1,4 +1,12 @@
 import { PlayIcon } from "@sanity/icons"
+import {
+	MATCH_URL_YOUTUBE,
+	MATCH_URL_VIMEO,
+	MATCH_URL_WISTIA,
+	MATCH_URL_SPOTIFY,
+	MATCH_URL_TWITCH,
+	MATCH_URL_TIKTOK,
+} from "react-player/patterns"
 import type libraryConfig from "app/libraryConfig"
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
@@ -247,6 +255,30 @@ export const youtube = defineType({
 	],
 })
 
+/**
+ * URL validation patterns sourced from react-player.
+ * @see https://github.com/cookpete/react-player/blob/master/src/patterns.ts
+ */
+const videoSourceValidation: Record<string, RegExp> = {
+	youtube: MATCH_URL_YOUTUBE,
+	vimeo: MATCH_URL_VIMEO,
+	wistia: MATCH_URL_WISTIA,
+	spotify: MATCH_URL_SPOTIFY,
+	twitch: MATCH_URL_TWITCH,
+	tiktok: MATCH_URL_TIKTOK,
+}
+
+const videoSourceTypes = [
+	{ title: "Mux Video", value: "mux" },
+	{ title: "YouTube", value: "youtube" },
+	{ title: "Vimeo", value: "vimeo" },
+	{ title: "Wistia", value: "wistia" },
+	{ title: "Spotify", value: "spotify" },
+	{ title: "Twitch", value: "twitch" },
+	{ title: "TikTok", value: "tiktok" },
+	{ title: "Video URL", value: "url" },
+]
+
 export const video = defineType({
 	name: "video",
 	type: "object",
@@ -256,22 +288,29 @@ export const video = defineType({
 		defineField({
 			name: "sourceType",
 			type: "string",
-			title: "Source Type",
+			title: "Source",
 			options: {
-				list: [
-					{ title: "URL (YouTube, Vimeo, Wistia, etc.)", value: "url" },
-					{ title: "Mux Upload", value: "mux" },
-				],
-				layout: "radio",
+				list: videoSourceTypes,
 			},
-			initialValue: "url",
+			initialValue: "mux",
 		}),
 		defineField({
 			name: "url",
 			type: "url",
 			title: "Video URL",
-			description: "YouTube, Vimeo, Wistia, or any direct video URL",
-			hidden: ({ parent }) => parent?.sourceType !== "url",
+			hidden: ({ parent }) => !parent?.sourceType || parent.sourceType === "mux",
+			validation: (rule) =>
+				rule.custom((value, context) => {
+					const sourceType = (context.parent as { sourceType?: string })?.sourceType
+					if (!sourceType || sourceType === "mux" || sourceType === "url") return true
+					if (!value) return "URL is required"
+					const pattern = videoSourceValidation[sourceType]
+					if (pattern && !pattern.test(value)) {
+						const label = videoSourceTypes.find((s) => s.value === sourceType)?.title
+						return `This doesn't look like a valid ${label} URL`
+					}
+					return true
+				}),
 		}),
 		defineField({
 			name: "muxVideo",
