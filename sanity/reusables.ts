@@ -1,15 +1,15 @@
 import { PlayIcon } from "@sanity/icons"
-import {
-	MATCH_URL_YOUTUBE,
-	MATCH_URL_VIMEO,
-	MATCH_URL_WISTIA,
-	MATCH_URL_SPOTIFY,
-	MATCH_URL_TWITCH,
-	MATCH_URL_TIKTOK,
-} from "react-player/patterns"
 import type libraryConfig from "app/libraryConfig"
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
+import {
+	MATCH_URL_SPOTIFY,
+	MATCH_URL_TIKTOK,
+	MATCH_URL_TWITCH,
+	MATCH_URL_VIMEO,
+	MATCH_URL_WISTIA,
+	MATCH_URL_YOUTUBE,
+} from "react-player/patterns"
 import type {
 	AutocompleteString,
 	IntrinsicTypeName,
@@ -298,15 +298,20 @@ export const video = defineType({
 			name: "url",
 			type: "url",
 			title: "Video URL",
-			hidden: ({ parent }) => !parent?.sourceType || parent.sourceType === "mux",
+			hidden: ({ parent }) =>
+				!parent?.sourceType || parent.sourceType === "mux",
 			validation: (rule) =>
 				rule.custom((value, context) => {
-					const sourceType = (context.parent as { sourceType?: string })?.sourceType
-					if (!sourceType || sourceType === "mux" || sourceType === "url") return true
+					const sourceType = (context.parent as { sourceType?: string })
+						?.sourceType
+					if (!sourceType || sourceType === "mux" || sourceType === "url")
+						return true
 					if (!value) return "URL is required"
 					const pattern = videoSourceValidation[sourceType]
 					if (pattern && !pattern.test(value)) {
-						const label = videoSourceTypes.find((s) => s.value === sourceType)?.title
+						const label = videoSourceTypes.find(
+							(s) => s.value === sourceType,
+						)?.title
 						return `This doesn't look like a valid ${label} URL`
 					}
 					return true
