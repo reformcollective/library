@@ -113,6 +113,13 @@ export function analyzeDependencies(
 						deps.add(n.text)
 					}
 				}
+			} else if (ts.isPropertyAccessExpression(n)) {
+				// Only visit the object (left-hand side), not the property name.
+				// e.g. for `Combobox.Input`, only `Combobox` is an identifier
+				// reference — `Input` is a property name and must not be matched
+				// against imports/variables defined in this file.
+				visit(n.expression)
+				return
 			}
 			ts.forEachChild(n, visit)
 		}
