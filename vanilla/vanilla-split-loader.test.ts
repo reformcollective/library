@@ -6,7 +6,8 @@ import type {
 	TurboLoaderOptions,
 } from "@vanilla-extract/turbopack-plugin"
 import ts from "typescript"
-import { describe, expect, it, vi } from "vitest"
+import { assert, describe, expect, it, vi } from "vitest"
+import { analyzeDependencies } from "./dependency-graph.ts"
 import { default as vanillaSplitLoader } from "./vanilla-split-loader.ts"
 
 /**
@@ -821,6 +822,67 @@ export const button = style({ color: "red" })`
 			// globalStyle is a side-effect that moves to virtual along with other styles
 			expect(result).toContain("data:text/javascript;base64,")
 			expect(result).toContain("import { button }")
+		})
+	})
+
+	describe("property access false dependency bug", () => {
+		it("collectDependencies should not treat property-name identifiers in PropertyAccessExpression as standalone refs", () => {
+			// Bug: collectDependencies uses ts.forEachChild to walk ALL identifiers,
+			// including the `.name` side of a PropertyAccessExpression. So for
+			// `styled(Combobox.Input, ...)`, both `Combobox` and `Input` are visited.
+			// If `Input` happens to be an imported name, it gets added to dependsOn
+			// of the styled component — incorrectly tainting it and dragging it into
+			// the virtual CSS module.
+			const source = `import * as Combobox from "@headlessui/react"
+import { Input } from "./input-component"
+import { styled } from "library/styled/alpha"
+
+const StyledComboboxInput = styled(Combobox.Input, { color: "red" })`
+
+			const graph = analyzeDependencies(source)
+			const node = graph.nodes.get("StyledComboboxInput")
+
+			assert(node !== undefined)
+			// `Input` is only a property name here — it is NOT a reference to the
+			// imported `Input`. It must NOT appear in dependsOn.
+			expect(node.dependsOn).not.toContain("Input")
+			// The root of the property access and styled itself must still be deps.
+			expect(node.dependsOn).toContain("Combobox")
+			expect(node.dependsOn).toContain("styled")
+		})
+
+		it("should not pull a same-named import into the virtual module via property access", async () => {
+			// Observable symptom of the bug at the loader level: `Input` (imported from
+			// a separate path) gets dragged into the virtual .css.ts module because its
+			// name coincidentally matches the property in `Combobox.Input`. The virtual
+			// module then tries to evaluate Input.tsx in a .css.ts context and throws.
+			await using tmpDir = new TempDir()
+			const source = `import { styled } from "library/styled/alpha"
+import * as Combobox from "@headlessui/react"
+import { Input } from "./input-component"
+
+const StyledComboboxInput = styled(Combobox.Input, { color: "red" })`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			const preProcessPath = path.join(
+				await tmpDir.getPath(),
+				".next/debug/pre-process/app/test.css.tsx",
+			)
+			const virtualModule = await fs.readFile(preProcessPath, "utf-8")
+
+			// The virtual module must NOT import Input — it's referenced only as a
+			// property name (Combobox.Input) and has nothing to do with CSS.
+			expect(virtualModule).not.toContain("input-component")
+			expect(virtualModule).not.toMatch(/import\s*\{[^}]*\bInput\b/)
+
+			// The Input import must remain in the original file, not be moved to virtual.
+			expect(result).toContain('from "./input-component"')
 		})
 	})
 
