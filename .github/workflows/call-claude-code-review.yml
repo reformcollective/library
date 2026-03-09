@@ -1,0 +1,17 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+jobs:
+  library:
+    uses: reformcollective/library/.github/workflows/claude-code-review.yml@main
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    secrets:
+      SECRETS_JSON: ${{ toJSON(secrets) }}
