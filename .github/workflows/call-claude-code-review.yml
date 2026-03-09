@@ -6,7 +6,7 @@ on:
 
 jobs:
   library:
-    uses: reformcollective/library/.github/workflows/claude-code-review.yml@main
+    uses: reformcollective/library/.github/workflows/claude-code-review.yml@next-main
     permissions:
       contents: read
       pull-requests: write
