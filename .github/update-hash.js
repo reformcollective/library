@@ -19,7 +19,7 @@ const workflowsPath = ".github/workflows"
 
 // Regex to match the submodule reference in workflow files
 const submoduleRegex =
-	/(code-checks|check-updates|lighthouse|claude|claude-code-review)\.yml@(.*)/g
+	/(code-checks|check-updates|lighthouse)\.yml@(.*)/g
 
 try {
 	// Get the latest commit hash of the submodule
