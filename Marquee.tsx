@@ -304,7 +304,11 @@ export function Marquee({
 
 	return (
 		<Wrapper className={className}>
-			<Row ref={rowRef} className="track" data-vertical={isVertical || undefined}>
+			<Row
+				ref={rowRef}
+				className="track"
+				data-vertical={isVertical || undefined}
+			>
 				{Array.from({ length: numberNeeded }, (_, index) => (
 					<Fragment key={index}>{children}</Fragment>
 				))}
