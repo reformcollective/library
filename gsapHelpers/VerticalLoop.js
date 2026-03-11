@@ -17,76 +17,76 @@ Features:
    - current() - returns the current index (if an animation is in-progress, it reflects the final index)
    - times - an Array of the times on the timeline where each element hits the "starting" spot.
  */
-export function verticalLoop(items: gsap.DOMTarget, config?: Record<string, unknown>) {
-	let timeline: gsap.core.Timeline
-	const itemsArray = gsap.utils.toArray(items) as HTMLElement[]
+export function verticalLoop(items, config) {
+	let timeline
+	items = gsap.utils.toArray(items)
 	config = config || {}
 	// REFORM CHANGE: allow callers to opt out of internal window resize handling
 	const manageResize = config.manageResize !== false
 	gsap.context(() => {
-		let onChange = config!.onChange as ((item: HTMLElement, index: number) => void) | undefined,
+		let onChange = config.onChange,
 			lastIndex = 0,
 			tl = gsap.timeline({
-				repeat: config!.repeat as number,
+				repeat: config.repeat,
 				onUpdate:
 					onChange &&
 					function () {
 						let i = tl.closestIndex()
 						if (lastIndex !== i) {
 							lastIndex = i
-							onChange!(itemsArray[i], i)
+							onChange(items[i], i)
 						}
 					},
-				paused: config!.paused as boolean,
+				paused: config.paused,
 				defaults: { ease: "none" },
 				onReverseComplete: () =>
 					tl.totalTime(tl.rawTime() + tl.duration() * 100),
 			}),
-			length = itemsArray.length,
-			startY = itemsArray[0].offsetTop,
-			times: number[] = [],
-			heights: number[] = [],
-			spaceBefore: number[] = [],
-			yPercents: number[] = [],
+			length = items.length,
+			startY = items[0].offsetTop,
+			times = [],
+			heights = [],
+			spaceBefore = [],
+			yPercents = [],
 			curIndex = 0,
 			indexIsDirty = false,
-			center = config!.center,
-			pixelsPerSecond = ((config!.speed as number) || 1) * 100,
+			center = config.center,
+			pixelsPerSecond = (config.speed || 1) * 100,
 			snap =
-				config!.snap === false ? (v: number) => v : gsap.utils.snap((config!.snap as number) || 1),
+				config.snap === false ? (v) => v : gsap.utils.snap(config.snap || 1),
 			timeOffset = 0,
 			container =
 				center === true
-					? (itemsArray[0].parentNode as HTMLElement)
-					: ((gsap.utils.toArray(center)[0] as HTMLElement) || (itemsArray[0].parentNode as HTMLElement)),
-			totalHeight: number,
+					? items[0].parentNode
+					: gsap.utils.toArray(center)[0] || items[0].parentNode,
+			totalHeight,
 			getTotalHeight = () =>
-				itemsArray[length - 1].offsetTop +
+				items[length - 1].offsetTop +
 				(yPercents[length - 1] / 100) * heights[length - 1] -
 				startY +
 				spaceBefore[0] +
-				itemsArray[length - 1].offsetHeight *
-					(gsap.getProperty(itemsArray[length - 1], "scaleY") as number) +
-				(parseFloat(config!.paddingBottom as string) || 0),
+				items[length - 1].offsetHeight *
+					gsap.getProperty(items[length - 1], "scaleY") +
+				(parseFloat(config.paddingBottom) || 0),
 			populateHeights = () => {
 				let b1 = container.getBoundingClientRect(),
-					b2: DOMRect
-				itemsArray.forEach((el, i) => {
-					heights[i] = parseFloat(gsap.getProperty(el, "height", "px") as string)
+					b2
+				items.forEach((el, i) => {
+					heights[i] = parseFloat(gsap.getProperty(el, "height", "px"))
 					yPercents[i] = snap(
-						(parseFloat(gsap.getProperty(el, "y", "px") as string) / heights[i]) * 100 +
-							(gsap.getProperty(el, "yPercent") as number),
+						(parseFloat(gsap.getProperty(el, "y", "px")) / heights[i]) * 100 +
+							gsap.getProperty(el, "yPercent"),
 					)
 					b2 = el.getBoundingClientRect()
 					spaceBefore[i] = b2.top - (i ? b1.bottom : b1.top)
 					b1 = b2
 				})
-				gsap.set(itemsArray, {
+				gsap.set(items, {
 					yPercent: (i) => yPercents[i],
 				})
 				totalHeight = getTotalHeight()
 			},
-			timeWrap: (value: number) => number,
+			timeWrap,
 			populateOffsets = () => {
 				timeOffset = center
 					? (tl.duration() * (container.offsetHeight / 2)) / totalHeight
@@ -100,11 +100,11 @@ export function verticalLoop(items: gsap.DOMTarget, config?: Record<string, unkn
 						)
 					})
 			},
-			getClosest = (values: number[], value: number, wrap: number) => {
+			getClosest = (values, value, wrap) => {
 				let i = values.length,
 					closest = 1e10,
 					index = 0,
-					d: number
+					d
 				while (i--) {
 					d = Math.abs(values[i] - value)
 					if (d > wrap / 2) {
@@ -118,18 +118,14 @@ export function verticalLoop(items: gsap.DOMTarget, config?: Record<string, unkn
 				return index
 			},
 			populateTimeline = () => {
-				let i: number,
-					item: HTMLElement,
-					curY: number,
-					distanceToStart: number,
-					distanceToLoop: number
+				let i, item, curY, distanceToStart, distanceToLoop
 				tl.clear()
 				for (i = 0; i < length; i++) {
-					item = itemsArray[i]
+					item = items[i]
 					curY = (yPercents[i] / 100) * heights[i]
 					distanceToStart = item.offsetTop + curY - startY + spaceBefore[0]
 					distanceToLoop =
-						distanceToStart + heights[i] * (gsap.getProperty(item, "scaleY") as number)
+						distanceToStart + heights[i] * gsap.getProperty(item, "scaleY")
 					tl.to(
 						item,
 						{
@@ -158,24 +154,24 @@ export function verticalLoop(items: gsap.DOMTarget, config?: Record<string, unkn
 				}
 				timeWrap = gsap.utils.wrap(0, tl.duration())
 			},
-			refresh = (deep?: boolean) => {
+			refresh = (deep) => {
 				let progress = tl.progress()
 				tl.progress(0, true)
 				populateHeights()
 				deep && populateTimeline()
 				populateOffsets()
-				deep && (tl as unknown as { draggable: Draggable }).draggable && tl.paused()
+				deep && tl.draggable && tl.paused()
 					? tl.time(times[curIndex], true)
 					: tl.progress(progress, true)
 			},
 			onResize = () => refresh(true),
-			proxy: HTMLElement
-		gsap.set(itemsArray, { y: 0 })
+			proxy
+		gsap.set(items, { y: 0 })
 		populateHeights()
 		populateTimeline()
 		populateOffsets()
 		if (manageResize) window.addEventListener("resize", onResize)
-		function toIndex(index: number, vars?: gsap.TweenVars) {
+		function toIndex(index, vars) {
 			vars = vars || {}
 			Math.abs(index - curIndex) > length / 2 &&
 				(index += index > curIndex ? -length : length)
@@ -194,9 +190,8 @@ export function verticalLoop(items: gsap.DOMTarget, config?: Record<string, unkn
 				? tl.time(timeWrap(time))
 				: tl.tweenTo(time, vars)
 		}
-		const ext = tl as unknown as Record<string, unknown>
-		ext.toIndex = (index: number, vars?: gsap.TweenVars) => toIndex(index, vars)
-		ext.closestIndex = (setCurrent?: boolean) => {
+		tl.toIndex = (index, vars) => toIndex(index, vars)
+		tl.closestIndex = (setCurrent) => {
 			let index = getClosest(times, tl.time(), tl.duration())
 			if (setCurrent) {
 				curIndex = index
@@ -204,40 +199,37 @@ export function verticalLoop(items: gsap.DOMTarget, config?: Record<string, unkn
 			}
 			return index
 		}
-		ext.current = () =>
-			indexIsDirty ? (ext.closestIndex as (b: boolean) => number)(true) : curIndex
-		ext.next = (vars?: gsap.TweenVars) =>
-			toIndex((ext.current as () => number)() + 1, vars)
-		ext.previous = (vars?: gsap.TweenVars) =>
-			toIndex((ext.current as () => number)() - 1, vars)
-		ext.times = times
+		tl.current = () => (indexIsDirty ? tl.closestIndex(true) : curIndex)
+		tl.next = (vars) => toIndex(tl.current() + 1, vars)
+		tl.previous = (vars) => toIndex(tl.current() - 1, vars)
+		tl.times = times
 		tl.progress(1, true).progress(0, true)
-		if (config!.reversed) {
-			tl.vars.onReverseComplete!()
+		if (config.reversed) {
+			tl.vars.onReverseComplete()
 			tl.reverse()
 		}
-		if (config!.draggable && typeof Draggable === "function") {
+		if (config.draggable && typeof Draggable === "function") {
 			proxy = document.createElement("div")
 			let wrap = gsap.utils.wrap(0, 1),
-				ratio: number,
-				startProgress: number,
-				draggable: Draggable,
-				lastSnap: number,
-				initChangeY: number,
-				wasPlaying: boolean,
+				ratio,
+				startProgress,
+				draggable,
+				lastSnap,
+				initChangeY,
+				wasPlaying,
 				// REFORM CHANGE: track reversed direction to resume correctly
-				wasReversed: boolean,
+				wasReversed,
 				align = () =>
 					tl.progress(
 						wrap(startProgress + (draggable.startY - draggable.y) * ratio),
 					),
-				syncIndex = () => (ext.closestIndex as (b: boolean) => number)(true)
+				syncIndex = () => tl.closestIndex(true)
 			typeof InertiaPlugin === "undefined" &&
 				console.warn(
 					"InertiaPlugin required for momentum-based scrolling and snapping. https://greensock.com/club",
 				)
 			draggable = Draggable.create(proxy, {
-				trigger: itemsArray[0].parentNode,
+				trigger: items[0].parentNode,
 				type: "y",
 				onPressInit() {
 					const y = this.y
@@ -258,15 +250,15 @@ export function verticalLoop(items: gsap.DOMTarget, config?: Record<string, unkn
 				overshootTolerance: 0,
 				inertia: true,
 				// REFORM CHANGE: snap is optional, value is clamped
-				snap: !config!.snap
-					? (value: number) => {
+				snap: !config.snap
+					? (value) => {
 							const current = draggable.y
 							const diff = current - value
 							if (Math.abs(diff) > 10_000) return current
 							const clampedDiff = gsap.utils.clamp(-1000, 1000, diff)
 							return current - clampedDiff
 						}
-					: function (value: number) {
+					: function (value) {
 							const current = draggable.y
 							const diff = current - value
 							if (Math.abs(diff) > 10_000) return current
@@ -310,18 +302,18 @@ export function verticalLoop(items: gsap.DOMTarget, config?: Record<string, unkn
 					}
 				},
 			})[0]
-			ext.draggable = draggable
+			tl.draggable = draggable
 		}
 		// REFORM CHANGE: add scrollBy method
-		ext.scrollBy = (pixels: number) => {
+		tl.scrollBy = (pixels) => {
 			const wrap = gsap.utils.wrap(0, 1),
 				progress = wrap(tl.progress() + pixels / totalHeight)
 			tl.progress(progress)
-			;(ext.closestIndex as (b: boolean) => number)(true)
+			tl.closestIndex(true)
 		}
-		;(ext.closestIndex as (b: boolean) => number)(true)
+		tl.closestIndex(true)
 		lastIndex = curIndex
-		onChange && onChange(itemsArray[curIndex], curIndex)
+		onChange && onChange(items[curIndex], curIndex)
 		timeline = tl
 		// REFORM CHANGE: better cleanup
 		return () => {
@@ -331,5 +323,5 @@ export function verticalLoop(items: gsap.DOMTarget, config?: Record<string, unkn
 			} catch {}
 		}
 	})
-	return timeline!
+	return timeline
 }
