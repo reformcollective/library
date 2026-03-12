@@ -1,5 +1,6 @@
 "use client"
 
+import {} from 'react/canary'
 import {
 	type ComponentProps,
 	ViewTransition as ReactViewTransition,
