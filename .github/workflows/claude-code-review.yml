@@ -45,4 +45,4 @@ jobs:
 
           claude_args: >-
             --dangerously-skip-permissions
-            --mcp-config {"mcpServers":{"github":{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer ${{ github.token }}"}}}}
+            --allowedTools "mcp__github__*"
