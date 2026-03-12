@@ -43,6 +43,4 @@ jobs:
             3. Add inline comments: Use mcp__github__add_comment_to_pending_review for feedback on specific lines. Always use inline comments for specific code issues — never post them as top-level PR comments.
             4. Submit the review: Use mcp__github__submit_pending_pull_request_review with event type "COMMENT" (not "REQUEST_CHANGES") to publish all comments as a non-blocking review.
 
-          claude_args: >-
-            --dangerously-skip-permissions
-            --mcp-config {"mcpServers":{"github":{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer ${{ github.token }}"}}}}
+          claude_args: --dangerously-skip-permissions
