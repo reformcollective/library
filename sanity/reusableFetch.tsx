@@ -35,6 +35,7 @@ export async function libraryFetch<const QueryString extends string>({
 	params = {},
 	perspective,
 	disableStega,
+	enrichAssets = true,
 }: {
 	query: QueryString
 	params?: QueryParams | Promise<QueryParams>
@@ -50,6 +51,11 @@ export async function libraryFetch<const QueryString extends string>({
 	 * otherwise, stega should be undefined
 	 */
 	disableStega?: boolean
+	/**
+	 * enable asset metadata enrichment? can be disabled if you're in a context
+	 * where enriching the assets would cause an infinite loop.
+	 */
+	enrichAssets?: boolean
 }) {
 	const { data, sourceMap, tags } = await internalFetch({
 		query,
@@ -59,7 +65,7 @@ export async function libraryFetch<const QueryString extends string>({
 	})
 
 	return {
-		data: await fetchAssetMeta(data),
+		data: enrichAssets ? await fetchAssetMeta(data) : data,
 		sourceMap,
 		tags,
 	}
