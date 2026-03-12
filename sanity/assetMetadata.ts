@@ -105,6 +105,7 @@ export const fetchAssetMeta = async <InputType>(
 				params: {
 					asset: assetParse.asset._ref,
 				},
+				enrichAssets: false,
 			})
 			if (!asset) return input as Output
 
@@ -153,6 +154,7 @@ export const fetchAssetMeta = async <InputType>(
 			const { data: linkedItem } = await sanityFetch({
 				query: linkQuery,
 				params: { asset: linkParse.internalLink._ref },
+				enrichAssets: false,
 			})
 
 			return {
