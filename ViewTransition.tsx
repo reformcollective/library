@@ -1,11 +1,11 @@
 "use client"
 
-// biome-ignore lint/correctness/noUnusedImports: required to load type definitions
-import {} from 'react/canary'
 import {
 	type ComponentProps,
 	ViewTransition as ReactViewTransition,
 } from "react"
+// biome-ignore lint/correctness/noUnusedImports: required to load type definitions
+import {} from "react/canary"
 import { usePreloader } from "./link/usePreloader"
 import { type CSSObject, createStyle } from "./styled"
 
