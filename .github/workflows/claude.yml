@@ -30,4 +30,6 @@ jobs:
           additional_permissions: |
             actions: read
 
-          claude_args: "--dangerously-skip-permissions"
+          claude_args: >-
+            --dangerously-skip-permissions
+            --allowedTools "mcp__github__*"
