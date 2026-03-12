@@ -31,12 +31,13 @@ jobs:
           claude_code_oauth_token: ${{ env.CLAUDE_CODE_OAUTH_TOKEN }}
           plugin_marketplaces: "https://github.com/anthropics/claude-code.git"
           plugins: "code-review@claude-code-plugins"
-          track_progress: true
           prompt: |
             /code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
 
-            After completing the review above, post your feedback as inline GitHub review comments using these steps:
+            Before reviewing or posting anything, check if you've already reviewed the PR - there may be a pending review or existing comments if you've reviewed before. If this is the case, you are performing a follow-up review and should behave accordingly.
+            - Be aware that previous comments may have replies or been marked resolved.
 
+            Post code feedback as inline GitHub review comments using these steps:
             1. Start a review: Use mcp__github__create_pending_pull_request_review to begin a pending review.
             2. Get diff info: Use mcp__github__get_pull_request_diff to understand the code changes and line numbers. Paginate if needed.
             3. Add inline comments: Use mcp__github__add_comment_to_pending_review for feedback on specific lines. Always use inline comments for specific code issues — never post them as top-level PR comments.
@@ -44,4 +45,4 @@ jobs:
 
           claude_args: >-
             --dangerously-skip-permissions
-            --mcp-config '{"mcpServers":{"github":{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer ${{ github.token }}"}}}}'
+            --mcp-config {"mcpServers":{"github":{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer ${{ github.token }}"}}}}
