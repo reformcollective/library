@@ -1,4 +1,4 @@
-import { fetchAssetMeta } from "library/sanity/assetMetadata"
+// import { fetchAssetMeta } from "library/sanity/assetMetadata"
 import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
 import type { ClientPerspective, QueryParams } from "next-sanity"
@@ -59,7 +59,7 @@ export async function libraryFetch<const QueryString extends string>({
 	})
 
 	return {
-		data: await fetchAssetMeta(data),
+		data,
 		sourceMap,
 		tags,
 	}
