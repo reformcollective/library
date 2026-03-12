@@ -1,5 +1,6 @@
 "use client"
 
+// biome-ignore lint/correctness/noUnusedImports: required to load type definitions
 import {} from 'react/canary'
 import {
 	type ComponentProps,
