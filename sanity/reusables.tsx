@@ -1,4 +1,4 @@
-import { PlayIcon } from "@sanity/icons"
+import { InfoOutlineIcon, PlayIcon } from "@sanity/icons"
 import type libraryConfig from "app/libraryConfig"
 import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
@@ -325,3 +325,40 @@ export const video = defineType({
 		}),
 	],
 })
+
+/**
+ * Renders a non-editable info callout in the Studio form.
+ * No data is stored — purely a UI hint for editors.
+ */
+export const calloutField = ({
+	name = "documentationHint",
+	message,
+}: {
+	name?: string
+	message: string
+}) =>
+	defineField({
+		name,
+		type: "string",
+		readOnly: true,
+		components: {
+			field: () => (
+				<div
+					style={{
+						display: "flex",
+						alignItems: "center",
+						gap: 8,
+						padding: "10px 14px",
+						borderRadius: 4,
+						background: "rgba(0 0 0 / 5%)",
+						border: "1px solid rgba(0 0 0 / 10%)",
+						fontSize: 13,
+						opacity: 0.75,
+					}}
+				>
+					<InfoOutlineIcon style={{ flexShrink: 0 }} />
+					{message}
+				</div>
+			),
+		},
+	})
