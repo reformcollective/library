@@ -40,7 +40,22 @@ export const useHMR =
 					if (process.env.NODE_ENV === "development") {
 						const handler = (event: MessageEvent) => {
 							const message = JSON.parse(event.data)
-							const parsedMessage = messageSchema?.parse(message)
+							let parsedMessage: z.infer<NonNullable<typeof messageSchema>>
+							try {
+								parsedMessage = messageSchema!.parse(message)
+							} catch (err) {
+								throw new Error(
+									`useHMR (library/useHMR.ts): WebSocket message from Next.js HMR does not match the expected schema.
+` +
+										`This usually means the Next.js version changed the HMR message format.
+` +
+										`Update the messageSchema in library/useHMR.ts to match the new format.
+` +
+										`Received message: ${JSON.stringify(message)}
+` +
+										`Original error: ${err}`,
+								)
+							}
 
 							if (!parsedMessage) throw new Error("Invalid message")
 
