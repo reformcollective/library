@@ -17,10 +17,10 @@ import type {
 	StrictDefinition,
 } from "sanity"
 import {
+	type ArrayOfEntry,
 	defineArrayMember,
 	defineField,
 	defineType,
-	type ArrayOfEntry,
 	type ImageDefinition,
 	type ObjectDefinition,
 } from "sanity"
@@ -190,7 +190,10 @@ export function definePageSection<const TName extends string>(
 		group,
 		icon,
 		...options
-	}: Omit<ArrayOfEntry<ObjectDefinition>, "name" | "groups" | "icon" | "preview"> & {
+	}: Omit<
+		ArrayOfEntry<ObjectDefinition>,
+		"name" | "groups" | "icon" | "preview"
+	> & {
 		name: TName
 		preview?: {
 			select?: Record<string, string>
@@ -208,9 +211,15 @@ export function definePageSection<const TName extends string>(
 		icon: StaticImageData
 	},
 	secondary?: Parameters<
-		typeof defineArrayMember<"object", TName, undefined, undefined, undefined, StrictDefinition>
+		typeof defineArrayMember<
+			"object",
+			TName,
+			undefined,
+			undefined,
+			undefined,
+			StrictDefinition
+		>
 	>[1],
-
 ) {
 	return defineArrayMember(
 		{
@@ -250,7 +259,7 @@ const videoSourceValidation: Record<string, RegExp> = {
 }
 
 const videoSourceTypes = [
-	{ title: "Upload a File", value: "mux" },
+	{ title: "Upload or Select a File", value: "mux" },
 	{ title: "YouTube", value: "youtube" },
 	{ title: "Vimeo", value: "vimeo" },
 	{ title: "Wistia", value: "wistia" },
