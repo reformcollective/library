@@ -84,7 +84,7 @@ export const LibraryLive = async () => {
 	return (
 		<LiveWrapper>
 			<Toaster />
-			<FirefoxFix />
+			{isDraftMode && <FirefoxFix />}
 			{isDraftMode && <DraftModeOverlay />}
 			{useProxy ? (
 				<SanityLiveProxy />

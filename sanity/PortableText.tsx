@@ -9,14 +9,7 @@ import {
 } from "next-sanity"
 import type { ReactNode } from "react"
 
-type PossibleMarks =
-	| "strong"
-	| "em"
-	| "code"
-	| "underline"
-	| "strike-through"
-	| "super"
-	| "sub"
+type PossibleMarks = string
 
 type Input = {
 	_type: string
@@ -25,7 +18,7 @@ type Input = {
 	listItem?: string
 	markDefs?: Array<{
 		_type: string
-	}>
+	}> | null
 }
 
 type UnionToIntersection<U> = (
@@ -50,7 +43,10 @@ type GetMarkDefinition<Item extends Input> = Item extends unknown
 		? {
 				block?: NonNullable<Item["style"]> extends string
 					? {
-							[style in NonNullable<Item["style"]>]?: Component
+							[style in NonNullable<Item["style"]>]?: (props: {
+								children: ReactNode
+								value: Item
+							}) => ReactNode
 						}
 					: undefined
 				list?: NonNullable<Item["listItem"]> extends string
