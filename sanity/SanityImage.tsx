@@ -20,7 +20,7 @@ import {
 	objectPositionVar,
 } from "../StaticImage.css"
 
-type SanityImageData<CropType, WithAlt extends "true" | "false"> = {
+export type SanityImageData<CropType, WithAlt extends "true" | "false"> = {
 	asset?: { _ref: string }
 	crop?: SanityImageCrop
 	hotspot?: SanityImageHotspot
