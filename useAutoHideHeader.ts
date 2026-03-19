@@ -125,9 +125,7 @@ export default function useAutoHideHeader(
 			wrapper.current?.addEventListener("pointerleave", onLeave)
 
 			ScrollTrigger.create({ onUpdate })
-			const interval = setInterval(onUpdate, 100)
 			return () => {
-				clearInterval(interval)
 				wrapper.current?.removeEventListener("pointerenter", onHover)
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
 			}

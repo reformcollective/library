@@ -338,8 +338,8 @@ export const calloutField = ({
 						gap: 8,
 						padding: "10px 14px",
 						borderRadius: 4,
-						background: "var(--card-badge-default-bg-color, rgba(0,0,0,0.05))",
-						border: "1px solid var(--card-border-color, rgba(0,0,0,0.1))",
+						background: "rgba(0 0 0 / 5%)",
+						border: "1px solid rgba(0 0 0 / 10%)",
 						fontSize: 13,
 						opacity: 0.75,
 					}}

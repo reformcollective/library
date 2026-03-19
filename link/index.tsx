@@ -30,6 +30,7 @@ type ButtonProps = {
 	transition?: undefined
 	openInNewTab?: undefined
 	onNavigate?: undefined
+	onBeforeNavigate?: undefined
 } & Omit<ComponentProps<"button">, "type" | "ref">
 
 type AnchorProps = {
@@ -46,6 +47,11 @@ type AnchorProps = {
 	 * this does not apply to external links
 	 */
 	onNavigate?: LinkProps<string>["onNavigate"]
+	/**
+	 * called when the link is clicked, before navigation begins
+	 * works for both internal and external links
+	 */
+	onBeforeNavigate?: () => void
 
 	type?: undefined
 } & Omit<ComponentProps<"a">, "href" | "onClick" | "ref">
@@ -112,6 +118,7 @@ export default function UniversalLink({
 	children,
 	ref,
 	onNavigate,
+	onBeforeNavigate,
 	...props
 }: UniversalLinkProps) {
 	const transitioner = useTransitioner()
@@ -136,6 +143,7 @@ export default function UniversalLink({
 
 	const onClick = (e: React.MouseEvent) => {
 		if (!url) return
+		onBeforeNavigate?.()
 
 		if (internal && !newTab) {
 			transitioner({ e, to: url })
