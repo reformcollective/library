@@ -10,10 +10,7 @@ import {
 	MATCH_URL_WISTIA,
 	MATCH_URL_YOUTUBE,
 } from "react-player/patterns"
-import type {
-	PreviewValue,
-	StrictDefinition,
-} from "sanity"
+import type { PreviewValue, StrictDefinition } from "sanity"
 import {
 	type ArrayOfEntry,
 	defineArrayMember,

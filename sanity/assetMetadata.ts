@@ -59,7 +59,7 @@ type ImageAssetMeta = {
 	size: number | undefined
 	extension: string | undefined
 	url: string | undefined
-	dimensionsAspectRatio: number | undefined
+	aspectRatio: number | undefined
 }
 
 export type AssetMeta = VideoAssetMeta & ImageAssetMeta
@@ -143,9 +143,7 @@ export const fetchAssetMeta = async <InputType>(
 							size: asset?.size,
 							extension: asset?.extension,
 							url: asset?.url,
-							dimensionsAspectRatio: (
-								meta as { dimensions?: { aspectRatio?: number } } | null
-							)?.dimensions?.aspectRatio,
+							aspectRatio: meta?.dimensions?.aspectRatio,
 						} satisfies ImageAssetMeta)
 
 			return {
