@@ -131,7 +131,7 @@ export default function useAutoHideHeader(
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
 			}
 		},
-		[wrapper, style, reverse],
+		[wrapper, style, reverse, extraOffset],
 		{
 			// reset to top when pathname changes
 			extraDeps: [pathname],
