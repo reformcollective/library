@@ -6,30 +6,27 @@ const socket =
 		? new WebSocket("ws://localhost:3000/_next/webpack-hmr")
 		: null
 
-const messageSchema =
-	process.env.NODE_ENV === "development"
-		? z.union([
-				z.strictObject({
-					type: z.literal("built"),
-					hash: z.string(),
-					errors: z.array(z.unknown()),
-					warnings: z.array(z.unknown()),
-				}),
-				z.strictObject({
-					type: z.literal("building"),
-				}),
-				// unused messages
-				z.object({
-					type: z.enum([
-						"serverComponentChanges",
-						"turbopack-connected",
-						"turbopack-message",
-						"isrManifest",
-						"sync",
-					]),
-				}),
-			])
-		: null
+const messageSchema = z.union([
+	z.strictObject({
+		type: z.literal("built"),
+		hash: z.string(),
+		errors: z.array(z.unknown()),
+		warnings: z.array(z.unknown()),
+	}),
+	z.strictObject({
+		type: z.literal("building"),
+	}),
+	// unused messages
+	z.object({
+		type: z.enum([
+			"serverComponentChanges",
+			"turbopack-connected",
+			"turbopack-message",
+			"isrManifest",
+			"sync",
+		]),
+	}),
+])
 
 export const useHMR =
 	process.env.NODE_ENV === "development"
@@ -40,10 +37,8 @@ export const useHMR =
 					if (process.env.NODE_ENV === "development") {
 						const handler = (event: MessageEvent) => {
 							const message = JSON.parse(event.data)
-							let parsedMessage: z.infer<NonNullable<typeof messageSchema>>
-							try {
-								parsedMessage = messageSchema!.parse(message)
-							} catch (err) {
+							const result = messageSchema.safeParse(message)
+							if (!result.success) {
 								throw new Error(
 									`useHMR (library/useHMR.ts): WebSocket message from Next.js HMR does not match the expected schema.
 ` +
@@ -53,11 +48,10 @@ export const useHMR =
 ` +
 										`Received message: ${JSON.stringify(message)}
 ` +
-										`Original error: ${err}`,
+										`Original error: ${result.error}`,
 								)
 							}
-
-							if (!parsedMessage) throw new Error("Invalid message")
+							const parsedMessage = result.data
 
 							if (type === "prebuild" && parsedMessage.type === "building") {
 								sendMessage("building")

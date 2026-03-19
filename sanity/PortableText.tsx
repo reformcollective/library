@@ -20,12 +20,13 @@ type PossibleMarks =
 
 type Input = {
 	_type: string
+	_key?: string
 	style?: string
 	list?: string
 	listItem?: string
 	markDefs?: Array<{
 		_type: string
-	}>
+	}> | null
 }
 
 type UnionToIntersection<U> = (
@@ -36,13 +37,12 @@ type UnionToIntersection<U> = (
 	? I
 	: never
 
-type Component = ({ children }: { children: ReactNode }) => ReactNode
-type ValueComponent<ValueType = never> = ({
+type ValueComponent<V = never> = ({
 	children,
 	value,
 }: {
 	children: ReactNode
-	value: ValueType
+	value: V
 }) => ReactNode
 
 type GetMarkDefinition<Item extends Input> = Item extends unknown
@@ -50,21 +50,21 @@ type GetMarkDefinition<Item extends Input> = Item extends unknown
 		? {
 				block?: NonNullable<Item["style"]> extends string
 					? {
-							[style in NonNullable<Item["style"]>]?: Component
+							[style in NonNullable<Item["style"]>]?: ValueComponent<Item>
 						}
 					: undefined
 				list?: NonNullable<Item["listItem"]> extends string
 					? {
-							[listItem in NonNullable<Item["listItem"]>]: Component
+							[listItem in NonNullable<Item["listItem"]>]: ValueComponent<Item>
 						}
 					: undefined
 				listItem?: NonNullable<Item["listItem"]> extends string
 					? {
-							[listItem in NonNullable<Item["listItem"]>]: Component
+							[listItem in NonNullable<Item["listItem"]>]: ValueComponent<Item>
 						}
 					: undefined
 				marks?: {
-					[mark in PossibleMarks]?: Component
+					[mark in PossibleMarks]?: ValueComponent
 				} & {
 					[customMark in NonNullable<
 						Item["markDefs"]

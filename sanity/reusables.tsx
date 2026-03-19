@@ -11,8 +11,6 @@ import {
 	MATCH_URL_YOUTUBE,
 } from "react-player/patterns"
 import type {
-	AutocompleteString,
-	IntrinsicTypeName,
 	PreviewValue,
 	StrictDefinition,
 } from "sanity"

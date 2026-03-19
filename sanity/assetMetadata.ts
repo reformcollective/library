@@ -143,7 +143,9 @@ export const fetchAssetMeta = async <InputType>(
 							size: asset?.size,
 							extension: asset?.extension,
 							url: asset?.url,
-							dimensionsAspectRatio: (meta as { dimensions?: { aspectRatio?: number } } | null)?.dimensions?.aspectRatio,
+							dimensionsAspectRatio: (
+								meta as { dimensions?: { aspectRatio?: number } } | null
+							)?.dimensions?.aspectRatio,
 						} satisfies ImageAssetMeta)
 
 			return {

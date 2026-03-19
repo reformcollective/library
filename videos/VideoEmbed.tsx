@@ -8,10 +8,10 @@ import type { Video } from "sanity.types"
 type VideoEmbedProps = {
 	className?: string
 	video: DeepAssetMeta<Video>
-	controls: boolean
-	playing: boolean
-	muted: boolean
-	loop: boolean
+	controls?: boolean
+	playing?: boolean
+	muted?: boolean
+	loop?: boolean
 }
 
 function getVideoSrc(video: DeepAssetMeta<Video>) {
