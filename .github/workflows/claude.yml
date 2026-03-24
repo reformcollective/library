@@ -15,10 +15,38 @@ jobs:
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
 
+      - name: Resolve checkout target
+        id: checkout-target
+        uses: actions/github-script@v8
+        with:
+          script: |
+            if (context.payload.pull_request) {
+              core.setOutput("repository", context.payload.pull_request.head.repo.full_name)
+              core.setOutput("ref", context.payload.pull_request.head.ref)
+              return
+            }
+
+            if (context.payload.issue?.pull_request) {
+              const { data: pullRequest } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.issue.number,
+              })
+
+              core.setOutput("repository", pullRequest.head.repo.full_name)
+              core.setOutput("ref", pullRequest.head.ref)
+              return
+            }
+
+            core.setOutput("repository", `${context.repo.owner}/${context.repo.repo}`)
+            core.setOutput("ref", context.ref.replace("refs/heads/", ""))
+
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          fetch-depth: 1
+          repository: ${{ steps.checkout-target.outputs.repository }}
+          ref: ${{ steps.checkout-target.outputs.ref }}
+          fetch-depth: 0
 
       - name: Run Claude Code
         id: claude
