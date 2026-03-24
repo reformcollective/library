@@ -20,8 +20,10 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
+            const defaultRepository = `${context.repo.owner}/${context.repo.repo}`
+
             if (context.payload.pull_request) {
-              core.setOutput("repository", context.payload.pull_request.head.repo.full_name)
+              core.setOutput("repository", context.payload.pull_request.head.repo?.full_name ?? defaultRepository)
               core.setOutput("ref", context.payload.pull_request.head.ref)
               return
             }
@@ -33,12 +35,12 @@ jobs:
                 pull_number: context.payload.issue.number,
               })
 
-              core.setOutput("repository", pullRequest.head.repo.full_name)
+              core.setOutput("repository", pullRequest.head.repo?.full_name ?? defaultRepository)
               core.setOutput("ref", pullRequest.head.ref)
               return
             }
 
-            core.setOutput("repository", `${context.repo.owner}/${context.repo.repo}`)
+            core.setOutput("repository", defaultRepository)
             core.setOutput("ref", context.ref.replace("refs/heads/", ""))
 
       - name: Checkout repository
@@ -61,3 +63,4 @@ jobs:
           claude_args: >-
             --dangerously-skip-permissions
             --allowedTools "mcp__github__*"
+            --mcp-config '{"mcpServers":{"github":{"type":"http","url":"https://api.githubcopilot.com/mcp","headers":{"Authorization":"Bearer ${{ github.token }}"}}}}'
