@@ -17,6 +17,7 @@ export default function useAutoHideHeader(
 	wrapper: RefObject<HTMLDivElement | null> | null | undefined,
 	styleIn: "scrub" | "snap" = "scrub",
 	reverse = false,
+	extraOffset = 0,
 ) {
 	// scrub style only really works if we're using a smoother
 	const isSmooth = useIsSmooth()
@@ -84,7 +85,7 @@ export default function useAutoHideHeader(
 				const scroll = window.lenis?.scroll ?? window.scrollY
 				const delta = scroll - lastScroll
 				lastScroll = scroll
-				const height = wrapper.current?.offsetHeight ?? 0
+				const height = (wrapper.current?.offsetHeight ?? 0) + extraOffset
 				if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
 
 				const forceHideHeader = dataHideAreOnScreen.current
@@ -130,7 +131,7 @@ export default function useAutoHideHeader(
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
 			}
 		},
-		[wrapper, style, reverse],
+		[wrapper, style, reverse, extraOffset],
 		{
 			// reset to top when pathname changes
 			extraDeps: [pathname],
