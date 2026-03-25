@@ -13,7 +13,7 @@ const zeroWidthChars = /[\u200B\u200C\u200D\uFEFF]/g
 
 const checkZeroWidthChars = (startNode: Node = document.body) => {
 	const walk = (node: Node) => {
-		if (window.lenis?.isScrolling) return
+		if (window.lenisInstance?.isScrolling) return
 
 		if (node.nodeType === Node.TEXT_NODE) {
 			const parent = node.parentElement
