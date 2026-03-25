@@ -1,4 +1,13 @@
 
+# 2026-03-24
+
+## `window.lenis` renamed to `window.lenisInstance`
+
+`lenis@1.x` declares its own `window.lenis` global as a metadata object (`{ version?, horizontal?, snap? }`), which conflicts with the library's `window.lenis?: Lenis` instance declaration and causes TypeScript errors.
+
+**Migration Advice**
+
+Replace all usages of `window.lenis` with `window.lenisInstance` in your project.
 
 # 2026-02-10
 
