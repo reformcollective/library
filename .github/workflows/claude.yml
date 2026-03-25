@@ -35,24 +35,19 @@ jobs:
             if (!pullRequest) {
               core.setOutput("repository", defaultRepository)
               core.setOutput("ref", context.ref.replace("refs/heads/", ""))
-              core.setOutput("persist_credentials", "true")
-              core.setOutput("is_fork", "false")
               return
             }
 
-            const headRepository = pullRequest.head.repo?.full_name ?? defaultRepository
-            const baseRef = pullRequest.base.ref
+            const headRepository = pullRequest.head.repo?.full_name
             const headRef = pullRequest.head.ref
-            const isFork = headRepository !== defaultRepository
 
-            core.setOutput("repository", isFork ? defaultRepository : headRepository)
-            core.setOutput("ref", isFork ? baseRef : headRef)
-            core.setOutput("persist_credentials", isFork ? "false" : "true")
-            core.setOutput("is_fork", isFork ? "true" : "false")
-            core.setOutput("head_repository", headRepository)
-            core.setOutput("head_ref", headRef)
-            core.setOutput("base_ref", baseRef)
-            core.setOutput("pr_number", String(pullRequest.number))
+            if (!headRepository || headRepository !== defaultRepository) {
+              core.setFailed("Claude ping workflow only supports pull requests from branches in this repository.")
+              return
+            }
+
+            core.setOutput("repository", headRepository)
+            core.setOutput("ref", headRef)
 
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -60,25 +55,12 @@ jobs:
           repository: ${{ steps.checkout-target.outputs.repository }}
           ref: ${{ steps.checkout-target.outputs.ref }}
           fetch-depth: 0
-          persist-credentials: ${{ steps.checkout-target.outputs.persist_credentials }}
 
       - name: Run Claude Code
         id: claude
-        env:
-          PR_NUMBER: ${{ steps.checkout-target.outputs.pr_number }}
-          PR_IS_FORK: ${{ steps.checkout-target.outputs.is_fork }}
-          PR_HEAD_REPOSITORY: ${{ steps.checkout-target.outputs.head_repository }}
-          PR_HEAD_REF: ${{ steps.checkout-target.outputs.head_ref }}
-          PR_BASE_REF: ${{ steps.checkout-target.outputs.base_ref }}
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ env.CLAUDE_CODE_OAUTH_TOKEN }}
-          prompt: |
-            If `PR_IS_FORK` is `true`, this run is for a fork-based pull request.
-            - The checked out code is the trusted base branch, not the fork head.
-            - Do not attempt to push commits for fork PRs.
-            - Use GitHub tools to inspect the PR and leave comments or guidance instead.
-            - For same-repo branches, you may edit and push when asked.
 
           # This is an optional setting that allows Claude to read CI results on PRs
           additional_permissions: |
