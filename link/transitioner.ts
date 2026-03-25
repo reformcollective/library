@@ -73,13 +73,13 @@ export const useTransitioner = () => {
 				// scroll to anchor if applicable, otherwise scroll to top
 				if (destination.hash) {
 					const scrollOffset = getScrollOffset(destination.hash)
-					window.lenis?.scrollTo(destination.hash, {
+					window.lenisInstance?.scrollTo(destination.hash, {
 						offset: scrollOffset,
 						onComplete: scrollLock.release,
 					})
 					loader.dispatchEvent("scroll", destination.hash)
 				} else {
-					window.lenis?.scrollTo(0, {
+					window.lenisInstance?.scrollTo(0, {
 						onComplete: scrollLock.release,
 					})
 					loader.dispatchEvent("scroll", null)
@@ -153,7 +153,7 @@ export const useTransitioner = () => {
 			await Promise.race([timeout, urlChange])
 			await sleep(10) // give the page a moment to render
 
-			window.lenis?.scrollTo(0, { immediate: true })
+			window.lenisInstance?.scrollTo(0, { immediate: true })
 
 			// after the page has changed, an abort does nothing
 			if (signal?.aborted) return

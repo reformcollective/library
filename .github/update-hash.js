@@ -30,7 +30,10 @@ try {
 		.trim()
 	// Output format: "160000 <hash> 0\t<name>"
 	const latestHash = lsOutput.split(/\s+/)[1]
-	if (!latestHash) throw new Error(`Could not determine submodule hash for "${submoduleName}" from git index`)
+	if (!latestHash)
+		throw new Error(
+			`Could not determine submodule hash for "${submoduleName}" from git index`,
+		)
 
 	// Update all files in the workflows folder
 	const files = fs.readdirSync(workflowsPath)
