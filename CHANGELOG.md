@@ -3,7 +3,7 @@
 
 ## `window.lenis` renamed to `window.lenisInstance`
 
-`lenis@1.x` declares its own `window.lenis` global as a metadata object (`{ version?, horizontal?, snap? }`), which conflicts with the library's `window.lenis?: Lenis` instance declaration and causes TypeScript errors.
+`lenis@1.3.18` introduced a breaking change: `window.lenis` is now a package-owned metadata object (`{ version?, horizontal?, snap? }`) rather than the Lenis scroll instance. This conflicts with the library's `window.lenis?: Lenis` declaration and causes TypeScript errors if you're on `lenis >= 1.3.18`.
 
 **Migration Advice**
 
