@@ -6,30 +6,27 @@ const socket =
 		? new WebSocket("ws://localhost:3000/_next/webpack-hmr")
 		: null
 
-const messageSchema =
-	process.env.NODE_ENV === "development"
-		? z.union([
-				z.strictObject({
-					type: z.literal("built"),
-					hash: z.string(),
-					errors: z.array(z.unknown()),
-					warnings: z.array(z.unknown()),
-				}),
-				z.strictObject({
-					type: z.literal("building"),
-				}),
-				// unused messages
-				z.object({
-					type: z.enum([
-						"serverComponentChanges",
-						"turbopack-connected",
-						"turbopack-message",
-						"isrManifest",
-						"sync",
-					]),
-				}),
-			])
-		: null
+const messageSchema = z.union([
+	z.strictObject({
+		type: z.literal("built"),
+		hash: z.string(),
+		errors: z.array(z.unknown()),
+		warnings: z.array(z.unknown()),
+	}),
+	z.strictObject({
+		type: z.literal("building"),
+	}),
+	// unused messages
+	z.object({
+		type: z.enum([
+			"serverComponentChanges",
+			"turbopack-connected",
+			"turbopack-message",
+			"isrManifest",
+			"sync",
+		]),
+	}),
+])
 
 export const useHMR =
 	process.env.NODE_ENV === "development"
@@ -40,9 +37,21 @@ export const useHMR =
 					if (process.env.NODE_ENV === "development") {
 						const handler = (event: MessageEvent) => {
 							const message = JSON.parse(event.data)
-							const parsedMessage = messageSchema?.parse(message)
-
-							if (!parsedMessage) throw new Error("Invalid message")
+							const result = messageSchema.safeParse(message)
+							if (!result.success) {
+								throw new Error(
+									`useHMR (library/useHMR.ts): WebSocket message from Next.js HMR does not match the expected schema.
+` +
+										`This usually means the Next.js version changed the HMR message format.
+` +
+										`Update the messageSchema in library/useHMR.ts to match the new format.
+` +
+										`Received message: ${JSON.stringify(message)}
+` +
+										`Original error: ${result.error}`,
+								)
+							}
+							const parsedMessage = result.data
 
 							if (type === "prebuild" && parsedMessage.type === "building") {
 								sendMessage("building")
