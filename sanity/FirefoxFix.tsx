@@ -4,7 +4,6 @@ import { useInterval } from "ahooks"
 import { browserData } from "library/deviceDetection"
 import { useHMR } from "library/useHMR"
 import { stegaClean } from "next-sanity"
-import { useDraftModePerspective } from "next-sanity/hooks"
 import { toast } from "sonner"
 
 let hasWarned = false
@@ -14,7 +13,7 @@ const zeroWidthChars = /[\u200B\u200C\u200D\uFEFF]/g
 
 const checkZeroWidthChars = (startNode: Node = document.body) => {
 	const walk = (node: Node) => {
-		if (window.lenis?.isScrolling) return
+		if (window.lenisInstance?.isScrolling) return
 
 		if (node.nodeType === Node.TEXT_NODE) {
 			const parent = node.parentElement
@@ -25,7 +24,7 @@ const checkZeroWidthChars = (startNode: Node = document.body) => {
 				const letterSpacing = parseFloat(computedStyle.letterSpacing)
 
 				// remove the stega and replace the content
-				if (letterSpacing < 0) {
+				if (letterSpacing !== 0) {
 					const cleanContent = stegaClean(node.textContent ?? "")
 					node.textContent = cleanContent
 
@@ -44,14 +43,14 @@ const checkZeroWidthChars = (startNode: Node = document.body) => {
 }
 
 export const FirefoxFix = () => {
-	const perspective = useDraftModePerspective()
-
 	useInterval(() => {
-		if (browserData.isFireFox && perspective === "drafts") checkZeroWidthChars()
+		if (browserData.isFireFox) checkZeroWidthChars()
 	}, 1000)
 	useHMR("postbuild", () => {
-		hasWarned = false
-		checkZeroWidthChars()
+		if (browserData.isFireFox) {
+			hasWarned = false
+			checkZeroWidthChars()
+		}
 	})
 
 	return null

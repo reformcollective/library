@@ -10,16 +10,14 @@ import {
 	MATCH_URL_WISTIA,
 	MATCH_URL_YOUTUBE,
 } from "react-player/patterns"
-import type {
-	AutocompleteString,
-	IntrinsicTypeName,
-	StrictDefinition,
-} from "sanity"
+import type { PreviewValue, StrictDefinition } from "sanity"
 import {
+	type ArrayOfEntry,
 	defineArrayMember,
 	defineField,
 	defineType,
 	type ImageDefinition,
+	type ObjectDefinition,
 } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
 
@@ -182,32 +180,20 @@ export const redirect = defineArrayMember({
 	},
 })
 
-export function definePageSection<
-	const TType extends IntrinsicTypeName | AutocompleteString,
-	const TName extends string,
-	TSelect extends Record<string, string> | undefined,
-	// biome-ignore lint/suspicious/noExplicitAny: intentional behavior
-	TPrepareValue extends Record<keyof TSelect, any> | undefined,
-	TAlias extends IntrinsicTypeName | undefined,
-	TStrict extends StrictDefinition,
->(
+export function definePageSection<const TName extends string>(
 	{
 		group,
 		icon,
 		...options
 	}: Omit<
-		Parameters<
-			typeof defineArrayMember<
-				TType,
-				TName,
-				TSelect,
-				TPrepareValue,
-				TAlias,
-				TStrict
-			>
-		>[0],
-		"groups" | "icon"
+		ArrayOfEntry<ObjectDefinition>,
+		"name" | "groups" | "icon" | "preview"
 	> & {
+		name: TName
+		preview?: {
+			select?: Record<string, string>
+			prepare?: (value: Record<string, string | undefined>) => PreviewValue
+		}
 		/**
 		 * for example, "Designed for Home"
 		 *
@@ -221,17 +207,16 @@ export function definePageSection<
 	},
 	secondary?: Parameters<
 		typeof defineArrayMember<
-			TType,
+			"object",
 			TName,
-			TSelect,
-			TPrepareValue,
-			TAlias,
-			TStrict
+			undefined,
+			undefined,
+			undefined,
+			StrictDefinition
 		>
 	>[1],
 ) {
 	return defineArrayMember(
-		// @ts-expect-error doesn't match due to narrowing constraints
 		{
 			...options,
 			groups: [{ name: group }],
@@ -269,7 +254,7 @@ const videoSourceValidation: Record<string, RegExp> = {
 }
 
 const videoSourceTypes = [
-	{ title: "Upload a File", value: "mux" },
+	{ title: "Upload or Select a File", value: "mux" },
 	{ title: "YouTube", value: "youtube" },
 	{ title: "Vimeo", value: "vimeo" },
 	{ title: "Wistia", value: "wistia" },

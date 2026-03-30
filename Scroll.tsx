@@ -95,10 +95,10 @@ export const useIsSmooth = () => {
 		let isMounted = true
 
 		const updateFromLenis = () => {
-			const lenis = window.lenis
+			const lenis = window.lenisInstance
 			if (!lenis) return
 
-			const state = window.lenis?.isScrolling
+			const state = window.lenisInstance?.isScrolling
 
 			if (state === "smooth") {
 				if (isMounted) setSmooth(true)
@@ -109,7 +109,7 @@ export const useIsSmooth = () => {
 
 		updateFromLenis()
 
-		const lenis = window.lenis
+		const lenis = window.lenisInstance
 		lenis?.on("scroll", updateFromLenis)
 
 		return () => {
@@ -123,7 +123,7 @@ export const useIsSmooth = () => {
 
 declare global {
 	interface Window {
-		lenis?: Lenis
+		lenisInstance?: Lenis
 	}
 }
 
@@ -145,7 +145,7 @@ export const SmoothScrollStyle = (config: LenisOptions) => {
 	}, [lenis])
 
 	useEffect(() => {
-		window.lenis = lenis
+		window.lenisInstance = lenis
 		if (!lenis) return
 
 		let needsRefresh = false

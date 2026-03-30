@@ -175,7 +175,7 @@ export const useAnimation = <InputFn extends Creation>(
 		if (!shouldHydrateUtilities) return
 
 		const newContext = gsap.context((self) => {
-			const lenis = window.lenis
+			const lenis = window.lenisInstance
 
 			if (
 				// lenis exists
