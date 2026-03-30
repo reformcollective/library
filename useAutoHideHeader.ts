@@ -94,17 +94,21 @@ export default function useAutoHideHeader(
 				const showHeader = style === "snap" && delta < 0
 				const hideHeader = style === "snap" && delta > 0
 
+				const el = wrapper.current
 				// if forced sticky
 				if (forceShowHeader || (showHeader && !forceHideHeader)) {
 					yTo(0)
+					if (el) el.dataset.headerHiding = "false"
 				}
 				// if forced not sticky
 				else if (forceHideHeader || hideHeader) {
 					yTo(reverse ? height : -height)
+					if (el) el.dataset.headerHiding = "true"
 				}
 				// if hovered
 				else if (isHovered) {
 					yTo(0)
+					if (el) el.dataset.headerHiding = "false"
 				}
 				// scrub behavior, if needed
 				else if (style === "scrub") {
@@ -112,6 +116,7 @@ export default function useAutoHideHeader(
 					const newY = Math.min(0, Math.max(-height, currentY - delta))
 					const newPotentiallyReversedY = reverse ? -newY : newY
 					yTo(newPotentiallyReversedY, newPotentiallyReversedY)
+					if (el) el.dataset.headerHiding = String(delta > 0)
 				}
 			}
 
