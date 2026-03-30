@@ -34,6 +34,12 @@ jobs:
           prompt: |
             /code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}
 
+            This PR has ${{ github.event.pull_request.changed_files }} changed files and ${{ github.event.pull_request.additions + github.event.pull_request.deletions }} total lines changed.
+            Scale the number of parallel review agents based on PR size:
+            - Small (≤100 lines or ≤3 files): run 2 agents (CLAUDE.md audit + bug scan)
+            - Medium (101–300 lines or 4–10 files): run 3 agents (add git history)
+            - Large (>300 lines or >10 files): run all 5 agents
+
             Before reviewing or posting anything, check if you've already reviewed the PR - there may be a pending review or existing comments if you've reviewed before. If this is the case, you are performing a follow-up review and should behave accordingly.
             - Be aware that previous comments may have replies or been marked resolved.
             - When you find previously opened bot review comments that are fully addressed by the current diff, resolve those comment threads before submitting your review. Do not resolve comments unless the fix is present and verified in the current code.
