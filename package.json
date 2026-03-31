@@ -38,5 +38,5 @@
 		"lint": "biome lint",
 		"format": "biome check --write"
 	},
-	"packageManager": "pnpm@10.28.2"
+	"packageManager": "pnpm@10.33.0"
 }
