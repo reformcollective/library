@@ -117,10 +117,10 @@ export function InfiniteSideScroll({
 			const gap =
 				firstLastChild && secondFirstChild
 					? // distance from right edge of first to left edge of second,
-					  // minus secondFirstLeftMargin only (already in totalWidth via spaceBefore[0]).
-					  // firstLastRightMargin is NOT subtracted: horizontalLoop's getTotalWidth ends
-					  // at the last item's offsetWidth (no trailing margin), so that margin must
-					  // remain in paddingRight to produce an even gap at the loop point.
+						// minus secondFirstLeftMargin only (already in totalWidth via spaceBefore[0]).
+						// firstLastRightMargin is NOT subtracted: horizontalLoop's getTotalWidth ends
+						// at the last item's offsetWidth (no trailing margin), so that margin must
+						// remain in paddingRight to produce an even gap at the loop point.
 						Math.abs(
 							firstLastChild.getBoundingClientRect().right -
 								secondFirstChild.getBoundingClientRect().left,
