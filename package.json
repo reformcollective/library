@@ -9,10 +9,10 @@
 		"@mux/blurup": "^1",
 		"@mux/mux-video-react": "^0.29",
 		"@sanity/image-url": "^2",
+		"@types/semver": "^7",
 		"@vanilla-extract/css": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/css@edaedbb",
 		"@vanilla-extract/next-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/next-plugin@edaedbb",
 		"@vanilla-extract/turbopack-plugin": "https://pkg.pr.new/RJWadley/vanilla-extract/@vanilla-extract/turbopack-plugin@edaedbb",
-		"@types/semver": "^7",
 		"ahooks": "^3",
 		"browser-dtector": "^4",
 		"class-variance-authority": "^0.7",
@@ -28,7 +28,7 @@
 		"zod": "^4"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2",
+		"@biomejs/biome": "2.4.10",
 		"@types/stylis": "^4",
 		"typescript": "^5",
 		"vitest": "^4"
