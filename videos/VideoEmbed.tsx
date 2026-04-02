@@ -1,17 +1,22 @@
 import ClientOnly from "library/ClientOnly"
 import type { DeepAssetMeta } from "library/sanity/assetMetadata"
 import { css, f, styled } from "library/styled/alpha"
+import { useCombinedRefs } from "library/useCombinedRefs"
 import { stegaClean } from "next-sanity"
+import { useRef } from "react"
 import ReactPlayer from "react-player"
 import type { Video } from "sanity.types"
 
-type VideoEmbedProps = {
+type VideoEmbedProps = Omit<
+	React.ComponentPropsWithoutRef<typeof ReactPlayer>,
+	"src" | "width" | "height"
+> & {
+	ref?: React.Ref<HTMLVideoElement>
 	className?: string
 	video: DeepAssetMeta<Video>
 	controls?: boolean
-	playing?: boolean
-	muted?: boolean
-	loop?: boolean
+	/** When true, seeks to 0 each time playback starts */
+	resetOnPlay?: boolean
 }
 
 function getVideoSrc(video: DeepAssetMeta<Video>) {
@@ -33,24 +38,38 @@ export function VideoEmbed({
 	className,
 	video,
 	controls = true,
-	muted,
-	loop,
-	playing,
+	resetOnPlay,
+	onPlay,
+	ref: externalRef,
+	...props
 }: VideoEmbedProps) {
 	const { src } = getVideoSrc(video)
+	const internalRef = useRef<HTMLVideoElement>(null)
+	const combinedRef = useCombinedRefs(externalRef, internalRef)
+
 	if (!src) return null
 
 	return (
 		<ClientOnly>
 			<Embed className={className}>
 				<ReactPlayer
+					ref={combinedRef}
 					src={src}
 					width="100%"
 					height="100%"
 					controls={controls}
-					muted={muted}
-					loop={loop}
-					playing={playing}
+					onPlay={
+						resetOnPlay
+							? (e) => {
+									const el = internalRef.current
+									if (el && el.currentTime > 0.1) {
+										el.currentTime = 0
+									}
+									onPlay?.(e)
+								}
+							: onPlay
+					}
+					{...props}
 				/>
 			</Embed>
 		</ClientOnly>
