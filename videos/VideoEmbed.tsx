@@ -3,7 +3,7 @@ import type { DeepAssetMeta } from "library/sanity/assetMetadata"
 import { css, f, styled } from "library/styled/alpha"
 import { useCombinedRefs } from "library/useCombinedRefs"
 import { stegaClean } from "next-sanity"
-import { forwardRef, useRef } from "react"
+import { useRef } from "react"
 import ReactPlayer from "react-player"
 import type { Video } from "sanity.types"
 
@@ -11,6 +11,7 @@ type VideoEmbedProps = Omit<
 	React.ComponentPropsWithoutRef<typeof ReactPlayer>,
 	"src" | "width" | "height"
 > & {
+	ref?: React.Ref<HTMLVideoElement>
 	className?: string
 	video: DeepAssetMeta<Video>
 	controls?: boolean
@@ -33,44 +34,47 @@ function getVideoSrc(video: DeepAssetMeta<Video>) {
  * A React component for playing a variety of URLs, including file paths, HLS, DASH, YouTube, Vimeo, Wistia and Mux.
  * Accepts a Sanity `video` schema object directly. Fills its container — the parent is responsible for sizing.
  */
-export const VideoEmbed = forwardRef<HTMLVideoElement, VideoEmbedProps>(
-	function VideoEmbed(
-		{ className, video, controls = true, resetOnPlay, onPlay, ...props },
-		externalRef,
-	) {
-		const { src } = getVideoSrc(video)
-		const internalRef = useRef<HTMLVideoElement>(null)
-		const combinedRef = useCombinedRefs(externalRef, internalRef)
+export function VideoEmbed({
+	className,
+	video,
+	controls = true,
+	resetOnPlay,
+	onPlay,
+	ref: externalRef,
+	...props
+}: VideoEmbedProps) {
+	const { src } = getVideoSrc(video)
+	const internalRef = useRef<HTMLVideoElement>(null)
+	const combinedRef = useCombinedRefs(externalRef, internalRef)
 
-		if (!src) return null
+	if (!src) return null
 
-		return (
-			<ClientOnly>
-				<Embed className={className}>
-					<ReactPlayer
-						ref={combinedRef}
-						src={src}
-						width="100%"
-						height="100%"
-						controls={controls}
-						onPlay={
-							resetOnPlay
-								? (e) => {
-										const el = internalRef.current
-										if (el && el.currentTime > 0.1) {
-											el.currentTime = 0
-										}
-										onPlay?.(e)
+	return (
+		<ClientOnly>
+			<Embed className={className}>
+				<ReactPlayer
+					ref={combinedRef}
+					src={src}
+					width="100%"
+					height="100%"
+					controls={controls}
+					onPlay={
+						resetOnPlay
+							? (e) => {
+									const el = internalRef.current
+									if (el && el.currentTime > 0.1) {
+										el.currentTime = 0
 									}
-								: onPlay
-						}
-						{...props}
-					/>
-				</Embed>
-			</ClientOnly>
-		)
-	},
-)
+									onPlay?.(e)
+								}
+							: onPlay
+					}
+					{...props}
+				/>
+			</Embed>
+		</ClientOnly>
+	)
+}
 
 const Embed = styled(
 	"div",
