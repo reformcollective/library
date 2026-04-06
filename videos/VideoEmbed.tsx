@@ -1,3 +1,5 @@
+"use client"
+
 import ClientOnly from "library/ClientOnly"
 import type { DeepAssetMeta } from "library/sanity/assetMetadata"
 import { css, f, styled } from "library/styled/alpha"
