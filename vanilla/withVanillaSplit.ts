@@ -5,7 +5,7 @@ import type { NextConfig } from "next"
 import type { TurbopackLoaderItem } from "next/dist/server/config-shared"
 
 const withVanillaExtract = createVanillaExtractPlugin({
-	unstable_turbopack: { mode: "on" },
+	turbopackMode: "on",
 })
 
 export const withVanillaSplit = (config: NextConfig): NextConfig => {
