@@ -92,6 +92,8 @@ export function horizontalLoop(items, config) {
 			populateOffsets = () => {
 				timeOffset = center
 					? (tl.duration() * (container.offsetWidth / 2)) / totalWidth
+					: config.snapOffset
+					? (tl.duration() * config.snapOffset) / totalWidth
 					: 0
 				center &&
 					times.forEach((t, i) => {
@@ -100,6 +102,10 @@ export function horizontalLoop(items, config) {
 								(tl.duration() * widths[i]) / 2 / totalWidth -
 								timeOffset,
 						)
+					})
+				!center && config.snapOffset &&
+					times.forEach((t, i) => {
+						times[i] = timeWrap(tl.labels["label" + i] - timeOffset)
 					})
 			},
 			getClosest = (values, value, wrap) => {
