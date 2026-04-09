@@ -178,6 +178,7 @@ export function CarouselBackgroundVideo({
 					muted={muted}
 					playsInline
 					loop={loop}
+					preferPlayback="mse"
 					poster={
 						playbackFailure
 							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${posterSize}`

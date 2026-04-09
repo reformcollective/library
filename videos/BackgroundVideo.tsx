@@ -217,6 +217,7 @@ export function BackgroundVideo({
 						muted={muted}
 						playsInline
 						loop={loop}
+						preferPlayback="mse"
 						streamType="on-demand"
 						onCanPlay={() => setVideoCanPlay(false)}
 						onEnded={onEnded}
@@ -255,6 +256,7 @@ export function BackgroundVideo({
 				preload="metadata"
 				muted={muted}
 				playsInline
+				preferPlayback="mse"
 				style={{ opacity: videoCanPlay ? 1 : 0 }}
 			/>
 			{/* this is to combat a safari rendering bug where the video doesn't render properly if being lazy loaded or dynamically loaded. */}
@@ -272,6 +274,7 @@ export function BackgroundVideo({
 					muted={muted}
 					playsInline
 					loop={loop}
+					preferPlayback="mse"
 					poster={
 						playbackFailure
 							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${posterSize}`
@@ -291,6 +294,7 @@ export function BackgroundVideo({
 					muted={muted}
 					playsInline
 					loop={loop}
+					preferPlayback="mse"
 					streamType="on-demand"
 					onEnded={onEnded}
 					onTimeUpdate={handleTimeUpdate}
