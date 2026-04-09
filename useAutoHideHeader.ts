@@ -74,7 +74,7 @@ export default function useAutoHideHeader(
 			let isHovered = false
 			if (!wrapper?.current) return
 
-			// reset header position on route change
+			// reset header position on route change. This is important because otherwise the header could get stuck in the wrong position if the user navigates while it's hidden
 			const resetHeader = (target: typeof wrapper.current) => {
 				gsap.set(target, { y: 0 })
 				if (target) {
