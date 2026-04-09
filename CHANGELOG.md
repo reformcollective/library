@@ -1,4 +1,14 @@
 
+# 2026-04-09
+
+## Use published vanilla-extract packages
+
+The library now targets the published npm releases of vanilla-extract rather than PR builds.
+
+**Migration Advice**
+
+Remove any `@vanilla-extract/*` overrides and update to the latest published packages.
+
 # 2026-03-24
 
 ## `window.lenis` renamed to `window.lenisInstance`
