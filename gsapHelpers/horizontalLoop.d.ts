@@ -11,6 +11,8 @@ interface HorizontalLoopConfig {
 	snap?: boolean | number | ((value: number) => number)
 	draggable?: boolean
 	center?: boolean
+	/** Pixel offset from the container's left edge where items snap. Ignored when center is true. */
+	snapOffset?: number
 	onChange?: (items: unknown, index: number) => void
 	/**
 	 * When false, the helper will not attach a window resize listener.
