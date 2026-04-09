@@ -74,6 +74,16 @@ export default function useAutoHideHeader(
 			let isHovered = false
 			if (!wrapper?.current) return
 
+			// reset header position on route change
+			const resetHeader = (target: typeof wrapper.current) => {
+				gsap.set(target, { y: 0 })
+				if (target) {
+					target.dataset.headerHiding = "false"
+					target.dataset.headerScrolled = "false"
+				}
+			}
+			resetHeader(wrapper.current)
+
 			const props = {
 				ease: "power1.out",
 				duration: 0.4,
