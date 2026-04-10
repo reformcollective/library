@@ -143,7 +143,7 @@ export const useTransitioner = () => {
 			)
 			await Promise.race([timeout, pageCommit])
 
-			window.lenisInstance?.scrollTo(0, { immediate: true })
+			window.lenisInstance?.scrollTo(0, { immediate: true, force: true })
 
 			// after the page has changed, an abort does nothing
 			if (signal?.aborted) return

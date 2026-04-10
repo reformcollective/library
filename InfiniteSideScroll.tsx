@@ -25,6 +25,7 @@ export function InfiniteSideScroll({
 	ArrowButton,
 	BackArrowButton,
 	className,
+	snapPaddingLeft = 0,
 	marqueeSpeed = 0,
 	reversed = false,
 	disableDrag = false,
@@ -36,6 +37,13 @@ export function InfiniteSideScroll({
 }: {
 	children: React.ReactNode
 	className?: string
+	/**
+	 * Pixel offset from the left edge where items snap.
+	 * For example, pass the inter-card gap to have items snap flush with
+	 * the first visible card rather than the raw container edge.
+	 * Changes to this value trigger a loop recreation.
+	 */
+	snapPaddingLeft?: number
 	/**
 	 * if specified, a button will be shown to scroll forward and backward by an item
 	 */
@@ -139,6 +147,8 @@ export function InfiniteSideScroll({
 				manageResize: false,
 				// padding right should match the calculated gap
 				paddingRight: gap,
+				// pixel offset from left edge where items snap (ignored in center mode)
+				snapOffset: centerMode ? undefined : snapPaddingLeft || undefined,
 				onChange: (_, index) => {
 					latestOnChange.current?.(index)
 				},
@@ -221,6 +231,7 @@ export function InfiniteSideScroll({
 			numberNeeded,
 			internalLoopRef,
 			centerMode,
+			snapPaddingLeft,
 		],
 		{
 			recreateOnResize: true,
