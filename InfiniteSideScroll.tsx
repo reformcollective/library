@@ -107,7 +107,7 @@ export function InfiniteSideScroll({
 			// doing the math properly here is a bit tricky, but gives us lots of flexibility in how we pad our marquee
 			const childCount = rowRef.current.children.length / numberNeeded
 			const firstLastChild = rowRef.current.children[childCount - 1]
-			const firstLastRightMargin = Number(
+			const _firstLastRightMargin = Number(
 				gsap.getProperty(firstLastChild ?? null, "marginRight"),
 			)
 			const secondFirstChild = rowRef.current.children[childCount]

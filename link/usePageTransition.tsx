@@ -24,6 +24,7 @@ export const PageTransitionProvider = ({
 	const [animations] = useState(() => new Set<PageTransition>())
 
 	const pathname = usePathname()
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional — fire signal on every path change
 	useEffect(() => {
 		signalPathChanged()
 	}, [pathname])
