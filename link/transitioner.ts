@@ -154,6 +154,7 @@ export const useTransitioner = () => {
 			await sleep(10) // give the page a moment to render
 
 			window.lenisInstance?.scrollTo(0, { immediate: true })
+			window.scrollTo(0, 0)
 
 			// after the page has changed, an abort does nothing
 			if (signal?.aborted) return
