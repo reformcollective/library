@@ -98,7 +98,7 @@ export default function useAutoHideHeader(
 				const height = (wrapper.current?.offsetHeight ?? 0) + extraOffset
 				if (delta > 100 || delta < -100) {
 					// short circuit on large scrolls, since those are probably page transitions
-					// still update scrolled state so frosted effect is correct (e.g. back button)
+					// still update scrolled state so scroll-dependent styles remain correct
 					const el = wrapper.current
 					if (el) el.dataset.headerScrolled = scroll <= 5 ? "false" : "true"
 					return
