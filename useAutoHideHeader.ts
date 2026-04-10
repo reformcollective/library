@@ -153,7 +153,8 @@ export default function useAutoHideHeader(
 					ScrollTrigger.refresh()
 					const scroll = window.lenisInstance?.scroll ?? window.scrollY
 					if (wrapper.current) {
-						wrapper.current.dataset.headerScrolled = scroll <= 5 ? "false" : "true"
+						wrapper.current.dataset.headerScrolled =
+							scroll <= 5 ? "false" : "true"
 					}
 				})
 			}
