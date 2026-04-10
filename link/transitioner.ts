@@ -153,7 +153,7 @@ export const useTransitioner = () => {
 			await Promise.race([timeout, urlChange])
 			await sleep(10) // give the page a moment to render
 
-			window.lenisInstance?.scrollTo(0, { immediate: true })
+			window.lenisInstance?.scrollTo(0, { immediate: true, force: true })
 
 			// after the page has changed, an abort does nothing
 			if (signal?.aborted) return
