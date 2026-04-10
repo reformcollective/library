@@ -32,13 +32,13 @@ export const loader = new TypedEventEmitter<{
 	/**
 	 * fires when the new page has been committed to the DOM after a route change
 	 */
-	pageCommit: []
+	pageCommit: [string]
 }>({
 	triggerHappyEvents: ["end"],
 	resetHappyEvents: ["start", "routeChange"],
 })
 
-export const waitForPathChange = () =>
+export const waitForPageCommit = () =>
 	new Promise<void>((resolve) => {
 		const handler = () => {
 			loader.removeEventListener("pageCommit", handler)

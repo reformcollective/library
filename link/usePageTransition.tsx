@@ -25,7 +25,7 @@ export const PageTransitionProvider = ({
 
 	const pathname = usePathname()
 	useEffect(() => {
-		loader.dispatchEvent("pageCommit")
+		loader.dispatchEvent("pageCommit", pathname)
 	}, [pathname])
 
 	return (
