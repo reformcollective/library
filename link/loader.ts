@@ -29,7 +29,20 @@ export const loader = new TypedEventEmitter<{
 	 * @param transitionName the name of the anchor that was clicked if available
 	 */
 	scroll: [string | null]
+	/**
+	 * fires when the new page has been committed to the DOM after a route change
+	 */
+	pageCommit: []
 }>({
 	triggerHappyEvents: ["end"],
 	resetHappyEvents: ["start", "routeChange"],
 })
+
+export const waitForPathChange = () =>
+	new Promise<void>((resolve) => {
+		const handler = () => {
+			loader.removeEventListener("pageCommit", handler)
+			resolve()
+		}
+		loader.addEventListener("pageCommit", handler)
+	})

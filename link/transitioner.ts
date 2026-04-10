@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation"
 import type { MouseEvent } from "react"
 import { use, useCallback } from "react"
 import { flushSync } from "react-dom"
-import { loader } from "./loader"
-import { waitForPathChange } from "./pathChangeSignal"
+import { loader, waitForPageCommit } from "./loader"
 import { TransitionsContext } from "./usePageTransition"
 import { getScrollOffset } from "./util"
 
@@ -133,7 +132,7 @@ export const useTransitioner = () => {
 			])
 			if (signal?.aborted) return
 
-			const pathChange = waitForPathChange()
+			const pageCommit = waitForPageCommit()
 			router.push(to as Parameters<typeof router.prefetch>[0])
 
 			// wait for the new page to commit to the DOM, with a timeout
@@ -142,7 +141,7 @@ export const useTransitioner = () => {
 					if (!signal?.aborted) reject(new Error("Navigation timeout"))
 				}, 30_000),
 			)
-			await Promise.race([timeout, pathChange])
+			await Promise.race([timeout, pageCommit])
 
 			window.lenisInstance?.scrollTo(0, { immediate: true })
 
