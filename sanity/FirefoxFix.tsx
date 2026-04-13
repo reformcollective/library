@@ -48,7 +48,6 @@ export const FirefoxFix = () => {
 	}, 1000)
 	useHMR("postbuild", () => {
 		if (browserData.isFireFox) {
-			hasWarned = false
 			checkZeroWidthChars()
 		}
 	})
