@@ -80,11 +80,19 @@ const linkQuery = defineQuery(`
 // get-it (used by @sanity/client) bypasses Next.js's fetch deduplication by
 // going through node:http directly, so we memoize at the JS call level instead.
 const fetchAssetDoc = cache((ref: string) =>
-	sanityFetch({ query: assetQuery, params: { asset: ref }, enrichAssets: false }),
+	sanityFetch({
+		query: assetQuery,
+		params: { asset: ref },
+		enrichAssets: false,
+	}),
 )
 
 const fetchLinkDoc = cache((ref: string) =>
-	sanityFetch({ query: linkQuery, params: { asset: ref }, enrichAssets: false }),
+	sanityFetch({
+		query: linkQuery,
+		params: { asset: ref },
+		enrichAssets: false,
+	}),
 )
 
 export type DeepAssetMeta<T> = T extends { asset?: { _ref?: string } }
@@ -158,7 +166,9 @@ export const fetchAssetMeta = async <InputType>(
 		}
 
 		if (isLink) {
-			const { data: linkedItem } = await fetchLinkDoc(linkParse.internalLink._ref)
+			const { data: linkedItem } = await fetchLinkDoc(
+				linkParse.internalLink._ref,
+			)
 
 			return {
 				...input,
