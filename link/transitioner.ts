@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import type { MouseEvent } from "react"
 import { use, useCallback } from "react"
 import { flushSync } from "react-dom"
-import { loader } from "./loader"
+import { loader, waitForPageCommit } from "./loader"
 import { TransitionsContext } from "./usePageTransition"
 import { getScrollOffset } from "./util"
 
@@ -132,28 +132,18 @@ export const useTransitioner = () => {
 			])
 			if (signal?.aborted) return
 
-			const existingHref = window.location.href
+			const pageCommit = waitForPageCommit()
 			router.push(to as Parameters<typeof router.prefetch>[0])
 
-			// check for href changes with a timeout
+			// wait for the new page to commit to the DOM, with a timeout
 			const timeout = new Promise((_, reject) =>
 				setTimeout(() => {
 					if (!signal?.aborted) reject(new Error("Navigation timeout"))
 				}, 30_000),
 			)
-			const urlChange = new Promise<void>((resolve) => {
-				const checkUrlChange = () => {
-					if (window.location.href !== existingHref) {
-						resolve()
-						clearInterval(interval)
-					}
-				}
-				const interval = setInterval(checkUrlChange, 5)
-			})
-			await Promise.race([timeout, urlChange])
-			await sleep(10) // give the page a moment to render
+			await Promise.race([timeout, pageCommit])
 
-			window.lenisInstance?.scrollTo(0, { immediate: true })
+			window.lenisInstance?.scrollTo(0, { immediate: true, force: true })
 
 			// after the page has changed, an abort does nothing
 			if (signal?.aborted) return
