@@ -1,4 +1,65 @@
 
+# 2026-04-13
+
+## `enrichAssets` now opt-in; `fetchAssetMeta` deprecated
+
+`libraryFetch` / `sanityFetch` previously called `fetchAssetMeta` after every query, recursively enriching image refs with LQIP/aspect-ratio data, Mux video refs with playback metadata, and link objects with a resolved `internalSlug`. This happened automatically with no action required.
+
+That behaviour is now **opt-in**. The `enrichAssets` option defaults to `false`. Calls that relied on automatic enrichment will silently receive un-enriched data unless migrated.
+
+**Why**
+
+Post-query enrichment fired N+1 Sanity API calls per render (one per asset ref), added up to 1 second of SSR latency (Mux `@mux/blurup` HTTP requests), and made it impossible to know at query time what shape the data would have. Inline GROQ projections resolve the same data in a single round-trip and make the shape explicit and type-safe.
+
+**Migration Advice**
+
+Replace post-query enrichment with inline GROQ projections in your query. The patterns below cover all enriched field types:
+
+```groq
+# Image — adds lqip and aspectRatio under a `data` key
+customImage {
+  ...,
+  "data": {
+    "lqip": asset->metadata.lqip,
+    "aspectRatio": asset->metadata.dimensions.aspectRatio
+  }
+}
+
+# Mux video — adds playback metadata under a `data` key
+muxVideo {
+  ...,
+  "data": {
+    "playbackId": asset->playbackId,
+    "videoThumbnailUrl": "https://image.mux.com/" + asset->playbackId + "/thumbnail.jpg",
+    "videoBlurUrl": "https://image.mux.com/" + asset->playbackId + "/thumbnail.webp?time=0&width=32",
+    "videoAspectRatio": select(
+      defined(asset->data.aspect_ratio) =>
+        string::split(asset->data.aspect_ratio, ":")[0] + "/" + string::split(asset->data.aspect_ratio, ":")[1]
+    ),
+    "videoDuration": asset->data.duration
+  }
+}
+
+# Link — adds resolved internalSlug
+link {
+  ...,
+  "internalSlug": select(
+    type != "internal" => null,
+    !defined(internalLink) => null,
+    internalLink->._type == "page" => select(
+      internalLink->slug.current == "home" => "/",
+      internalLink->slug.current
+    ),
+    internalLink->._type == "product" => "/products/" + internalLink->store.slug.current,
+    internalLink->._type == "collection" => "/collections/" + internalLink->store.slug.current
+  )
+}
+```
+
+Once migrated, remove any explicit `enrichAssets: true` from your `sanityFetch` calls. If you cannot migrate a call-site immediately, pass `enrichAssets: true` to preserve the old behaviour — but note that `fetchAssetMeta` is now `@deprecated` and will be removed in a future release.
+
+Note: `CMSLink.internalSlug` has been widened from `string | undefined` to `string | null | undefined` to match the `null` that GROQ `select()` returns on the fallback path.
+
 # 2026-04-07
 
 ## Use published vanilla-extract packages
