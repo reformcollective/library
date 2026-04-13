@@ -31,7 +31,12 @@
 		"@biomejs/biome": "2.4.10",
 		"@types/stylis": "^4",
 		"typescript": "^5",
-		"vitest": "^4"
+		"vitest": "^4",
+		"postcss": "^8.5.6",
+		"postcss-styled-syntax": "^0.7.1",
+		"stylelint": "^16.25.0",
+		"stylelint-config-standard": "^39.0.1",
+		"stylelint-plugin-use-baseline": "^1.1.0"
 	},
 	"scripts": {
 		"test": "vitest run",

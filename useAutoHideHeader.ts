@@ -74,6 +74,16 @@ export default function useAutoHideHeader(
 			let isHovered = false
 			if (!wrapper?.current) return
 
+			// reset header position on route change. This is important because otherwise the header could get stuck in the wrong position if the user navigates while it's hidden
+			const resetHeader = (target: typeof wrapper.current) => {
+				gsap.set(target, { y: 0 })
+				if (target) {
+					target.dataset.headerHiding = "false"
+					target.dataset.headerScrolled = "false"
+				}
+			}
+			resetHeader(wrapper.current)
+
 			const props = {
 				ease: "power1.out",
 				duration: 0.4,
@@ -86,7 +96,13 @@ export default function useAutoHideHeader(
 				const delta = scroll - lastScroll
 				lastScroll = scroll
 				const height = (wrapper.current?.offsetHeight ?? 0) + extraOffset
-				if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
+				if (delta > 100 || delta < -100) {
+					// short circuit on large scrolls, since those are probably page transitions
+					// still update scrolled state so scroll-dependent styles remain correct
+					const el = wrapper.current
+					if (el) el.dataset.headerScrolled = scroll <= 5 ? "false" : "true"
+					return
+				}
 
 				const forceHideHeader = dataHideAreOnScreen.current
 				const forceShowHeader =
@@ -132,13 +148,26 @@ export default function useAutoHideHeader(
 				isHovered = false
 			}
 
+			const onPopState = () => {
+				requestAnimationFrame(() => {
+					ScrollTrigger.refresh()
+					const scroll = window.lenisInstance?.scroll ?? window.scrollY
+					if (wrapper.current) {
+						wrapper.current.dataset.headerScrolled =
+							scroll <= 5 ? "false" : "true"
+					}
+				})
+			}
+
 			wrapper.current?.addEventListener("pointerenter", onHover)
 			wrapper.current?.addEventListener("pointerleave", onLeave)
+			window.addEventListener("popstate", onPopState)
 
 			ScrollTrigger.create({ onUpdate })
 			return () => {
 				wrapper.current?.removeEventListener("pointerenter", onHover)
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
+				window.removeEventListener("popstate", onPopState)
 			}
 		},
 		[wrapper, style, reverse, extraOffset],
