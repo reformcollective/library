@@ -62,6 +62,28 @@ Once migrated, remove any explicit `enrichAssets: true` from your `sanityFetch` 
 
 Note: `CMSLink.internalSlug` has been widened from `string | undefined` to `string | null | undefined` to match the `null` that GROQ `select()` returns on the fallback path.
 
+## `isRouteDefined` helper — use instead of `!!link`
+
+A new `isRouteDefined(link)` export is available from `library/link`.
+
+**Why**
+
+`sanity-plugin-link-field` writes an `initialValue` of `{ type: "internal", toNewTab: false }` into every link field when a section is first created in Studio. This means the link field is **never** `null` or `undefined` in the database — it always contains at least a partial object, even when the editor has not selected any destination.
+
+As a result, `!!link` is always `true` for these fields and is an unreliable guard for "does this section link anywhere?". Previously, `fetchAssetMeta` resolved an `internalSlug` onto the link object, but that enrichment did not change the object's truthiness or null out links with no destination — the check was subtly broken in both the old and new systems.
+
+`isRouteDefined` fixes this by running the value through `resolveRoute` and checking whether a URL was produced:
+
+```ts
+import { isRouteDefined } from "library/link"
+
+// ✓
+const hasLink = isRouteDefined(link)
+
+// ✗ — always true; the link object exists even with no destination selected
+const hasLink = !!link
+```
+
 # 2026-04-07
 
 ## Use published vanilla-extract packages
