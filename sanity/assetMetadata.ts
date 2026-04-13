@@ -76,6 +76,17 @@ const linkQuery = defineQuery(`
 	*[_id == $asset && defined(slug.current)][0]
 `)
 
+// Deduplicate repeated lookups for the same ref within a single render pass.
+// get-it (used by @sanity/client) bypasses Next.js's fetch deduplication by
+// going through node:http directly, so we memoize at the JS call level instead.
+const fetchAssetDoc = cache((ref: string) =>
+	sanityFetch({ query: assetQuery, params: { asset: ref }, enrichAssets: false }),
+)
+
+const fetchLinkDoc = cache((ref: string) =>
+	sanityFetch({ query: linkQuery, params: { asset: ref }, enrichAssets: false }),
+)
+
 export type DeepAssetMeta<T> = T extends { asset?: { _ref?: string } }
 	? T & { data?: AssetMeta }
 	: T extends { _type: "link"; internalLink?: { _ref?: string } }
@@ -101,13 +112,7 @@ export const fetchAssetMeta = async <InputType>(
 		const { data: linkParse, success: isLink } = z.safeParse(linkSchema, input)
 
 		if (isAsset) {
-			const { data: asset } = await sanityFetch({
-				query: assetQuery,
-				params: {
-					asset: assetParse.asset._ref,
-				},
-				enrichAssets: false,
-			})
+			const { data: asset } = await fetchAssetDoc(assetParse.asset._ref)
 			if (!asset) return input as Output
 
 			const { blurDataURL } =
@@ -153,11 +158,7 @@ export const fetchAssetMeta = async <InputType>(
 		}
 
 		if (isLink) {
-			const { data: linkedItem } = await sanityFetch({
-				query: linkQuery,
-				params: { asset: linkParse.internalLink._ref },
-				enrichAssets: false,
-			})
+			const { data: linkedItem } = await fetchLinkDoc(linkParse.internalLink._ref)
 
 			return {
 				...input,
