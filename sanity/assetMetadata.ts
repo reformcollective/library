@@ -112,11 +112,7 @@ export const fetchAssetMeta = async <InputType>(
 		const { data: linkParse, success: isLink } = z.safeParse(linkSchema, input)
 
 		if (isAsset) {
-			const assetT0 = performance.now()
 			const { data: asset } = await fetchAssetDoc(assetParse.asset._ref)
-			console.log(
-				`[sanity:asset  ] resolved ${assetParse.asset._ref} (${asset?._type ?? "not found"}) — ${(performance.now() - assetT0).toFixed(0)}ms`,
-			)
 			if (!asset) return input as Output
 
 			const { blurDataURL } =
@@ -162,11 +158,7 @@ export const fetchAssetMeta = async <InputType>(
 		}
 
 		if (isLink) {
-			const linkT0 = performance.now()
 			const { data: linkedItem } = await fetchLinkDoc(linkParse.internalLink._ref)
-			console.log(
-				`[sanity:link   ] resolved ${linkParse.internalLink._ref} → ${linkedItem ? `"${linkedItem.slug?.current}"` : "not found"} — ${(performance.now() - linkT0).toFixed(0)}ms`,
-			)
 
 			return {
 				...input,

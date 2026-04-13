@@ -30,11 +30,6 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
  * and will also fetch from the CDN.
  * When using the "drafts" perspective then the data is fetched from the live API and isn't cached, it will also fetch draft content that isn't published yet.
  */
-// Shared reference point so timestamps are relative offsets (easier to read than wall-clock)
-const _fetchEpoch = performance.now()
-const relMs = () => (performance.now() - _fetchEpoch).toFixed(0).padStart(6)
-const queryLabel = (q: string) => q.trimStart().slice(0, 70).replace(/\s+/g, " ")
-
 export async function libraryFetch<const QueryString extends string>({
 	query,
 	params = {},
@@ -62,10 +57,6 @@ export async function libraryFetch<const QueryString extends string>({
 	 */
 	enrichAssets?: boolean
 }) {
-	const label = queryLabel(query)
-	const t0 = performance.now()
-	console.log(`[sanity +${relMs()}ms] FETCH  start  "${label}"`)
-
 	const { data, sourceMap, tags } = await internalFetch({
 		query,
 		params,
@@ -73,20 +64,11 @@ export async function libraryFetch<const QueryString extends string>({
 		perspective,
 	})
 
-	const t1 = performance.now()
-	console.log(`[sanity +${relMs()}ms] FETCH  done   "${label}" — ${(t1 - t0).toFixed(0)}ms`)
-
-	if (!enrichAssets) {
-		return { data, sourceMap, tags }
+	return {
+		data: enrichAssets ? await fetchAssetMeta(data) : data,
+		sourceMap,
+		tags,
 	}
-
-	const enriched = await fetchAssetMeta(data)
-	const t2 = performance.now()
-	console.log(
-		`[sanity +${relMs()}ms] ENRICH done   "${label}" — enrich: ${(t2 - t1).toFixed(0)}ms | total: ${(t2 - t0).toFixed(0)}ms`,
-	)
-
-	return { data: enriched, sourceMap, tags }
 }
 
 const allowProxy =
