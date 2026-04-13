@@ -1,4 +1,6 @@
+import { usePathname } from "next/navigation"
 import { createContext, use, useEffect, useState } from "react"
+import { loader } from "./loader"
 
 type PageTransition = {
 	animateBefore?: () => Promise<void> | void
@@ -20,6 +22,11 @@ export const PageTransitionProvider = ({
 		false,
 	)
 	const [animations] = useState(() => new Set<PageTransition>())
+
+	const pathname = usePathname()
+	useEffect(() => {
+		loader.dispatchEvent("pageCommit", pathname)
+	}, [pathname])
 
 	return (
 		<TransitionsContext.Provider

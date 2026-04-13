@@ -1,4 +1,4 @@
-import postcssSyntax from "postcss-styled-syntax";
+import postcssSyntax from "postcss-styled-syntax"
 
 export default {
 	extends: "stylelint-config-standard",
@@ -20,11 +20,11 @@ export default {
 				ignoreSelectors: ["/^view-transition-/"],
 				ignoreProperties: {
 					"background-clip": ["text"],
-          "view-transition-name": [],
-          "text-wrap": ['pretty'],
-					"user-select":['none']
+					"view-transition-name": [],
+					"text-wrap": ["pretty"],
+					"user-select": ["none"],
 				},
 			},
 		],
 	},
-};
+}
