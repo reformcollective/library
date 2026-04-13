@@ -10,7 +10,8 @@ type CMSLink = {
 	_type: "link"
 	text?: string
 	type?: string
-	internalSlug?: string
+	/** Resolved by inline GROQ projection; null when not an internal link. */
+	internalSlug?: string | null
 	url?: string
 	email?: string
 	phone?: string
