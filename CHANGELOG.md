@@ -9,11 +9,13 @@ That behaviour is now **opt-in**. The `enrichAssets` option defaults to `false`.
 
 **Why**
 
-Post-query enrichment fired N+1 Sanity API calls per render (one per asset ref), added up to 1 second of SSR latency (Mux `@mux/blurup` HTTP requests), and made it impossible to know at query time what shape the data would have. Inline GROQ projections resolve the same data in a single round-trip and make the shape explicit and type-safe.
+Post-query enrichment fired N+1 Sanity API calls per render (one per asset ref) and added a lot of render latency, sometimes up to several seconds. Inline GROQ projections resolve the same data in a single round-trip, which is much faster.
 
 **Migration Advice**
 
-Replace post-query enrichment with inline GROQ projections in your query. The patterns below cover all enriched field types:
+For a quick fix, just enable asset enrichment on all your queries.
+
+Long term, replace post-query enrichment with inline GROQ projections in your query. The patterns below cover all enriched field types:
 
 ```groq
 # Image — adds lqip and aspectRatio under a `data` key
