@@ -45,6 +45,15 @@ function flattenArray<T>(input: T): InfinitelyFlattened<T>[] {
 
 function classFromStyleRules(input: StyleRules | undefined, debugId?: string) {
 	const flatInput = flattenArray(input)
+	if (process.env.NODE_ENV === "development") {
+		for (const item of flatInput) {
+			if (typeof item === "string" && /[;:{]/.test(item)) {
+				throw new Error(
+					`[styled] Raw CSS string passed as style rules — wrap in fresponsive(), f.unresponsive(), etc.:\n\n"${item}"`,
+				)
+			}
+		}
+	}
 	return style(flatInput.filter(Boolean), debugId)
 }
 
