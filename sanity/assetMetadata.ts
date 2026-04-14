@@ -46,20 +46,20 @@ const linkSchema = z.object({
 })
 
 type VideoAssetMeta = {
-	playbackId: string | undefined
-	videoThumbnailUrl: string | undefined
-	videoBlurUrl: string | undefined
-	videoAspectRatio: string | undefined
-	videoDuration: number | undefined
+	playbackId?: string | null
+	videoThumbnailUrl?: string | null
+	videoBlurUrl?: string | null
+	videoAspectRatio?: string | null
+	videoDuration?: number | null
 }
 type ImageAssetMeta = {
-	lqip: string | undefined
-	dominantColor: string | undefined
-	originalFilename: string | undefined
-	size: number | undefined
-	extension: string | undefined
-	url: string | undefined
-	aspectRatio: number | undefined
+	lqip?: string | null
+	dominantColor?: string | null
+	originalFilename?: string | null
+	size?: number | null
+	extension?: string | null
+	url?: string | null
+	aspectRatio?: number | null
 }
 
 export type AssetMeta = VideoAssetMeta & ImageAssetMeta
