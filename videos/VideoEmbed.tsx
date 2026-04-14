@@ -16,7 +16,12 @@ type VideoEmbedProps = Omit<
 	ref?: React.Ref<HTMLVideoElement>
 	className?: string
 	video: Omit<DeepAssetMeta<Video>, "muxVideo"> & {
-		muxVideo?: { data?: { playbackId?: string | null; videoThumbnailUrl?: string | null } | null } | null
+		muxVideo?: {
+			data?: {
+				playbackId?: string | null
+				videoThumbnailUrl?: string | null
+			} | null
+		} | null
 	}
 	controls?: boolean
 	/** When true, seeks to 0 each time playback starts */
