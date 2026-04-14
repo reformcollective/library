@@ -1,24 +1,13 @@
 "use client"
 
 import Link, { type LinkProps } from "next/link"
-import { stegaClean } from "next-sanity"
 import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
 import { useTransitioner } from "./transitioner"
+import { resolveRoute, isRouteDefined, type CMSLink, type LinkHref } from "./resolve"
 
-type CMSLink = {
-	_type: "link"
-	text?: string
-	type?: string
-	internalSlug?: string
-	url?: string
-	email?: string
-	phone?: string
-	value?: string
-	blank?: boolean
-	parameters?: string
-	anchor?: string
-}
+export type { CMSLink, LinkHref }
+export { resolveRoute, isRouteDefined }
 
 type ButtonProps = {
 	/**
@@ -37,7 +26,7 @@ type AnchorProps = {
 	/**
 	 * where should the link navigate to?
 	 */
-	href: string | null | undefined | CMSLink
+	href: LinkHref
 	/**
 	 * open this link in a new tab?
 	 */
@@ -61,53 +50,6 @@ export type UniversalLinkProps = (ButtonProps | AnchorProps) & {
 		| Ref<HTMLButtonElement | null>
 		| Ref<HTMLAnchorElement | null>
 		| Ref<HTMLButtonElement | HTMLAnchorElement | null>
-}
-
-export const resolveRoute = (
-	link: AnchorProps["href"],
-): { url: string | undefined; newTab: boolean } => {
-	if (typeof link === "string")
-		return {
-			url: link,
-			newTab: !linkIsInternal(link),
-		}
-	if (!link)
-		return {
-			url: undefined,
-			newTab: false,
-		}
-
-	if (link.type === "internal" && link.internalSlug) {
-		const slugToUse = link.internalSlug === "home" ? "" : link.internalSlug
-		return {
-			url: `/${stegaClean(slugToUse || "")}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`,
-			// default to same tab if not specified
-			newTab: link.blank ?? false,
-		}
-	}
-
-	if (link.type === "external" && link.url)
-		return {
-			url: `${stegaClean(link.url || "")}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`,
-			// default to other tab if not specified
-			newTab: link.blank ?? true,
-		}
-
-	if (link.type === "email" && link.email) {
-		return { url: `mailto:${stegaClean(link.email || "")}`, newTab: true }
-	}
-
-	if (link.type === "phone") {
-		return {
-			url: `tel:${stegaClean(link.phone || "")}`,
-			newTab: true,
-		}
-	}
-
-	return {
-		url: undefined,
-		newTab: false,
-	}
 }
 
 /**
