@@ -53,7 +53,7 @@ export const resolveRoute = (
 		return { url: `mailto:${stegaClean(link.email || "")}`, newTab: true }
 	}
 
-	if (link.type === "phone") {
+	if (link.type === "phone" && link.phone) {
 		return {
 			url: `tel:${stegaClean(link.phone || "")}`,
 			newTab: true,
