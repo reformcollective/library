@@ -20,49 +20,32 @@ import {
 	objectPositionVar,
 } from "../StaticImage.css"
 
-export type SanityImageData<CropType, WithAlt extends "true" | "false"> = {
+export type SanityImageData<WithAlt extends "true" | "false"> = {
 	asset?: { _ref: string }
 	crop?: SanityImageCrop
 	hotspot?: SanityImageHotspot
 	data?: AssetMeta
 	alt?: string
-	cropType?: CropType
 	willHaveAlt?: WithAlt
 }
 
-type SanityProps<CropType> =
+type SanityProps =
 	| {
-			src: SanityImageData<CropType, "false"> | null | undefined
+			src: SanityImageData<"false"> | null | undefined
 			alt: string | undefined
 	  }
 	| {
-			src: SanityImageData<CropType, "true"> | null | undefined
+			src: SanityImageData<"true"> | null | undefined
 			// the alt should be provided by sanity
 			alt?: undefined
 	  }
 
-export type SanityImageProps =
-	| (SanityProps<"sanity"> & {
-			objectFit?: "contain" | "cover"
-			objectPosition?: undefined
-			loading?: "eager" | "lazy" | "default"
-			width: number
-			height: number
-	  } & DefaultImageProps)
-	| (SanityProps<"uncropped"> & {
-			objectFit?: undefined
-			objectPosition?: undefined
-			loading?: "eager" | "lazy" | "default"
-			width?: undefined
-			height?: undefined
-	  } & DefaultImageProps)
-	| (SanityProps<"css"> & {
-			objectFit?: "contain" | "cover"
-			objectPosition?: string
-			loading?: "eager" | "lazy" | "default"
-			width?: number
-			height?: number
-	  } & DefaultImageProps)
+export type SanityImageProps = SanityProps & {
+	objectFit?: "contain" | "cover"
+	loading?: "eager" | "lazy" | "default"
+	width?: number
+	height?: number
+} & DefaultImageProps
 
 const isStringProps = (
 	props: SanityImageProps | StaticImageProps,
@@ -87,6 +70,18 @@ export default function SanityUniversalImage(
 
 	const { src, ...rest } = props
 	if (!src.asset) return null
+
+	const hasFixedDimensions = !!(props.width && props.height)
+
+	// When no fixed dimensions are provided, derive object-position from the
+	// hotspot focal point so CSS cropping (object-fit: cover) respects the
+	// editor's chosen subject. When dimensions are fixed, sanity-image bakes
+	// the hotspot into the URL via ?rect= instead.
+	const hotspotObjectPosition =
+		!hasFixedDimensions && src.hotspot?.x != null && src.hotspot?.y != null
+			? `${src.hotspot.x * 100}% ${src.hotspot.y * 100}%`
+			: undefined
+
 	return (
 		<DefaultSanityImage
 			{...rest}
@@ -100,15 +95,14 @@ export default function SanityUniversalImage(
 			id={src.asset?._ref}
 			mode={props.objectFit ?? "cover"}
 			objectFit={props.objectFit ?? "cover"}
+			objectPosition={hotspotObjectPosition}
 			projectId={projectId}
 			dataset={dataset}
 			queryParams={{
 				q: 90,
 			}}
 			aspectRatio={
-				props.width && props.height
-					? `${props.width}/${props.height}`
-					: undefined
+				hasFixedDimensions ? `${props.width}/${props.height}` : undefined
 			}
 		/>
 	)

@@ -33,31 +33,14 @@ export const createSectionPreview = (image: StaticImageData) =>
 	)
 
 export const universalImage = <
-	CropType extends "css" | "sanity" | "uncropped" | undefined = undefined,
 	WithAlt extends boolean | undefined = undefined,
 >({
-	cropType,
 	withAlt,
 	...schemaField
 }: Omit<ImageDefinition, "type"> & {
 	/**
-	 * if we're cropping the image, how will we do it?
-	 *
-	 * `css` means we'll crop the image in the CSS.
-	 * this is the safest and easiest, but we don't get hotspots.
-	 * this is the default
-	 *
-	 * `sanity` means we'll crop the image at build time using sanity's CMS.
-	 * this gets us hotspots and cropping, but we have to specify the aspect ratio in our props.
-	 *
-	 * `uncropped` means we'll not crop the image at all.
-	 * this is ideal for images we won't know the size of, like inline blog images
-	 *
-	 * @default css
-	 */
-	cropType?: CropType
-	/**
-	 * if you need to omit the alt text field - sometimes it's not needed
+	 * Pass `false` to hide and skip validation on the alt text field.
+	 * Omit (or pass `true`) to show and require it.
 	 */
 	withAlt?: WithAlt
 }) =>
@@ -72,15 +55,6 @@ export const universalImage = <
 				rows: 2,
 				validation: withAlt === false ? undefined : (rule) => rule.required(),
 				hidden: withAlt === false,
-			}),
-			defineField({
-				type: "string",
-				name: "cropType",
-				options: {
-					list: [cropType ?? "css"],
-				},
-				hidden: true,
-				readOnly: true,
 			}),
 			defineField({
 				type: "string",
@@ -99,8 +73,7 @@ export const universalImage = <
 				imageDescriptionField: "alt",
 				...schemaField.options?.aiAssist,
 			},
-			// if we're manually cropping, we don't want hotspots (they will be ignored front-end)
-			hotspot: cropType && cropType !== "css",
+			hotspot: true,
 			...schemaField.options,
 		},
 		preview: {

@@ -25,7 +25,6 @@ type SanityPosterImage = {
 	hotspot?: SanityImageHotspot
 	crop?: SanityImageCrop
 	alt?: string
-	cropType?: "sanity"
 	willHaveAlt?: "true"
 	data?: AssetMeta
 }
