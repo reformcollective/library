@@ -4,6 +4,7 @@ import { defineQuery, stegaClean } from "next-sanity"
 import { cache } from "react"
 import { sanityFetch } from "sanity/lib/live"
 import { resolveLink } from "sanity/lib/slug-resolver"
+import type { Video } from "sanity.types"
 import { z } from "zod"
 
 export const getBlurUp = cache(async (playbackId: string) =>
@@ -63,6 +64,14 @@ type ImageAssetMeta = {
 }
 
 export type AssetMeta = VideoAssetMeta & ImageAssetMeta
+
+export type ResolvedMuxVideo = NonNullable<Video["muxVideo"]> & {
+	data: AssetMeta | null
+}
+
+export type ResolvedVideo = Omit<Video, "muxVideo"> & {
+	muxVideo?: ResolvedMuxVideo | null
+}
 
 export const internalSlugField = `"internalSlug": select(
 		type != "internal" => null,
@@ -134,8 +143,13 @@ const linkQuery = defineQuery(`
 	*[_id == $asset && defined(slug.current)][0]
 `)
 
+/**
+ * @deprecated Use query result types or explicit resolved aliases like
+ * `ResolvedVideo` instead. `DeepAssetMeta` models the old `fetchAssetMeta`
+ * post-processing step and is not the right abstraction for GROQ-resolved data.
+ */
 export type DeepAssetMeta<T> = T extends { asset?: { _ref?: string } }
-	? T & { data?: AssetMeta }
+	? T & { data: AssetMeta | null }
 	: T extends { _type: "link"; internalLink?: { _ref?: string } }
 		? T & { internalSlug?: string | null }
 		: T extends object
@@ -166,7 +180,12 @@ export const fetchAssetMeta = async <InputType>(
 				},
 				enrichAssets: false,
 			})
-			if (!asset) return input as Output
+			if (!asset) {
+				return {
+					...input,
+					data: null,
+				} as Output
+			}
 
 			const { blurDataURL } =
 				asset?._type === "mux.videoAsset" && asset.playbackId

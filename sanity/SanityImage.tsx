@@ -30,7 +30,7 @@ export type SanityImageData<WithAlt extends "true" | "false"> = {
 	asset?: { _ref: string }
 	crop?: SanityImageCrop
 	hotspot?: SanityImageHotspot
-	data?: AssetMeta
+	data: AssetMeta | null
 	alt?: string
 	willHaveAlt?: WithAlt
 }

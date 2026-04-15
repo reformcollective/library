@@ -1,7 +1,7 @@
 "use client"
 
 import ClientOnly from "library/ClientOnly"
-import type { DeepAssetMeta } from "library/sanity/assetMetadata"
+import type { ResolvedVideo } from "library/sanity/assetMetadata"
 import { css, f, styled } from "library/styled/alpha"
 import { useCombinedRefs } from "library/useCombinedRefs"
 import { stegaClean } from "next-sanity"
@@ -15,13 +15,13 @@ type VideoEmbedProps = Omit<
 > & {
 	ref?: React.Ref<HTMLVideoElement>
 	className?: string
-	video: DeepAssetMeta<Video>
+	video: ResolvedVideo
 	controls?: boolean
 	/** When true, seeks to 0 each time playback starts */
 	resetOnPlay?: boolean
 }
 
-function getVideoSrc(video: DeepAssetMeta<Video>) {
+function getVideoSrc(video: ResolvedVideo) {
 	if (stegaClean(video.sourceType) === "mux") {
 		const playbackId = video.muxVideo?.data?.playbackId
 		return {
