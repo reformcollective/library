@@ -4,6 +4,7 @@ import {
 	type ComponentProps,
 	ViewTransition as ReactViewTransition,
 } from "react"
+import type {} from "react/canary"
 import { usePreloader } from "./link/usePreloader"
 
 type ClassProps = "default" | "enter" | "exit" | "share" | "update"

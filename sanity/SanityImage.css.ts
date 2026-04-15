@@ -33,7 +33,6 @@ export const lqipClass = style({
 			backgroundRepeat: "no-repeat",
 			backgroundPosition: objectPositionVar,
 			filter: lqipFilterVar,
-			// @ts-expect-error — TS doesn't accept a CSS var here but browsers handle it fine
 			imageRendering: lqipImageRenderingVar,
 		},
 	},

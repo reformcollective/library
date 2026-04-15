@@ -62,6 +62,8 @@ Once migrated, remove any explicit `enrichAssets: true` from your `sanityFetch` 
 
 Note: `CMSLink.internalSlug` has been widened from `string | undefined` to `string | null | undefined` to match the `null` that GROQ `select()` returns on the fallback path.
 
+Note: any app-level helper types still derived from `DeepAssetMeta<Page>` / asset-meta-enriched schema types should be migrated to the actual query result type. In particular, `GetSectionType` should be generated from the real `PageQueryResult["sections"]` union rather than schema-side asset-meta types; otherwise nullability and enriched-field shapes will be too optimistic after the `fetchAssetMeta` deprecation.
+
 ## `isRouteDefined` helper — use instead of `!!link`
 
 A new `isRouteDefined(link)` export is available from `library/link`.
