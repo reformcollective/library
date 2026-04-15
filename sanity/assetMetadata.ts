@@ -156,7 +156,6 @@ export type DeepAssetMeta<T> = T extends { asset?: { _ref?: string } }
 			? { [K in keyof T]: DeepAssetMeta<T[K]> }
 			: T
 
-
 /**
  * @deprecated Enrich assets inline in your GROQ query instead using the provided helpers in this file
  */
