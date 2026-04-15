@@ -18,3 +18,16 @@ jobs:
           run_install: true
       - name: Lint
         run: pnpm run lint
+        continue-on-error: true
+      - run: git status
+      - uses: tj-actions/verify-changed-files@v20
+        with:
+          fail-if-changed: true
+          fail-message: 'Looks like there may be auto-fixable linting issues. Run "pnpm lint" to fix them.'
+      - name: Format
+        run: pnpm run format
+      - run: git status
+      - uses: tj-actions/verify-changed-files@v20
+        with:
+          fail-if-changed: true
+          fail-message: 'Looks like there may be formatting issues. Run "pnpm format" to fix them.'
