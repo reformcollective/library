@@ -112,7 +112,13 @@ export default function SanityUniversalImage(
 	if (isStringProps(props) || isNextProps(props)) {
 		return <StaticImage {...props} />
 	}
-	return <SanityImageCore {...(props as SanityImageProps)} />
+	const sanityProps = props as SanityImageProps
+	return (
+		<SanityImageCore
+			key={sanityProps.src?.asset?._ref}
+			{...sanityProps}
+		/>
+	)
 }
 
 function SanityImageCore(props: SanityImageProps) {
