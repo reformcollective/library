@@ -92,7 +92,7 @@ export default function SanityUniversalImage(
 			{...rest}
 			alt={stegaClean(rest.alt ?? src.alt)}
 			loading={prioritizedLoading}
-			preview={src.data?.lqip}
+			preview={src.data?.lqip ?? undefined}
 			// @ts-expect-error library type mismatch
 			hotspot={src.hotspot}
 			// @ts-expect-error library type mismatch

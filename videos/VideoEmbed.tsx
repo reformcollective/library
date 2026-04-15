@@ -15,13 +15,20 @@ type VideoEmbedProps = Omit<
 > & {
 	ref?: React.Ref<HTMLVideoElement>
 	className?: string
-	video: DeepAssetMeta<Video>
+	video: Omit<DeepAssetMeta<Video>, "muxVideo"> & {
+		muxVideo?: {
+			data?: {
+				playbackId?: string | null
+				videoThumbnailUrl?: string | null
+			} | null
+		} | null
+	}
 	controls?: boolean
 	/** When true, seeks to 0 each time playback starts */
 	resetOnPlay?: boolean
 }
 
-function getVideoSrc(video: DeepAssetMeta<Video>) {
+function getVideoSrc(video: VideoEmbedProps["video"]) {
 	if (stegaClean(video.sourceType) === "mux") {
 		const playbackId = video.muxVideo?.data?.playbackId
 		return {
