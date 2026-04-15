@@ -20,26 +20,34 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            if (context.payload.pull_request) {
-              core.setOutput("repository", context.payload.pull_request.head.repo.full_name)
-              core.setOutput("ref", context.payload.pull_request.head.ref)
-              return
-            }
+            const defaultRepository = `${context.repo.owner}/${context.repo.repo}`
+            let pullRequest = context.payload.pull_request ?? null
 
-            if (context.payload.issue?.pull_request) {
-              const { data: pullRequest } = await github.rest.pulls.get({
+            if (!pullRequest && context.payload.issue?.pull_request) {
+              const response = await github.rest.pulls.get({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 pull_number: context.payload.issue.number,
               })
+              pullRequest = response.data
+            }
 
-              core.setOutput("repository", pullRequest.head.repo.full_name)
-              core.setOutput("ref", pullRequest.head.ref)
+            if (!pullRequest) {
+              core.setOutput("repository", defaultRepository)
+              core.setOutput("ref", context.ref.replace("refs/heads/", ""))
               return
             }
 
-            core.setOutput("repository", `${context.repo.owner}/${context.repo.repo}`)
-            core.setOutput("ref", context.ref.replace("refs/heads/", ""))
+            const headRepository = pullRequest.head.repo?.full_name
+            const headRef = pullRequest.head.ref
+
+            if (!headRepository || headRepository !== defaultRepository) {
+              core.setFailed("Claude ping workflow only supports pull requests from branches in this repository.")
+              return
+            }
+
+            core.setOutput("repository", headRepository)
+            core.setOutput("ref", headRef)
 
       - name: Checkout repository
         uses: actions/checkout@v6

@@ -11,20 +11,29 @@ import { fileURLToPath } from "node:url"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Path to the submodule (../)
-const submodulePath = path.join(__dirname, "..")
-
 // Path to the .github/workflows folder
 const workflowsPath = ".github/workflows"
+
+// Submodule name (folder name relative to repo root)
+const submoduleName = path.basename(path.join(__dirname, ".."))
 
 // Regex to match the submodule reference in workflow files
 const submoduleRegex = /(code-checks|check-updates|lighthouse)\.yml@(.*)/g
 
 try {
-	// Get the latest commit hash of the submodule
-	const latestHash = execSync(`git -C ${submodulePath} rev-parse HEAD`)
+	// Get the latest commit hash of the submodule from the parent repo's index.
+	// Using `git ls-files --stage` rather than `git -C library rev-parse HEAD`
+	// because in git worktrees the submodule's .git redirect can cause the
+	// latter to resolve HEAD against the wrong context.
+	const lsOutput = execSync(`git ls-files --stage -- ${submoduleName}`)
 		.toString()
 		.trim()
+	// Output format: "160000 <hash> 0\t<name>"
+	const latestHash = lsOutput.split(/\s+/)[1]
+	if (!latestHash)
+		throw new Error(
+			`Could not determine submodule hash for "${submoduleName}" from git index`,
+		)
 
 	// Update all files in the workflows folder
 	const files = fs.readdirSync(workflowsPath)

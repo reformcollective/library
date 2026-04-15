@@ -25,6 +25,7 @@ export function InfiniteSideScroll({
 	ArrowButton,
 	BackArrowButton,
 	className,
+	snapPaddingLeft = 0,
 	marqueeSpeed = 0,
 	reversed = false,
 	disableDrag = false,
@@ -36,6 +37,13 @@ export function InfiniteSideScroll({
 }: {
 	children: React.ReactNode
 	className?: string
+	/**
+	 * Pixel offset from the left edge where items snap.
+	 * For example, pass the inter-card gap to have items snap flush with
+	 * the first visible card rather than the raw container edge.
+	 * Changes to this value trigger a loop recreation.
+	 */
+	snapPaddingLeft?: number
 	/**
 	 * if specified, a button will be shown to scroll forward and backward by an item
 	 */
@@ -107,22 +115,21 @@ export function InfiniteSideScroll({
 			// doing the math properly here is a bit tricky, but gives us lots of flexibility in how we pad our marquee
 			const childCount = rowRef.current.children.length / numberNeeded
 			const firstLastChild = rowRef.current.children[childCount - 1]
-			const firstLastRightMargin = Number(
-				gsap.getProperty(firstLastChild ?? null, "marginRight"),
-			)
 			const secondFirstChild = rowRef.current.children[childCount]
 			const secondFirstLeftMargin = Number(
 				gsap.getProperty(secondFirstChild ?? null, "marginLeft"),
 			)
 			const gap =
 				firstLastChild && secondFirstChild
-					? // distance from right edge of first to left edge of second
+					? // distance from right edge of first to left edge of second,
+						// minus secondFirstLeftMargin only (already in totalWidth via spaceBefore[0]).
+						// The last item's right margin is NOT subtracted: horizontalLoop's getTotalWidth ends
+						// at the last item's offsetWidth (no trailing margin), so that margin must
+						// remain in paddingRight to produce an even gap at the loop point.
 						Math.abs(
 							firstLastChild.getBoundingClientRect().right -
 								secondFirstChild.getBoundingClientRect().left,
-						) -
-						firstLastRightMargin -
-						secondFirstLeftMargin
+						) - secondFirstLeftMargin
 					: 0
 
 			const loop = horizontalLoop(rowRef.current.children, {
@@ -137,6 +144,8 @@ export function InfiniteSideScroll({
 				manageResize: false,
 				// padding right should match the calculated gap
 				paddingRight: gap,
+				// pixel offset from left edge where items snap (ignored in center mode)
+				snapOffset: centerMode ? undefined : snapPaddingLeft || undefined,
 				onChange: (_, index) => {
 					latestOnChange.current?.(index)
 				},
@@ -219,6 +228,7 @@ export function InfiniteSideScroll({
 			numberNeeded,
 			internalLoopRef,
 			centerMode,
+			snapPaddingLeft,
 		],
 		{
 			recreateOnResize: true,

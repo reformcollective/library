@@ -10,18 +10,48 @@ import {
 	MATCH_URL_WISTIA,
 	MATCH_URL_YOUTUBE,
 } from "react-player/patterns"
-import type {
-	AutocompleteString,
-	IntrinsicTypeName,
-	StrictDefinition,
-} from "sanity"
+import type { PreviewValue, StrictDefinition } from "sanity"
 import {
+	type ArrayOfEntry,
 	defineArrayMember,
 	defineField,
 	defineType,
+	getValueAtPath,
 	type ImageDefinition,
+	type ObjectDefinition,
+	type Path,
+	type SanityDocument,
 } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
+
+type HiddenValidationContext = {
+	currentUser?: unknown
+	document?: SanityDocument
+	parent?: unknown
+	path?: Path
+}
+
+function isFieldHidden(
+	hidden: ImageDefinition["hidden"],
+	context: HiddenValidationContext,
+) {
+	if (!hidden) return false
+	if (typeof hidden !== "function") return Boolean(hidden)
+	const path = Array.isArray(context.path) ? context.path : []
+	const fieldPath = path.slice(0, -1)
+	const containerPath = fieldPath.slice(0, -1)
+	return Boolean(
+		hidden({
+			currentUser: context.currentUser as never,
+			document: context.document,
+			parent: context.document
+				? getValueAtPath(context.document, containerPath)
+				: undefined,
+			path: fieldPath,
+			value: context.parent,
+		}),
+	)
+}
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
@@ -35,31 +65,14 @@ export const createSectionPreview = (image: StaticImageData) =>
 	)
 
 export const universalImage = <
-	CropType extends "css" | "sanity" | "uncropped" | undefined = undefined,
 	WithAlt extends boolean | undefined = undefined,
 >({
-	cropType,
 	withAlt,
 	...schemaField
 }: Omit<ImageDefinition, "type"> & {
 	/**
-	 * if we're cropping the image, how will we do it?
-	 *
-	 * `css` means we'll crop the image in the CSS.
-	 * this is the safest and easiest, but we don't get hotspots.
-	 * this is the default
-	 *
-	 * `sanity` means we'll crop the image at build time using sanity's CMS.
-	 * this gets us hotspots and cropping, but we have to specify the aspect ratio in our props.
-	 *
-	 * `uncropped` means we'll not crop the image at all.
-	 * this is ideal for images we won't know the size of, like inline blog images
-	 *
-	 * @default css
-	 */
-	cropType?: CropType
-	/**
-	 * if you need to omit the alt text field - sometimes it's not needed
+	 * Pass `false` to hide and skip validation on the alt text field.
+	 * Omit (or pass `true`) to show and require it.
 	 */
 	withAlt?: WithAlt
 }) =>
@@ -72,17 +85,15 @@ export const universalImage = <
 				name: "alt",
 				title: "Alternative text",
 				rows: 2,
-				validation: withAlt === false ? undefined : (rule) => rule.required(),
+				validation:
+					withAlt === false
+						? undefined
+						: (rule) =>
+								rule.custom((value, context) => {
+									if (isFieldHidden(schemaField.hidden, context)) return true
+									return value ? true : "Required"
+								}),
 				hidden: withAlt === false,
-			}),
-			defineField({
-				type: "string",
-				name: "cropType",
-				options: {
-					list: [cropType ?? "css"],
-				},
-				hidden: true,
-				readOnly: true,
 			}),
 			defineField({
 				type: "string",
@@ -101,8 +112,7 @@ export const universalImage = <
 				imageDescriptionField: "alt",
 				...schemaField.options?.aiAssist,
 			},
-			// if we're manually cropping, we don't want hotspots (they will be ignored front-end)
-			hotspot: cropType && cropType !== "css",
+			hotspot: true,
 			...schemaField.options,
 		},
 		preview: {
@@ -182,32 +192,20 @@ export const redirect = defineArrayMember({
 	},
 })
 
-export function definePageSection<
-	const TType extends IntrinsicTypeName | AutocompleteString,
-	const TName extends string,
-	TSelect extends Record<string, string> | undefined,
-	// biome-ignore lint/suspicious/noExplicitAny: intentional behavior
-	TPrepareValue extends Record<keyof TSelect, any> | undefined,
-	TAlias extends IntrinsicTypeName | undefined,
-	TStrict extends StrictDefinition,
->(
+export function definePageSection<const TName extends string>(
 	{
 		group,
 		icon,
 		...options
 	}: Omit<
-		Parameters<
-			typeof defineArrayMember<
-				TType,
-				TName,
-				TSelect,
-				TPrepareValue,
-				TAlias,
-				TStrict
-			>
-		>[0],
-		"groups" | "icon"
+		ArrayOfEntry<ObjectDefinition>,
+		"name" | "groups" | "icon" | "preview"
 	> & {
+		name: TName
+		preview?: {
+			select?: Record<string, string>
+			prepare?: (value: Record<string, string | undefined>) => PreviewValue
+		}
 		/**
 		 * for example, "Designed for Home"
 		 *
@@ -221,17 +219,16 @@ export function definePageSection<
 	},
 	secondary?: Parameters<
 		typeof defineArrayMember<
-			TType,
+			"object",
 			TName,
-			TSelect,
-			TPrepareValue,
-			TAlias,
-			TStrict
+			undefined,
+			undefined,
+			undefined,
+			StrictDefinition
 		>
 	>[1],
 ) {
 	return defineArrayMember(
-		// @ts-expect-error doesn't match due to narrowing constraints
 		{
 			...options,
 			groups: [{ name: group }],
@@ -269,7 +266,7 @@ const videoSourceValidation: Record<string, RegExp> = {
 }
 
 const videoSourceTypes = [
-	{ title: "Upload a File", value: "mux" },
+	{ title: "Upload or Select a File", value: "mux" },
 	{ title: "YouTube", value: "youtube" },
 	{ title: "Vimeo", value: "vimeo" },
 	{ title: "Wistia", value: "wistia" },

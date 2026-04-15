@@ -35,7 +35,7 @@ export async function libraryFetch<const QueryString extends string>({
 	params = {},
 	perspective,
 	disableStega,
-	enrichAssets = true,
+	enrichAssets = false,
 }: {
 	query: QueryString
 	params?: QueryParams | Promise<QueryParams>
@@ -52,8 +52,12 @@ export async function libraryFetch<const QueryString extends string>({
 	 */
 	disableStega?: boolean
 	/**
-	 * enable asset metadata enrichment? can be disabled if you're in a context
-	 * where enriching the assets would cause an infinite loop.
+	 * Opt-in to legacy post-query asset enrichment via `fetchAssetMeta`.
+	 * Prefer projecting asset data inline in your GROQ query instead — e.g.
+	 * `asset->metadata.lqip` for images, `asset->playbackId` for Mux video.
+	 *
+	 * @deprecated Set `enrichAssets: true` only on legacy call-sites that have
+	 * not yet been migrated to inline GROQ projections.
 	 */
 	enrichAssets?: boolean
 }) {
@@ -84,7 +88,7 @@ export const LibraryLive = async () => {
 	return (
 		<LiveWrapper>
 			<Toaster />
-			<FirefoxFix />
+			{isDraftMode && <FirefoxFix />}
 			{isDraftMode && <DraftModeOverlay />}
 			{useProxy ? (
 				<SanityLiveProxy />

@@ -58,7 +58,7 @@ export const instantScrollToAnchor = async (anchor: string) => {
 
 			const scrollOffset = getScrollOffset(anchor)
 			ScrollTrigger.refresh()
-			window.lenis?.scrollTo(anchor, {
+			window.lenisInstance?.scrollTo(anchor, {
 				offset: scrollOffset,
 				immediate: true,
 				force: true,

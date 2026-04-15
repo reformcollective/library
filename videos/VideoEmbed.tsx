@@ -1,42 +1,76 @@
-import ClientOnly from "library/ClientOnly"
-import type { DeepAssetMeta } from "library/sanity/assetMetadata"
-import { css, fresponsive, styled } from "library/styled"
-import ReactPlayer from "react-player"
-import type { Video } from "sanity.types"
+"use client"
 
-type VideoEmbedProps = {
+import ClientOnly from "library/ClientOnly"
+import type { ResolvedVideo } from "library/sanity/assetMetadata"
+import { css, f, styled } from "library/styled/alpha"
+import { useCombinedRefs } from "library/useCombinedRefs"
+import { stegaClean } from "next-sanity"
+import { useRef } from "react"
+import ReactPlayer from "react-player"
+
+type VideoEmbedProps = Omit<
+	React.ComponentPropsWithoutRef<typeof ReactPlayer>,
+	"src" | "width" | "height"
+> & {
+	ref?: React.Ref<HTMLVideoElement>
 	className?: string
-	video: DeepAssetMeta<Video>
+	video: ResolvedVideo
+	controls?: boolean
+	/** When true, seeks to 0 each time playback starts */
+	resetOnPlay?: boolean
 }
 
-function getVideoSrc(video: DeepAssetMeta<Video>) {
-	if (video.sourceType === "mux") {
+function getVideoSrc(video: ResolvedVideo) {
+	if (stegaClean(video.sourceType) === "mux") {
 		const playbackId = video.muxVideo?.data?.playbackId
 		return {
 			src: playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : null,
 			thumbnail: video.muxVideo?.data?.videoThumbnailUrl,
 		}
 	}
-	return { src: video.url, thumbnail: null }
+	return { src: video.url ?? null, thumbnail: null }
 }
 
 /**
  * A React component for playing a variety of URLs, including file paths, HLS, DASH, YouTube, Vimeo, Wistia and Mux.
- * Accepts a Sanity `video` schema object directly.
+ * Accepts a Sanity `video` schema object directly. Fills its container — the parent is responsible for sizing.
  */
-export function VideoEmbed({ className, video }: VideoEmbedProps) {
-	const { src, thumbnail } = getVideoSrc(video)
+export function VideoEmbed({
+	className,
+	video,
+	controls = true,
+	resetOnPlay,
+	onPlay,
+	ref: externalRef,
+	...props
+}: VideoEmbedProps) {
+	const { src } = getVideoSrc(video)
+	const internalRef = useRef<HTMLVideoElement>(null)
+	const combinedRef = useCombinedRefs(externalRef, internalRef)
+
 	if (!src) return null
 
 	return (
 		<ClientOnly>
 			<Embed className={className}>
 				<ReactPlayer
+					ref={combinedRef}
 					src={src}
 					width="100%"
 					height="100%"
-					controls
-					light={thumbnail || undefined}
+					controls={controls}
+					onPlay={
+						resetOnPlay
+							? (e) => {
+									const el = internalRef.current
+									if (el && el.currentTime > 0.1) {
+										el.currentTime = 0
+									}
+									onPlay?.(e)
+								}
+							: onPlay
+					}
+					{...props}
 				/>
 			</Embed>
 		</ClientOnly>
@@ -45,12 +79,10 @@ export function VideoEmbed({ className, video }: VideoEmbedProps) {
 
 const Embed = styled(
 	"div",
-	fresponsive(css`
+	f.unresponsive(css`
 		width: 100%;
-
-		> div {
-			width: 100% !important;
-			height: 100% !important;
-		}
+		height: 100%;
+		--media-object-fit: cover;
+		--media-object-position: center;
 	`),
 )

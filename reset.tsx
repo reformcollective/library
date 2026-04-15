@@ -172,7 +172,7 @@ const style = css`
 			border-collapse: collapse;
 		}
 
-		/* Safari - solving issue when using user-select:none on the <body> text input doesn't working */
+		/* Safari - solving issue when using user-select:none on the body element, text input doesn't working */
 		input,
 		textarea {
 			-webkit-user-select: auto;

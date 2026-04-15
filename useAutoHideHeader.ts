@@ -70,9 +70,19 @@ export default function useAutoHideHeader(
 
 	useAnimation(
 		() => {
-			let lastScroll = window.lenis?.scroll ?? window.scrollY
+			let lastScroll = window.lenisInstance?.scroll ?? window.scrollY
 			let isHovered = false
 			if (!wrapper?.current) return
+
+			// reset header position on route change. This is important because otherwise the header could get stuck in the wrong position if the user navigates while it's hidden
+			const resetHeader = (target: typeof wrapper.current) => {
+				gsap.set(target, { y: 0 })
+				if (target) {
+					target.dataset.headerHiding = "false"
+					target.dataset.headerScrolled = "false"
+				}
+			}
+			resetHeader(wrapper.current)
 
 			const props = {
 				ease: "power1.out",
@@ -82,11 +92,17 @@ export default function useAutoHideHeader(
 			const yTo = gsap.quickTo(wrapper.current, "y", props)
 
 			const onUpdate = () => {
-				const scroll = window.lenis?.scroll ?? window.scrollY
+				const scroll = window.lenisInstance?.scroll ?? window.scrollY
 				const delta = scroll - lastScroll
 				lastScroll = scroll
 				const height = (wrapper.current?.offsetHeight ?? 0) + extraOffset
-				if (delta > 100 || delta < -100) return // short circuit on large scrolls, since those are probably page transitions
+				if (delta > 100 || delta < -100) {
+					// short circuit on large scrolls, since those are probably page transitions
+					// still update scrolled state so scroll-dependent styles remain correct
+					const el = wrapper.current
+					if (el) el.dataset.headerScrolled = scroll <= 5 ? "false" : "true"
+					return
+				}
 
 				const forceHideHeader = dataHideAreOnScreen.current
 				const forceShowHeader =
@@ -94,17 +110,26 @@ export default function useAutoHideHeader(
 				const showHeader = style === "snap" && delta < 0
 				const hideHeader = style === "snap" && delta > 0
 
+				const el = wrapper.current
+				if (el) {
+					if (scroll <= 5) el.dataset.headerScrolled = "false"
+					else if (delta < 0 || isHovered) el.dataset.headerScrolled = "true"
+				}
+
 				// if forced sticky
 				if (forceShowHeader || (showHeader && !forceHideHeader)) {
 					yTo(0)
+					if (el) el.dataset.headerHiding = "false"
 				}
 				// if forced not sticky
 				else if (forceHideHeader || hideHeader) {
 					yTo(reverse ? height : -height)
+					if (el) el.dataset.headerHiding = "true"
 				}
 				// if hovered
 				else if (isHovered) {
 					yTo(0)
+					if (el) el.dataset.headerHiding = "false"
 				}
 				// scrub behavior, if needed
 				else if (style === "scrub") {
@@ -112,6 +137,7 @@ export default function useAutoHideHeader(
 					const newY = Math.min(0, Math.max(-height, currentY - delta))
 					const newPotentiallyReversedY = reverse ? -newY : newY
 					yTo(newPotentiallyReversedY, newPotentiallyReversedY)
+					if (el) el.dataset.headerHiding = String(delta > 0)
 				}
 			}
 
@@ -122,13 +148,26 @@ export default function useAutoHideHeader(
 				isHovered = false
 			}
 
+			const onPopState = () => {
+				requestAnimationFrame(() => {
+					ScrollTrigger.refresh()
+					const scroll = window.lenisInstance?.scroll ?? window.scrollY
+					if (wrapper.current) {
+						wrapper.current.dataset.headerScrolled =
+							scroll <= 5 ? "false" : "true"
+					}
+				})
+			}
+
 			wrapper.current?.addEventListener("pointerenter", onHover)
 			wrapper.current?.addEventListener("pointerleave", onLeave)
+			window.addEventListener("popstate", onPopState)
 
 			ScrollTrigger.create({ onUpdate })
 			return () => {
 				wrapper.current?.removeEventListener("pointerenter", onHover)
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
+				window.removeEventListener("popstate", onPopState)
 			}
 		},
 		[wrapper, style, reverse, extraOffset],

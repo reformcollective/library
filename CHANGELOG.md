@@ -1,4 +1,110 @@
 
+# 2026-04-13
+
+## `enrichAssets` now opt-in; `fetchAssetMeta` deprecated
+
+`libraryFetch` / `sanityFetch` previously called `fetchAssetMeta` after every query, recursively enriching image refs with LQIP/aspect-ratio data, Mux video refs with playback metadata, and link objects with a resolved `internalSlug`. This happened automatically with no action required.
+
+That behaviour is now **opt-in**. The `enrichAssets` option defaults to `false`. Calls that relied on automatic enrichment will silently receive un-enriched data unless migrated.
+
+**Why**
+
+Post-query enrichment fired N+1 Sanity API calls per render (one per asset ref) and added a lot of render latency, sometimes up to several seconds. Inline GROQ projections resolve the same data in a single round-trip, which is much faster.
+
+**Migration Advice**
+
+For a quick fix, just enable asset enrichment on all your queries.
+
+Long term, replace post-query enrichment with inline GROQ projections in your query. The patterns below cover all enriched field types:
+
+```groq
+# Image — adds lqip and aspectRatio under a `data` key
+customImage {
+  ...,
+  "data": {
+    "lqip": asset->metadata.lqip,
+    "aspectRatio": asset->metadata.dimensions.aspectRatio
+  }
+}
+
+# Mux video — adds playback metadata under a `data` key
+muxVideo {
+  ...,
+  "data": {
+    "playbackId": asset->playbackId,
+    "videoThumbnailUrl": "https://image.mux.com/" + asset->playbackId + "/thumbnail.jpg",
+    "videoBlurUrl": "https://image.mux.com/" + asset->playbackId + "/thumbnail.webp?time=0&width=32",
+    "videoAspectRatio": select(
+      defined(asset->data.aspect_ratio) =>
+        string::split(asset->data.aspect_ratio, ":")[0] + "/" + string::split(asset->data.aspect_ratio, ":")[1]
+    ),
+    "videoDuration": asset->data.duration
+  }
+}
+
+# Link — adds resolved internalSlug
+link {
+  ...,
+  "internalSlug": select(
+    type != "internal" => null,
+    !defined(internalLink) => null,
+    internalLink->._type == "page" => select(
+      internalLink->slug.current == "home" => "/",
+      internalLink->slug.current
+    ),
+    internalLink->._type == "product" => "/products/" + internalLink->store.slug.current,
+    internalLink->._type == "collection" => "/collections/" + internalLink->store.slug.current
+  )
+}
+```
+
+Once migrated, remove any explicit `enrichAssets: true` from your `sanityFetch` calls. If you cannot migrate a call-site immediately, pass `enrichAssets: true` to preserve the old behaviour — but note that `fetchAssetMeta` is now `@deprecated` and will be removed in a future release.
+
+Note: `CMSLink.internalSlug` has been widened from `string | undefined` to `string | null | undefined` to match the `null` that GROQ `select()` returns on the fallback path.
+
+Note: any app-level helper types still derived from `DeepAssetMeta<Page>` / asset-meta-enriched schema types should be migrated to the actual query result type. In particular, `GetSectionType` should be generated from the real `PageQueryResult["sections"]` union rather than schema-side asset-meta types; otherwise nullability and enriched-field shapes will be too optimistic after the `fetchAssetMeta` deprecation.
+
+## `isRouteDefined` helper — use instead of `!!link`
+
+A new `isRouteDefined(link)` export is available from `library/link`.
+
+**Why**
+
+`sanity-plugin-link-field` writes an `initialValue` of `{ type: "internal", toNewTab: false }` into every link field when a section is first created in Studio. This means the link field is **never** `null` or `undefined` in the database — it always contains at least a partial object, even when the editor has not selected any destination.
+
+As a result, `!!link` is always `true` for these fields and is an unreliable guard for "does this section link anywhere?". Previously, `fetchAssetMeta` resolved an `internalSlug` onto the link object, but that enrichment did not change the object's truthiness or null out links with no destination — the check was subtly broken in both the old and new systems.
+
+`isRouteDefined` fixes this by running the value through `resolveRoute` and checking whether a URL was produced:
+
+```ts
+import { isRouteDefined } from "library/link"
+
+// ✓
+const hasLink = isRouteDefined(link)
+
+// ✗ — always true; the link object exists even with no destination selected
+const hasLink = !!link
+```
+
+# 2026-04-07
+
+## Use published vanilla-extract packages
+
+The library now targets the published npm releases of vanilla-extract rather than PR builds.
+
+**Migration Advice**
+
+Remove any `@vanilla-extract/*` overrides and update to the latest published packages.
+
+# 2026-03-24
+
+## `window.lenis` renamed to `window.lenisInstance`
+
+`lenis@1.3.18` introduced a breaking change: `window.lenis` is now a package-owned metadata object (`{ version?, horizontal?, snap? }`) rather than the Lenis scroll instance. This conflicts with the library's `window.lenis?: Lenis` declaration and causes TypeScript errors if you're on `lenis >= 1.3.18`.
+
+**Migration Advice**
+
+Replace all usages of `window.lenis` with `window.lenisInstance` in your project.
 
 # 2026-02-10
 

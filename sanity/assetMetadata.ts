@@ -4,6 +4,7 @@ import { defineQuery, stegaClean } from "next-sanity"
 import { cache } from "react"
 import { sanityFetch } from "sanity/lib/live"
 import { resolveLink } from "sanity/lib/slug-resolver"
+import type { Video } from "sanity.types"
 import { z } from "zod"
 
 export const getBlurUp = cache(async (playbackId: string) =>
@@ -46,22 +47,89 @@ const linkSchema = z.object({
 })
 
 type VideoAssetMeta = {
-	playbackId: string | undefined
-	videoThumbnailUrl: string | undefined
-	videoBlurUrl: string | undefined
-	videoAspectRatio: string | undefined
-	videoDuration: number | undefined
+	playbackId?: string | null
+	videoThumbnailUrl?: string | null
+	videoBlurUrl?: string | null
+	videoAspectRatio?: string | null
+	videoDuration?: number | null
 }
 type ImageAssetMeta = {
-	lqip: string | undefined
-	dominantColor: string | undefined
-	originalFilename: string | undefined
-	size: number | undefined
-	extension: string | undefined
-	url: string | undefined
+	lqip?: string | null
+	dominantColor?: string | null
+	originalFilename?: string | null
+	size?: number | null
+	extension?: string | null
+	url?: string | null
+	aspectRatio?: number | null
 }
 
 export type AssetMeta = VideoAssetMeta & ImageAssetMeta
+
+export type ResolvedMuxVideo = NonNullable<Video["muxVideo"]> & {
+	data: AssetMeta | null
+}
+
+export type ResolvedVideo = Omit<Video, "muxVideo"> & {
+	muxVideo?: ResolvedMuxVideo | null
+}
+
+export const internalSlugField = `"internalSlug": select(
+		type != "internal" => null,
+		!defined(internalLink) => null,
+		internalLink->._type == "page" => select(
+			internalLink->slug.current == "home" => "/",
+			internalLink->slug.current
+		),
+		internalLink->._type == "product" => "/products/" + internalLink->store.slug.current,
+		internalLink->._type == "collection" => "/collections/" + internalLink->store.slug.current
+	)`
+
+export const imageDataProjection = `{
+		"lqip": asset->metadata.lqip,
+		"dominantColor": asset->metadata.palette.dominant.background,
+		"originalFilename": asset->originalFilename,
+		"size": asset->size,
+		"extension": asset->extension,
+		"url": asset->url,
+		"aspectRatio": asset->metadata.dimensions.aspectRatio
+	}`
+
+// Matches fetchAssetMeta as closely as GROQ can. `videoBlurUrl` is kept as a
+// lightweight thumbnail URL rather than the old blur-up fetch step.
+export const muxVideoDataProjection = `{
+		"playbackId": asset->playbackId,
+		"videoThumbnailUrl": select(
+			defined(asset->thumbTime) =>
+				"https://image.mux.com/" + asset->playbackId + "/thumbnail.jpg?time=" + string(asset->thumbTime),
+			"https://image.mux.com/" + asset->playbackId + "/thumbnail.jpg"
+		),
+		"videoBlurUrl": "https://image.mux.com/" + asset->playbackId + "/thumbnail.webp?time=0&width=32",
+		"videoAspectRatio": select(
+			defined(asset->data.aspect_ratio) =>
+				string::split(asset->data.aspect_ratio, ":")[0] + "/" + string::split(asset->data.aspect_ratio, ":")[1]
+		),
+		"videoDuration": asset->data.duration
+	}`
+
+export const linkProjection = `{ ..., ${internalSlugField} }`
+
+export const imageProjection = `{
+		...,
+		"data": ${imageDataProjection}
+	}`
+
+export const muxVideoProjection = `{
+		...,
+		"data": ${muxVideoDataProjection}
+	}`
+
+export const videoProjection = `{ ..., muxVideo ${muxVideoProjection} }`
+
+export const linkField = (name: string) => `${name} ${linkProjection}`
+
+export const imageField = (name: string) => `${name} ${imageProjection}`
+
+export const videoField = (name: string) => `${name} ${videoProjection}`
 
 const assetQuery = defineQuery(`
 	*[_id == $asset && _type in [
@@ -75,14 +143,22 @@ const linkQuery = defineQuery(`
 	*[_id == $asset && defined(slug.current)][0]
 `)
 
+/**
+ * @deprecated Use query result types or explicit resolved aliases like
+ * `ResolvedVideo` instead. `DeepAssetMeta` models the old `fetchAssetMeta`
+ * post-processing step and is not the right abstraction for GROQ-resolved data.
+ */
 export type DeepAssetMeta<T> = T extends { asset?: { _ref?: string } }
-	? T & { data?: AssetMeta }
+	? T & { data: AssetMeta | null }
 	: T extends { _type: "link"; internalLink?: { _ref?: string } }
-		? T & { internalSlug?: string }
+		? T & { internalSlug?: string | null }
 		: T extends object
 			? { [K in keyof T]: DeepAssetMeta<T[K]> }
 			: T
 
+/**
+ * @deprecated Enrich assets inline in your GROQ query instead using the provided helpers in this file
+ */
 export const fetchAssetMeta = async <InputType>(
 	input: InputType,
 ): Promise<DeepAssetMeta<InputType>> => {
@@ -107,7 +183,12 @@ export const fetchAssetMeta = async <InputType>(
 				},
 				enrichAssets: false,
 			})
-			if (!asset) return input as Output
+			if (!asset) {
+				return {
+					...input,
+					data: null,
+				} as Output
+			}
 
 			const { blurDataURL } =
 				asset?._type === "mux.videoAsset" && asset.playbackId
@@ -142,6 +223,7 @@ export const fetchAssetMeta = async <InputType>(
 							size: asset?.size,
 							extension: asset?.extension,
 							url: asset?.url,
+							aspectRatio: meta?.dimensions?.aspectRatio,
 						} satisfies ImageAssetMeta)
 
 			return {

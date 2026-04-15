@@ -25,7 +25,6 @@ type SanityPosterImage = {
 	hotspot?: SanityImageHotspot
 	crop?: SanityImageCrop
 	alt?: string
-	cropType?: "sanity"
 	willHaveAlt?: "true"
 	data?: AssetMeta
 }
@@ -198,6 +197,7 @@ export function BackgroundVideo({
 					style={{ opacity: videoCanPlay ? 1 : 0 }}
 					src={{
 						asset: { _ref: posterOverride.asset._ref },
+						data: posterOverride.data ?? null,
 						alt: posterOverride.alt as string,
 					}}
 					alt={posterOverride.alt as string}
