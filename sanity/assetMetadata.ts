@@ -4,6 +4,7 @@ import { defineQuery, stegaClean } from "next-sanity"
 import { cache } from "react"
 import { sanityFetch } from "sanity/lib/live"
 import { resolveLink } from "sanity/lib/slug-resolver"
+import type { Video } from "sanity.types"
 import { z } from "zod"
 
 export const getBlurUp = cache(async (playbackId: string) =>
@@ -64,6 +65,72 @@ type ImageAssetMeta = {
 
 export type AssetMeta = VideoAssetMeta & ImageAssetMeta
 
+export type ResolvedMuxVideo = NonNullable<Video["muxVideo"]> & {
+	data: AssetMeta | null
+}
+
+export type ResolvedVideo = Omit<Video, "muxVideo"> & {
+	muxVideo?: ResolvedMuxVideo | null
+}
+
+export const internalSlugField = `"internalSlug": select(
+		type != "internal" => null,
+		!defined(internalLink) => null,
+		internalLink->._type == "page" => select(
+			internalLink->slug.current == "home" => "/",
+			internalLink->slug.current
+		),
+		internalLink->._type == "product" => "/products/" + internalLink->store.slug.current,
+		internalLink->._type == "collection" => "/collections/" + internalLink->store.slug.current
+	)`
+
+export const imageDataProjection = `{
+		"lqip": asset->metadata.lqip,
+		"dominantColor": asset->metadata.palette.dominant.background,
+		"originalFilename": asset->originalFilename,
+		"size": asset->size,
+		"extension": asset->extension,
+		"url": asset->url,
+		"aspectRatio": asset->metadata.dimensions.aspectRatio
+	}`
+
+// Matches fetchAssetMeta as closely as GROQ can. `videoBlurUrl` is kept as a
+// lightweight thumbnail URL rather than the old blur-up fetch step.
+export const muxVideoDataProjection = `{
+		"playbackId": asset->playbackId,
+		"videoThumbnailUrl": select(
+			defined(asset->thumbTime) =>
+				"https://image.mux.com/" + asset->playbackId + "/thumbnail.jpg?time=" + string(asset->thumbTime),
+			"https://image.mux.com/" + asset->playbackId + "/thumbnail.jpg"
+		),
+		"videoBlurUrl": "https://image.mux.com/" + asset->playbackId + "/thumbnail.webp?time=0&width=32",
+		"videoAspectRatio": select(
+			defined(asset->data.aspect_ratio) =>
+				string::split(asset->data.aspect_ratio, ":")[0] + "/" + string::split(asset->data.aspect_ratio, ":")[1]
+		),
+		"videoDuration": asset->data.duration
+	}`
+
+export const linkProjection = `{ ..., ${internalSlugField} }`
+
+export const imageProjection = `{
+		...,
+		"data": ${imageDataProjection}
+	}`
+
+export const muxVideoProjection = `{
+		...,
+		"data": ${muxVideoDataProjection}
+	}`
+
+export const videoProjection = `{ ..., muxVideo ${muxVideoProjection} }`
+
+export const linkField = (name: string) => `${name} ${linkProjection}`
+
+export const imageField = (name: string) => `${name} ${imageProjection}`
+
+export const videoField = (name: string) => `${name} ${videoProjection}`
+
 const assetQuery = defineQuery(`
 	*[_id == $asset && _type in [
 		"sanity.imageAsset",
@@ -76,38 +143,21 @@ const linkQuery = defineQuery(`
 	*[_id == $asset && defined(slug.current)][0]
 `)
 
-// Deduplicate repeated lookups for the same ref within a single render pass.
-// get-it (used by @sanity/client) bypasses Next.js's fetch deduplication by
-// going through node:http directly, so we memoize at the JS call level instead.
-const fetchAssetDoc = cache((ref: string) =>
-	sanityFetch({
-		query: assetQuery,
-		params: { asset: ref },
-		enrichAssets: false,
-	}),
-)
-
-const fetchLinkDoc = cache((ref: string) =>
-	sanityFetch({
-		query: linkQuery,
-		params: { asset: ref },
-		enrichAssets: false,
-	}),
-)
-
+/**
+ * @deprecated Use query result types or explicit resolved aliases like
+ * `ResolvedVideo` instead. `DeepAssetMeta` models the old `fetchAssetMeta`
+ * post-processing step and is not the right abstraction for GROQ-resolved data.
+ */
 export type DeepAssetMeta<T> = T extends { asset?: { _ref?: string } }
-	? T & { data?: AssetMeta }
+	? T & { data: AssetMeta | null }
 	: T extends { _type: "link"; internalLink?: { _ref?: string } }
-		? T & { internalSlug?: string }
+		? T & { internalSlug?: string | null }
 		: T extends object
 			? { [K in keyof T]: DeepAssetMeta<T[K]> }
 			: T
 
 /**
- * @deprecated Enrich assets inline in your GROQ query instead.
- * Use `asset->metadata.lqip` for image LQIP, `asset->playbackId` for Mux video, and
- * a `select()` projection for `internalSlug` on link fields.
- * Pass `enrichAssets: true` explicitly on any legacy call-site that still needs this.
+ * @deprecated Enrich assets inline in your GROQ query instead using the provided helpers in this file
  */
 export const fetchAssetMeta = async <InputType>(
 	input: InputType,
@@ -126,8 +176,19 @@ export const fetchAssetMeta = async <InputType>(
 		const { data: linkParse, success: isLink } = z.safeParse(linkSchema, input)
 
 		if (isAsset) {
-			const { data: asset } = await fetchAssetDoc(assetParse.asset._ref)
-			if (!asset) return input as Output
+			const { data: asset } = await sanityFetch({
+				query: assetQuery,
+				params: {
+					asset: assetParse.asset._ref,
+				},
+				enrichAssets: false,
+			})
+			if (!asset) {
+				return {
+					...input,
+					data: null,
+				} as Output
+			}
 
 			const { blurDataURL } =
 				asset?._type === "mux.videoAsset" && asset.playbackId
@@ -172,9 +233,11 @@ export const fetchAssetMeta = async <InputType>(
 		}
 
 		if (isLink) {
-			const { data: linkedItem } = await fetchLinkDoc(
-				linkParse.internalLink._ref,
-			)
+			const { data: linkedItem } = await sanityFetch({
+				query: linkQuery,
+				params: { asset: linkParse.internalLink._ref },
+				enrichAssets: false,
+			})
 
 			return {
 				...input,

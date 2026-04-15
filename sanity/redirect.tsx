@@ -13,7 +13,7 @@ export async function Redirect({ link }: GetSectionType<"redirect">) {
 				<p>
 					This page is configured as a redirect. If someone tries to navigate to
 					this page in any way, they will be redirected to{" "}
-					<Link href={link}>{link}</Link>
+					{link ? <Link href={link}>{link}</Link> : "an unset destination"}
 				</p>
 				<br />
 				<p>You are seeing this message because you are in draft mode.</p>
