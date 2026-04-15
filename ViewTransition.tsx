@@ -27,7 +27,6 @@ export function Transition({
 }: TransitionProps) {
 	const { completed } = usePreloader()
 	const m = mask(completed)
-	console.log({ completed })
 
 	return (
 		<ReactViewTransition
