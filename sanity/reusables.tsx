@@ -16,10 +16,40 @@ import {
 	defineArrayMember,
 	defineField,
 	defineType,
+	getValueAtPath,
 	type ImageDefinition,
 	type ObjectDefinition,
+	type Path,
+	type SanityDocument,
 } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
+
+type HiddenValidationContext = {
+	currentUser?: unknown
+	document?: SanityDocument
+	parent?: unknown
+	path?: Path
+}
+
+function isFieldHidden(
+	hidden: ImageDefinition["hidden"],
+	context: HiddenValidationContext,
+) {
+	if (!hidden) return false
+	if (typeof hidden !== "function") return Boolean(hidden)
+	const path = Array.isArray(context.path) ? context.path : []
+	const fieldPath = path.slice(0, -1)
+	const containerPath = fieldPath.slice(0, -1)
+	return Boolean(
+		hidden({
+			currentUser: context.currentUser as never,
+			document: context.document,
+			parent: context.document ? getValueAtPath(context.document, containerPath) : undefined,
+			path: fieldPath,
+			value: context.parent,
+		}),
+	)
+}
 
 export const createSectionPreview = (image: StaticImageData) =>
 	attrs(
@@ -53,7 +83,14 @@ export const universalImage = <
 				name: "alt",
 				title: "Alternative text",
 				rows: 2,
-				validation: withAlt === false ? undefined : (rule) => rule.required(),
+				validation:
+					withAlt === false
+						? undefined
+						: (rule) =>
+								rule.custom((value, context) => {
+									if (isFieldHidden(schemaField.hidden, context)) return true
+									return value ? true : "Required"
+								}),
 				hidden: withAlt === false,
 			}),
 			defineField({
