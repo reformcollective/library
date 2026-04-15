@@ -66,7 +66,10 @@ const SRCSET_WIDTHS = [400, 800, 1200, 1600, 2400]
  * by drawing it to an offscreen canvas and sampling the alpha channel.
  * JPEG LQIPs can never be transparent so they are skipped immediately.
  */
-function checkLqipTransparency(lqip: string, onResult: (hasTransparency: boolean) => void): void {
+function checkLqipTransparency(
+	lqip: string,
+	onResult: (hasTransparency: boolean) => void,
+): void {
 	if (!lqip.startsWith("data:image/png;base64,")) return
 	const img = new Image()
 	img.onload = () => {
@@ -178,12 +181,21 @@ function SanityImageCore(props: SanityImageProps) {
 			const containerH = el.offsetHeight
 			if (!containerW || !containerH) return
 			// Scale factor for object-fit: cover
-			const s = Math.max(containerW / el.naturalWidth, containerH / el.naturalHeight)
+			const s = Math.max(
+				containerW / el.naturalWidth,
+				containerH / el.naturalHeight,
+			)
 			const scaledW = el.naturalWidth * s
 			const scaledH = el.naturalHeight * s
 			// Offset to center the hotspot, clamped to image bounds
-			const ox = Math.max(containerW - scaledW, Math.min(0, containerW / 2 - scaledW * hx))
-			const oy = Math.max(containerH - scaledH, Math.min(0, containerH / 2 - scaledH * hy))
+			const ox = Math.max(
+				containerW - scaledW,
+				Math.min(0, containerW / 2 - scaledW * hx),
+			)
+			const oy = Math.max(
+				containerH - scaledH,
+				Math.min(0, containerH / 2 - scaledH * hy),
+			)
 			el.style.objectPosition = `${ox}px ${oy}px`
 		}
 
@@ -206,7 +218,9 @@ function SanityImageCore(props: SanityImageProps) {
 		.quality(90)
 		.auto("format")
 	const imgSrc = base.width(1600).url()
-	const srcSet = SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`).join(", ")
+	const srcSet = SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`).join(
+		", ",
+	)
 
 	// All LQIP props are grouped and cleared together on load. Transparent
 	// LQIPs also get pixelated + blur: upscale as hard blocks first, then
@@ -219,7 +233,7 @@ function SanityImageCore(props: SanityImageProps) {
 					lqipFilter: "blur(24px)" as const,
 					lqipImageRendering: "pixelated" as const,
 				}),
-		  }
+			}
 		: undefined
 
 	return (

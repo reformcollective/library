@@ -44,7 +44,9 @@ function isFieldHidden(
 		hidden({
 			currentUser: context.currentUser as never,
 			document: context.document,
-			parent: context.document ? getValueAtPath(context.document, containerPath) : undefined,
+			parent: context.document
+				? getValueAtPath(context.document, containerPath)
+				: undefined,
 			path: fieldPath,
 			value: context.parent,
 		}),

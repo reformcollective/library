@@ -3,11 +3,16 @@
 import Link, { type LinkProps } from "next/link"
 import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
+import {
+	type CMSLink,
+	isRouteDefined,
+	type LinkHref,
+	resolveRoute,
+} from "./resolve"
 import { useTransitioner } from "./transitioner"
-import { resolveRoute, isRouteDefined, type CMSLink, type LinkHref } from "./resolve"
 
 export type { CMSLink, LinkHref }
-export { resolveRoute, isRouteDefined }
+export { isRouteDefined, resolveRoute }
 
 type ButtonProps = {
 	/**
