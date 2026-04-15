@@ -31,3 +31,5 @@ jobs:
         with:
           fail-if-changed: true
           fail-message: 'Looks like there may be formatting issues. Run "pnpm format" to fix them.'
+      - name: Lint (fail on errors)
+        run: pnpm run lint
