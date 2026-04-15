@@ -26,24 +26,34 @@ import {
 	lqipVar,
 } from "./SanityImage.css"
 
-export type SanityImageData<WithAlt extends "true" | "false"> = {
+type SanityAltMode = "true" | "false"
+
+type AltProvidedBySanityError =
+	"You have passed an alt, but this image's alt text is provided by sanity"
+
+type SanityImageDataBase = {
 	asset?: { _ref: string }
 	crop?: SanityImageCrop
 	hotspot?: SanityImageHotspot
 	data: AssetMeta | null
 	alt?: string
+}
+
+export type SanityImageData<WithAlt extends SanityAltMode> = SanityImageDataBase & {
 	willHaveAlt?: WithAlt
 }
 
+export type SanityImageWithAlt = SanityImageData<"true">
+export type SanityImageWithoutAlt = SanityImageData<"false">
+
 type SanityProps =
 	| {
-			src: SanityImageData<"false"> | null | undefined
-			alt: string | undefined
+			src: SanityImageWithoutAlt | null | undefined
+			alt: string
 	  }
 	| {
-			src: SanityImageData<"true"> | null | undefined
-			// the alt should be provided by sanity
-			alt?: undefined
+			src: SanityImageWithAlt | null | undefined
+			alt?: AltProvidedBySanityError
 	  }
 
 export type SanityImageProps = SanityProps & {
