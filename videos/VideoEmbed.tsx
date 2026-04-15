@@ -7,7 +7,6 @@ import { useCombinedRefs } from "library/useCombinedRefs"
 import { stegaClean } from "next-sanity"
 import { useRef } from "react"
 import ReactPlayer from "react-player"
-import type { Video } from "sanity.types"
 
 type VideoEmbedProps = Omit<
 	React.ComponentPropsWithoutRef<typeof ReactPlayer>,

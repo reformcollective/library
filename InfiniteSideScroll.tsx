@@ -115,9 +115,6 @@ export function InfiniteSideScroll({
 			// doing the math properly here is a bit tricky, but gives us lots of flexibility in how we pad our marquee
 			const childCount = rowRef.current.children.length / numberNeeded
 			const firstLastChild = rowRef.current.children[childCount - 1]
-			const firstLastRightMargin = Number(
-				gsap.getProperty(firstLastChild ?? null, "marginRight"),
-			)
 			const secondFirstChild = rowRef.current.children[childCount]
 			const secondFirstLeftMargin = Number(
 				gsap.getProperty(secondFirstChild ?? null, "marginLeft"),
@@ -126,7 +123,7 @@ export function InfiniteSideScroll({
 				firstLastChild && secondFirstChild
 					? // distance from right edge of first to left edge of second,
 						// minus secondFirstLeftMargin only (already in totalWidth via spaceBefore[0]).
-						// firstLastRightMargin is NOT subtracted: horizontalLoop's getTotalWidth ends
+						// The last item's right margin is NOT subtracted: horizontalLoop's getTotalWidth ends
 						// at the last item's offsetWidth (no trailing margin), so that margin must
 						// remain in paddingRight to produce an even gap at the loop point.
 						Math.abs(
