@@ -3,7 +3,11 @@
  */
 
 import { type DocumentDefinition, definePlugin } from "sanity"
-import type { StructureResolver } from "sanity/structure"
+import type {
+	ListItemBuilder,
+	StructureBuilder,
+	StructureResolver,
+} from "sanity/structure"
 
 export const singletonPlugin = definePlugin((types: string[]) => {
 	return {
@@ -32,10 +36,16 @@ export const singletonPlugin = definePlugin((types: string[]) => {
 	}
 })
 
+type GroupItem = {
+	item: (S: StructureBuilder) => ListItemBuilder
+	hiddenTypes: string[]
+}
+
 // The StructureResolver is how we're changing the DeskTool structure to linking to document (named Singleton)
 // like how "Home" is handled.
 export const pageStructure = (
 	typeDefArray: DocumentDefinition[],
+	groups?: GroupItem[],
 ): StructureResolver => {
 	return (S) => {
 		// Goes through all of the singletons that were provided and translates them into something the
@@ -52,10 +62,14 @@ export const pageStructure = (
 				)
 		})
 
+		const hiddenTypes = [
+			...typeDefArray.map((s) => s.name),
+			...(groups?.flatMap((g) => g.hiddenTypes) ?? []),
+		]
+
 		// The default root list items (except custom ones)
 		const nonSingletonItems = S.documentTypeListItems().filter(
-			(listItem) =>
-				!typeDefArray.find((singleton) => singleton.name === listItem.getId()),
+			(listItem) => !hiddenTypes.includes(listItem.getId() ?? ""),
 		)
 		const middleItems = ["media.tag", "assist.instruction.context"]
 			.map((id) => nonSingletonItems.find((item) => item.getId() === id))
@@ -68,10 +82,13 @@ export const pageStructure = (
 			(item) => !middleItems.includes(item) && !hiddenItems.includes(item),
 		)
 
+		const groupItems = groups?.map((g) => g.item(S)) ?? []
+
 		return S.list()
 			.title("Content Types")
 			.items([
 				...singletonItems,
+				...groupItems,
 				S.divider(),
 				...middleItems,
 				S.divider(),
