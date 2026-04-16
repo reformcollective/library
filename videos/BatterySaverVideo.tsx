@@ -1,7 +1,7 @@
 import { keyframes } from "@vanilla-extract/css"
 import { eases } from "library/eases"
 import Portal from "library/Portal"
-import { css, f, styled } from "library/styled/alpha"
+import { css, f, styled } from "library/styled"
 import {
 	type ComponentProps,
 	useCallback,

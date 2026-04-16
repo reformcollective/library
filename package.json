@@ -18,25 +18,22 @@
 		"class-variance-authority": "^0.7",
 		"lenis": "^1",
 		"minisearch": "^7",
-		"restyle": "^3",
 		"rxjs": "^7",
 		"sanity-image": "^1",
 		"semver": "^7",
 		"sonner": "^2",
-		"stylis": "^4",
 		"use-deep-compare": "^1",
 		"zod": "^4"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.10",
-		"@types/stylis": "^4",
-		"typescript": "^5",
-		"vitest": "^4",
 		"postcss": "^8.5.6",
 		"postcss-styled-syntax": "^0.7.1",
 		"stylelint": "^16.25.0",
 		"stylelint-config-standard": "^39.0.1",
-		"stylelint-plugin-use-baseline": "^1.1.0"
+		"stylelint-plugin-use-baseline": "^1.1.0",
+		"typescript": "^5",
+		"vitest": "^4"
 	},
 	"scripts": {
 		"test": "vitest run",

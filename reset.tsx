@@ -1,4 +1,4 @@
-import { compileTime, css } from "library/styled/alpha"
+import { compileTime, css } from "library/styled"
 import { reset } from "./layers.css"
 
 const style = css`

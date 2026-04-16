@@ -3,7 +3,7 @@
 import { createVar } from "@vanilla-extract/css"
 import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
-import { css, styled, unresponsive } from "library/styled/alpha"
+import { css, styled, unresponsive } from "library/styled"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
 import { library } from "./layers.css"

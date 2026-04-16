@@ -1,6 +1,6 @@
 import { Component, type FC } from "react"
 import { expectTypeOf, test } from "vitest"
-import { styled } from "./alpha"
+import { styled } from "./index"
 import type { StyledComponent } from "./types"
 
 test("basic component type is preserved", () => {

@@ -164,7 +164,7 @@ describe.concurrent("vanilla-split-loader", () => {
 
 		it("should pass through library/styled/ files unchanged", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"\nexport const Button = styled("button", { color: "red" })`
+			const source = `import { styled } from "library/styled"\nexport const Button = styled("button", { color: "red" })`
 			const ctx = createMockContext(
 				path.join(await tmpDir.getPath(), "library/styled/helpers.ts"),
 				await tmpDir.getPath(),
@@ -190,7 +190,7 @@ describe.concurrent("vanilla-split-loader", () => {
 	describe("basic splitting", () => {
 		it("should move styled component to virtual module", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 export const Button = styled("button", { color: "red" })`
 			const ctx = createMockContext(
 				path.join(await tmpDir.getPath(), "app/test.tsx"),
@@ -207,9 +207,41 @@ export const Button = styled("button", { color: "red" })`
 			expect(result).toContain("export { Button }")
 		})
 
+		it("should move styled component to virtual module from library/styled/index", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { styled } from "library/styled/index"
+export const Button = styled("button", { color: "red" })`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+			expect(result).toContain("data:text/javascript;base64,")
+			expect(result).toContain("import { Button }")
+			expect(result).toContain("export { Button }")
+		})
+
+		it("should keep supporting the library/styled/alpha shim", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { styled } from "library/styled/alpha"
+export const Button = styled("button", { color: "red" })`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+			expect(result).toContain("data:text/javascript;base64,")
+			expect(result).toContain("import { Button }")
+			expect(result).toContain("export { Button }")
+		})
+
 		it("should move keyframes to virtual module", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { keyframes } from "library/styled/alpha"
+			const source = `import { keyframes } from "library/styled"
 export const fadeIn = keyframes({ from: { opacity: 0 }, to: { opacity: 1 } })`
 			const ctx = createMockContext(
 				path.join(await tmpDir.getPath(), "app/test.tsx"),
@@ -228,7 +260,7 @@ export const fadeIn = keyframes({ from: { opacity: 0 }, to: { opacity: 1 } })`
 		it("should preserve 'use client' directive at top of file", async () => {
 			await using tmpDir = new TempDir()
 			const source = `"use client"
-import { styled } from "library/styled/alpha"
+import { styled } from "library/styled"
 export const Button = styled("button", { color: "red" })`
 			const ctx = createMockContext(
 				path.join(await tmpDir.getPath(), "app/test.tsx"),
@@ -250,7 +282,7 @@ export const Button = styled("button", { color: "red" })`
 			await using tmpDir = new TempDir()
 			const source = `"use client"
 import React from "react"
-import { styled } from "library/styled/alpha"
+import { styled } from "library/styled"
 export const Button = styled("button", { color: "red" })`
 			const ctx = createMockContext(
 				path.join(await tmpDir.getPath(), "app/test.tsx"),
@@ -283,7 +315,7 @@ export const Button = styled("button", { color: "red" })`
 	describe("module-level statements", () => {
 		it("should preserve if statements at module scope", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 const isBrowser = typeof window !== "undefined"
 if (isBrowser) {
@@ -304,7 +336,7 @@ export const Button = styled("button", { color: "red" })`
 
 		it("should preserve for loops at module scope", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 for (let i = 0; i < 3; i++) {
 	console.log(i)
@@ -326,7 +358,7 @@ export const Button = styled("button", { color: "red" })`
 	describe("shared dependencies", () => {
 		it("should keep shared variables in original when used by both styled and runtime", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import { eases } from "library/eases"
 
 const DURATION = 0.3
@@ -356,7 +388,7 @@ export function animate() {
 
 		it("should move dependency to virtual when only used by tainted nodes", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 const STYLE_CONST = "red"
 
@@ -375,7 +407,7 @@ export const Button = styled("button", { color: STYLE_CONST })`
 
 		it("should preserve external component import for styled(Component)", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import { ExternalComponent } from "external-lib"
 
 export const Styled = styled(ExternalComponent, { color: "red" })`
@@ -396,7 +428,7 @@ export const Styled = styled(ExternalComponent, { color: "red" })`
 		it("should preserve external component import with type cast", async () => {
 			await using tmpDir = new TempDir()
 			// This mimics the SanityImage pattern: styled(Component as typeof Component<"img">, ...)
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import { SanityImage } from "sanity-image"
 
 const DefaultSanityImage = styled(SanityImage as typeof SanityImage<"img">, { color: "red" })`
@@ -418,7 +450,7 @@ const DefaultSanityImage = styled(SanityImage as typeof SanityImage<"img">, { co
 	describe("type declarations", () => {
 		it("should preserve type aliases", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 type ButtonVariant = "primary" | "secondary"
 
@@ -436,7 +468,7 @@ export const Button = styled("button", { color: "red" })`
 
 		it("should preserve interfaces", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 interface ButtonProps {
 	variant: string
@@ -456,7 +488,7 @@ export const Button = styled("button", { color: "red" })`
 
 		it("should preserve enums", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 enum ButtonSize { Small, Medium, Large }
 
@@ -476,7 +508,7 @@ export const Button = styled("button", { color: "red" })`
 	describe("export declarations", () => {
 		it("should preserve re-export declarations", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 export { something } from "./other"
 export const Button = styled("button", { color: "red" })`
 			const ctx = createMockContext(
@@ -492,7 +524,7 @@ export const Button = styled("button", { color: "red" })`
 
 		it("should re-export tainted exported variables", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 export const Button = styled("button", { color: "red" })`
 			const ctx = createMockContext(
 				path.join(await tmpDir.getPath(), "app/test.tsx"),
@@ -509,7 +541,7 @@ export const Button = styled("button", { color: "red" })`
 	describe("styled(Component) handling", () => {
 		it("should handle chained styled components", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 const Something = styled("div", { color: "red" })
 const SomethingElse = styled(Something, { color: "blue" })
@@ -563,7 +595,7 @@ export { Something, SomethingElse, SomethingElseElse }`
 
 		it("should split styled(Component) into raw + wrapper", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import BaseButton from "./BaseButton"
 
 export const Button = styled(BaseButton, { color: "red" })`
@@ -582,7 +614,7 @@ export const Button = styled(BaseButton, { color: "red" })`
 
 		it("should keep base component import in original", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import BaseButton from "./BaseButton"
 
 export const Button = styled(BaseButton, { color: "red" })`
@@ -600,7 +632,7 @@ export const Button = styled(BaseButton, { color: "red" })`
 
 		it("should handle styled(Menu.Trigger) compound component", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import * as Menu from "@radix-ui/react-menu"
 
 const StyledMenuTrigger = styled(Menu.Trigger, { color: "red" })`
@@ -620,7 +652,7 @@ const StyledMenuTrigger = styled(Menu.Trigger, { color: "red" })`
 
 		it("should handle styled(Menu.Trigger) with type assertion", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import * as Menu from "@radix-ui/react-menu"
 
 const StyledMenuTrigger = styled(Menu.Trigger, { color: "red" }) as typeof Menu.Trigger`
@@ -641,7 +673,7 @@ const StyledMenuTrigger = styled(Menu.Trigger, { color: "red" }) as typeof Menu.
 
 		it("should handle styled(Thing.Menu.Trigger) with type assertion", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import * as Thing from "./thing"
 
 const StyledThingMenuTrigger = styled(Thing.Menu.Trigger, { color: "red" }) as typeof Thing.Menu.Trigger`
@@ -662,7 +694,7 @@ const StyledThingMenuTrigger = styled(Thing.Menu.Trigger, { color: "red" }) as t
 
 		it("should handle styled(Thing.Menu.Trigger) nested compound component", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import * as Thing from "./thing"
 
 const StyledThingMenuTrigger = styled(Thing.Menu.Trigger, { color: "red" })`
@@ -684,7 +716,7 @@ const StyledThingMenuTrigger = styled(Thing.Menu.Trigger, { color: "red" })`
 			await using tmpDir = new TempDir()
 			const source = `"use client";
 
-import { css, f, styled } from "library/styled/alpha";
+import { css, f, styled } from "library/styled";
 import { colors } from "app/styles/colors.css";
 import { Field } from "@base-ui/react/field";
 
@@ -718,14 +750,14 @@ const StyledInput = styled(Field.Control, {
 			expect(result).toContain('from "@base-ui/react/field"')
 			expect(result).toContain("<StyledInput")
 			// styled/css/f/colors move to virtual; Field stays in original for withComponent
-			expect(result).not.toContain('from "library/styled/alpha"')
+			expect(result).not.toContain('from "library/styled"')
 		})
 	})
 
 	describe("error handling", () => {
 		it("should error when style functions used in function body", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 function createButton() {
 	return styled("button", { color: "red" })
@@ -742,7 +774,7 @@ function createButton() {
 
 		it("should error when style functions used in arrow function", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 const createButton = () => styled("button", { color: "red" })`
 			const ctx = createMockContext(
@@ -757,7 +789,7 @@ const createButton = () => styled("button", { color: "red" })`
 
 		it("should allow style functions in library/styled/ files", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 
 function createButton() {
 	return styled("button", { color: "red" })
@@ -835,7 +867,7 @@ export const button = style({ color: "red" })`
 			// the virtual CSS module.
 			const source = `import * as Combobox from "@headlessui/react"
 import { Input } from "./input-component"
-import { styled } from "library/styled/alpha"
+import { styled } from "library/styled"
 
 const StyledComboboxInput = styled(Combobox.Input, { color: "red" })`
 
@@ -857,7 +889,7 @@ const StyledComboboxInput = styled(Combobox.Input, { color: "red" })`
 			// name coincidentally matches the property in `Combobox.Input`. The virtual
 			// module then tries to evaluate Input.tsx in a .css.ts context and throws.
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 import * as Combobox from "@headlessui/react"
 import { Input } from "./input-component"
 
@@ -889,7 +921,7 @@ const StyledComboboxInput = styled(Combobox.Input, { color: "red" })`
 	describe("debug output", () => {
 		it("should write pre-process and final debug files", async () => {
 			await using tmpDir = new TempDir()
-			const source = `import { styled } from "library/styled/alpha"
+			const source = `import { styled } from "library/styled"
 export const Button = styled("button", { color: "red" })`
 			const ctx = createMockContext(
 				path.join(await tmpDir.getPath(), "app/test.tsx"),

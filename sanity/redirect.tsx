@@ -1,5 +1,5 @@
 import { library } from "library/layers.css"
-import { css, f, styled } from "library/styled/alpha"
+import { css, f, styled } from "library/styled"
 import { draftMode } from "next/headers"
 import { redirect } from "next/navigation"
 import type { GetSectionType } from "page"

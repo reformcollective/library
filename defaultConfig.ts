@@ -30,10 +30,6 @@ type Config<TransitionNames = never, GroupNames = never> = {
 	 */
 	pageSectionGroups: GroupNames[]
 	/**
-	 * styling system to use
-	 */
-	stylingSystem: "vanilla" | "restyle" | "both"
-	/**
 	 * for the vanilla extract styling system, which engine to use
 	 * "calc" will wrap each px value in a calc() function that calculates the value based on breakpoints
 	 * "media" will wrap entire statements in a media query based on breakpoints
@@ -53,7 +49,6 @@ const defaultConfig = {
 	transitionNames: [],
 	tabletBreakpoint: "tablet",
 	pageSectionGroups: [],
-	stylingSystem: "both",
 	vanillaExtractEngine: "calc",
 	overridePreloaderResolvers: false,
 } as const satisfies Config

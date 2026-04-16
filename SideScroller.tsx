@@ -1,3 +1,4 @@
+import { createVar } from "@vanilla-extract/css"
 import gsap from "gsap/all"
 import useCanHover from "library/canHover"
 import { usePinType } from "library/Scroll"
@@ -111,7 +112,7 @@ export default function SideScroller({
 	return (
 		<Wrapper
 			ref={setWrapperEl}
-			height={pinAmount}
+			pinAmount={pinAmount}
 			touchscreenMode={touchscreenMode}
 		>
 			<Inner ref={setInnerEl} touchscreenMode={touchscreenMode}>
@@ -121,28 +122,35 @@ export default function SideScroller({
 	)
 }
 
-const Wrapper = styled(
-	"section",
-	({ height, touchscreenMode }: { height: number; touchscreenMode: boolean }) =>
+const pinAmountVar = createVar()
+
+const Wrapper = styled("section", {
+	base: [
 		unresponsive(css`
 			position: relative;
 			overflow: hidden;
 			width: 100%;
-			height: ${height}px;
-
-			${
-				touchscreenMode &&
-				css`
-				height: fit-content;
-				overflow-x: auto;
-			`
-			}
+			height: ${pinAmountVar};
 		`),
-)
+	],
+	variants: {
+		touchscreenMode: {
+			true: [
+				unresponsive(css`
+					height: fit-content;
+					overflow-x: auto;
+				`),
+			],
+			false: [],
+		},
+	},
+	tokens: {
+		pinAmount: { token: pinAmountVar, unit: "px" },
+	},
+})
 
-const Inner = styled(
-	"div",
-	({ touchscreenMode }: { touchscreenMode: boolean }) =>
+const Inner = styled("div", {
+	base: [
 		unresponsive(css`
 			position: absolute;
 			width: fit-content;
@@ -152,13 +160,17 @@ const Inner = styled(
 			> div {
 				width: fit-content;
 			}
-
-			${
-				touchscreenMode &&
-				css`
-				width: fit-content;
-				height: fit-content;
-			`
-			}
 		`),
-)
+	],
+	variants: {
+		touchscreenMode: {
+			true: [
+				unresponsive(css`
+					width: fit-content;
+					height: fit-content;
+				`),
+			],
+			false: [],
+		},
+	},
+})

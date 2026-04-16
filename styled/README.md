@@ -10,10 +10,10 @@ it combines the best of both worlds:
 
 ## quick start
 
-import `styled` and the `f` utility from `library/styled/alpha`.
+import `styled` and the `f` utility from `library/styled`.
 
 ```tsx
-import { styled, f, css } from "library/styled/alpha"
+import { styled, f, css } from "library/styled"
 
 const Box = styled("div", [
 	// static styles with responsive scaling

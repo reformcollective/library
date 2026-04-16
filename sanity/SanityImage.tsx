@@ -2,7 +2,7 @@
 
 import { createImageUrlBuilder } from "@sanity/image-url"
 import type { AssetMeta } from "library/sanity/assetMetadata"
-import { styled } from "library/styled/alpha"
+import { styled } from "library/styled"
 import { stegaClean } from "next-sanity"
 import { use, useEffect, useId, useLayoutEffect, useState } from "react"
 import { dataset, projectId } from "sanity/lib/api"

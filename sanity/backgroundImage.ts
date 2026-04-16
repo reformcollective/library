@@ -1,4 +1,4 @@
-import { css } from "library/styled/alpha"
+import { css } from "library/styled"
 import { dataset, projectId } from "sanity/lib/api"
 import { buildSrcSet } from "sanity-image"
 import type { AssetMeta } from "./assetMetadata"

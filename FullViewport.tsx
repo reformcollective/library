@@ -1,6 +1,6 @@
 import { browserData } from "library/deviceDetection"
 import { useBrowserData } from "library/deviceDetection/react"
-import { css, f, fresponsive, styled } from "library/styled/alpha"
+import { css, f, fresponsive, styled } from "library/styled"
 
 import { useVH } from "library/viewportUtils"
 import {

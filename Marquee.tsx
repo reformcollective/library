@@ -1,7 +1,7 @@
 import { useDebounceFn } from "ahooks"
 import { gsap, Observer, ScrollTrigger } from "gsap/all"
 import { library } from "library/layers.css"
-import { css, fresponsive, styled } from "library/styled/alpha"
+import { css, fresponsive, styled } from "library/styled"
 import {
 	Fragment,
 	type ReactNode,

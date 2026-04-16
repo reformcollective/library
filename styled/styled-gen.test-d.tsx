@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { styled } from "library/styled/alpha"
+import { styled } from "library/styled"
 import { Component, type ComponentProps, type FC } from "react"
 import { expectTypeOf, test } from "vitest"
 

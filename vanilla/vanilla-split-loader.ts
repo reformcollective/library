@@ -24,6 +24,12 @@ import {
 
 type ModulesConfig = Record<string, string[]>
 
+const STYLED_MODULES = [
+	"library/styled",
+	"library/styled/index",
+	"library/styled/alpha",
+] as const
+
 const TRACKED_MODULES: ModulesConfig = {
 	"@vanilla-extract/css": [
 		"style",
@@ -46,10 +52,11 @@ const TRACKED_MODULES: ModulesConfig = {
 		"globalKeyframes",
 		"globalLayer",
 	],
+	"library/styled": ["styled", "keyframes", "compileTime"],
+	"library/styled/index": ["styled", "keyframes", "compileTime"],
 	"library/styled/alpha": ["styled", "keyframes", "compileTime"],
 }
 
-const STYLED_MODULE = "library/styled/alpha"
 const STYLED_IMPORT = "styled"
 
 const turboLoader =
@@ -199,7 +206,11 @@ function analyzeStyledCalls(
 		const styledLocal = Array.from(registry.trackedNames).find((local) => {
 			const mod = registry.localToModule.get(local)
 			const imp = registry.localToImported.get(local)
-			return mod === STYLED_MODULE && imp === STYLED_IMPORT
+			return (
+				mod !== undefined &&
+				STYLED_MODULES.includes(mod as (typeof STYLED_MODULES)[number]) &&
+				imp === STYLED_IMPORT
+			)
 		})
 
 		if (!styledLocal || !node.dependsOn.includes(styledLocal)) continue

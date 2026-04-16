@@ -4,7 +4,7 @@ import MuxVideo from "@mux/mux-video-react"
 import { browserData } from "library/deviceDetection"
 import { library } from "library/layers.css"
 import { ScreenContext } from "library/ScreenContext"
-import { css, f, styled } from "library/styled/alpha"
+import { css, f, styled } from "library/styled"
 import SanityUniversalImage from "library/UniversalImage"
 import { use, useEffect, useRef, useState } from "react"
 import type {

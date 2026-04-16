@@ -10,7 +10,7 @@ Marketing site starter built by Reform Collective. Next.js app router, Sanity CM
 
 ## Styling System
 
-Import `css`, `f`, `styled` from `"library/styled/alpha"`.
+Import `css`, `f`, `styled` from `"library/styled"`.
 
 `css` is just `String.raw` — a tagged template literal for CSS strings.
 
