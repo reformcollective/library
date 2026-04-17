@@ -19,11 +19,13 @@ Import `css`, `f`, `styled` from `"library/styled"`.
 `f` converts px values from the design file into fluid responsive values automatically. Available utilities:
 
 - `f.responsive` — all breakpoints (mobile → tablet → desktop → fullWidth). Use this by default.
+- `f.unresponsive` — passes CSS through with no transformation
+- `f.fullWidth` — full width only
 - `f.small` — mobile + tablet only
 - `f.large` — desktop + fullWidth only
 - `f.desktop` / `f.tablet` / `f.mobile` — single breakpoint
-- `f.allDesktop` — all breakpoints, desktop design size
-- `f.unresponsive` — passes CSS through with no transformation
+
+If you need extra `f.*` utilities beyond that default set, define them in `app/libraryConfig.ts` under `utilities`.
 
 Write px values as they appear in Figma — the system converts them. Styled components go at the bottom of the file.
 

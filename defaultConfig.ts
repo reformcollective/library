@@ -3,9 +3,25 @@
  * see libraryConfig.ts for the actual config
  */
 
-type Config<TransitionNames = never, GroupNames = never> = {
+export type Breakpoint = "mobile" | "tablet" | "desktop" | "fullWidth"
+export type DesignSize = "mobile" | "tablet" | "desktop"
+export type UtilityOutput = "fluid" | "pixel" | "scaleFullyConfig"
+
+export type BreakpointRule = {
+	breakpoint: Breakpoint
+	designSize: DesignSize
+	output: UtilityOutput
+}
+
+export type UtilityConfig = Record<string, readonly BreakpointRule[]>
+
+type Config<
+	TransitionNames = never,
+	GroupNames = never,
+	Utilities extends UtilityConfig = {},
+> = {
 	/**
-	 * if true, the fresponsive util will scale on fullWidth breakpoints
+	 * if true, f.responsive will scale on fullWidth breakpoints
 	 */
 	scaleFully: boolean
 	/**
@@ -40,6 +56,10 @@ type Config<TransitionNames = never, GroupNames = never> = {
 	 * in most cases you won't want to use this
 	 */
 	overridePreloaderResolvers?: boolean
+	/**
+	 * additional responsive utilities to merge into the default f.* set
+	 */
+	utilities: Utilities
 }
 
 const defaultConfig = {
@@ -51,11 +71,28 @@ const defaultConfig = {
 	pageSectionGroups: [],
 	vanillaExtractEngine: "calc",
 	overridePreloaderResolvers: false,
+	utilities: {},
 } as const satisfies Config
 
-export const defineLibraryConfig = <const TransitionNames, const GroupNames>(
-	config: Partial<Config<TransitionNames, GroupNames>>,
-): Config<TransitionNames, GroupNames> => ({
-	...defaultConfig,
-	...config,
-})
+type ConfigInput<
+	TransitionNames,
+	GroupNames,
+	Utilities extends UtilityConfig,
+> = Partial<
+	Omit<Config<TransitionNames, GroupNames, Utilities>, "utilities">
+> & {
+	utilities?: Utilities
+}
+
+export const defineLibraryConfig = <
+	const TransitionNames,
+	const GroupNames,
+	const Utilities extends UtilityConfig = {},
+>(
+	config: ConfigInput<TransitionNames, GroupNames, Utilities>,
+): Config<TransitionNames, GroupNames, Utilities> =>
+	({
+		...defaultConfig,
+		...config,
+		utilities: config.utilities ?? defaultConfig.utilities,
+	}) as Config<TransitionNames, GroupNames, Utilities>

@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { styled } from "library/styled"
+import { f, styled } from "library/styled"
 import { Component, type ComponentProps, type FC } from "react"
 import { expectTypeOf, test } from "vitest"
 
@@ -8,6 +8,20 @@ test("vanilla extract should be strict", () => {
 		// @ts-expect-error not a css property
 		skibidi: "toilet",
 	})
+})
+
+test("default f utility surface is intentionally small", () => {
+	expectTypeOf(f.responsive).toBeFunction()
+	expectTypeOf(f.unresponsive).toBeFunction()
+	expectTypeOf(f.fullWidth).toBeFunction()
+	expectTypeOf(f.desktop).toBeFunction()
+	expectTypeOf(f.tablet).toBeFunction()
+	expectTypeOf(f.mobile).toBeFunction()
+	expectTypeOf(f.large).toBeFunction()
+	expectTypeOf(f.small).toBeFunction()
+
+	// @ts-expect-error not part of the api surface
+	f.skibidiToilet("")
 })
 
 test("basic component type is preserved", () => {

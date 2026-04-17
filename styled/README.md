@@ -101,6 +101,17 @@ const Card = styled("article", {
 
 the `f` object is your best friend. it handles unit conversion (px to vw), breakpoint isolation, and fluid scaling logic.
 
+default built-ins:
+
+- `f.responsive(...)`
+- `f.unresponsive(...)`
+- `f.fullWidth(...)`
+- `f.desktop(...)`
+- `f.tablet(...)`
+- `f.mobile(...)`
+- `f.large(...)`
+- `f.small(...)`
+
 ### `f.responsive` (the magic one)
 
 takes standard css with pixel values and converts them into a responsive `calc()` expression that switches based on the viewport.
@@ -125,9 +136,22 @@ target specific ranges. these wrap your styles in `@media` queries.
 - `f.small(...)`: mobile + tablet
 - `f.large(...)`: desktop + full width
 
-### `f.scaledResponsive`
+### custom utilities via `app/libraryConfig.ts`
 
-forces `vw` scaling across _all_ breakpoints, ignoring the step-based switching of standard responsive mode.
+if you want project-specific `f.*` helpers, add them in `app/libraryConfig.ts`:
+
+```ts
+import { defineLibraryConfig } from "library/defaultConfig"
+
+export default defineLibraryConfig({
+	utilities: {
+		marketingOnly: [
+			{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
+		],
+	},
+})
+```
 
 ---
 

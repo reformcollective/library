@@ -1,4 +1,90 @@
 
+# 2026-04-17
+
+## Removed extra built-in `f.*` utilities
+
+The default `f` utility surface is now limited to:
+
+- `f.responsive`
+- `f.unresponsive`
+- `f.fullWidth`
+- `f.desktop`
+- `f.tablet`
+- `f.mobile`
+- `f.large`
+- `f.small`
+
+The older built-ins `f.scaledResponsive`, `f.allFullWidth`, `f.allDesktop`, `f.allTablet`, and `f.allMobile` are no longer provided by default.
+
+If you want additional utilities, add them in `app/libraryConfig.ts` under `utilities`. These custom utilities are merged into the default `f` set.
+
+**Migration Advice**
+
+If you were using the removed built-ins, paste this into `app/libraryConfig.ts` to restore the previous behavior:
+
+```ts
+import { defineLibraryConfig } from "library/defaultConfig"
+
+const tabletBreakpoint = "largeMobile" as const
+
+const tabletRule =
+	tabletBreakpoint === "tablet"
+		? { breakpoint: "tablet", designSize: "tablet", output: "fluid" }
+		: { breakpoint: "tablet", designSize: "mobile", output: "pixel" }
+
+export default defineLibraryConfig({
+	tabletBreakpoint,
+	utilities: {
+		scaledResponsive: [
+			{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
+			tabletRule,
+			{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
+		],
+		allFullWidth: [
+			{
+				breakpoint: "mobile",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+			{
+				breakpoint: "tablet",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+			{
+				breakpoint: "desktop",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+			{
+				breakpoint: "fullWidth",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+		],
+		allDesktop: [
+			{ breakpoint: "mobile", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "tablet", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
+		],
+		allTablet: [
+			{ ...tabletRule, breakpoint: "mobile" },
+			{ ...tabletRule, breakpoint: "tablet" },
+			{ ...tabletRule, breakpoint: "desktop" },
+			{ ...tabletRule, breakpoint: "fullWidth" },
+		],
+		allMobile: [
+			{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
+			{ breakpoint: "tablet", designSize: "mobile", output: "fluid" },
+			{ breakpoint: "desktop", designSize: "mobile", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "mobile", output: "fluid" },
+		],
+	},
+})
+```
+
 # 2026-04-16
 
 ## Removed legacy styled system
