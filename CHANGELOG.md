@@ -1,4 +1,18 @@
 
+# 2026-04-16
+
+## Removed legacy styled system
+
+The legacy `restyle`-based styled system has been removed.
+
+`library/styled` is now the canonical entrypoint for the current alpha styled system. `library/styled/alpha` still exists as a temporary compatibility shim, but the old `library/styled/index.tsx` implementation and its dual-system config hooks are gone.
+
+**Migration Advice**
+
+- Remove any app/library config that selects or references the old styling system (`stylingSystem`, `restyle`, or related legacy wiring).
+- Treat `library/styled` as the supported import path going forward.
+- If you still import `library/styled/alpha`, it will continue to work for now, but you should migrate those imports to `library/styled`.
+
 # 2026-04-13
 
 ## `enrichAssets` now opt-in; `fetchAssetMeta` deprecated

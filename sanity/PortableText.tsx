@@ -1,6 +1,6 @@
 import { library } from "library/layers.css"
 import UniversalLink from "library/link"
-import { styled } from "library/styled/alpha"
+import { styled } from "library/styled"
 import {
 	type ListNestMode,
 	type MissingComponentHandler,

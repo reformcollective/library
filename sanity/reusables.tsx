@@ -1,6 +1,5 @@
 import { InfoOutlineIcon, PlayIcon } from "@sanity/icons"
 import type libraryConfig from "app/libraryConfig"
-import { attrs, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
 import {
 	MATCH_URL_SPOTIFY,
@@ -54,15 +53,20 @@ function isFieldHidden(
 }
 
 export const createSectionPreview = (image: StaticImageData) =>
-	attrs(
-		styled("img", {
-			width: 160,
-			height: 90,
-			borderRadius: "0.1875rem",
-			objectFit: "cover !important" as "cover",
-		}),
-		{ src: image.src, alt: "" },
-	)
+	function SectionPreview() {
+		return (
+			<img
+				alt=""
+				src={image.src}
+				style={{
+					width: 160,
+					height: 90,
+					borderRadius: "0.1875rem",
+					objectFit: "cover",
+				}}
+			/>
+		)
+	}
 
 export const universalImage = <
 	WithAlt extends boolean | undefined = undefined,

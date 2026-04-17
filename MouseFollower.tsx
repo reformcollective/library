@@ -6,7 +6,7 @@ import { useClientOnly } from "./ClientOnly"
 import { useLoadState } from "./link/useLoadState"
 import { subscribeToMousePosition } from "./mouse-position"
 import { useIsSmooth } from "./Scroll"
-import { styled } from "./styled"
+import { css, styled, unresponsive } from "./styled"
 import { useAnimation } from "./useAnimation"
 
 // Default animation values
@@ -130,18 +130,20 @@ export const MouseFollower = ({
 	return <Wrapper ref={followerRef}>{children}</Wrapper>
 }
 
-const Wrapper = styled("div", {
-	position: "fixed",
-	top: 0,
-	left: 0,
-	transform: "translate(-50%, -50%)",
-	willChange: "transform, opacity",
-	zIndex: 1000,
-	pointerEvents: "none",
-	scale: 0,
-	opacity: 0,
+const Wrapper = styled(
+	"div",
+	unresponsive(css`
+		position: fixed;
+		top: 0;
+		left: 0;
+		transform: translate(-50%, -50%) scale(0);
+		will-change: transform, opacity;
+		z-index: 1000;
+		pointer-events: none;
+		opacity: 0;
 
-	"@media (hover:none)": {
-		visibility: "hidden",
-	},
-})
+		@media (hover: none) {
+			visibility: hidden;
+		}
+	`),
+)

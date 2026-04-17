@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /*
-  Codemod: Convert old styled object-spread configs to array alpha style system using TypeScript AST
+  Codemod: Convert old styled object-spread configs to array styled system using TypeScript AST
 
   - Converts: styled(X, { ...expr1, ...expr2, ... }) → styled(X, [ expr1, expr2, ... ])
   - Skips function-based styles: styled(X, () => ({ ... })) and annotates with a TODO above
-  - Partial conversion supported; only converted files get imports updated to `library/styled/alpha`
+  - Partial conversion supported; only converted files get imports updated to `library/styled`
   - Normalizes fresponsive(…) → f.responsive(…) within converted arrays
   - Preserves file formatting by performing targeted range edits, not full reprints
 */
@@ -137,7 +137,7 @@ function transformFile(sourceText, fileName) {
 		converted++
 	}
 
-	// if any conversion happened in this file, rewrite imports/exports to alpha
+	// if any conversion happened in this file, rewrite imports/exports to the canonical styled entrypoint
 	if (converted > 0) {
 		for (const stmt of sf.statements) {
 			if (
@@ -146,10 +146,14 @@ function transformFile(sourceText, fileName) {
 				ts.isStringLiteral(stmt.moduleSpecifier)
 			) {
 				const lit = stmt.moduleSpecifier
-				if (lit.text === "library/styled") {
+				if (
+					lit.text === "library/styled" ||
+					lit.text === "library/styled/index" ||
+					lit.text === "library/styled/alpha"
+				) {
 					const start = lit.getStart(sf) + 1
 					const end = lit.getEnd() - 1
-					edits.push({ start, end, text: "library/styled/alpha" })
+					edits.push({ start, end, text: "library/styled" })
 				}
 			}
 		}

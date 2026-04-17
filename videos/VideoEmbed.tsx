@@ -2,7 +2,7 @@
 
 import ClientOnly from "library/ClientOnly"
 import type { ResolvedVideo } from "library/sanity/assetMetadata"
-import { css, f, styled } from "library/styled/alpha"
+import { css, f, styled } from "library/styled"
 import { useCombinedRefs } from "library/useCombinedRefs"
 import { stegaClean } from "next-sanity"
 import { useRef } from "react"
