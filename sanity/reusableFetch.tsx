@@ -53,8 +53,12 @@ export async function libraryFetch<const QueryString extends string>({
 	disableStega?: boolean
 	/**
 	 * Opt-in to legacy post-query asset enrichment via `fetchAssetMeta`.
-	 * Prefer projecting asset data inline in your GROQ query instead — e.g.
-	 * `asset->metadata.lqip` for images, `asset->playbackId` for Mux video.
+	 * Prefer resolving asset data inline in your GROQ query using the helpers in
+	 * `library/sanity/assetMetadata.ts` such as `imageField`, `imageProjection`,
+	 * `videoField`, `videoProjection`, and related data projections.
+	 *
+	 * Any image data passed to `SanityImage` / `UniversalImage` should include
+	 * the inline metadata it needs rather than relying on post-query enrichment.
 	 *
 	 * @deprecated Set `enrichAssets: true` only on legacy call-sites that have
 	 * not yet been migrated to inline GROQ projections.
