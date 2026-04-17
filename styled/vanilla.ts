@@ -9,6 +9,12 @@ import {
 	tabletBreakpoint,
 	tabletDesignSize,
 } from "app/styles/media"
+import type {
+	Breakpoint,
+	BreakpointRule,
+	DesignSize,
+	UtilityConfig,
+} from "../defaultConfig"
 import { isBrowser } from "../deviceDetection"
 import { isDesktop, isFull, isMobile, isTablet } from "./breakpoints.css"
 
@@ -21,18 +27,10 @@ if (isBrowser && process.env.NODE_ENV === "development")
 // Types
 // =============================================================================
 
-type Breakpoint = "mobile" | "tablet" | "desktop" | "fullWidth"
-type DesignSize = "mobile" | "tablet" | "desktop"
 type BreakpointCombo = "small" | "large" | "all"
 
 type OutputType = "fluid" | "pixel" | "scaleFullyConfig"
 type ResponsiveEngine = "calc" | "media"
-
-type BreakpointRule = {
-	breakpoint: Breakpoint
-	designSize: DesignSize
-	output: OutputType
-}
 
 type FOptions = {
 	engine?: ResponsiveEngine
@@ -55,7 +53,7 @@ const TABLET_RULE: BreakpointRule =
 		? { breakpoint: "tablet", designSize: "tablet", output: "fluid" }
 		: { breakpoint: "tablet", designSize: "mobile", output: "pixel" }
 
-const UTILITIES = {
+const DEFAULT_UTILITIES = {
 	responsive: [
 		{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
 		TABLET_RULE,
@@ -65,13 +63,6 @@ const UTILITIES = {
 			designSize: "desktop",
 			output: "scaleFullyConfig",
 		},
-	],
-
-	scaledResponsive: [
-		{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
-		TABLET_RULE,
-		{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
-		{ breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
 	],
 
 	large: [
@@ -101,43 +92,12 @@ const UTILITIES = {
 	tablet: [TABLET_RULE],
 
 	mobile: [{ breakpoint: "mobile", designSize: "mobile", output: "fluid" }],
+} satisfies UtilityConfig
 
-	allFullWidth: [
-		{ breakpoint: "mobile", designSize: "desktop", output: "scaleFullyConfig" },
-		{ breakpoint: "tablet", designSize: "desktop", output: "scaleFullyConfig" },
-		{
-			breakpoint: "desktop",
-			designSize: "desktop",
-			output: "scaleFullyConfig",
-		},
-		{
-			breakpoint: "fullWidth",
-			designSize: "desktop",
-			output: "scaleFullyConfig",
-		},
-	],
-
-	allDesktop: [
-		{ breakpoint: "mobile", designSize: "desktop", output: "fluid" },
-		{ breakpoint: "tablet", designSize: "desktop", output: "fluid" },
-		{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
-		{ breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
-	],
-
-	allTablet: [
-		{ ...TABLET_RULE, breakpoint: "mobile" },
-		{ ...TABLET_RULE, breakpoint: "tablet" },
-		{ ...TABLET_RULE, breakpoint: "desktop" },
-		{ ...TABLET_RULE, breakpoint: "fullWidth" },
-	],
-
-	allMobile: [
-		{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
-		{ breakpoint: "tablet", designSize: "mobile", output: "fluid" },
-		{ breakpoint: "desktop", designSize: "mobile", output: "fluid" },
-		{ breakpoint: "fullWidth", designSize: "mobile", output: "fluid" },
-	],
-} satisfies Record<string, BreakpointRule[]>
+const UTILITIES = {
+	...DEFAULT_UTILITIES,
+	...config.utilities,
+} as const satisfies UtilityConfig
 
 // =============================================================================
 // Config
@@ -238,7 +198,7 @@ const computeResponsiveValue = (
 }
 
 const getBreakpointCombo = (
-	rules: BreakpointRule[],
+	rules: readonly BreakpointRule[],
 ): BreakpointCombo | null => {
 	const breakpoints = new Set(rules.map((r) => r.breakpoint))
 	if (breakpoints.size === 4) return "all"
@@ -250,7 +210,7 @@ const getBreakpointCombo = (
 	return null
 }
 
-const hasUniformOutput = (rules: BreakpointRule[]): boolean =>
+const hasUniformOutput = (rules: readonly BreakpointRule[]): boolean =>
 	rules.every(
 		(r) =>
 			r.designSize === rules[0]?.designSize && r.output === rules[0]?.output,
@@ -314,7 +274,7 @@ const toInjectedStyleRule = (cssText: string): StyleRule => ({
 
 const getCalcExpression = (
 	px: number,
-	rules: BreakpointRule[],
+	rules: readonly BreakpointRule[],
 	options?: FOptions,
 ): string => {
 	const uniform = hasUniformOutput(rules)
@@ -332,7 +292,7 @@ const getCalcExpression = (
 
 const wrapWithMediaQueries = (
 	cssText: string,
-	rules: BreakpointRule[],
+	rules: readonly BreakpointRule[],
 ): string => {
 	const combo = getBreakpointCombo(rules)
 
@@ -350,7 +310,7 @@ const wrapWithMediaQueries = (
 
 const calcEngine = (
 	cssText: string,
-	rules: BreakpointRule[],
+	rules: readonly BreakpointRule[],
 	options?: FOptions,
 ): string => {
 	const ast = parseWrappedCss(cssText)
@@ -367,7 +327,7 @@ const calcEngine = (
 
 const mediaEngine = (
 	cssText: string,
-	rules: BreakpointRule[],
+	rules: readonly BreakpointRule[],
 	options?: FOptions,
 ): string => {
 	const ast = parseWrappedCss(cssText)
@@ -399,7 +359,7 @@ const mediaEngine = (
 
 const generateStyle = (
 	cssText: string,
-	rules: BreakpointRule[],
+	rules: readonly BreakpointRule[],
 	options?: FOptions,
 ): StyleRule => {
 	const engine = options?.engine ?? DEFAULT_ENGINE
