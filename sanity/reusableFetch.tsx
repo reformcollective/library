@@ -102,8 +102,7 @@ export const LibraryLive = async () => {
 						refreshOnMount={true}
 						refreshOnReconnect={true}
 						intervalOnGoAway={false}
-
-          />
+					/>
 				)}
 			</LiveWrapper>
 		</>
