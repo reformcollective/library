@@ -1,5 +1,6 @@
 import { fetchAssetMeta } from "library/sanity/assetMetadata"
 import DraftModeOverlay from "library/sanity/DraftModeOverlay"
+import { siteURL } from "library/siteURL"
 import { draftMode } from "next/headers"
 import type { ClientPerspective, QueryParams } from "next-sanity"
 import { defineLive } from "next-sanity/live"
@@ -75,33 +76,34 @@ export async function libraryFetch<const QueryString extends string>({
 	}
 }
 
+const useProxyInDev = false
 const allowProxy =
 	// vercel has fluid compute baybeeee
 	// other providers should be tested and evaluated as needed
-	!!process.env.VERCEL
+	!!process.env.VERCEL ||
+	(process.env.NODE_ENV === "development" && useProxyInDev)
 
 export const LibraryLive = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
 
-	const useProxy = isDraftMode ? false : allowProxy
-
 	return (
-		<LiveWrapper>
+		<>
+			{allowProxy && <SanityLiveProxy />}
 			<Toaster />
-			{isDraftMode && <FirefoxFix />}
-			{isDraftMode && <DraftModeOverlay />}
-			{useProxy ? (
-				<SanityLiveProxy />
-			) : (
-				<InternalLive
-					onError={handleError}
-					refreshOnFocus={false}
-					refreshOnMount={true}
-					refreshOnReconnect={true}
-					intervalOnGoAway={false}
-				/>
+			{isDraftMode && (
+				<LiveWrapper>
+					<DraftModeOverlay />
+					<FirefoxFix />
+					<InternalLive
+						onError={handleError}
+						refreshOnFocus={false}
+						refreshOnMount={true}
+						refreshOnReconnect={true}
+						intervalOnGoAway={false}
+					/>
+				</LiveWrapper>
 			)}
-		</LiveWrapper>
+		</>
 	)
 }
 
