@@ -7,6 +7,13 @@ import { use } from "react"
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
 
+/**
+ * Pick a value by the current breakpoint in this order:
+ * `fullWidth`, `desktop`, `tablet`, `mobile`.
+ *
+ * Use this inside a `ScreenProvider` when component logic needs to mirror the
+ * same breakpoint split used by the styling system.
+ */
 export function useMedia<A, B, C, D>(fw: A, d: B, t: C, m: D) {
 	const { desktop, fullWidth, mobile, tablet } = use(ScreenContext)
 
