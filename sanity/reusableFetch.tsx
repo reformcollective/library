@@ -82,8 +82,9 @@ export async function libraryFetch<const QueryString extends string>({
 
 const useProxy =
 	// vercel has fluid compute baybeeee
+	// local obviously is persistent too
 	// other providers should be tested and evaluated as needed
-	!!process.env.VERCEL
+	!!process.env.VERCEL || process.env.NODE_ENV === "development"
 
 export const LibraryLive = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()

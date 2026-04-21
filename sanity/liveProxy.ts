@@ -1,6 +1,8 @@
 // app/api/live/route.ts
 
-import { revalidateSyncTags } from "next-sanity/live/server-actions"
+import crypto from "node:crypto"
+import { siteURL } from "library/siteURL"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { client } from "sanity/lib/client"
 
 export const dynamic = "force-dynamic"
@@ -12,6 +14,18 @@ const connectedClients = new Set<WritableStreamDefaultWriter<Uint8Array>>()
 let sanitySubscription: { unsubscribe: () => void } | null = null
 let cachedWelcomeEvent: string | null = null
 const encoder = new TextEncoder()
+const internalSecret = crypto.randomBytes(32).toString("base64url")
+
+function revalidate(tags?: string[]) {
+	fetch(`${siteURL}/api/live`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${internalSecret}`,
+		},
+		body: JSON.stringify({ tags }),
+	})
+}
 
 function broadcast(data: string) {
 	// cache welcome events to replay to new clients
@@ -38,13 +52,17 @@ function startUpstreamSubscription() {
 
 	console.log("⚡️ Opening shared upstream connection to Sanity...")
 
+	// Cold start: bust the entire cache in case events were missed while
+	// the serverless instance was recycled.
+	revalidate()
+
 	// We rely on the default behavior: includeAllDocuments=false
 	// This means we only receive events for PUBLISHED content, which is exactly
 	// what we want for public cache invalidation.
 	sanitySubscription = client.live.events().subscribe({
 		next: (event) => {
 			if (event.type === "message") {
-				revalidateSyncTags(event.tags)
+				revalidate(event.tags)
 			}
 			broadcast(JSON.stringify(event))
 		},
@@ -63,6 +81,25 @@ function startUpstreamSubscription() {
 // close connections before vercel's hard timeout (300s on pro, 60s on hobby)
 // this lets the client's native EventSource auto-reconnect handle it gracefully
 const MAX_CONNECTION_MS = 280_000
+
+export async function POST(request: Request) {
+	const bearer = request.headers.get("Authorization")?.replace("Bearer ", "")
+	if (bearer !== internalSecret) {
+		return Response.json({ error: "unauthorized" }, { status: 401 })
+	}
+
+	const { tags } = (await request.json()) as { tags?: string[] }
+
+	if (tags?.length) {
+		for (const tag of tags) {
+			revalidateTag(`sanity:${tag}`, "max")
+		}
+	} else {
+		revalidatePath("/", "layout")
+	}
+
+	return Response.json({ revalidated: true })
+}
 
 export async function GET(request: Request) {
 	const responseStream = new TransformStream()

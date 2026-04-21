@@ -1,4 +1,26 @@
 
+# 2026-04-21
+
+## Live proxy now requires POST to be exported
+
+`liveProxy.ts` now exports both `GET` (SSE) and `POST` (revalidation). The POST handler is how the proxy revalidates the Next.js Data Cache in a proper request context — without it, tag revalidation silently does nothing.
+
+**Migration Advice**
+
+If your `app/(sanity)/api/live/route.ts` explicitly forwards only `GET`:
+
+```ts
+// before
+export { GET } from "library/sanity/liveProxy"
+```
+
+Change it to re-export everything:
+
+```ts
+// after
+export * from "library/sanity/liveProxy"
+```
+
 # 2026-04-17
 
 ## Removed extra built-in `f.*` utilities
