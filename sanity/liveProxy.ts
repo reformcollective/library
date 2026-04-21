@@ -1,5 +1,6 @@
 // app/api/live/route.ts
 
+import { revalidateSyncTags } from "next-sanity/live/server-actions"
 import { client } from "sanity/lib/client"
 
 export const dynamic = "force-dynamic"
@@ -42,7 +43,11 @@ function startUpstreamSubscription() {
 	// what we want for public cache invalidation.
 	sanitySubscription = client.live.events().subscribe({
 		next: (event) => {
-			broadcast(JSON.stringify(event))
+			if (event.type === "message") {
+				revalidateSyncTags(event.tags)
+			} else {
+				broadcast(JSON.stringify(event))
+			}
 		},
 		error: (err) => {
 			console.error("Sanity upstream error:", err)
