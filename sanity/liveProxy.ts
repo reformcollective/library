@@ -45,9 +45,8 @@ function startUpstreamSubscription() {
 		next: (event) => {
 			if (event.type === "message") {
 				revalidateSyncTags(event.tags)
-			} else {
-				broadcast(JSON.stringify(event))
 			}
+			broadcast(JSON.stringify(event))
 		},
 		error: (err) => {
 			console.error("Sanity upstream error:", err)
