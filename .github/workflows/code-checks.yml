@@ -22,21 +22,16 @@ jobs:
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           lfs: true
-          fetch-depth: 0
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
-          run_install: false
-      - name: Ensure Git LFS objects are present
-        run: |
-          git lfs install --local
-          git lfs pull || true
-      - name: Install dependencies
-        run: pnpm install || echo 'Looks like your lockfile is out of date. Run "pnpm install" to fix it.'
+          run_install: true
+          cache: true
+          standalone: true
       - run: pnpm run lint
         continue-on-error: true
       - run: git status
@@ -58,11 +53,10 @@ jobs:
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
           secrets: ${{ secrets.SECRETS_JSON }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           lfs: true
-          fetch-depth: 0
       - uses: useblacksmith/cache@v5
         with:
           path: |
@@ -72,11 +66,12 @@ jobs:
           # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
-          run_install: false
-      - run: pnpm install
+          run_install: true
+          cache: true
+          standalone: true
       - run: pnpm run lint
       # running a build will also check types
       - run: pnpm run build
