@@ -29,7 +29,6 @@ if (isBrowser && process.env.NODE_ENV === "development")
 
 type BreakpointCombo = "small" | "large" | "all"
 
-type OutputType = "fluid" | "pixel" | "scaleFullyConfig"
 type ResponsiveEngine = "calc" | "media"
 
 type FOptions = {

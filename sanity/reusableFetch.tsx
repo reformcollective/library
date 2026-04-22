@@ -1,6 +1,5 @@
 import { fetchAssetMeta } from "library/sanity/assetMetadata"
 import DraftModeOverlay from "library/sanity/DraftModeOverlay"
-import { siteURL } from "library/siteURL"
 import { draftMode } from "next/headers"
 import type { ClientPerspective, QueryParams } from "next-sanity"
 import { defineLive } from "next-sanity/live"
