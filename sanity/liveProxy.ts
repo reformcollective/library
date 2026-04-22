@@ -17,6 +17,10 @@ const encoder = new TextEncoder()
 const internalSecret = crypto.randomBytes(32).toString("base64url")
 
 function revalidate(tags?: string[]) {
+	console.log(
+		"[liveProxy] revalidate →",
+		tags?.length ? `tags: ${tags.join(", ")}` : "full revalidatePath",
+	)
 	fetch(`${siteURL}/api/live`, {
 		method: "POST",
 		headers: {
@@ -25,6 +29,12 @@ function revalidate(tags?: string[]) {
 		},
 		body: JSON.stringify({ tags }),
 	})
+		.then((res) => {
+			console.log("[liveProxy] revalidate ← status", res.status)
+		})
+		.catch((err) => {
+			console.error("[liveProxy] revalidate fetch error:", err)
+		})
 }
 
 function broadcast(data: string) {
@@ -61,6 +71,11 @@ function startUpstreamSubscription() {
 	// what we want for public cache invalidation.
 	sanitySubscription = client.live.events().subscribe({
 		next: (event) => {
+			console.log(
+				"[liveProxy] sanity event:",
+				event.type,
+				event.type === "message" ? `tags: ${(event.tags ?? []).join(", ") || "(none)"}` : "",
+			)
 			if (event.type === "message") {
 				revalidate(event.tags)
 			}
@@ -91,10 +106,12 @@ export async function POST(request: Request) {
 	const { tags } = (await request.json()) as { tags?: string[] }
 
 	if (tags?.length) {
+		console.log("[liveProxy] POST revalidateTag:", tags.map((t) => `sanity:${t}`).join(", "))
 		for (const tag of tags) {
 			revalidateTag(`sanity:${tag}`, "max")
 		}
 	} else {
+		console.log("[liveProxy] POST revalidatePath: / (layout)")
 		revalidatePath("/", "layout")
 	}
 
