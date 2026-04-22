@@ -1,6 +1,6 @@
 // app/api/live/route.ts
 
-import crypto from "node:crypto"
+import { env } from "app/env"
 import { siteURL } from "library/siteURL"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { client } from "sanity/lib/client"
@@ -14,7 +14,7 @@ const connectedClients = new Set<WritableStreamDefaultWriter<Uint8Array>>()
 let sanitySubscription: { unsubscribe: () => void } | null = null
 let cachedWelcomeEvent: string | null = null
 const encoder = new TextEncoder()
-const internalSecret = crypto.randomBytes(32).toString("base64url")
+const internalSecret = env.SANITY_AUTH_TOKEN
 
 function revalidate(tags?: string[]) {
 	console.log(
