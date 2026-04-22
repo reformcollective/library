@@ -74,7 +74,9 @@ function startUpstreamSubscription() {
 			console.log(
 				"[liveProxy] sanity event:",
 				event.type,
-				event.type === "message" ? `tags: ${(event.tags ?? []).join(", ") || "(none)"}` : "",
+				event.type === "message"
+					? `tags: ${(event.tags ?? []).join(", ") || "(none)"}`
+					: "",
 			)
 			if (event.type === "message") {
 				revalidate(event.tags)
@@ -106,7 +108,10 @@ export async function POST(request: Request) {
 	const { tags } = (await request.json()) as { tags?: string[] }
 
 	if (tags?.length) {
-		console.log("[liveProxy] POST revalidateTag:", tags.map((t) => `sanity:${t}`).join(", "))
+		console.log(
+			"[liveProxy] POST revalidateTag:",
+			tags.map((t) => `sanity:${t}`).join(", "),
+		)
 		for (const tag of tags) {
 			revalidateTag(`sanity:${tag}`, "max")
 		}
