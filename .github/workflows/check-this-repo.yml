@@ -15,7 +15,6 @@ jobs:
         name: Install pnpm
         with:
           run_install: true
-          cache: true
           standalone: true
       - name: Lint
         run: pnpm run lint
