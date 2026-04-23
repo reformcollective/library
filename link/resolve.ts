@@ -34,7 +34,10 @@ export const resolveRoute = (
 		}
 
 	if (link.type === "internal" && link.internalSlug) {
-		const slugToUse = link.internalSlug === "home" ? "" : link.internalSlug
+		const slugToUse =
+			link.internalSlug === "home" || link.internalSlug === "/"
+				? ""
+				: link.internalSlug
 		return {
 			url: `/${stegaClean(slugToUse || "")}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`,
 			// default to same tab if not specified
