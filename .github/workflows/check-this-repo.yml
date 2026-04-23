@@ -7,15 +7,15 @@ jobs:
   Check_Linting:
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
-      - uses: pnpm/action-setup@v4
+          lfs: true
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: true
+          standalone: true
       - name: Lint
         run: pnpm run lint
         continue-on-error: true
