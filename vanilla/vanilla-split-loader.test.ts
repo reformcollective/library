@@ -918,6 +918,57 @@ const StyledComboboxInput = styled(Combobox.Input, { color: "red" })`
 		})
 	})
 
+	describe("JSX attribute false dependency bug", () => {
+		it("collectDependencies should not treat JSX attribute names as standalone refs", () => {
+			// Bug: collectDependencies walks the JSX attribute name `style` in
+			// `<div style={...} />`. If this file also imports `style` from
+			// @vanilla-extract/css, the React component is incorrectly marked as
+			// depending on the vanilla-extract style function and rejected.
+			const source = `import { style } from "@vanilla-extract/css"
+import { styled } from "library/styled"
+
+function Panel() {
+	return <div style={{ transform: "translateX(0%)" }} />
+}
+
+const PanelWrap = styled("div", { color: "red" })
+const captionClass = style({ color: "blue" })`
+
+			const graph = analyzeDependencies(source)
+			const node = graph.nodes.get("Panel")
+
+			assert(node !== undefined)
+			expect(node.dependsOn).not.toContain("style")
+		})
+
+		it("should allow React components with inline style attributes when vanilla style is imported", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { style } from "@vanilla-extract/css"
+import { styled } from "library/styled"
+
+function Panel() {
+	return (
+		<PanelWrap>
+			<div style={{ transform: "translateX(0%)" }} />
+		</PanelWrap>
+	)
+}
+
+const PanelWrap = styled("div", { color: "red" })
+const captionClass = style({ color: "blue" })`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			expect(result).toContain("function Panel")
+			expect(result).toContain("<PanelWrap>")
+		})
+	})
+
 	describe("debug output", () => {
 		it("should write pre-process and final debug files", async () => {
 			await using tmpDir = new TempDir()
