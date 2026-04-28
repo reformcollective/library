@@ -120,6 +120,9 @@ export function analyzeDependencies(
 				// against imports/variables defined in this file.
 				visit(n.expression)
 				return
+			} else if (ts.isJsxAttribute(n)) {
+				if (n.initializer) visit(n.initializer)
+				return
 			}
 			ts.forEachChild(n, visit)
 		}
