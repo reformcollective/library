@@ -18,7 +18,7 @@ export type UtilityConfig = Record<string, readonly BreakpointRule[]>
 type Config<
 	TransitionNames = never,
 	GroupNames = never,
-	Utilities extends UtilityConfig = {},
+	Utilities extends UtilityConfig = Record<string, never>,
 > = {
 	/**
 	 * if true, f.responsive will scale on fullWidth breakpoints
@@ -87,7 +87,7 @@ type ConfigInput<
 export const defineLibraryConfig = <
 	const TransitionNames,
 	const GroupNames,
-	const Utilities extends UtilityConfig = {},
+	const Utilities extends UtilityConfig = Record<string, never>,
 >(
 	config: ConfigInput<TransitionNames, GroupNames, Utilities>,
 ): Config<TransitionNames, GroupNames, Utilities> =>
