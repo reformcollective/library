@@ -1,94 +1,144 @@
-import { useEffect, useEffectEvent, useRef } from "react"
-import { z } from "zod"
+import { useEventListener } from "ahooks"
+import { dispatcher } from "next/dist/compiled/next-devtools"
+import type { Dispatcher } from "next/dist/next-devtools/dev-overlay.browser"
+import { use, useEffect, useEffectEvent } from "react"
+import { ScreenContext } from "./ScreenContext"
+import TypedEventEmitter from "./TypedEventEmitter"
 
-const socket =
-	process.env.NODE_ENV === "development"
-		? new WebSocket("ws://localhost:3000/_next/webpack-hmr")
-		: null
+const nextDispatcher = dispatcher as Dispatcher
 
-const messageSchema = z.union([
-	z.strictObject({
-		type: z.literal("built"),
-		hash: z.string(),
-		errors: z.array(z.unknown()),
-		warnings: z.array(z.unknown()),
-	}),
-	z.strictObject({
-		type: z.literal("building"),
-	}),
-	// unused messages
-	z.object({
-		type: z.enum([
-			"serverComponentChanges",
-			"turbopack-connected",
-			"turbopack-message",
-			"isrManifest",
-			"sync",
-		]),
-	}),
-])
+const refreshScrollStorageKey = "__reformSteadyHotScrollLatestScroll"
+const reloadScrollStorageKey = "__reformSteadyHotScrollLatestScrollBeforeReload"
+const refreshedAtStorageKey = "__reformSteadyHotScrollRefreshedAt"
+
+const emitter = new TypedEventEmitter<{
+	beforeRefresh: [string]
+	afterRefresh: [string]
+}>()
+
+const previousOnBeforeRefresh = nextDispatcher.onBeforeRefresh
+const previousOnRefresh = nextDispatcher.onRefresh
+nextDispatcher.onBeforeRefresh = () => {
+	previousOnBeforeRefresh()
+	emitter.dispatchEvent("beforeRefresh", crypto.randomUUID())
+}
+nextDispatcher.onRefresh = () => {
+	previousOnRefresh()
+	emitter.dispatchEvent("afterRefresh", crypto.randomUUID())
+}
+
+const setSavedScroll = (key: string, scroll: number | null) => {
+		if (scroll === null) sessionStorage.removeItem(key)
+		else sessionStorage.setItem(key, String(scroll))
+
+}
+
+const getSavedScroll = (key: string) => {
+	const scroll = sessionStorage.getItem(key)
+	if (scroll === null) return null
+	return Number.parseInt(scroll, 10)
+}
+
+const setRefreshedAt = () => {
+	sessionStorage.setItem(refreshedAtStorageKey, String(Date.now()))
+}
+
+const getRefreshedAt = () => {
+	const refreshedAt = sessionStorage.getItem(refreshedAtStorageKey)
+	if (refreshedAt === null) return null
+	return Number.parseInt(refreshedAt, 10)
+}
 
 export const useHMR =
 	process.env.NODE_ENV === "development"
-		? (type: "prebuild" | "postbuild", callback: (hash: string) => void) => {
+		? (
+				type: "beforeRefresh" | "afterRefresh" | "beforeReload" | "afterReload",
+				callback: (hash: string) => void,
+				debug?: string,
+			) => {
 				const sendMessage = useEffectEvent(callback)
+				const { initComplete } = use(ScreenContext)
 
 				useEffect(() => {
-					if (process.env.NODE_ENV === "development") {
-						const handler = (event: MessageEvent) => {
-							const message = JSON.parse(event.data)
-							const result = messageSchema.safeParse(message)
-							if (!result.success) {
-								throw new Error(
-									`useHMR (library/useHMR.ts): WebSocket message from Next.js HMR does not match the expected schema.
-` +
-										`This usually means the Next.js version changed the HMR message format.
-` +
-										`Update the messageSchema in library/useHMR.ts to match the new format.
-` +
-										`Received message: ${JSON.stringify(message)}
-` +
-										`Original error: ${result.error}`,
-								)
-							}
-							const parsedMessage = result.data
+					const before = () => {
+						previousOnBeforeRefresh()
+						if (type === "beforeRefresh") sendMessage(crypto.randomUUID())
+					}
+					const after = () => {
+						previousOnRefresh()
+						if (type === "afterRefresh") sendMessage(crypto.randomUUID())
+					}
 
-							if (type === "prebuild" && parsedMessage.type === "building") {
-								sendMessage("building")
-							}
-							if (type === "postbuild" && parsedMessage.type === "built") {
-								sendMessage(parsedMessage.hash)
-							}
-						}
-						socket?.addEventListener("message", handler)
-						return () => {
-							socket?.removeEventListener("message", handler)
-						}
+					if (type === "beforeRefresh")
+						emitter.addEventListener("beforeRefresh", before)
+					if (type === "afterRefresh")
+						emitter.addEventListener("afterRefresh", after)
+					return () => {
+						emitter.removeEventListener("beforeRefresh", before)
+						emitter.removeEventListener("afterRefresh", after)
 					}
 				}, [type])
+
+				useEventListener("beforeunload", () => {
+					setRefreshedAt()
+					if (type === "beforeReload") sendMessage(crypto.randomUUID())
+				})
+
+				useEffect(() => {
+					if (type !== "afterReload") return
+					const refreshedAt = getRefreshedAt()
+					// if refreshed in last 10 seconds, assume it's from an HMR-triggered reload and emit
+					if (initComplete && refreshedAt && Date.now() - refreshedAt < 10000) {
+						sendMessage(crypto.randomUUID())
+					}
+				}, [type, initComplete])
 			}
 		: () => {}
 
-export const useSteadyHotScroll =
+const useSteadyHotScroll =
 	process.env.NODE_ENV === "development"
 		? () => {
-				const latestScroll = useRef(0)
-				let rafId: number | null = null
+				let refreshRaf: number | null = null
+				let reloadRaf: number | null = null
 
-				useHMR("prebuild", () => {
-					if (rafId) cancelAnimationFrame(rafId)
-					latestScroll.current = window.scrollY
+				useHMR(
+					"beforeRefresh",
+					() => {
+						if (refreshRaf) cancelAnimationFrame(refreshRaf)
+						setSavedScroll(refreshScrollStorageKey, window.scrollY)
+					},
+					"use steady",
+				)
+
+				useHMR("afterRefresh", () => {
+					const savedScroll = getSavedScroll(refreshScrollStorageKey)
+					if (savedScroll !== null) {
+						refreshRaf = requestAnimationFrame(() => {
+							window.scrollTo(0, savedScroll)
+							setSavedScroll(refreshScrollStorageKey, null)
+						})
+					}
 				})
 
-				useHMR("postbuild", () => {
-					const startTime = performance.now()
-					const scrollEveryFrame = () => {
-						window.scrollTo({ top: latestScroll.current, behavior: "instant" })
-						if (performance.now() - startTime < 1000) {
-							rafId = requestAnimationFrame(scrollEveryFrame)
-						}
+				useHMR("beforeReload", () => {
+					if (reloadRaf) cancelAnimationFrame(reloadRaf)
+					setSavedScroll(reloadScrollStorageKey, window.scrollY)
+				})
+
+				useHMR("afterReload", () => {
+
+					const savedScroll = getSavedScroll(reloadScrollStorageKey)
+					if (savedScroll !== null) {
+						reloadRaf = requestAnimationFrame(() => {
+							window.scrollTo(0, savedScroll)
+							setSavedScroll(refreshScrollStorageKey, null)
+						})
 					}
-					scrollEveryFrame()
 				})
 			}
 		: () => {}
+
+export function SteadyHotScroll() {
+	useSteadyHotScroll()
+	return null
+}

@@ -46,7 +46,7 @@ export const FirefoxFix = () => {
 	useInterval(() => {
 		if (browserData.isFireFox) checkZeroWidthChars()
 	}, 1000)
-	useHMR("postbuild", () => {
+	useHMR("afterRefresh", () => {
 		if (browserData.isFireFox) {
 			checkZeroWidthChars()
 		}

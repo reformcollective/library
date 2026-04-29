@@ -237,7 +237,7 @@ export const useAnimation = <InputFn extends Creation>(
 		}
 	}, finalDeps)
 
-	useHMR("postbuild", (hash) => {
+	useHMR("afterRefresh", (hash) => {
 		setHmrHash(hash)
 		context.revert()
 	})
