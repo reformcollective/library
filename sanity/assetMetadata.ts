@@ -61,6 +61,7 @@ type ImageAssetMeta = {
 	extension?: string | null
 	url?: string | null
 	aspectRatio?: number | null
+	originalAspectRatio?: number | null
 }
 
 export type AssetMeta = VideoAssetMeta & ImageAssetMeta
@@ -73,6 +74,7 @@ export type ResolvedVideo = Omit<Video, "muxVideo"> & {
 	muxVideo?: ResolvedMuxVideo | null
 }
 
+// todo: move link resolution logic to project slug resolver?
 export const internalSlugField = `"internalSlug": select(
 		type != "internal" => null,
 		!defined(internalLink) => null,
@@ -91,7 +93,15 @@ export const imageDataProjection = `{
 		"size": asset->size,
 		"extension": asset->extension,
 		"url": asset->url,
-		"aspectRatio": asset->metadata.dimensions.aspectRatio
+		"originalAspectRatio": asset->metadata.dimensions.aspectRatio,
+		"aspectRatio": select(
+			(1 - coalesce(crop.left, 0) - coalesce(crop.right, 0)) > 0 &&
+			(1 - coalesce(crop.top, 0) - coalesce(crop.bottom, 0)) > 0 =>
+				asset->metadata.dimensions.aspectRatio *
+				((1 - coalesce(crop.left, 0) - coalesce(crop.right, 0)) /
+				(1 - coalesce(crop.top, 0) - coalesce(crop.bottom, 0))),
+			asset->metadata.dimensions.aspectRatio
+		)
 	}`
 
 // Matches fetchAssetMeta as closely as GROQ can. `videoBlurUrl` is kept as a
