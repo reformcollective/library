@@ -59,11 +59,9 @@ export const useHMR =
 
 				useEffect(() => {
 					const before = () => {
-						previousOnBeforeRefresh()
 						if (type === "beforeRefresh") sendMessage(crypto.randomUUID())
 					}
 					const after = () => {
-						previousOnRefresh()
 						if (type === "afterRefresh") sendMessage(crypto.randomUUID())
 					}
 
@@ -124,7 +122,7 @@ const useSteadyHotScroll =
 					if (savedScroll !== null) {
 						reloadRaf = requestAnimationFrame(() => {
 							window.scrollTo(0, savedScroll)
-							setSavedScroll(refreshScrollStorageKey, null)
+							setSavedScroll(reloadScrollStorageKey, null)
 						})
 					}
 				})
