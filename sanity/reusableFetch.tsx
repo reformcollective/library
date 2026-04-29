@@ -10,7 +10,7 @@ import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
 import { Toaster } from "sonner"
 import { FirefoxFix } from "./FirefoxFix"
-import LiveWrapper, { handleError } from "./reusableFetchClient"
+import ExcludeFromStudio, { handleError } from "./reusableFetchClient"
 import { SanityLiveProxy } from "./SanityLiveProxy"
 
 /**
@@ -79,7 +79,7 @@ export async function libraryFetch<const QueryString extends string>({
 	}
 }
 
-const useProxy =
+const allowProxy =
 	// vercel has fluid compute baybeeee
 	// local obviously is persistent too
 	// other providers should be tested and evaluated as needed
@@ -87,15 +87,17 @@ const useProxy =
 
 export const LibraryLive = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
+	const enableProxy = isDraftMode ? false : allowProxy
 
 	return (
 		<>
-			{useProxy && <SanityLiveProxy />}
 			<Toaster />
-			{isDraftMode && <DraftModeOverlay />}
 			{isDraftMode && <FirefoxFix />}
-			<LiveWrapper>
-				{(isDraftMode || !useProxy) && (
+			{isDraftMode && <DraftModeOverlay />}
+			<ExcludeFromStudio>
+				{enableProxy ? (
+					<SanityLiveProxy />
+				) : (
 					<InternalLive
 						onError={handleError}
 						refreshOnFocus={false}
@@ -104,7 +106,7 @@ export const LibraryLive = async () => {
 						intervalOnGoAway={false}
 					/>
 				)}
-			</LiveWrapper>
+			</ExcludeFromStudio>
 		</>
 	)
 }

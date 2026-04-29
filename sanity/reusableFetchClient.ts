@@ -11,7 +11,7 @@ import { toast } from "sonner"
  * might reload unexpectedly, so we delay the rendering
  * of the studio until we're sure it's not in the studio
  */
-export default function LiveWrapper({
+export default function ExcludeFromStudio({
 	children,
 }: {
 	children: React.ReactNode
