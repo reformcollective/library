@@ -122,7 +122,7 @@ const useSteadyHotScroll =
 					if (savedScroll !== null) {
 						reloadRaf = requestAnimationFrame(() => {
 							window.scrollTo(0, savedScroll)
-							setSavedScroll(refreshScrollStorageKey, null)
+							setSavedScroll(reloadScrollStorageKey, null)
 						})
 					}
 				})
