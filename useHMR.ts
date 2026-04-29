@@ -28,9 +28,8 @@ nextDispatcher.onRefresh = () => {
 }
 
 const setSavedScroll = (key: string, scroll: number | null) => {
-		if (scroll === null) sessionStorage.removeItem(key)
-		else sessionStorage.setItem(key, String(scroll))
-
+	if (scroll === null) sessionStorage.removeItem(key)
+	else sessionStorage.setItem(key, String(scroll))
 }
 
 const getSavedScroll = (key: string) => {
@@ -54,7 +53,6 @@ export const useHMR =
 		? (
 				type: "beforeRefresh" | "afterRefresh" | "beforeReload" | "afterReload",
 				callback: (hash: string) => void,
-				debug?: string,
 			) => {
 				const sendMessage = useEffectEvent(callback)
 				const { initComplete } = use(ScreenContext)
@@ -101,14 +99,10 @@ const useSteadyHotScroll =
 				let refreshRaf: number | null = null
 				let reloadRaf: number | null = null
 
-				useHMR(
-					"beforeRefresh",
-					() => {
-						if (refreshRaf) cancelAnimationFrame(refreshRaf)
-						setSavedScroll(refreshScrollStorageKey, window.scrollY)
-					},
-					"use steady",
-				)
+				useHMR("beforeRefresh", () => {
+					if (refreshRaf) cancelAnimationFrame(refreshRaf)
+					setSavedScroll(refreshScrollStorageKey, window.scrollY)
+				})
 
 				useHMR("afterRefresh", () => {
 					const savedScroll = getSavedScroll(refreshScrollStorageKey)
@@ -126,7 +120,6 @@ const useSteadyHotScroll =
 				})
 
 				useHMR("afterReload", () => {
-
 					const savedScroll = getSavedScroll(reloadScrollStorageKey)
 					if (savedScroll !== null) {
 						reloadRaf = requestAnimationFrame(() => {
