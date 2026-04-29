@@ -54,6 +54,11 @@ const getSize = (element: React.RefObject<HTMLElement | null>) => {
 	return { width: offsetWidth + 1, height: offsetHeight }
 }
 
+type AutoAnimateAlignmentKeyword = "start" | "center" | "end" | "stretch"
+type AutoAnimateAlignment =
+	| AutoAnimateAlignmentKeyword
+	| `${AutoAnimateAlignmentKeyword} ${AutoAnimateAlignmentKeyword}`
+
 export default function AutoAnimate({
 	children,
 	duration = 1,
@@ -99,9 +104,11 @@ export default function AutoAnimate({
 	 *
 	 * if left, content will only overflow on the right during the animation.
 	 * this is ideal when the container itself is left-aligned
+	 *
+	 * You can also pass two-axis values like "stretch center" or "start end".
 	 * @default start
 	 */
-	alignment?: "start" | "center" | "end"
+	alignment?: AutoAnimateAlignment
 	/**
 	 * if you need to style this, you can. be careful though. be very careful.
 	 */
