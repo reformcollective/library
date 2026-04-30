@@ -3,7 +3,7 @@ import { sleep } from "library/functions"
 import { defineQuery, stegaClean } from "next-sanity"
 import { cache } from "react"
 import { sanityFetch } from "sanity/lib/live"
-import { resolveLink } from "sanity/lib/slug-resolver"
+import { internalLinkPathProjection, resolveLink } from "sanity/lib/slug-resolver"
 import type { Video } from "sanity.types"
 import { z } from "zod"
 
@@ -74,16 +74,9 @@ export type ResolvedVideo = Omit<Video, "muxVideo"> & {
 	muxVideo?: ResolvedMuxVideo | null
 }
 
-// todo: move link resolution logic to project slug resolver?
 export const internalSlugField = `"internalSlug": select(
 		type != "internal" => null,
-		!defined(internalLink) => null,
-		internalLink->._type == "page" => select(
-			internalLink->slug.current == "home" => "/",
-			internalLink->slug.current
-		),
-		internalLink->._type == "product" => "/products/" + internalLink->store.slug.current,
-		internalLink->._type == "collection" => "/collections/" + internalLink->store.slug.current
+		${internalLinkPathProjection("internalLink->")}
 	)`
 
 export const imageDataProjection = `{
