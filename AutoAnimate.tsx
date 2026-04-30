@@ -62,6 +62,7 @@ export default function AutoAnimate({
 	fromParameters,
 	toParameters,
 	alignment = "start",
+	fill = false,
 	className = "",
 }: {
 	/**
@@ -102,6 +103,11 @@ export default function AutoAnimate({
 	 * @default start
 	 */
 	alignment?: "start" | "center" | "end"
+	/**
+	 * If the children size themselves with width/height: 100%, fill the internal
+	 * wrappers so those percentages resolve correctly.
+	 */
+	fill?: boolean
 	/**
 	 * if you need to style this, you can. be careful though. be very careful.
 	 */
@@ -169,9 +175,28 @@ export default function AutoAnimate({
 		 * this is a) bad for performance and b) can cause the smoother to jump visually (at least in gsap 3.12.5)
 		 */
 		const heightChanged = size.height !== getSize(wrapper).height
-		gsap.set(wrapper.current, {
-			height: heightChanged ? undefined : "auto",
-		})
+		if (fill) {
+			gsap.set(wrapper.current, {
+				clearProps: "width,height",
+			})
+		} else {
+			gsap.set(wrapper.current, {
+				height: heightChanged ? undefined : "auto",
+			})
+		}
+
+		const clearWrapperSize = () => {
+			gsap.set(wrapper.current, {
+				...(fill
+					? { clearProps: "width,height" }
+					: {
+							height: "auto",
+							width: "auto",
+						}),
+				// this needs to happen on the *next* frame, otherwise the height will briefly be wrong
+				delay: 0.0001,
+			})
+		}
 
 		gsap.to(wrapper.current, {
 			width: size.width,
@@ -183,21 +208,29 @@ export default function AutoAnimate({
 			 * we only want to set the size during a transition
 			 * at any other time, we want the size to be auto
 			 */
-			onComplete: () => {
-				gsap.set(wrapper.current, {
-					height: "auto",
-					width: "auto",
-					// this needs to happen on the *next* frame, otherwise the height will briefly be wrong
-					delay: 0.0001,
-				})
-			},
+			onComplete: clearWrapperSize,
 		})
 
 		/**
 		 * ensure that we have a static size to animate from during the next transition
 		 */
 		const cleanup = () => {
+			if (fill) {
+				gsap.set(wrapper.current, {
+					clearProps: "width,height",
+				})
+				return
+			}
+
 			gsap.set(wrapper.current, getSize(wrapper))
+		}
+
+		const clearSlotWidth = (slot: RefObject<HTMLDivElement | null>) => {
+			gsap.set(slot.current, {
+				...(fill ? { clearProps: "width" } : { width: "auto" }),
+				// this needs to happen on the *next* frame, otherwise the height will briefly be wrong
+				delay: 0.0001,
+			})
 		}
 
 		/**
@@ -243,11 +276,7 @@ export default function AutoAnimate({
 			ease: "power3.inOut",
 			duration,
 			onComplete: () => {
-				gsap.set(animateSlotOut.current, {
-					width: "auto",
-					// this needs to happen on the *next* frame, otherwise the height will briefly be wrong
-					delay: 0.0001,
-				})
+				clearSlotWidth(animateSlotOut)
 
 				/**
 				 * clear the unused slot to prevent it from being focusable
@@ -268,11 +297,7 @@ export default function AutoAnimate({
 			...parameters,
 			...fromParameters,
 			onComplete: () => {
-				gsap.set(animateSlotIn.current, {
-					width: "auto",
-					// this needs to happen on the *next* frame, otherwise the height will briefly be wrong
-					delay: 0.0001,
-				})
+				clearSlotWidth(animateSlotIn)
 			},
 		})
 
@@ -289,18 +314,31 @@ export default function AutoAnimate({
 			tween.revert()
 		}
 
-		gsap.set(wrapper.current, {
-			width: "auto",
-			height: "auto",
-		})
+		gsap.set(
+			wrapper.current,
+			fill
+				? {
+						clearProps: "width,height",
+					}
+				: {
+						width: "auto",
+						height: "auto",
+					},
+		)
 	})
 
 	return (
-		<Wrapper className={className}>
-			<div ref={sizer} style={{ display: "none" }}>
+		<Wrapper className={className} fill={fill}>
+			<Sizer
+				ref={sizer}
+				style={{
+					display: "none",
+				}}
+				fill={fill}
+			>
 				{getNodeFromKey(currentKey)}
-			</div>
-			<AnimationWrapper ref={wrapper} alignment={alignment}>
+			</Sizer>
+			<AnimationWrapper ref={wrapper} alignment={alignment} fill={fill}>
 				<div ref={wrapperA}>{getNodeFromKey(slotA)}</div>
 				<div ref={wrapperB}>{getNodeFromKey(slotB)}</div>
 			</AnimationWrapper>
@@ -309,10 +347,37 @@ export default function AutoAnimate({
 }
 
 const Wrapper = styled("div", {
-	"@layer": {
-		[library]: unresponsive(css`
-			overflow: clip;
-		`),
+	base: {
+		"@layer": {
+			[library]: unresponsive(css`
+				overflow: clip;
+			`),
+		},
+	},
+	variants: {
+		fill: {
+			true: [
+				unresponsive(css`
+					width: 100%;
+					height: 100%;
+				`),
+			],
+			false: [],
+		},
+	},
+})
+
+const Sizer = styled("div", {
+	variants: {
+		fill: {
+			true: [
+				unresponsive(css`
+					width: 100%;
+					height: 100%;
+				`),
+			],
+			false: [],
+		},
 	},
 })
 
@@ -339,6 +404,23 @@ const AnimationWrapper = styled("div", {
 					}
 				}
 			`),
+		},
+	},
+	variants: {
+		fill: {
+			true: [
+				unresponsive(css`
+					width: 100%;
+					height: 100%;
+
+					> * {
+						width: 100%;
+						height: 100%;
+						overflow: clip;
+					}
+				`),
+			],
+			false: [],
 		},
 	},
 	tokens: { alignment },
