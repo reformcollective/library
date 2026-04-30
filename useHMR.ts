@@ -1,7 +1,7 @@
 import { useEventListener } from "ahooks"
 import { dispatcher } from "next/dist/compiled/next-devtools"
 import type { Dispatcher } from "next/dist/next-devtools/dev-overlay.browser"
-import { use, useEffect, useEffectEvent } from "react"
+import { use, useEffect, useEffectEvent, useRef } from "react"
 import { ScreenContext } from "./ScreenContext"
 import TypedEventEmitter from "./TypedEventEmitter"
 
@@ -59,11 +59,9 @@ export const useHMR =
 
 				useEffect(() => {
 					const before = () => {
-						previousOnBeforeRefresh()
 						if (type === "beforeRefresh") sendMessage(crypto.randomUUID())
 					}
 					const after = () => {
-						previousOnRefresh()
 						if (type === "afterRefresh") sendMessage(crypto.randomUUID())
 					}
 
@@ -96,18 +94,18 @@ export const useHMR =
 const useSteadyHotScroll =
 	process.env.NODE_ENV === "development"
 		? () => {
-				let refreshRaf: number | null = null
-				let reloadRaf: number | null = null
+				const refreshRaf = useRef<number | null>(null)
+				const reloadRaf = useRef<number | null>(null)
 
 				useHMR("beforeRefresh", () => {
-					if (refreshRaf) cancelAnimationFrame(refreshRaf)
+					if (refreshRaf.current) cancelAnimationFrame(refreshRaf.current)
 					setSavedScroll(refreshScrollStorageKey, window.scrollY)
 				})
 
 				useHMR("afterRefresh", () => {
 					const savedScroll = getSavedScroll(refreshScrollStorageKey)
 					if (savedScroll !== null) {
-						refreshRaf = requestAnimationFrame(() => {
+						refreshRaf.current = requestAnimationFrame(() => {
 							window.scrollTo(0, savedScroll)
 							setSavedScroll(refreshScrollStorageKey, null)
 						})
@@ -115,16 +113,16 @@ const useSteadyHotScroll =
 				})
 
 				useHMR("beforeReload", () => {
-					if (reloadRaf) cancelAnimationFrame(reloadRaf)
+					if (reloadRaf.current) cancelAnimationFrame(reloadRaf.current)
 					setSavedScroll(reloadScrollStorageKey, window.scrollY)
 				})
 
 				useHMR("afterReload", () => {
 					const savedScroll = getSavedScroll(reloadScrollStorageKey)
 					if (savedScroll !== null) {
-						reloadRaf = requestAnimationFrame(() => {
+						reloadRaf.current = requestAnimationFrame(() => {
 							window.scrollTo(0, savedScroll)
-							setSavedScroll(refreshScrollStorageKey, null)
+							setSavedScroll(reloadScrollStorageKey, null)
 						})
 					}
 				})
