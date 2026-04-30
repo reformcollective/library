@@ -1,4 +1,33 @@
 
+# 2026-04-29
+
+## `useHMR` event types renamed; `useSteadyHotScroll` replaced by `SteadyHotScroll`
+
+`useHMR` no longer uses a WebSocket — it hooks into Next.js's internal dispatcher. The event type strings changed and two new types were added:
+
+| Before | After |
+|--------|-------|
+| `"prebuild"` | `"beforeRefresh"` |
+| `"postbuild"` | `"afterRefresh"` |
+| — | `"beforeReload"` *(new)* |
+| — | `"afterReload"` *(new)* |
+
+`useSteadyHotScroll` is no longer exported. Use the `SteadyHotScroll` component instead:
+
+```tsx
+// before
+useSteadyHotScroll()
+
+// after
+<SteadyHotScroll />
+```
+
+**Migration Advice**
+
+Update any `useHMR` call sites to use the new event type strings. Replace any `useSteadyHotScroll()` hook calls with a rendered `<SteadyHotScroll />` component (imported from `library/useHMR`).
+
+Note that `SteadyHotScroll` MUST be *below* ScreenContext to work.
+
 # 2026-04-21
 
 ## Live proxy now requires POST to be exported
