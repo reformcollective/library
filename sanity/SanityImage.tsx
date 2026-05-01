@@ -31,7 +31,7 @@ export type SanityImageData<WithAlt extends "true" | "false"> = {
 	asset?: { _ref: string }
 	crop?: SanityImageCrop
 	hotspot?: SanityImageHotspot
-	data: ImageField['data'] | null
+	data: ImageField["data"] | null
 	alt?: string
 	willHaveAlt?: WithAlt
 }
