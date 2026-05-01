@@ -75,7 +75,7 @@ export type LinkField = {
 const internalSlugField = `"internalSlug": select(
 		type != "internal" => null,
 		${documentPathProjection("internalLink->")}
-	)`
+	)` as const
 
 const imageDataProjection = `{
 		"lqip": asset->metadata.lqip,
@@ -93,7 +93,7 @@ const imageDataProjection = `{
 				(1 - coalesce(crop.top, 0) - coalesce(crop.bottom, 0))),
 			asset->metadata.dimensions.aspectRatio
 		)
-	}`
+	}` as const
 
 const muxVideoDataProjection = `{
 		"playbackId": asset->playbackId,
@@ -108,22 +108,22 @@ const muxVideoDataProjection = `{
 				string::split(asset->data.aspect_ratio, ":")[0] + "/" + string::split(asset->data.aspect_ratio, ":")[1]
 		),
 		"videoDuration": asset->data.duration
-	}`
+	}` as const
 
-const linkProjection = `{ ..., ${internalSlugField} }`
+const linkProjection = `{ ..., ${internalSlugField} }` as const
 
 const imageProjection = `{
 		...,
 		"data": ${imageDataProjection}
-	}`
+	}` as const
 
 const muxVideoProjection = `{
 		...,
 		"data": ${muxVideoDataProjection}
 	}
-`
+` as const
 
-const videoProjection = `{ ..., muxVideo ${muxVideoProjection} }`
+const videoProjection = `{ ..., muxVideo ${muxVideoProjection} }` as const
 
 export const linkField = <T extends string>(name: T) =>
 	`${name} ${linkProjection}` as const
