@@ -1,9 +1,6 @@
 import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
-import type {
-    ClientPerspective,
-    QueryParams
-} from "next-sanity"
+import type { ClientPerspective, QueryParams } from "next-sanity"
 import { defineLive } from "next-sanity/live"
 import { version as nextSanityVersion } from "next-sanity/package.json"
 import { client } from "sanity/lib/client"

@@ -1,7 +1,7 @@
 "use client"
 
 import ClientOnly from "library/ClientOnly"
-import type { ResolvedVideo } from "library/sanity/assetMetadata"
+import type { VideoField } from "library/sanity/assetMetadata"
 import { css, f, styled } from "library/styled"
 import { useCombinedRefs } from "library/useCombinedRefs"
 import { stegaClean } from "next-sanity"
@@ -14,13 +14,13 @@ type VideoEmbedProps = Omit<
 > & {
 	ref?: React.Ref<HTMLVideoElement>
 	className?: string
-	video: ResolvedVideo
+	video: VideoField
 	controls?: boolean
 	/** When true, seeks to 0 each time playback starts */
 	resetOnPlay?: boolean
 }
 
-function getVideoSrc(video: ResolvedVideo) {
+function getVideoSrc(video: VideoField) {
 	if (stegaClean(video.sourceType) === "mux") {
 		const playbackId = video.muxVideo?.data?.playbackId
 		return {

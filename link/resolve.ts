@@ -21,7 +21,9 @@ export type LinkHref = string | null | undefined | CMSLink
 
 const normalizeInternalPath = (path: string) => {
 	const cleanPath = stegaClean(path)
-	return cleanPath.startsWith("/") ? cleanPath.replace(/^\/+/, "/") : `/${cleanPath}`
+	return cleanPath.startsWith("/")
+		? cleanPath.replace(/^\/+/, "/")
+		: `/${cleanPath}`
 }
 
 export const resolveRoute = (

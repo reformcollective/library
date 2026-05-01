@@ -1,7 +1,7 @@
 "use client"
 
 import { createImageUrlBuilder } from "@sanity/image-url"
-import type { AssetMeta } from "library/sanity/assetMetadata"
+import type { ImageField } from "library/sanity/assetMetadata"
 import { styled } from "library/styled"
 import { stegaClean } from "next-sanity"
 import { use, useEffect, useId, useLayoutEffect, useState } from "react"
@@ -26,11 +26,12 @@ import {
 	lqipVar,
 } from "./SanityImage.css"
 
+// todo: ImageField and SanityImageData are the same shape?
 export type SanityImageData<WithAlt extends "true" | "false"> = {
 	asset?: { _ref: string }
 	crop?: SanityImageCrop
 	hotspot?: SanityImageHotspot
-	data: AssetMeta | null
+	data: ImageField['data'] | null
 	alt?: string
 	willHaveAlt?: WithAlt
 }

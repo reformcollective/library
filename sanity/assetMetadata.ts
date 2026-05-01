@@ -1,4 +1,76 @@
 import { documentPathProjection } from "sanity/lib/slug-resolver"
+import type {
+	MuxVideoAssetReference,
+	SanityImageAssetReference,
+	SanityImageCrop,
+	SanityImageHotspot,
+} from "sanity.types"
+
+// the three types below were directly copied from the starter's generated types
+
+export type ImageField = {
+	asset?: SanityImageAssetReference
+	media?: unknown
+	hotspot?: SanityImageHotspot
+	crop?: SanityImageCrop
+	alt?: string
+	willHaveAlt?: "true" | "false"
+	_type: "image"
+	data: {
+		lqip: string | null
+		dominantColor: string | null
+		originalFilename: string | null
+		size: number | null
+		extension: string | null
+		url: string | null
+		originalAspectRatio: number | null
+		aspectRatio: number | null
+	}
+}
+
+export type VideoField = {
+	_type: "video"
+	sourceType?:
+		| "mux"
+		| "spotify"
+		| "tiktok"
+		| "twitch"
+		| "url"
+		| "vimeo"
+		| "wistia"
+		| "youtube"
+	url?: string
+	muxVideo: {
+		_type: "mux.video"
+		asset?: MuxVideoAssetReference
+		data: {
+			playbackId: string | null
+			videoThumbnailUrl: string | null
+			videoBlurUrl: string | null
+			videoAspectRatio: string | null
+			videoDuration: number | null
+		}
+	} | null
+}
+
+export type LinkField = {
+	_type: "link"
+	text?: string
+	type?: string
+	internalLink?: {
+		_ref: string
+		_type: "reference"
+		_weak?: boolean
+	}
+	url?: string
+	email?: string
+	phone?: string
+	value?: string
+	blank?: boolean
+	parameters?: string
+	anchor?: string
+	internalSlug: null | string | "/"
+}
 
 const internalSlugField = `"internalSlug": select(
 		type != "internal" => null,

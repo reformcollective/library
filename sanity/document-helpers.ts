@@ -1,29 +1,13 @@
 import { siteURL } from "library/siteURL"
 import { map } from "rxjs"
 import { documentPaths } from "sanity/lib/slug-resolver"
-import type { DocumentLocationResolver } from "sanity/presentation"
+import type {
+	DocumentLocationResolver,
+	DocumentLocationsState,
+} from "sanity/presentation"
 
 type SanityDocument = {
 	_type?: string
-}
-
-type DocumentLocation = {
-	href: string
-	title: string
-}
-
-const normalizeLocation = (
-	route:
-		| { path: string | null | undefined; title: string | null | undefined }
-		| null
-		| undefined,
-): DocumentLocation | undefined => {
-	if (!route?.path || !route.title) return undefined
-
-	return {
-		href: route.path,
-		title: route.title,
-	}
 }
 
 const resolveDocumentRoute = (document: unknown) => {
@@ -41,14 +25,14 @@ const resolveDocumentRoute = (document: unknown) => {
  * Resolves a fetched Sanity document to its canonical public pathname
  */
 export const resolveDocumentPathname = (document: unknown) => {
-	return normalizeLocation(resolveDocumentRoute(document))?.href
+	return resolveDocumentRoute(document)?.path || null
 }
 
 /**
  * Resolves a fetched Sanity document to its canonical public title
  */
 export const resolveDocumentTitle = (document: unknown) => {
-	return normalizeLocation(resolveDocumentRoute(document))?.title
+	return resolveDocumentRoute(document)?.title || null
 }
 
 /**
@@ -69,16 +53,9 @@ export const getLinkableTypes = () => {
 }
 
 /**
- * Resolves a fetched Sanity document to the Presentation location shape
- */
-export const resolveDocumentLocation = (document: unknown) => {
-	return normalizeLocation(resolveDocumentRoute(document))
-}
-
-/**
  * Adapts document path declarations to Sanity Presentation's locations API
  */
-export const documentLocationsResolver: DocumentLocationResolver = (
+export const resolveDocumentLocations: DocumentLocationResolver = (
 	{ id },
 	context,
 ) => {
@@ -91,13 +68,14 @@ export const documentLocationsResolver: DocumentLocationResolver = (
 	return doc$.pipe(
 		map((document: SanityDocument | null) => {
 			if (!document) return { locations: [] }
-
-			const location = resolveDocumentLocation(document)
-			if (!location) return { locations: [] }
+			const href = resolveDocumentPathname(document)
+			if (!href) return { locations: [] }
 
 			return {
-				locations: [location],
-			}
+				locations: [
+					{ href, title: resolveDocumentTitle(document) || "No Title" },
+				],
+			} satisfies DocumentLocationsState
 		}),
 	)
 }
