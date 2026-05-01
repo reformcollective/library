@@ -1,8 +1,13 @@
 import DraftModeOverlay from "library/sanity/DraftModeOverlay"
-import { draftMode } from "next/headers"
-import type { ClientPerspective, QueryParams } from "next-sanity"
+import type {
+    ClientPerspective,
+    ClientReturn,
+    ContentSourceMap,
+    QueryParams
+} from "next-sanity"
 import { defineLive } from "next-sanity/live"
 import { version as nextSanityVersion } from "next-sanity/package.json"
+import { draftMode } from "next/headers"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
 import { version as sanityVersion } from "sanity/package.json"
@@ -22,6 +27,14 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	browserToken: token,
 	fetchOptions: { revalidate: Infinity },
 })
+
+type IsAny<T> = 0 extends 1 & T ? true : false
+type UnknownIfAny<T> = IsAny<T> extends true ? unknown : T
+type LibraryFetchResult<QueryString extends string> = {
+	data: UnknownIfAny<ClientReturn<QueryString>>
+	sourceMap: ContentSourceMap | null
+	tags: string[]
+}
 
 /**
  * Used to fetch data in Server Components, it has built in support for handling Draft Mode and perspectives.
@@ -49,7 +62,7 @@ export async function libraryFetch<const QueryString extends string>({
 	 * otherwise, stega should be undefined
 	 */
 	disableStega?: boolean
-}) {
+}): Promise<LibraryFetchResult<QueryString>> {
 	return await internalFetch({
 		query,
 		params,
