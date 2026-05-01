@@ -1,4 +1,55 @@
 
+# 2026-05-01
+
+## Simpler slug resolvers
+
+The library now expects each project `sanity/lib/slug-resolver.ts` to export two project-specific route representations:
+
+- `documentPaths`: JavaScript document-to-path/title rules for already-fetched Sanity documents
+- `documentPathProjection`: a GROQ expression that resolves paths at query time
+
+Shared document helper plumbing now lives in `library/sanity/document-helpers`. Project slug resolver files define route behavior, while document helpers provide linkable type extraction, production URL creation, and Presentation location resolution.
+
+**Migration Advice**
+
+Update `sanity/lib/slug-resolver.ts` to this shape:
+
+```ts
+import { defineDocumentPaths } from "library/sanity/define-document-paths"
+
+export const documentPaths = defineDocumentPaths({
+	page: (document) => ({
+		path: document.slug?.current === "home" ? "/" : `/${document.slug?.current}`,
+		title: document.title ?? "Untitled Page",
+	}),
+})
+
+export const documentPathProjection = <T>(document: T) =>
+	`
+	select(
+	  !defined(${document}) => null,
+		${document}._type == "page" => select(
+			${document}.slug.current == "home" => "/",
+			"/" + ${document}.slug.current
+		)
+	)
+` as const
+
+```
+
+Update sanity config to import utilities from `library/sanity/document-helpers`
+
+# 2026-04-30
+
+## removed `fetchAssetMeta` / `enrichAssets`
+
+`fetchAssetMeta` and the `enrichAssets` option on `libraryFetch` / `sanityFetch` have been removed. Asset, video, and link metadata should be resolved inline with `imageField`, `videoField`, or `linkField`.
+
+**Migration Advice**
+
+See 2026-04-13
+
+
 # 2026-04-29
 
 ## `useHMR` event types renamed; `useSteadyHotScroll` replaced by `SteadyHotScroll`
