@@ -1,4 +1,3 @@
-import { fetchAssetMeta } from "library/sanity/assetMetadata"
 import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
 import type { ClientPerspective, QueryParams } from "next-sanity"
@@ -35,7 +34,6 @@ export async function libraryFetch<const QueryString extends string>({
 	params = {},
 	perspective,
 	disableStega,
-	enrichAssets = false,
 }: {
 	query: QueryString
 	params?: QueryParams | Promise<QueryParams>
@@ -51,32 +49,13 @@ export async function libraryFetch<const QueryString extends string>({
 	 * otherwise, stega should be undefined
 	 */
 	disableStega?: boolean
-	/**
-	 * Opt-in to legacy post-query asset enrichment via `fetchAssetMeta`.
-	 * Prefer resolving asset data inline in your GROQ query using the helpers in
-	 * `library/sanity/assetMetadata.ts` such as `imageField`, `imageProjection`,
-	 * `videoField`, `videoProjection`, and related data projections.
-	 *
-	 * Any image data passed to `SanityImage` / `UniversalImage` should include
-	 * the inline metadata it needs rather than relying on post-query enrichment.
-	 *
-	 * @deprecated Set `enrichAssets: true` only on legacy call-sites that have
-	 * not yet been migrated to inline GROQ projections.
-	 */
-	enrichAssets?: boolean
 }) {
-	const { data, sourceMap, tags } = await internalFetch({
+	return await internalFetch({
 		query,
 		params,
 		stega: disableStega ? false : undefined,
 		perspective,
 	})
-
-	return {
-		data: enrichAssets ? await fetchAssetMeta(data) : data,
-		sourceMap,
-		tags,
-	}
 }
 
 const useProxy =

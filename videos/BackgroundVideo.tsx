@@ -7,27 +7,9 @@ import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
 import SanityUniversalImage from "library/UniversalImage"
 import { use, useEffect, useRef, useState } from "react"
-import type {
-	internalGroqTypeReferenceTo,
-	SanityImageCrop,
-	SanityImageHotspot,
-} from "sanity.types"
-import type { AssetMeta } from "../sanity/assetMetadata"
+import type { ImageField } from "../sanity/assetMetadata"
 
-type SanityPosterImage = {
-	asset?: {
-		_ref: string
-		_type: "reference"
-		_weak?: boolean
-		[internalGroqTypeReferenceTo]?: "sanity.imageAsset"
-	}
-	media?: unknown
-	hotspot?: SanityImageHotspot
-	crop?: SanityImageCrop
-	alt?: string
-	willHaveAlt?: "true"
-	data?: AssetMeta
-}
+type SanityPosterImage = ImageField
 
 export function BackgroundVideo({
 	playbackId,
