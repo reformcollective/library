@@ -1,5 +1,3 @@
-import { fetchAssetMeta } from "library/sanity/assetMetadata"
-import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
 import type {
 	ClientPerspective,
@@ -16,8 +14,8 @@ import semver from "semver"
 import { Toaster } from "sonner"
 import { FirefoxFix } from "./FirefoxFix"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
-import { SanityPreviewStatusToast } from "./SanityPreviewStatusToast"
 import { SanityLiveProxy } from "./SanityLiveProxy"
+import { SanityPreviewStatusToast } from "./SanityPreviewStatusToast"
 import { SanityVisualEditingOverlay } from "./SanityVisualEditingOverlay"
 
 /**
