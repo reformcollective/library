@@ -1,4 +1,32 @@
 
+# 2026-05-04
+
+## Sanity data attribute helper now uses serializable context
+
+`createSanityDataAttribute` has been replaced by `getSanityDataAttribute`.
+
+**Migration Advice**
+
+Attribute context includes document id, type, and a path to the relevant section on the page:
+
+```tsx
+const sectionContext = {
+	sanityDataAttribute: {
+		documentId: relevantPage._id,
+		documentType: relevantPage._type,
+		pathPrefix: `sections[${index}]`,
+	},
+}
+```
+
+Then update section call sites:
+
+```tsx
+import { getSanityDataAttribute } from "library/sanity/getSanityDataAttribute"
+
+<div data-sanity={getSanityDataAttribute(sanityDataAttribute, "title")} />
+```
+
 # 2026-05-01
 
 ## Simpler slug resolvers
