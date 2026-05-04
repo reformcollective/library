@@ -22,6 +22,6 @@ export const getSanityDataAttribute = (
 		baseUrl: `${siteURL}${studioUrl}`,
 		id: documentId,
 		type: documentType,
-		path: `${pathPrefix}.${path}`,
+		path: [pathPrefix, path].filter(Boolean).join("."),
 	}).toString()
 }
