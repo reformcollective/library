@@ -1,4 +1,3 @@
-import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
 import type {
 	ClientPerspective,
@@ -16,6 +15,8 @@ import { Toaster } from "sonner"
 import { FirefoxFix } from "./FirefoxFix"
 import LiveWrapper, { handleError } from "./reusableFetchClient"
 import { SanityLiveProxy } from "./SanityLiveProxy"
+import { SanityPreviewStatusToast } from "./SanityPreviewStatusToast"
+import { SanityVisualEditingOverlay } from "./SanityVisualEditingOverlay"
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
@@ -84,7 +85,8 @@ export const LibraryLive = async () => {
 		<>
 			{useProxy && <SanityLiveProxy />}
 			<Toaster />
-			{isDraftMode && <DraftModeOverlay />}
+			<SanityPreviewStatusToast isDraftMode={isDraftMode} />
+			<SanityVisualEditingOverlay isDraftMode={isDraftMode} />
 			{isDraftMode && <FirefoxFix />}
 			<LiveWrapper>
 				{(isDraftMode || !useProxy) && (
