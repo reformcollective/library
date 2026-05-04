@@ -72,7 +72,7 @@ export async function libraryFetch<const QueryString extends string>({
 	})
 }
 
-const useProxy =
+const canUseLiveProxy =
 	// vercel has fluid compute baybeeee
 	// local obviously is persistent too
 	// other providers should be tested and evaluated as needed
@@ -80,16 +80,17 @@ const useProxy =
 
 export const LibraryLive = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
+	const useLiveProxy = canUseLiveProxy && !isDraftMode
 
 	return (
 		<>
-			{useProxy && <SanityLiveProxy />}
+			{useLiveProxy && <SanityLiveProxy />}
 			<Toaster />
 			<SanityPreviewStatusToast isDraftMode={isDraftMode} />
 			<SanityVisualEditingOverlay isDraftMode={isDraftMode} />
 			{isDraftMode && <FirefoxFix />}
 			<LiveWrapper>
-				{(isDraftMode || !useProxy) && (
+				{(isDraftMode || !useLiveProxy) && (
 					<InternalLive
 						onError={handleError}
 						refreshOnFocus={false}

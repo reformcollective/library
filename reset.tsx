@@ -1,4 +1,5 @@
-import { compileTime, css } from "library/styled"
+import { compileTime } from "library/compile-time"
+import { css } from "library/styled"
 import { reset } from "./layers.css"
 
 const style = css`
@@ -286,6 +287,6 @@ display:revert; revert to element instead of attribute */
 	}
 `
 
-const builtStyle = compileTime(() => style)
+const builtStyle = await compileTime(() => style)
 
 export const ResetStyles = () => <style>{builtStyle}</style>
