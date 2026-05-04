@@ -1,6 +1,12 @@
 import { fetchAssetMeta } from "library/sanity/assetMetadata"
+import DraftModeOverlay from "library/sanity/DraftModeOverlay"
 import { draftMode } from "next/headers"
-import type { ClientPerspective, QueryParams } from "next-sanity"
+import type {
+	ClientPerspective,
+	ClientReturn,
+	ContentSourceMap,
+	QueryParams,
+} from "next-sanity"
 import { defineLive } from "next-sanity/live"
 import { version as nextSanityVersion } from "next-sanity/package.json"
 import { client } from "sanity/lib/client"
@@ -25,6 +31,14 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	fetchOptions: { revalidate: Infinity },
 })
 
+type IsAny<T> = 0 extends 1 & T ? true : false
+type UnknownIfAny<T> = IsAny<T> extends true ? unknown : T
+type LibraryFetchResult<QueryString extends string> = {
+	data: UnknownIfAny<ClientReturn<QueryString>>
+	sourceMap: ContentSourceMap | null
+	tags: string[]
+}
+
 /**
  * Used to fetch data in Server Components, it has built in support for handling Draft Mode and perspectives.
  * When using the "published" perspective then time-based revalidation is used, set to match the time-to-live on Sanity's API CDN (60 seconds)
@@ -36,7 +50,6 @@ export async function libraryFetch<const QueryString extends string>({
 	params = {},
 	perspective,
 	disableStega,
-	enrichAssets = false,
 }: {
 	query: QueryString
 	params?: QueryParams | Promise<QueryParams>
@@ -52,32 +65,13 @@ export async function libraryFetch<const QueryString extends string>({
 	 * otherwise, stega should be undefined
 	 */
 	disableStega?: boolean
-	/**
-	 * Opt-in to legacy post-query asset enrichment via `fetchAssetMeta`.
-	 * Prefer resolving asset data inline in your GROQ query using the helpers in
-	 * `library/sanity/assetMetadata.ts` such as `imageField`, `imageProjection`,
-	 * `videoField`, `videoProjection`, and related data projections.
-	 *
-	 * Any image data passed to `SanityImage` / `UniversalImage` should include
-	 * the inline metadata it needs rather than relying on post-query enrichment.
-	 *
-	 * @deprecated Set `enrichAssets: true` only on legacy call-sites that have
-	 * not yet been migrated to inline GROQ projections.
-	 */
-	enrichAssets?: boolean
-}) {
-	const { data, sourceMap, tags } = await internalFetch({
+}): Promise<LibraryFetchResult<QueryString>> {
+	return await internalFetch({
 		query,
 		params,
 		stega: disableStega ? false : undefined,
 		perspective,
 	})
-
-	return {
-		data: enrichAssets ? await fetchAssetMeta(data) : data,
-		sourceMap,
-		tags,
-	}
 }
 
 const useProxy =

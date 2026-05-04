@@ -10,6 +10,9 @@ export const createSanityDataAttribute = ({
 }: {
 	documentId: string
 	documentType: string
+	/**
+	 * this is NOT the pathname, but rather a path to the property you want click-to-edit to go to
+	 */
 	path: string
 }) => {
 	return createDataAttribute({
