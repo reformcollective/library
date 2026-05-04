@@ -68,6 +68,7 @@ export default function AutoAnimate({
 	toParameters,
 	alignment = "start",
 	className = "",
+	clip = true,
 }: {
 	/**
 	 * A react element to display. We'll smoothly animate this into view when its key changes
@@ -109,6 +110,11 @@ export default function AutoAnimate({
 	 * @default start
 	 */
 	alignment?: AutoAnimateAlignment
+	/**
+	 * pass false to disable clipping on the container
+	 * @default true
+	 */
+	clip?: boolean
 	/**
 	 * if you need to style this, you can. be careful though. be very careful.
 	 */
@@ -303,15 +309,16 @@ export default function AutoAnimate({
 	})
 
 	return (
-		<Wrapper className={className}>
+		<Wrapper className={className} clip={clip}>
 			<AnimationWrapper
 				ref={sizer}
 				alignment={alignment}
+				clip={clip}
 				style={{ display: "none" }}
 			>
 				<div>{getNodeFromKey(currentKey)}</div>
 			</AnimationWrapper>
-			<AnimationWrapper ref={wrapper} alignment={alignment}>
+			<AnimationWrapper ref={wrapper} alignment={alignment} clip={clip}>
 				<div ref={wrapperA}>{getNodeFromKey(slotA)}</div>
 				<div ref={wrapperB}>{getNodeFromKey(slotB)}</div>
 			</AnimationWrapper>
@@ -320,10 +327,23 @@ export default function AutoAnimate({
 }
 
 const Wrapper = styled("div", {
-	"@layer": {
-		[library]: unresponsive(css`
-			overflow: clip;
-		`),
+	variants: {
+		clip: {
+			true: {
+				"@layer": {
+					[library]: unresponsive(css`
+						overflow: clip;
+					`),
+				},
+			},
+			false: {
+				"@layer": {
+					[library]: unresponsive(css`
+						overflow: visible;
+					`),
+				},
+			},
+		},
 	},
 })
 
@@ -350,6 +370,24 @@ const AnimationWrapper = styled("div", {
 					}
 				}
 			`),
+		},
+	},
+	variants: {
+		clip: {
+			true: {
+				"@layer": {
+					[library]: unresponsive(css`
+						overflow: clip;
+					`),
+				},
+			},
+			false: {
+				"@layer": {
+					[library]: unresponsive(css`
+						overflow: visible;
+					`),
+				},
+			},
 		},
 	},
 	tokens: { alignment },
