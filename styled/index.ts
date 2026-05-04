@@ -16,10 +16,6 @@ export * from "./vanilla"
 
 export const css = String.raw
 
-export function compileTime<T>(getValue: () => T): T {
-	return getValue()
-}
-
 // using a union for the type of Component will cause
 // generic forwarding to fail, so we have overloads for each type
 

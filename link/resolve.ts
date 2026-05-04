@@ -1,6 +1,8 @@
 import { stegaClean } from "next-sanity"
 import { linkIsInternal } from "../functions"
 
+export const staticPageLinkType = "static-page"
+
 export type CMSLink = {
 	_type: "link"
 	text?: string
@@ -63,6 +65,15 @@ export const resolveRoute = (
 		return {
 			url: `tel:${stegaClean(link.phone || "")}`,
 			newTab: true,
+		}
+	}
+
+	if (link.type === staticPageLinkType && link.value) {
+		const url = `${stegaClean(link.value)}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`
+
+		return {
+			url,
+			newTab: link.blank ?? !linkIsInternal(url),
 		}
 	}
 

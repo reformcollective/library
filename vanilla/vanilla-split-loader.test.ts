@@ -94,6 +94,50 @@ function expectValidTypeScript(code: string, filename = "test.tsx") {
 	}
 }
 
+function decodeDataUrlModules(code: string) {
+	return [...code.matchAll(/data:text\/javascript;base64,([^"]+)/g)].map(
+		(match) => Buffer.from(match[1] ?? "", "base64").toString("utf8"),
+	)
+}
+
+function hasExportedVariable(code: string, name: string) {
+	const sourceFile = ts.createSourceFile(
+		"generated.ts",
+		code,
+		ts.ScriptTarget.Latest,
+		true,
+		ts.ScriptKind.TS,
+	)
+
+	for (const statement of sourceFile.statements) {
+		if (!ts.isVariableStatement(statement)) continue
+
+		const isExported = statement.modifiers?.some(
+			(modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+		)
+		if (!isExported) continue
+
+		for (const declaration of statement.declarationList.declarations) {
+			if (!ts.isIdentifier(declaration.name)) continue
+			if (declaration.name.text !== name) continue
+
+			return true
+		}
+	}
+
+	return false
+}
+
+async function importVirtualModuleForTest(code: string) {
+	const testableCode = code.replace(
+		/import\s+\{\s*compileTime\s*\}\s+from\s+["']library\/compile-time["'];?/,
+		"function compileTime(getValue) { return getValue() }",
+	)
+	const url = `data:text/javascript;base64,${Buffer.from(testableCode).toString("base64")}`
+
+	return await import(url)
+}
+
 // Mock the turboLoader to return a simple passthrough
 vi.mock("@vanilla-extract/turbopack-plugin", () => ({
 	default: {
@@ -854,6 +898,82 @@ export const button = style({ color: "red" })`
 			// globalStyle is a side-effect that moves to virtual along with other styles
 			expect(result).toContain("data:text/javascript;base64,")
 			expect(result).toContain("import { button }")
+		})
+	})
+
+	describe("compileTime", () => {
+		it("should support awaited async values", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { compileTime } from "library/compile-time"
+
+export const options = await compileTime(async () => [
+	{ title: "Sample Form", value: "/sample-form" },
+	{ title: "Action Test", value: "/action-test" },
+])`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			const optionsModule = decodeDataUrlModules(result).find((module) => {
+				return hasExportedVariable(module, "options")
+			})
+
+			assert(optionsModule)
+
+			const { options } = await importVirtualModuleForTest(optionsModule)
+			expect(options).toEqual([
+				{ title: "Sample Form", value: "/sample-form" },
+				{ title: "Action Test", value: "/action-test" },
+			])
+		})
+
+		it("should allow awaited compileTime calls wrapped by expressions", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { compileTime } from "library/compile-time"
+
+export const parenthesizedOptions = await (compileTime(async () => [
+	{ title: "Sample Form", value: "/sample-form" },
+]))
+
+export const assertedOptions = await (compileTime(async () => [
+	{ title: "Action Test", value: "/action-test" },
+]) as Promise<unknown>)
+
+export const nonNullOptions = await (compileTime(async () => [
+	{ title: "Non Null", value: "/non-null" },
+])!)
+
+export const satisfiesOptions = await (compileTime(async () => [
+	{ title: "Satisfies", value: "/satisfies" },
+]) satisfies Promise<unknown>)`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+		})
+
+		it("should require compileTime calls to be awaited", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { compileTime } from "library/compile-time"
+
+export const options = compileTime(async () => [
+	{ title: "Sample Form", value: "/sample-form" },
+])`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			await expect(vanillaSplitLoader.call(ctx, source)).rejects.toThrow(
+				/compileTime must be called with await/,
+			)
 		})
 	})
 

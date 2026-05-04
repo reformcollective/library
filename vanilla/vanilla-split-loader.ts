@@ -52,12 +52,14 @@ const TRACKED_MODULES: ModulesConfig = {
 		"globalKeyframes",
 		"globalLayer",
 	],
-	"library/styled": ["styled", "keyframes", "compileTime"],
-	"library/styled/index": ["styled", "keyframes", "compileTime"],
-	"library/styled/alpha": ["styled", "keyframes", "compileTime"],
+	"library/styled": ["styled", "keyframes"],
+	"library/styled/index": ["styled", "keyframes"],
+	"library/styled/alpha": ["styled", "keyframes"],
+	"library/compile-time": ["compileTime"],
 }
 
 const STYLED_IMPORT = "styled"
+const COMPILE_TIME_IMPORT = "compileTime"
 
 const turboLoader =
 	// @ts-expect-error turbopack loader shape has default export in some builds
@@ -169,6 +171,71 @@ function computeTaintedNodes(
 	}
 
 	return { tainted, invalidTainted }
+}
+
+function getTrackedImportLocalNames(
+	registry: TrackedRegistry,
+	importedName: string,
+) {
+	return new Set(
+		[...registry.trackedNames].filter(
+			(name) => registry.localToImported.get(name) === importedName,
+		),
+	)
+}
+
+function isTransparentAwaitWrapper(node: ts.Node) {
+	return (
+		ts.isParenthesizedExpression(node) ||
+		ts.isAsExpression(node) ||
+		ts.isTypeAssertionExpression(node) ||
+		ts.isNonNullExpression(node) ||
+		ts.isSatisfiesExpression(node)
+	)
+}
+
+function isAwaitedExpression(expression: ts.Expression) {
+	let current: ts.Node = expression
+	let parent = current.parent
+
+	while (parent && isTransparentAwaitWrapper(parent)) {
+		current = parent
+		parent = parent.parent
+	}
+
+	return ts.isAwaitExpression(parent) && parent.expression === current
+}
+
+function assertCompileTimeCallsAreAwaited(
+	sourceFile: ts.SourceFile,
+	registry: TrackedRegistry,
+) {
+	const compileTimeLocalNames = getTrackedImportLocalNames(
+		registry,
+		COMPILE_TIME_IMPORT,
+	)
+	if (compileTimeLocalNames.size === 0) return
+
+	function visit(node: ts.Node) {
+		if (
+			ts.isCallExpression(node) &&
+			ts.isIdentifier(node.expression) &&
+			compileTimeLocalNames.has(node.expression.text) &&
+			!isAwaitedExpression(node)
+		) {
+			const { line, character } = sourceFile.getLineAndCharacterOfPosition(
+				node.getStart(sourceFile),
+			)
+			throw new Error(
+				`compileTime must be called with await at ${sourceFile.fileName}:${line + 1}:${character + 1}. ` +
+					`Use "await compileTime(...)" so async values are resolved before the bundle is emitted.`,
+			)
+		}
+
+		ts.forEachChild(node, visit)
+	}
+
+	visit(sourceFile)
 }
 
 // =============================================================================
@@ -868,6 +935,7 @@ async function transform(
 
 	// 2) Build tracked import registry
 	const registry = buildTrackedRegistry(graph)
+	assertCompileTimeCallsAreAwaited(graph.sourceFile, registry)
 
 	// 3) Compute tainted nodes
 	const { tainted, invalidTainted } = computeTaintedNodes(graph, registry)
