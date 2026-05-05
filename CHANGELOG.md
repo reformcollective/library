@@ -1,6 +1,38 @@
 
 # 2026-05-04
 
+## `compileTime` is now exported from `library/compile-time`
+
+`compileTime` has moved out of `library/styled` because it is not part of the styled API. Import it from `library/compile-time` instead.
+
+The vanilla splitter now requires every `compileTime(...)` call to be awaited. This keeps sync and async build-time values using the same call shape, and prevents async values from being emitted into the bundle before they resolve.
+
+```ts
+import { compileTime } from "library/compile-time"
+
+export const syncValue = await compileTime(() => "serialized at build time")
+export const asyncValue = await compileTime(async () => {
+	return await fetchBuildTimeValue()
+})
+```
+
+`compileTime` still returns the callback result directly. The required `await` is intentional because awaiting a non-Promise value is a no-op, while awaiting a Promise ensures it resolves before bundling continues.
+
+**Migration Advice**
+
+```ts
+// before
+import { compileTime, css } from "library/styled"
+
+const value = compileTime(() => "build-time value")
+
+// after
+import { compileTime } from "library/compile-time"
+import { css } from "library/styled"
+
+const value = await compileTime(() => "build-time value")
+```
+
 ## Sanity data attribute helper now uses serializable context
 
 `createSanityDataAttribute` has been replaced by `getSanityDataAttribute`.
