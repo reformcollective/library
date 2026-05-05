@@ -34,3 +34,11 @@ Do exactly what is asked. No extra refactors, comments, or features.
 - Read the relevant file(s) fully before editing, then make a complete change instead of patching blindly.
 - Don't over-index on unlikely edge cases. Use a reasonable approach, then iterate if real issues appear.
 - If an approach is failing repeatedly, stop and evaluate the strategy and alternatives, asking the user for guidance if needed.
+
+<!-- BEGIN:nextjs-agent-rules -->
+ 
+# Next.js: ALWAYS read docs before coding
+ 
+Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+ 
+<!-- END:nextjs-agent-rules -->
