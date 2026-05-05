@@ -1,4 +1,38 @@
 
+# 2026-05-05
+
+## Removed styled utility alias exports
+
+`library/styled` no longer exports the named aliases `fresponsive`, `ftablet`, `fmobile`, or `unresponsive`.
+
+Use the `f` utility object instead.
+
+**Migration Advice**
+
+```ts
+// before
+import { css, fresponsive, styled, unresponsive } from "library/styled"
+
+fresponsive(css`
+	padding: 20px;
+`)
+
+unresponsive(css`
+	position: fixed;
+`)
+
+// after
+import { css, f, styled } from "library/styled"
+
+f.responsive(css`
+	padding: 20px;
+`)
+
+f.unresponsive(css`
+	position: fixed;
+`)
+```
+
 # 2026-05-04
 
 ## `compileTime` is now exported from `library/compile-time`

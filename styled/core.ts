@@ -49,7 +49,7 @@ function classFromStyleRules(input: StyleRules | undefined, debugId?: string) {
 		for (const item of flatInput) {
 			if (typeof item === "string" && /[;:{]/.test(item)) {
 				throw new Error(
-					`[styled] Raw CSS string passed as style rules — wrap in fresponsive(), f.unresponsive(), etc.:\n\n"${item}"`,
+					`[styled] Raw CSS string passed as style rules — wrap in f.responsive(), f.unresponsive(), etc.:\n\n"${item}"`,
 				)
 			}
 		}
