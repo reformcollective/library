@@ -1,4 +1,115 @@
 
+# 2026-05-04
+
+## `compileTime` is now exported from `library/compile-time`
+
+`compileTime` has moved out of `library/styled` because it is not part of the styled API. Import it from `library/compile-time` instead.
+
+The vanilla splitter now requires every `compileTime(...)` call to be awaited. This keeps sync and async build-time values using the same call shape, and prevents async values from being emitted into the bundle before they resolve.
+
+```ts
+import { compileTime } from "library/compile-time"
+
+export const syncValue = await compileTime(() => "serialized at build time")
+export const asyncValue = await compileTime(async () => {
+	return await fetchBuildTimeValue()
+})
+```
+
+`compileTime` still returns the callback result directly. The required `await` is intentional because awaiting a non-Promise value is a no-op, while awaiting a Promise ensures it resolves before bundling continues.
+
+**Migration Advice**
+
+```ts
+// before
+import { compileTime, css } from "library/styled"
+
+const value = compileTime(() => "build-time value")
+
+// after
+import { compileTime } from "library/compile-time"
+import { css } from "library/styled"
+
+const value = await compileTime(() => "build-time value")
+```
+
+## Sanity data attribute helper now uses serializable context
+
+`createSanityDataAttribute` has been replaced by `getSanityDataAttribute`.
+
+**Migration Advice**
+
+Attribute context includes document id, type, and a path to the relevant section on the page:
+
+```tsx
+const sectionContext = {
+	sanityDataAttribute: {
+		documentId: relevantPage._id,
+		documentType: relevantPage._type,
+		pathPrefix: `sections[${index}]`,
+	},
+}
+```
+
+Then update section call sites:
+
+```tsx
+import { getSanityDataAttribute } from "library/sanity/getSanityDataAttribute"
+
+<div data-sanity={getSanityDataAttribute(sanityDataAttribute, "title")} />
+```
+
+# 2026-05-01
+
+## Simpler slug resolvers
+
+The library now expects each project `sanity/lib/slug-resolver.ts` to export two project-specific route representations:
+
+- `documentPaths`: JavaScript document-to-path/title rules for already-fetched Sanity documents
+- `documentPathProjection`: a GROQ expression that resolves paths at query time
+
+Shared document helper plumbing now lives in `library/sanity/document-helpers`. Project slug resolver files define route behavior, while document helpers provide linkable type extraction, production URL creation, and Presentation location resolution.
+
+**Migration Advice**
+
+Update `sanity/lib/slug-resolver.ts` to this shape:
+
+```ts
+import { defineDocumentPaths } from "library/sanity/define-document-paths"
+
+export const documentPaths = defineDocumentPaths({
+	page: (document) => ({
+		path: document.slug?.current === "home" ? "/" : `/${document.slug?.current}`,
+		title: document.title ?? "Untitled Page",
+	}),
+})
+
+export const documentPathProjection = <T>(document: T) =>
+	`
+	select(
+	  !defined(${document}) => null,
+		${document}._type == "page" => select(
+			${document}.slug.current == "home" => "/",
+			"/" + ${document}.slug.current
+		)
+	)
+` as const
+
+```
+
+Update sanity config to import utilities from `library/sanity/document-helpers`
+
+# 2026-04-30
+
+## removed `fetchAssetMeta` / `enrichAssets`
+
+`fetchAssetMeta` and the `enrichAssets` option on `libraryFetch` / `sanityFetch` have been removed. Asset, video, and link metadata should be resolved inline with `imageField`, `videoField`, or `linkField`.
+
+**Migration Advice**
+
+See 2026-04-13
+
+
 # 2026-04-29
 
 ## `useHMR` event types renamed; `useSteadyHotScroll` replaced by `SteadyHotScroll`

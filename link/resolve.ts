@@ -1,6 +1,8 @@
 import { stegaClean } from "next-sanity"
 import { linkIsInternal } from "../functions"
 
+export const staticPageLinkType = "static-page"
+
 export type CMSLink = {
 	_type: "link"
 	text?: string
@@ -19,6 +21,13 @@ export type CMSLink = {
 /** All values accepted by resolveRoute / isRouteDefined. */
 export type LinkHref = string | null | undefined | CMSLink
 
+const normalizeInternalPath = (path: string) => {
+	const cleanPath = stegaClean(path)
+	return cleanPath.startsWith("/")
+		? cleanPath.replace(/^\/+/, "/")
+		: `/${cleanPath}`
+}
+
 export const resolveRoute = (
 	link: LinkHref,
 ): { url: string | undefined; newTab: boolean } => {
@@ -34,12 +43,8 @@ export const resolveRoute = (
 		}
 
 	if (link.type === "internal" && link.internalSlug) {
-		const slugToUse =
-			link.internalSlug === "home" || link.internalSlug === "/"
-				? ""
-				: link.internalSlug
 		return {
-			url: `/${stegaClean(slugToUse || "")}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`,
+			url: `${normalizeInternalPath(link.internalSlug)}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`,
 			// default to same tab if not specified
 			newTab: link.blank ?? false,
 		}
@@ -60,6 +65,15 @@ export const resolveRoute = (
 		return {
 			url: `tel:${stegaClean(link.phone || "")}`,
 			newTab: true,
+		}
+	}
+
+	if (link.type === staticPageLinkType && link.value) {
+		const url = `${stegaClean(link.value)}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`
+
+		return {
+			url,
+			newTab: link.blank ?? !linkIsInternal(url),
 		}
 	}
 

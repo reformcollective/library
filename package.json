@@ -6,7 +6,6 @@
 	"//": "anything that the supermodule may also install should use the ^major syntax. this is so that pnpm can combine duplicate versions to prevent inflating the bundle. this doesn't apply to dev dependencies (e.g. biome)",
 	"dependencies": {
 		"@eslint/css-tree": "^3",
-		"@mux/blurup": "^1",
 		"@mux/mux-video-react": "^0.29",
 		"@sanity/image-url": "^2",
 		"@types/semver": "^7",
