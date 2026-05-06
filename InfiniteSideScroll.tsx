@@ -109,6 +109,7 @@ export function InfiniteSideScroll({
 	const { result: loop } = useAnimation(
 		() => {
 			if (!rowRef.current) return
+			if (!rowRef.current.children.length) return
 			const draggable = !disableDrag
 
 			// calculate the gap size between instances so that we can pad the marquee when it loops
