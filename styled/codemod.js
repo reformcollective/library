@@ -6,7 +6,7 @@
   - Converts: styled(X, { ...expr1, ...expr2, ... }) → styled(X, [ expr1, expr2, ... ])
   - Skips function-based styles: styled(X, () => ({ ... })) and annotates with a TODO above
   - Partial conversion supported; only converted files get imports updated to `library/styled`
-  - Normalizes fresponsive(…) → f.responsive(…) within converted arrays
+  - Normalizes legacy fresponsive(…) → f.responsive(…) within converted arrays
   - Preserves file formatting by performing targeted range edits, not full reprints
 */
 

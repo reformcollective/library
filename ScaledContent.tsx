@@ -1,5 +1,5 @@
 import { library } from "library/layers.css"
-import { css, fresponsive, styled } from "library/styled"
+import { css, f, styled } from "library/styled"
 import { useEffect, useRef } from "react"
 
 /**
@@ -55,7 +55,7 @@ export default function ScaledContent({
 
 const Outer = styled("div", {
 	"@layer": {
-		[library]: fresponsive(css`
+		[library]: f.responsive(css`
 			display: grid;
 			place-items: start;
 		`),
@@ -64,7 +64,7 @@ const Outer = styled("div", {
 
 const Inner = styled("div", {
 	"@layer": {
-		[library]: fresponsive(css`
+		[library]: f.responsive(css`
 			transform-origin: top left;
 		`),
 	},

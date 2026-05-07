@@ -3,7 +3,7 @@
 import { createVar } from "@vanilla-extract/css"
 import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
-import { css, styled, unresponsive } from "library/styled"
+import { css, f, styled } from "library/styled"
 import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
 import { library } from "./layers.css"
@@ -331,14 +331,14 @@ const Wrapper = styled("div", {
 		clip: {
 			true: {
 				"@layer": {
-					[library]: unresponsive(css`
+					[library]: f.unresponsive(css`
 						overflow: clip;
 					`),
 				},
 			},
 			false: {
 				"@layer": {
-					[library]: unresponsive(css`
+					[library]: f.unresponsive(css`
 						overflow: visible;
 					`),
 				},
@@ -352,7 +352,7 @@ const alignment = createVar()
 const AnimationWrapper = styled("div", {
 	base: {
 		"@layer": {
-			[library]: unresponsive(css`
+			[library]: f.unresponsive(css`
 				display: grid;
 				place-items: ${alignment};
 				place-content: ${alignment};
@@ -376,14 +376,14 @@ const AnimationWrapper = styled("div", {
 		clip: {
 			true: {
 				"@layer": {
-					[library]: unresponsive(css`
+					[library]: f.unresponsive(css`
 						overflow: clip;
 					`),
 				},
 			},
 			false: {
 				"@layer": {
-					[library]: unresponsive(css`
+					[library]: f.unresponsive(css`
 						overflow: visible;
 					`),
 				},
