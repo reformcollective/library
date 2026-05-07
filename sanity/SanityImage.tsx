@@ -4,7 +4,14 @@ import { createImageUrlBuilder } from "@sanity/image-url"
 import type { ImageField } from "library/sanity/assetMetadata"
 import { styled } from "library/styled"
 import { stegaClean } from "next-sanity"
-import { use, useEffect, useId, useLayoutEffect, useState } from "react"
+import {
+	type SyntheticEvent,
+	use,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react"
 import { dataset, projectId } from "sanity/lib/api"
 import type { SanityImageCrop, SanityImageHotspot } from "sanity.types"
 import StaticImage, {
@@ -19,6 +26,7 @@ import {
 	objectFitVar,
 	objectPositionVar,
 } from "../StaticImage.css"
+import { useCombinedRefs } from "../useCombinedRefs"
 import {
 	lqipClass,
 	lqipFilterVar,
@@ -118,33 +126,27 @@ export default function SanityUniversalImage(
 }
 
 function SanityImageCore(props: SanityImageProps) {
-	const { src, ...rest } = props
+	const { src, ref, ...rest } = props
 	const defaultEager = use(EagerContext)
 	const prioritizedLoading = prioritizeLoading(props.loading, defaultEager)
 	const [loaded, setLoaded] = useState(false)
 	const [hasTransparency, setHasTransparency] = useState(false)
-	const imgId = useId()
+	const imgRef = useRef<HTMLImageElement>(null)
+	const combinedRef = useCombinedRefs(ref, imgRef)
+	const handleLoad = (event: SyntheticEvent<HTMLImageElement>) => {
+		setLoaded(true)
+		rest.onLoad?.(event)
+	}
 
-	// useLayoutEffect fires synchronously before the browser paints after React
-	// commits. Checking el.complete handles already-loaded (cached) images in
-	// the same frame — no flash. The load listener handles images that finish
-	// loading after mount (including client-side navigation).
 	useLayoutEffect(() => {
 		if (loaded) return
-		const el = document.getElementById(imgId) as HTMLImageElement | null
+		const el = imgRef.current
 		if (!el) return
-		const clear = () => setLoaded(true)
 		if (el.complete) {
-			clear()
-			return
+			setLoaded(true)
 		}
-		el.addEventListener("load", clear, { once: true })
-		return () => el.removeEventListener("load", clear)
-	}, [imgId, loaded])
+	}, [loaded])
 
-	// Async pixel-level transparency check. Runs after paint so it doesn't
-	// block the initial render — the LQIP is already visible and the check
-	// completes in milliseconds since the image is tiny.
 	useEffect(() => {
 		const lqip = src?.data?.lqip
 		if (!lqip) return
@@ -164,7 +166,7 @@ function SanityImageCore(props: SanityImageProps) {
 	const cropBottom = src?.crop?.bottom
 	useLayoutEffect(() => {
 		if (hotspotX == null || hotspotY == null) return
-		const el = document.getElementById(imgId) as HTMLImageElement | null
+		const el = imgRef.current
 		if (!el) return
 
 		// Remap hotspot from original image space into post-crop space
@@ -211,7 +213,7 @@ function SanityImageCore(props: SanityImageProps) {
 			el.removeEventListener("load", compute)
 			el.style.objectPosition = ""
 		}
-	}, [imgId, hotspotX, hotspotY, cropLeft, cropRight, cropTop, cropBottom])
+	}, [hotspotX, hotspotY, cropLeft, cropRight, cropTop, cropBottom])
 
 	if (!src?.asset) return null
 
@@ -241,9 +243,10 @@ function SanityImageCore(props: SanityImageProps) {
 	return (
 		<DefaultImg
 			{...rest}
-			id={imgId}
+			ref={combinedRef}
 			alt={stegaClean(rest.alt ?? src.alt)}
 			loading={prioritizedLoading}
+			onLoad={handleLoad}
 			src={imgSrc}
 			srcSet={srcSet}
 			objectFit={props.objectFit ?? "cover"}
