@@ -11,15 +11,7 @@ import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
 import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
-import { Toaster } from "sonner"
-import {
-	FirefoxFix,
-	handleError,
-	LiveWrapper,
-	SanityLiveProxy,
-	SanityPreviewStatusToast,
-	SanityVisualEditingOverlay,
-} from "./live.client"
+import { handleError, SanityLiveRuntime } from "./live.client"
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
@@ -86,24 +78,15 @@ export const LibraryLive = async () => {
 	const useLiveProxy = canUseLiveProxy && !isDraftMode
 
 	return (
-		<>
-			{useLiveProxy && <SanityLiveProxy />}
-			<Toaster />
-			<SanityPreviewStatusToast isDraftMode={isDraftMode} />
-			<SanityVisualEditingOverlay isDraftMode={isDraftMode} />
-			{isDraftMode && <FirefoxFix />}
-			<LiveWrapper>
-				{(isDraftMode || !useLiveProxy) && (
-					<InternalLive
-						onError={handleError}
-						refreshOnFocus={false}
-						refreshOnMount={true}
-						refreshOnReconnect={true}
-						intervalOnGoAway={false}
-					/>
-				)}
-			</LiveWrapper>
-		</>
+		<SanityLiveRuntime isDraftMode={isDraftMode} useLiveProxy={useLiveProxy}>
+			<InternalLive
+				onError={handleError}
+				refreshOnFocus={false}
+				refreshOnMount={true}
+				refreshOnReconnect={true}
+				intervalOnGoAway={false}
+			/>
+		</SanityLiveRuntime>
 	)
 }
 

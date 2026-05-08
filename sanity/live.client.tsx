@@ -6,30 +6,101 @@ import { browserData } from "library/deviceDetection"
 import { useHMR } from "library/useHMR"
 import { usePathname, useRouter } from "next/navigation"
 import { stegaClean } from "next-sanity"
-import { useIsPresentationTool } from "next-sanity/hooks"
+import {
+	type DraftEnvironment,
+	useDraftModeEnvironment,
+} from "next-sanity/hooks"
 import { isCorsOriginError } from "next-sanity/live"
 import { revalidateSyncTags } from "next-sanity/live/server-actions"
 import { VisualEditing } from "next-sanity/visual-editing"
-import type { ComponentProps } from "react"
+import type { ComponentProps, ReactNode } from "react"
 import { useEffect, useState, useTransition } from "react"
 import { studioUrl } from "sanity/lib/api"
-import { toast } from "sonner"
+import { Toaster, toast } from "sonner"
 import { disableDraftMode } from "./disableDraftMode"
 
+const isPresentationEnvironment = (environment: DraftEnvironment) =>
+	environment === "presentation-iframe" || environment === "presentation-window"
+
+const presentationSearchParams = ["sanity-preview-perspective"]
+
+const getIsPossiblyPresentationPreview = () => {
+	try {
+		const searchParams = new URLSearchParams(window.location.search)
+		return (
+			window.self !== window.top ||
+			presentationSearchParams.some((param) => searchParams.has(param))
+		)
+	} catch {
+		return true
+	}
+}
+
 /**
- * if sanity live is initialized in the studio, the page
- * might reload unexpectedly, so we delay the rendering
- * of the studio until we're sure it's not in the studio
+ * Owns all browser-only Sanity runtime behavior:
+ * subscriptions, draft/presentation UI, and browser stega cleanup.
  */
-export function LiveWrapper({ children }: { children: React.ReactNode }) {
-	const [isStudio, setIsStudio] = useState(true) // default to true during SSR
+export function SanityLiveRuntime({
+	children,
+	isDraftMode,
+	useLiveProxy,
+}: {
+	children: ReactNode
+	isDraftMode: boolean
+	useLiveProxy: boolean
+}) {
 	const pathname = usePathname()
+	const isStudio = pathname.startsWith(studioUrl)
+	const [isPossiblyPresentationPreview, setIsPossiblyPresentationPreview] =
+		useState(false)
 
 	useEffect(() => {
-		setIsStudio(pathname.startsWith(studioUrl))
-	}, [pathname])
+		setIsPossiblyPresentationPreview(getIsPossiblyPresentationPreview())
+	}, [])
 
-	return isStudio ? null : children
+	if (isStudio) return null
+
+	const useDirectLive =
+		isDraftMode || !useLiveProxy || isPossiblyPresentationPreview
+
+	return (
+		<>
+			<Toaster />
+			{useDirectLive ? (
+				<SanityLiveDirectRuntime isDraftMode={isDraftMode}>
+					{children}
+				</SanityLiveDirectRuntime>
+			) : (
+				<SanityLiveProxy />
+			)}
+		</>
+	)
+}
+
+function SanityLiveDirectRuntime({
+	children,
+	isDraftMode,
+}: {
+	children: ReactNode
+	isDraftMode: boolean
+}) {
+	const environment = useDraftModeEnvironment()
+	const isPresentation = isPresentationEnvironment(environment)
+
+	return (
+		<>
+			{children}
+			<SanityPreviewStatusToast
+				isDraftMode={isDraftMode}
+				isPresentation={isPresentation}
+			/>
+			<SanityVisualEditingOverlay
+				isDraftMode={isDraftMode}
+				isPresentation={isPresentation}
+			/>
+			{isDraftMode && <FirefoxFix />}
+		</>
+	)
 }
 
 /**
@@ -61,23 +132,22 @@ export function SanityLiveProxy() {
 
 export function SanityPreviewStatusToast({
 	isDraftMode,
+	isPresentation,
 }: {
 	isDraftMode: boolean
+	isPresentation: boolean
 }) {
-	const isPresentationTool = useIsPresentationTool()
 	const router = useRouter()
 	const [pending, startTransition] = useTransition()
 
 	useEffect(() => {
-		if (isPresentationTool === undefined) return
-		if (!isPresentationTool && !isDraftMode) return
+		if (!isPresentation && !isDraftMode) return
 
 		const toastId = toast(
 			isDraftMode ? "Viewing Drafted Content" : "Viewing Published Content",
 			{
-				duration: Number.POSITIVE_INFINITY,
 				action:
-					isDraftMode && !isPresentationTool
+					isDraftMode && !isPresentation
 						? {
 								label: "Disable",
 								onClick: async () => {
@@ -94,7 +164,7 @@ export function SanityPreviewStatusToast({
 		return () => {
 			toast.dismiss(toastId)
 		}
-	}, [isDraftMode, isPresentationTool, router])
+	}, [isDraftMode, isPresentation, router])
 
 	useEffect(() => {
 		if (pending) {
@@ -110,13 +180,13 @@ export function SanityPreviewStatusToast({
 
 export function SanityVisualEditingOverlay({
 	isDraftMode,
+	isPresentation,
 	...props
 }: ComponentProps<typeof VisualEditing> & {
 	isDraftMode: boolean
+	isPresentation: boolean
 }) {
-	const isPresentationTool = useIsPresentationTool()
-
-	if (!isDraftMode || isPresentationTool !== true) return null
+	if (!isDraftMode || !isPresentation) return null
 
 	return <VisualEditing {...props} />
 }
