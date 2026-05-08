@@ -12,11 +12,14 @@ import { token } from "sanity/lib/token"
 import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
 import { Toaster } from "sonner"
-import { FirefoxFix } from "./FirefoxFix"
-import LiveWrapper, { handleError } from "./reusableFetchClient"
-import { SanityLiveProxy } from "./SanityLiveProxy"
-import { SanityPreviewStatusToast } from "./SanityPreviewStatusToast"
-import { SanityVisualEditingOverlay } from "./SanityVisualEditingOverlay"
+import {
+	FirefoxFix,
+	handleError,
+	LiveWrapper,
+	SanityLiveProxy,
+	SanityPreviewStatusToast,
+	SanityVisualEditingOverlay,
+} from "./live.client"
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
