@@ -1,7 +1,7 @@
 import { useDebounceFn, useLatest } from "ahooks"
 import { gsap, Observer, ScrollTrigger } from "gsap/all"
 import { library } from "library/layers.css"
-import { css, fresponsive, styled } from "library/styled"
+import { css, f, styled } from "library/styled"
 import {
 	Fragment,
 	type ReactNode,
@@ -106,6 +106,7 @@ export function InfiniteSideScroll({
 	const { result: loop } = useAnimation(
 		() => {
 			if (!rowRef.current) return
+			if (!rowRef.current.children.length) return
 			const draggable = !disableDrag
 
 			// calculate the gap size between instances so that we can pad the marquee when it loops
@@ -322,7 +323,7 @@ export function InfiniteSideScroll({
 const Wrapper = styled("div", [
 	{
 		"@layer": {
-			[library]: fresponsive(css`
+			[library]: f.responsive(css`
 				display: grid;
 				position: relative;
 			`),
@@ -333,7 +334,7 @@ const Wrapper = styled("div", [
 const Row = styled("div", [
 	{
 		"@layer": {
-			[library]: fresponsive(css`
+			[library]: f.responsive(css`
 				display: flex;
 				width: 100%;
 				overflow: hidden;
@@ -349,7 +350,7 @@ const Row = styled("div", [
 const TwoButtons = styled("div", [
 	{
 		"@layer": {
-			[library]: fresponsive(css`
+			[library]: f.responsive(css`
 				display: flex;
 			`),
 		},
@@ -359,7 +360,7 @@ const TwoButtons = styled("div", [
 const OneButton = styled(TwoButtons, [
 	{
 		"@layer": {
-			[library]: fresponsive(css`
+			[library]: f.responsive(css`
 				& > *:first-child {
 					scale: -1 1;
 				}

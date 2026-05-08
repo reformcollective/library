@@ -1,6 +1,6 @@
 import { browserData } from "library/deviceDetection"
 import { useBrowserData } from "library/deviceDetection/react"
-import { css, f, fresponsive, styled } from "library/styled"
+import { css, f, styled } from "library/styled"
 
 import { useVH } from "library/viewportUtils"
 import {
@@ -86,7 +86,7 @@ const Page = styled("div", [
 ])
 
 const StickyVariant = styled("div", [
-	fresponsive(css`/* stick to center of viewport */
+	f.responsive(css`/* stick to center of viewport */
         position: sticky;
         top: 50%;
         left: 0;
@@ -100,7 +100,7 @@ const StickyVariant = styled("div", [
 ])
 
 const FixedVariant = styled("div", [
-	fresponsive(css`
+	f.responsive(css`
         position: fixed;
         top: 0;
         left: 0;
