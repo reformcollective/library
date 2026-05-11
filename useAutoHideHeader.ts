@@ -4,6 +4,13 @@ import { type RefObject, useEffect, useRef } from "react"
 import { useIsSmooth } from "./Scroll"
 import { useAnimation } from "./useAnimation"
 
+const HEADER_HEIGHT_VAR = "--site-header-height"
+const HEADER_VISIBLE_OFFSET_VAR = "--site-header-visible-offset"
+
+function clamp(value: number, min: number, max: number) {
+	return Math.min(max, Math.max(min, value))
+}
+
 /**
  * A custom hook that controls header visibility based on scroll position and specified elements.
  *
@@ -74,12 +81,26 @@ export default function useAutoHideHeader(
 			let isHovered = false
 			if (!wrapper?.current) return
 
+			const publishHeaderVars = (target: HTMLDivElement) => {
+				const height = target.offsetHeight + extraOffset
+				const y = Number(gsap.getProperty(target, "y")) || 0
+				const visibleOffset = reverse ? height - y : height + y
+				const root = document.documentElement
+
+				root.style.setProperty(HEADER_HEIGHT_VAR, `${height}px`)
+				root.style.setProperty(
+					HEADER_VISIBLE_OFFSET_VAR,
+					`${clamp(visibleOffset, 0, height)}px`,
+				)
+			}
+
 			// reset header position on route change. This is important because otherwise the header could get stuck in the wrong position if the user navigates while it's hidden
 			const resetHeader = (target: typeof wrapper.current) => {
 				gsap.set(target, { y: 0 })
 				if (target) {
 					target.dataset.headerHiding = "false"
 					target.dataset.headerScrolled = "false"
+					publishHeaderVars(target)
 				}
 			}
 			resetHeader(wrapper.current)
@@ -87,9 +108,16 @@ export default function useAutoHideHeader(
 			const props = {
 				ease: "power1.out",
 				duration: 0.4,
+				onUpdate: () => {
+					if (wrapper.current) publishHeaderVars(wrapper.current)
+				},
 			}
 
 			const yTo = gsap.quickTo(wrapper.current, "y", props)
+			const resizeObserver = new ResizeObserver(() => {
+				if (wrapper.current) publishHeaderVars(wrapper.current)
+			})
+			resizeObserver.observe(wrapper.current)
 
 			const onUpdate = () => {
 				const scroll = window.lenisInstance?.scroll ?? window.scrollY
@@ -168,6 +196,7 @@ export default function useAutoHideHeader(
 				wrapper.current?.removeEventListener("pointerenter", onHover)
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
 				window.removeEventListener("popstate", onPopState)
+				resizeObserver.disconnect()
 			}
 		},
 		[wrapper, style, reverse, extraOffset],

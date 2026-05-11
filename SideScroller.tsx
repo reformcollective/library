@@ -5,7 +5,7 @@ import { usePinType } from "library/Scroll"
 import { useAnimation } from "library/useAnimation"
 import { useEffect, useState } from "react"
 
-import { css, styled, unresponsive } from "./styled"
+import { css, f, styled } from "./styled"
 import { getVH } from "./viewportUtils"
 
 interface SideScrollerProps {
@@ -126,7 +126,7 @@ const pinAmountVar = createVar()
 
 const Wrapper = styled("section", {
 	base: [
-		unresponsive(css`
+		f.unresponsive(css`
 			position: relative;
 			overflow: hidden;
 			width: 100%;
@@ -136,7 +136,7 @@ const Wrapper = styled("section", {
 	variants: {
 		touchscreenMode: {
 			true: [
-				unresponsive(css`
+				f.unresponsive(css`
 					height: fit-content;
 					overflow-x: auto;
 				`),
@@ -151,7 +151,7 @@ const Wrapper = styled("section", {
 
 const Inner = styled("div", {
 	base: [
-		unresponsive(css`
+		f.unresponsive(css`
 			position: absolute;
 			width: fit-content;
 			top: 0;
@@ -165,7 +165,7 @@ const Inner = styled("div", {
 	variants: {
 		touchscreenMode: {
 			true: [
-				unresponsive(css`
+				f.unresponsive(css`
 					width: fit-content;
 					height: fit-content;
 				`),

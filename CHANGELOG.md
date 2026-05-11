@@ -1,4 +1,39 @@
 
+# 2026-05-08
+
+## Consolidated Sanity live helpers
+
+Sanity live/draft runtime helpers now use a single public entrypoint: `library/sanity/live`.
+
+The old helper-specific imports have been removed:
+
+- `library/sanity/reusableFetch`
+- `library/sanity/reusableFetchClient`
+- `library/sanity/SanityLiveProxy`
+- `library/sanity/SanityPreviewStatusToast`
+- `library/sanity/SanityVisualEditingOverlay`
+- `library/sanity/FirefoxFix`
+
+`library/sanity/liveProxy` and `library/sanity/disableDraftMode` are still separate because they are route/server helpers.
+
+**Migration Advice**
+
+```ts
+// before
+import {
+	LibraryLive as SanityLive,
+	libraryFetch as sanityFetch,
+} from "library/sanity/reusableFetch"
+
+// after
+import {
+	LibraryLive as SanityLive,
+	libraryFetch as sanityFetch,
+} from "library/sanity/live"
+```
+
+Remove any direct imports of `FirefoxFix`, `SanityLiveProxy`, `SanityPreviewStatusToast`, or `SanityVisualEditingOverlay`; those are now internal to `LibraryLive`.
+
 # 2026-05-07
 
 ## Image object fit and position are CSS-only
@@ -22,6 +57,40 @@ const Image = styled(UniversalImage, [
 		object-position: top center;
 	`),
 ])
+```
+
+# 2026-05-05
+
+## Removed styled utility alias exports
+
+`library/styled` no longer exports the named aliases `fresponsive`, `ftablet`, `fmobile`, or `unresponsive`.
+
+Use the `f` utility object instead.
+
+**Migration Advice**
+
+```ts
+// before
+import { css, fresponsive, styled, unresponsive } from "library/styled"
+
+fresponsive(css`
+	padding: 20px;
+`)
+
+unresponsive(css`
+	position: fixed;
+`)
+
+// after
+import { css, f, styled } from "library/styled"
+
+f.responsive(css`
+	padding: 20px;
+`)
+
+f.unresponsive(css`
+	position: fixed;
+`)
 ```
 
 # 2026-05-04
