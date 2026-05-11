@@ -10,6 +10,10 @@ const nextDispatcher = dispatcher as Dispatcher
 const refreshScrollStorageKey = "__reformSteadyHotScrollLatestScroll"
 const reloadScrollStorageKey = "__reformSteadyHotScrollLatestScrollBeforeReload"
 const refreshedAtStorageKey = "__reformSteadyHotScrollRefreshedAt"
+let hmrMessageId = 0
+
+const createHMRMessageId = () =>
+	`${Date.now().toString(36)}-${(hmrMessageId++).toString(36)}-${Math.random().toString(36).slice(2)}`
 
 const emitter = new TypedEventEmitter<{
 	beforeRefresh: [string]
@@ -20,11 +24,11 @@ const previousOnBeforeRefresh = nextDispatcher.onBeforeRefresh
 const previousOnRefresh = nextDispatcher.onRefresh
 nextDispatcher.onBeforeRefresh = () => {
 	previousOnBeforeRefresh()
-	emitter.dispatchEvent("beforeRefresh", crypto.randomUUID())
+	emitter.dispatchEvent("beforeRefresh", createHMRMessageId())
 }
 nextDispatcher.onRefresh = () => {
 	previousOnRefresh()
-	emitter.dispatchEvent("afterRefresh", crypto.randomUUID())
+	emitter.dispatchEvent("afterRefresh", createHMRMessageId())
 }
 
 const setSavedScroll = (key: string, scroll: number | null) => {
@@ -59,10 +63,10 @@ export const useHMR =
 
 				useEffect(() => {
 					const before = () => {
-						if (type === "beforeRefresh") sendMessage(crypto.randomUUID())
+						if (type === "beforeRefresh") sendMessage(createHMRMessageId())
 					}
 					const after = () => {
-						if (type === "afterRefresh") sendMessage(crypto.randomUUID())
+						if (type === "afterRefresh") sendMessage(createHMRMessageId())
 					}
 
 					if (type === "beforeRefresh")
@@ -77,7 +81,7 @@ export const useHMR =
 
 				useEventListener("beforeunload", () => {
 					setRefreshedAt()
-					if (type === "beforeReload") sendMessage(crypto.randomUUID())
+					if (type === "beforeReload") sendMessage(createHMRMessageId())
 				})
 
 				useEffect(() => {
@@ -85,7 +89,7 @@ export const useHMR =
 					const refreshedAt = getRefreshedAt()
 					// if refreshed in last 10 seconds, assume it's from an HMR-triggered reload and emit
 					if (initComplete && refreshedAt && Date.now() - refreshedAt < 10000) {
-						sendMessage(crypto.randomUUID())
+						sendMessage(createHMRMessageId())
 					}
 				}, [type, initComplete])
 			}

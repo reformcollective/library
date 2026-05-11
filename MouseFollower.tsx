@@ -6,7 +6,7 @@ import { useClientOnly } from "./ClientOnly"
 import { useLoadState } from "./link/useLoadState"
 import { subscribeToMousePosition } from "./mouse-position"
 import { useIsSmooth } from "./Scroll"
-import { css, styled, unresponsive } from "./styled"
+import { css, f, styled } from "./styled"
 import { useAnimation } from "./useAnimation"
 
 // Default animation values
@@ -132,7 +132,7 @@ export const MouseFollower = ({
 
 const Wrapper = styled(
 	"div",
-	unresponsive(css`
+	f.unresponsive(css`
 		position: fixed;
 		top: 0;
 		left: 0;

@@ -393,8 +393,3 @@ export const f = Object.fromEntries(
 ) as FApi
 
 f.unresponsive = unresponsive
-
-export const fresponsive = f.responsive
-export const ftablet = f.tablet
-export const fmobile = f.mobile
-export { unresponsive }
