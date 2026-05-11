@@ -1,5 +1,5 @@
-import { layer } from "@vanilla-extract/css"
+import { globalLayer } from "@vanilla-extract/css"
 
-export const reset = layer("reset")
-export const foundation = layer("foundation")
-export const library = layer("library")
+export const reset = globalLayer("reset")
+export const foundation = globalLayer("foundation")
+export const library = globalLayer("library")
