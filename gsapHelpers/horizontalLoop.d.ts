@@ -10,7 +10,7 @@ interface HorizontalLoopConfig {
 	paddingRight?: number
 	snap?: boolean | number | ((value: number) => number)
 	draggable?: boolean
-	center?: boolean
+	center?: boolean | gsap.DOMTarget
 	/** Pixel offset from the container's left edge where items snap. Ignored when center is true. */
 	snapOffset?: number
 	onChange?: (items: unknown, index: number) => void

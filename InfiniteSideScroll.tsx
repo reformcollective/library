@@ -1,4 +1,4 @@
-import { useDebounceFn } from "ahooks"
+import { useDebounceFn, useLatest } from "ahooks"
 import { gsap, Observer, ScrollTrigger } from "gsap/all"
 import { library } from "library/layers.css"
 import { css, f, styled } from "library/styled"
@@ -7,7 +7,6 @@ import {
 	type ReactNode,
 	type RefObject,
 	useEffect,
-	useLayoutEffect,
 	useRef,
 	useState,
 } from "react"
@@ -90,6 +89,7 @@ export function InfiniteSideScroll({
 	 */
 	centerMode?: boolean
 }) {
+	const wrapperRef = useRef<HTMLDivElement>(null)
 	const rowRef = useRef<HTMLDivElement>(null)
 	const internalLoopRef = useCombinedRefs(loopRef, undefined)
 	const [numberNeeded, setNumberNeeded] = useState(1)
@@ -101,10 +101,7 @@ export function InfiniteSideScroll({
 		{ wait: 150 },
 	)
 
-	const latestOnChange = useRef(onChange)
-	useLayoutEffect(() => {
-		latestOnChange.current = onChange
-	}, [onChange])
+	const latestOnChange = useLatest(onChange)
 
 	const { result: loop } = useAnimation(
 		() => {
@@ -137,7 +134,7 @@ export function InfiniteSideScroll({
 				draggable,
 				snap: disableSnap ? false : 1,
 				paused: marqueeSpeed === 0,
-				center: centerMode,
+				center: centerMode ? wrapperRef.current : false,
 				speed: marqueeSpeed === 0 ? 2 : marqueeSpeed,
 				reversed,
 				repeat: -1,
@@ -148,18 +145,16 @@ export function InfiniteSideScroll({
 				// pixel offset from left edge where items snap (ignored in center mode)
 				snapOffset: centerMode ? undefined : snapPaddingLeft || undefined,
 				onChange: (_, index) => {
-					latestOnChange.current?.(index)
+					queueMicrotask(() => {
+						latestOnChange.current?.(index)
+					})
 				},
 			})
 			internalLoopRef(loop)
 
 			// start centered
 			if (marqueeSpeed === 0) {
-				loop.toIndex(0)
-				loop.timeScale(999)
-				requestAnimationFrame(() => {
-					loop.timeScale(1)
-				})
+				loop.toIndex(0, { duration: 0 })
 			}
 
 			if (scrollVelocity)
@@ -230,6 +225,7 @@ export function InfiniteSideScroll({
 			internalLoopRef,
 			centerMode,
 			snapPaddingLeft,
+			latestOnChange,
 		],
 		{
 			recreateOnResize: true,
@@ -291,7 +287,7 @@ export function InfiniteSideScroll({
 	const ButtonWrapper = hasTwoButtons ? TwoButtons : OneButton
 
 	return (
-		<Wrapper className={className}>
+		<Wrapper ref={wrapperRef} className={className}>
 			<Row ref={rowRef} className="track">
 				{Array.from({ length: numberNeeded }, (_, index) => (
 					<Fragment key={index}>{children}</Fragment>
