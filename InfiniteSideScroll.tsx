@@ -225,6 +225,7 @@ export function InfiniteSideScroll({
 			internalLoopRef,
 			centerMode,
 			snapPaddingLeft,
+			latestOnChange.current,
 		],
 		{
 			recreateOnResize: true,
