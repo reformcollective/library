@@ -1,0 +1,11 @@
+/*
+	Sanity's hotspot preview thumbnails prioritize keeping the selected hotspot
+	fully visible, so the generated crop box can letterbox inside the preview
+	ratio. Scale that crop box up to cover the preview tile, which better matches
+	site object-fit: cover image rendering.
+*/
+[class^="HotspotImageContainer-sc-"][data-hotspot-cover-preview] > div > div:nth-child(2),
+[class*=" HotspotImageContainer-sc-"][data-hotspot-cover-preview] > div > div:nth-child(2) {
+	transform: scale(var(--studio-hotspot-cover-scale, 1));
+	transform-origin: center;
+}
