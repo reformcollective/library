@@ -1,10 +1,18 @@
 "use client"
 
 import { createImageUrlBuilder } from "@sanity/image-url"
+import { setElementVars } from "@vanilla-extract/dynamic"
 import type { ImageField } from "library/sanity/assetMetadata"
 import { styled } from "library/styled"
 import { stegaClean } from "next-sanity"
-import { use, useEffect, useId, useLayoutEffect, useState } from "react"
+import {
+	type SyntheticEvent,
+	use,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react"
 import { dataset, projectId } from "sanity/lib/api"
 import type { SanityImageCrop, SanityImageHotspot } from "sanity.types"
 import StaticImage, {
@@ -13,17 +21,15 @@ import StaticImage, {
 	prioritizeLoading,
 	type StaticImageProps,
 } from "../StaticImage"
+import { aspectRatioVar, defaultImageClass } from "../StaticImage.css"
+import { useCombinedRefs } from "../useCombinedRefs"
 import {
-	aspectRatioVar,
-	defaultImageClass,
-	objectFitVar,
-	objectPositionVar,
-} from "../StaticImage.css"
-import {
-	lqipClass,
+	hotspotObjectPositionVar,
 	lqipFilterVar,
 	lqipImageRenderingVar,
+	lqipObjectFitVar,
 	lqipVar,
+	sanityImageClass,
 } from "./SanityImage.css"
 
 // todo: ImageField and SanityImageData are the same shape?
@@ -39,39 +45,32 @@ export type SanityImageData<WithAlt extends "true" | "false"> = {
 type SanityProps =
 	| {
 			src: SanityImageData<"false"> | null | undefined
-			alt: string | undefined
+			alt: string
 	  }
 	| {
 			src: SanityImageData<"true"> | null | undefined
-			// the alt should be provided by sanity
 			alt?: undefined
 	  }
 
 export type SanityImageProps = SanityProps & {
-	objectFit?: "contain" | "cover"
 	loading?: "eager" | "lazy" | "default"
+	quality?: number
 	width?: number
 	height?: number
-} & DefaultImageProps
-
-// ─── URL builder ─────────────────────────────────────────────────────────────
+} & Omit<DefaultImageProps, "srcSet">
 
 const urlBuilder = createImageUrlBuilder({ projectId, dataset })
 
 const SRCSET_WIDTHS = [400, 800, 1200, 1600, 2400]
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Checks whether a PNG LQIP data URL contains any actually-transparent pixels
- * by drawing it to an offscreen canvas and sampling the alpha channel.
- * JPEG LQIPs can never be transparent so they are skipped immediately.
- */
 function checkLqipTransparency(
 	lqip: string,
 	onResult: (hasTransparency: boolean) => void,
 ): void {
-	if (!lqip.startsWith("data:image/png;base64,")) return
+	if (!lqip.startsWith("data:image/png;base64,")) {
+		onResult(false)
+		return
+	}
 	const img = new Image()
 	img.onload = () => {
 		const canvas = document.createElement("canvas")
@@ -87,11 +86,10 @@ function checkLqipTransparency(
 				return
 			}
 		}
+		onResult(false)
 	}
 	img.src = lqip
 }
-
-// ─── Type guards ─────────────────────────────────────────────────────────────
 
 const isStringProps = (
 	props: SanityImageProps | StaticImageProps,
@@ -103,8 +101,6 @@ const isNextProps = (
 	!!props.src &&
 	!isStringProps(props) &&
 	("default" in props.src || "src" in props.src)
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SanityUniversalImage(
 	props: SanityImageProps | StaticImageProps,
@@ -118,78 +114,93 @@ export default function SanityUniversalImage(
 }
 
 function SanityImageCore(props: SanityImageProps) {
-	const { src, ...rest } = props
+	const { src, ref, quality = 90, ...rest } = props
 	const defaultEager = use(EagerContext)
 	const prioritizedLoading = prioritizeLoading(props.loading, defaultEager)
-	const [loaded, setLoaded] = useState(false)
+	const srcKey = [
+		src?.asset?._ref,
+		src?.crop?.left,
+		src?.crop?.right,
+		src?.crop?.top,
+		src?.crop?.bottom,
+		quality,
+	].join(":")
+	const [loadedKey, setLoadedKey] = useState<string | null>(null)
+	const loaded = loadedKey === srcKey
 	const [hasTransparency, setHasTransparency] = useState(false)
-	const imgId = useId()
+	const imgRef = useRef<HTMLImageElement>(null)
+	const combinedRef = useCombinedRefs(ref, imgRef)
+	const handleLoad = (event: SyntheticEvent<HTMLImageElement>) => {
+		setLoadedKey(srcKey)
+		rest.onLoad?.(event)
+	}
 
-	// useLayoutEffect fires synchronously before the browser paints after React
-	// commits. Checking el.complete handles already-loaded (cached) images in
-	// the same frame — no flash. The load listener handles images that finish
-	// loading after mount (including client-side navigation).
 	useLayoutEffect(() => {
 		if (loaded) return
-		const el = document.getElementById(imgId) as HTMLImageElement | null
+		const el = imgRef.current
 		if (!el) return
-		const clear = () => setLoaded(true)
-		if (el.complete) {
-			clear()
-			return
+		if (el.complete && el.naturalWidth) {
+			setLoadedKey(srcKey)
 		}
-		el.addEventListener("load", clear, { once: true })
-		return () => el.removeEventListener("load", clear)
-	}, [imgId, loaded])
+	}, [loaded, srcKey])
 
-	// Async pixel-level transparency check. Runs after paint so it doesn't
-	// block the initial render — the LQIP is already visible and the check
-	// completes in milliseconds since the image is tiny.
 	useEffect(() => {
 		const lqip = src?.data?.lqip
+		setHasTransparency(false)
 		if (!lqip) return
-		checkLqipTransparency(lqip, setHasTransparency)
+		let active = true
+		checkLqipTransparency(lqip, (result) => {
+			if (active) setHasTransparency(result)
+		})
+		return () => {
+			active = false
+		}
 	}, [src?.data?.lqip])
 
-	// Hotspot centering via ResizeObserver. Reads the element's actual rendered
-	// dimensions to compute the exact px offset that puts the hotspot at the
-	// center of the container — matches Sanity Studio's crop preview behavior.
-	// Setting object-position as an inline style overrides the CSS-var-based
-	// class rule, so React never clobbers it on re-renders.
 	const hotspotX = src?.hotspot?.x
 	const hotspotY = src?.hotspot?.y
 	const cropLeft = src?.crop?.left
 	const cropRight = src?.crop?.right
 	const cropTop = src?.crop?.top
 	const cropBottom = src?.crop?.bottom
+	const hasHotspot = hotspotX != null && hotspotY != null
+	const shouldTrackRenderedFit = hasHotspot || (!loaded && !!src?.data?.lqip)
 	useLayoutEffect(() => {
-		if (hotspotX == null || hotspotY == null) return
-		const el = document.getElementById(imgId) as HTMLImageElement | null
+		if (!shouldTrackRenderedFit) return
+		const el = imgRef.current
 		if (!el) return
-
-		// Remap hotspot from original image space into post-crop space
-		const l = cropLeft ?? 0
-		const r = cropRight ?? 0
-		const t = cropTop ?? 0
-		const b = cropBottom ?? 0
-		const cw = 1 - l - r
-		const ch = 1 - t - b
-		const hx = Math.max(0, Math.min(1, cw > 0 ? (hotspotX - l) / cw : 0.5))
-		const hy = Math.max(0, Math.min(1, ch > 0 ? (hotspotY - t) / ch : 0.5))
+		let rafId: number | null = null
+		const scheduleCompute = () => {
+			if (rafId != null) return
+			rafId = requestAnimationFrame(compute)
+		}
 
 		const compute = () => {
+			rafId = null
+			const { objectFit: fit } = getComputedStyle(el)
+			setElementVars(el, { [lqipObjectFitVar]: fit || "cover" })
+			if (!hasHotspot || fit !== "cover") {
+				setElementVars(el, { [hotspotObjectPositionVar]: "center" })
+				return
+			}
+			const l = cropLeft ?? 0
+			const r = cropRight ?? 0
+			const t = cropTop ?? 0
+			const b = cropBottom ?? 0
+			const cw = 1 - l - r
+			const ch = 1 - t - b
+			const hx = Math.max(0, Math.min(1, cw > 0 ? (hotspotX - l) / cw : 0.5))
+			const hy = Math.max(0, Math.min(1, ch > 0 ? (hotspotY - t) / ch : 0.5))
 			if (!el.naturalWidth || !el.naturalHeight) return
 			const containerW = el.offsetWidth
 			const containerH = el.offsetHeight
 			if (!containerW || !containerH) return
-			// Scale factor for object-fit: cover
 			const s = Math.max(
 				containerW / el.naturalWidth,
 				containerH / el.naturalHeight,
 			)
 			const scaledW = el.naturalWidth * s
 			const scaledH = el.naturalHeight * s
-			// Offset to center the hotspot, clamped to image bounds
 			const ox = Math.max(
 				containerW - scaledW,
 				Math.min(0, containerW / 2 - scaledW * hx),
@@ -198,35 +209,47 @@ function SanityImageCore(props: SanityImageProps) {
 				containerH - scaledH,
 				Math.min(0, containerH / 2 - scaledH * hy),
 			)
-			el.style.objectPosition = `${ox}px ${oy}px`
+			setElementVars(el, { [hotspotObjectPositionVar]: `${ox}px ${oy}px` })
 		}
 
-		const ro = new ResizeObserver(compute)
+		const ro = new ResizeObserver(scheduleCompute)
 		ro.observe(el)
-		if (el.complete && el.naturalWidth) compute()
-		else el.addEventListener("load", compute, { once: true })
+		window.addEventListener("resize", scheduleCompute)
+		el.addEventListener("load", scheduleCompute)
+		scheduleCompute()
 
 		return () => {
+			if (rafId != null) cancelAnimationFrame(rafId)
 			ro.disconnect()
-			el.removeEventListener("load", compute)
-			el.style.objectPosition = ""
+			window.removeEventListener("resize", scheduleCompute)
+			el.removeEventListener("load", scheduleCompute)
+			setElementVars(el, {
+				[hotspotObjectPositionVar]: "center",
+				[lqipObjectFitVar]: "cover",
+			})
 		}
-	}, [imgId, hotspotX, hotspotY, cropLeft, cropRight, cropTop, cropBottom])
+	}, [
+		shouldTrackRenderedFit,
+		hasHotspot,
+		hotspotX,
+		hotspotY,
+		cropLeft,
+		cropRight,
+		cropTop,
+		cropBottom,
+	])
 
 	if (!src?.asset) return null
 
 	const base = urlBuilder
 		.image({ _type: "image" as const, asset: src.asset, crop: src.crop })
-		.quality(90)
+		.quality(quality)
 		.auto("format")
 	const imgSrc = base.width(1600).url()
 	const srcSet = SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`).join(
 		", ",
 	)
 
-	// All LQIP props are grouped and cleared together on load. Transparent
-	// LQIPs also get pixelated + blur: upscale as hard blocks first, then
-	// smooth — cleaner than bilinear and avoids harsh upscaled edges.
 	const lqip = !loaded && src.data?.lqip
 	const lqipProps = lqip
 		? {
@@ -241,12 +264,12 @@ function SanityImageCore(props: SanityImageProps) {
 	return (
 		<DefaultImg
 			{...rest}
-			id={imgId}
-			alt={stegaClean(rest.alt ?? src.alt)}
+			ref={combinedRef}
+			alt={stegaClean(rest.alt ?? src.alt ?? "")}
 			loading={prioritizedLoading}
+			onLoad={handleLoad}
 			src={imgSrc}
 			srcSet={srcSet}
-			objectFit={props.objectFit ?? "cover"}
 			aspectRatio={
 				props.width && props.height
 					? `${props.width}/${props.height}`
@@ -259,13 +282,9 @@ function SanityImageCore(props: SanityImageProps) {
 	)
 }
 
-// ─── Styled primitive ────────────────────────────────────────────────────────
-
 const DefaultImg = styled("img", {
-	base: [defaultImageClass, lqipClass],
+	base: [defaultImageClass, sanityImageClass],
 	tokens: {
-		objectFit: { token: objectFitVar },
-		objectPosition: { token: objectPositionVar },
 		aspectRatio: { token: aspectRatioVar },
 		lqip: { token: lqipVar },
 		lqipFilter: { token: lqipFilterVar },

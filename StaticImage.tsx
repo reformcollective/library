@@ -5,12 +5,7 @@ import type { PlaceholderValue } from "next/dist/shared/lib/get-img-props"
 import type { StaticImageData } from "next/image"
 import Image from "next/image"
 import { createContext, type ImgHTMLAttributes, use } from "react"
-import {
-	aspectRatioVar,
-	defaultImageClass,
-	objectFitVar,
-	objectPositionVar,
-} from "./StaticImage.css"
+import { aspectRatioVar, defaultImageClass } from "./StaticImage.css"
 
 export const EagerContext = createContext(false)
 export const EagerImages = ({ children }: { children: React.ReactNode }) => (
@@ -20,7 +15,7 @@ export const EagerImages = ({ children }: { children: React.ReactNode }) => (
 type LoadingType = "eager" | "lazy" | "default"
 export type DefaultImageProps = Omit<
 	ImgHTMLAttributes<HTMLImageElement>,
-	"src" | "width" | "height" | "loading"
+	"src" | "width" | "height" | "loading" | "alt"
 > & { ref?: React.Ref<HTMLImageElement> }
 export const prioritizeLoading = (
 	loading: LoadingType | undefined,
@@ -32,36 +27,40 @@ export const prioritizeLoading = (
 	return "lazy"
 }
 
-export type StaticImageProps = DefaultImageProps & {
+type BaseStaticImageProps = DefaultImageProps & {
 	alt: string
-	objectFit?: "contain" | "cover"
-	objectPosition?: string
 	loading?: LoadingType
-	sizes?: string
-	quality?: number
-	priority?: boolean
-	placeholder?: PlaceholderValue
-} & (
+}
+
+export type StaticImageProps = BaseStaticImageProps &
+	(
 		| {
 				src: StaticImageData
 				width?: number
 				height?: number
+				sizes?: string
+				quality?: number
+				priority?: boolean
+				placeholder?: PlaceholderValue
+				srcSet?: never
 		  }
 		| {
 				src: string
 				width: number
 				height: number
+				quality?: never
+				priority?: never
+				placeholder?: never
 		  }
 	)
 
 export default function StaticImage({
 	src,
 	alt,
-	objectFit = "cover",
-	objectPosition,
 	loading,
-	sizes = "100vw",
+	sizes,
 	quality = 90,
+	priority,
 	placeholder = "empty",
 	...otherProps
 }: StaticImageProps) {
@@ -71,8 +70,6 @@ export default function StaticImage({
 	const prioritizedLoading = prioritizeLoading(loading, defaultEager)
 
 	const props = {
-		objectFit: objectFit,
-		objectPosition: objectPosition,
 		alt,
 		loading: prioritizedLoading,
 		...otherProps,
@@ -83,6 +80,7 @@ export default function StaticImage({
 			<DefaultImage
 				{...props}
 				src={src}
+				sizes={sizes}
 				aspectRatio={
 					props.width && props.height ? `${props.width}/${props.height}` : ""
 				}
@@ -98,7 +96,8 @@ export default function StaticImage({
 			{...props}
 			src={src}
 			quality={quality}
-			sizes={sizes}
+			priority={priority}
+			sizes={sizes ?? "100vw"}
 			aspectRatio={
 				props.width && props.height
 					? `${props.width}/${props.height}`
@@ -111,8 +110,6 @@ export default function StaticImage({
 export const defaultImageConfig = {
 	base: [defaultImageClass],
 	tokens: {
-		objectFit: { token: objectFitVar },
-		objectPosition: { token: objectPositionVar },
 		aspectRatio: { token: aspectRatioVar },
 	} as const,
 }
