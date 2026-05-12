@@ -34,6 +34,31 @@ import {
 
 Remove any direct imports of `FirefoxFix`, `SanityLiveProxy`, `SanityPreviewStatusToast`, or `SanityVisualEditingOverlay`; those are now internal to `LibraryLive`.
 
+# 2026-05-07
+
+## Image object fit and position are CSS-only
+
+`StaticImage`, `SanityImage`, and `UniversalImage` no longer accept `objectFit` or `objectPosition` props. Set `object-fit` and `object-position` in CSS instead.
+
+`SanityImage` hotspot positioning now reads the rendered `object-fit` value at runtime and only computes hotspot offsets when the computed fit is `cover`. The computed hotspot `object-position` is applied in the library CSS layer, so caller `object-position` CSS overrides it through the cascade.
+
+`SanityImage` now accepts a `quality` prop for Sanity CDN image quality, matching the existing `StaticImage` quality API.
+
+**Migration Advice**
+
+```tsx
+// before
+<UniversalImage src={image} objectFit="contain" objectPosition="top center" />
+
+// after
+const Image = styled(UniversalImage, [
+	f.responsive(css`
+		object-fit: contain;
+		object-position: top center;
+	`),
+])
+```
+
 # 2026-05-05
 
 ## Removed styled utility alias exports
