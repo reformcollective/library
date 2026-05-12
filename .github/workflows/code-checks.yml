@@ -73,5 +73,6 @@ jobs:
           cache: true
           standalone: true
       - run: pnpm run lint
+      - run: pnpm test
       # running a build will also check types
       - run: pnpm run build
