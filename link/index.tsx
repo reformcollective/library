@@ -85,7 +85,8 @@ export default function UniversalLink({
 		)
 	}
 
-	const { url, newTab } = resolveRoute(props.href)
+	const { url, newTab: routeNewTab } = resolveRoute(props.href)
+	const newTab = props.openInNewTab ?? routeNewTab
 	const internal = url ? linkIsInternal(url) : false
 
 	const onClick = (e: React.MouseEvent) => {
