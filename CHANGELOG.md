@@ -1,3 +1,8 @@
+# 2026-05-12
+
+## CI now validates `pnpm test`
+
+The reusable code checks workflow now runs `pnpm test` before building. In starter projects, this exercises the root Wireit `test` target and runs the library test script through `./library:test`.
 
 # 2026-05-08
 
