@@ -1,3 +1,103 @@
+# 2026-05-14
+
+## Sanity apps should use Cache Components
+
+Sanity-backed Next.js apps are now expected to run with `cacheComponents: true` and `next-sanity@cache-components`. The library Sanity live helpers have been updated for the `next-sanity` cache-components API, and `library/next/ensureStaticParams` is available for the build-time validation requirement that every `generateStaticParams` returns at least one result.
+
+**Migration Advice**
+
+Install the cache-components canary:
+
+```bash
+pnpm add next-sanity@cache-components --save-exact
+```
+
+Enable Cache Components and Sanity's cache life preset:
+
+```ts
+import type { NextConfig } from "next"
+import { sanity } from "next-sanity/live/cache-life"
+
+const nextConfig: NextConfig = {
+	cacheComponents: true,
+	cacheLife: { sanity },
+}
+
+export default nextConfig
+```
+
+Replace the old app-level `library/sanity/live` wrapper with a project-local strict `defineLive` setup. Export explicit helpers for dynamic rendering decisions and static params:
+
+```ts
+import { cookies, draftMode } from "next/headers"
+import { type QueryParams } from "next-sanity"
+import {
+	defineLive,
+	resolvePerspectiveFromCookies,
+	type LivePerspective,
+} from "next-sanity/live"
+import { client } from "sanity/lib/client"
+import { token } from "sanity/lib/token"
+
+export interface DynamicFetchOptions {
+	perspective: LivePerspective
+	stega: boolean
+	isDraftMode: boolean
+}
+
+export const { sanityFetch, SanityLive } = defineLive({
+	client,
+	serverToken: token,
+	browserToken: token,
+	strict: true,
+})
+
+export async function getDynamicFetchOptions(): Promise<DynamicFetchOptions> {
+	const { isEnabled: isDraftMode } = await draftMode()
+	if (!isDraftMode) return { perspective: "published", stega: false, isDraftMode }
+
+	const perspective = await resolvePerspectiveFromCookies({ cookies: await cookies() })
+	return { perspective: perspective ?? "drafts", stega: true, isDraftMode }
+}
+
+export async function sanityFetchStaticParams<const QueryString extends string>({
+	query,
+	params = {},
+}: {
+	query: QueryString
+	params?: QueryParams
+}) {
+	return client.fetch(query, params, {
+		perspective: "published",
+		stega: false,
+		useCdn: true,
+	})
+}
+```
+
+Update every `sanityFetch` call to pass explicit `perspective` and `stega`. Use `stega: false` for metadata, sitemaps, static params, and server actions where encoded strings must not leak into output.
+
+For routes that read draft mode or cookies, use the three-layer route shape:
+
+- Page/layout reads `draftMode()` and branches.
+- Dynamic child resolves `getDynamicFetchOptions()` inside `<Suspense>`.
+- Cached child uses `"use cache"` and calls `sanityFetch({ perspective, stega })`.
+
+With Cache Components, remove incompatible segment config exports such as `dynamic`, `dynamicParams`, `revalidate`, and `fetchCache`; express caching with `"use cache"` boundaries instead.
+
+Every `generateStaticParams` must return at least one result. Use the helper for CMS-backed routes that can have no documents in a new dataset:
+
+```ts
+import { ensureStaticParams } from "library/next/ensureStaticParams"
+
+export async function generateStaticParams() {
+	const posts = await sanityFetchStaticParams({ query: postSlugsQuery })
+	return ensureStaticParams(posts, { slug: "__missing-post__" })
+}
+```
+
+The fallback value should be route-specific and should naturally hit the route's existing `notFound()` path.
+
 # 2026-05-12
 
 ## CI now validates `pnpm test`
