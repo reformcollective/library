@@ -21,7 +21,6 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	client,
 	serverToken: token,
 	browserToken: token,
-	fetchOptions: { revalidate: Infinity },
 })
 
 type IsAny<T> = 0 extends 1 & T ? true : false
@@ -79,13 +78,7 @@ export const LibraryLive = async () => {
 
 	return (
 		<SanityLiveRuntime isDraftMode={isDraftMode} useLiveProxy={useLiveProxy}>
-			<InternalLive
-				onError={handleError}
-				refreshOnFocus={false}
-				refreshOnMount={true}
-				refreshOnReconnect={true}
-				intervalOnGoAway={false}
-			/>
+			<InternalLive onError={handleError} />
 		</SanityLiveRuntime>
 	)
 }
@@ -100,9 +93,9 @@ if (client.config().useCdn !== true) {
 /**
  * validate sanity versions - read actual installed versions from node_modules
  */
-if (!semver.satisfies(nextSanityVersion, "^12.0.0")) {
+if (!semver.satisfies(nextSanityVersion, "^13.0.0-0")) {
 	throw new Error(
-		`next-sanity must satisfy version ^12.0.0! (installed: ${nextSanityVersion})`,
+		`next-sanity must satisfy version ^13.0.0-0! (installed: ${nextSanityVersion})`,
 	)
 }
 if (!semver.satisfies(sanityVersion, "^5.0.0")) {

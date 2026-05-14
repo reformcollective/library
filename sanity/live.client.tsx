@@ -6,21 +6,14 @@ import { browserData } from "library/deviceDetection"
 import { useHMR } from "library/useHMR"
 import { usePathname, useRouter } from "next/navigation"
 import { stegaClean } from "next-sanity"
-import {
-	type DraftEnvironment,
-	useDraftModeEnvironment,
-} from "next-sanity/hooks"
 import { isCorsOriginError } from "next-sanity/live"
-import { revalidateSyncTags } from "next-sanity/live/server-actions"
+import { revalidateSyncTagsAction } from "next-sanity/live/server-actions"
 import { VisualEditing } from "next-sanity/visual-editing"
 import type { ComponentProps, ReactNode } from "react"
 import { useEffect, useState, useTransition } from "react"
 import { studioUrl } from "sanity/lib/api"
 import { Toaster, toast } from "sonner"
 import { disableDraftMode } from "./disableDraftMode"
-
-const isPresentationEnvironment = (environment: DraftEnvironment) =>
-	environment === "presentation-iframe" || environment === "presentation-window"
 
 const presentationSearchParams = ["sanity-preview-perspective"]
 
@@ -67,7 +60,10 @@ export function SanityLiveRuntime({
 		<>
 			<Toaster />
 			{useDirectLive ? (
-				<SanityLiveDirectRuntime isDraftMode={isDraftMode}>
+				<SanityLiveDirectRuntime
+					isDraftMode={isDraftMode}
+					isPresentation={isPossiblyPresentationPreview}
+				>
 					{children}
 				</SanityLiveDirectRuntime>
 			) : (
@@ -80,13 +76,12 @@ export function SanityLiveRuntime({
 function SanityLiveDirectRuntime({
 	children,
 	isDraftMode,
+	isPresentation,
 }: {
 	children: ReactNode
 	isDraftMode: boolean
+	isPresentation: boolean
 }) {
-	const environment = useDraftModeEnvironment()
-	const isPresentation = isPresentationEnvironment(environment)
-
 	return (
 		<>
 			{children}
@@ -118,7 +113,7 @@ export function SanityLiveProxy() {
 		eventSource.onmessage = (e) => {
 			const event = JSON.parse(e.data) as LiveEvent
 			if (event.type === "message") {
-				revalidateSyncTags(event.tags)
+				revalidateSyncTagsAction(event.tags)
 			} else if (event.type === "restart" || event.type === "reconnect") {
 				router.refresh()
 			}

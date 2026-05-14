@@ -1,5 +1,5 @@
 import { usePathname } from "next/navigation"
-import { createContext, use, useEffect, useState } from "react"
+import { createContext, Suspense, use, useEffect, useState } from "react"
 import { loader } from "./loader"
 
 type PageTransition = {
@@ -23,18 +23,26 @@ export const PageTransitionProvider = ({
 	)
 	const [animations] = useState(() => new Set<PageTransition>())
 
-	const pathname = usePathname()
-	useEffect(() => {
-		loader.dispatchEvent("pageCommit", pathname)
-	}, [pathname])
-
 	return (
 		<TransitionsContext.Provider
 			value={{ animations, isAnimating, setIsAnimating }}
 		>
-			{children}
+			<Suspense fallback={null}>
+				<PageTransitionCommit />
+			</Suspense>
+			<Suspense fallback={null}>{children}</Suspense>
 		</TransitionsContext.Provider>
 	)
+}
+
+function PageTransitionCommit() {
+	const pathname = usePathname()
+
+	useEffect(() => {
+		loader.dispatchEvent("pageCommit", pathname)
+	}, [pathname])
+
+	return null
 }
 
 export const usePageTransition = (transition: PageTransition = {}) => {
