@@ -66,6 +66,7 @@ export default function UniversalLink({
 	ref,
 	onNavigate,
 	onBeforeNavigate,
+	openInNewTab,
 	...props
 }: UniversalLinkProps) {
 	const transitioner = useTransitioner()
@@ -86,7 +87,7 @@ export default function UniversalLink({
 	}
 
 	const { url, newTab: routeNewTab } = resolveRoute(props.href)
-	const newTab = props.openInNewTab ?? routeNewTab
+	const newTab = openInNewTab ?? routeNewTab
 	const internal = url ? linkIsInternal(url) : false
 
 	const onClick = (e: React.MouseEvent) => {
