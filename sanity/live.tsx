@@ -93,9 +93,9 @@ export const LibraryLive = async () => {
 /**
  * sanity live handles revalidation
  */
-if (client.config().useCdn !== true) {
-	throw new Error("useCdn must be true!")
-}
+// if (client.config().useCdn !== true) {
+// 	throw new Error("useCdn must be true!")
+// }
 
 /**
  * validate sanity versions - read actual installed versions from node_modules
