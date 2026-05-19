@@ -4,6 +4,7 @@ import type {
 	ClientReturn,
 	ContentSourceMap,
 	QueryParams,
+	SanityClient,
 } from "next-sanity"
 import { defineLive } from "next-sanity/live"
 import { version as nextSanityVersion } from "next-sanity/package.json"
@@ -13,15 +14,52 @@ import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
 import { handleError, SanityLiveRuntime } from "./live.client"
 
+// defineLive recalculates useCdn from perspective (true when "published"), ignoring the
+// client-level useCdn setting. This proxy intercepts withConfig and fetch to force
+// useCdn: false so all fetches go to api.sanity.io instead of apicdn.sanity.io.
+function withForcedNoCdn(c: SanityClient): SanityClient {
+	return new Proxy(c, {
+		get(target, prop) {
+			if (prop === "withConfig") {
+				return (cfg: Parameters<SanityClient["withConfig"]>[0]) =>
+					withForcedNoCdn(target.withConfig({ ...cfg, useCdn: false }))
+			}
+			if (prop === "fetch") {
+				return (
+					query: string,
+					params: Parameters<typeof target.fetch>[1],
+					opts: Record<string, unknown> = {},
+				) => {
+					const url = target.getUrl(query, false)
+					console.log(
+						"[sanity] fetch via",
+						new URL(url).hostname,
+						"| useCdn forced false",
+					)
+					return target.fetch(query, params, { ...opts, useCdn: false })
+				}
+			}
+			// Private class fields (#clientConfig etc.) are only accessible on the real instance.
+			// Using target as receiver and binding functions ensures `this` is never the Proxy.
+			const value = Reflect.get(target, prop, target)
+			return typeof value === "function"
+				? (value as Function).bind(target)
+				: value
+		},
+	})
+}
+
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
  * Learn more: https://github.com/sanity-io/next-sanity?tab=readme-ov-file#1-configure-definelive
  */
 const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
-	client,
+	client:
+		process.env.NODE_ENV === "development" ? withForcedNoCdn(client) : client,
 	serverToken: token,
 	browserToken: token,
-	fetchOptions: { revalidate: Infinity },
+	fetchOptions:
+		process.env.NODE_ENV === "development" ? {} : { revalidate: Infinity },
 })
 
 type IsAny<T> = 0 extends 1 & T ? true : false
@@ -82,7 +120,7 @@ export const LibraryLive = async () => {
 			<InternalLive
 				onError={handleError}
 				refreshOnFocus={false}
-				refreshOnMount={true}
+				refreshOnMount={false}
 				refreshOnReconnect={true}
 				intervalOnGoAway={false}
 			/>
