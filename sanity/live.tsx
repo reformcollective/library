@@ -13,12 +13,14 @@ import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
 import { handleError, SanityLiveRuntime } from "./live.client"
 
+const libraryClient = client.withConfig({ useCdn: false })
+
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
  * Learn more: https://github.com/sanity-io/next-sanity?tab=readme-ov-file#1-configure-definelive
  */
 const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
-	client,
+	client: libraryClient,
 	serverToken: token,
 	browserToken: token,
 	fetchOptions: { revalidate: Infinity },
@@ -88,13 +90,6 @@ export const LibraryLive = async () => {
 			/>
 		</SanityLiveRuntime>
 	)
-}
-
-/**
- * sanity live handles revalidation
- */
-if (client.config().useCdn !== true) {
-	throw new Error("useCdn must be true!")
 }
 
 /**
