@@ -15,6 +15,7 @@ type PossibleMarks =
 	| "code"
 	| "underline"
 	| "strike-through"
+	| "sup"
 	| "super"
 	| "sub"
 
