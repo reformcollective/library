@@ -25,20 +25,27 @@ function makeNoCdnProxy(target: SanityClientLike): SanityClientLike {
 			if (prop === "fetch") {
 				type FetchOptions = Parameters<typeof t.fetch>[2]
 				return (query: string, params?: QueryParams, options?: FetchOptions) =>
-					Reflect.get(t, prop, receiver).call(t, query, params, { ...options, useCdn: false } as FetchOptions)
+					Reflect.get(t, prop, receiver).call(t, query, params, {
+						...options,
+						useCdn: false,
+					} as FetchOptions)
 			}
 			if (prop === "withConfig") {
 				return (...args: Parameters<typeof t.withConfig>) =>
 					makeNoCdnProxy(Reflect.get(t, prop, receiver).call(t, ...args))
 			}
 			const value = Reflect.get(t, prop, receiver)
-			return typeof value === "function" ? (value as (...a: unknown[]) => unknown).bind(t) : value
+			return typeof value === "function"
+				? (value as (...a: unknown[]) => unknown).bind(t)
+				: value
 		},
 	})
 }
 
 const libraryClient =
-	process.env.NODE_ENV === "development" ? makeNoCdnProxy(client) : client.withConfig({ useCdn: false })
+	process.env.NODE_ENV === "development"
+		? makeNoCdnProxy(client)
+		: client.withConfig({ useCdn: false })
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content
