@@ -4,6 +4,11 @@ import { listStaticRoutes } from "library/list-pages"
 import type { CustomLinkType } from "sanity-plugin-link-field"
 import { staticPageLinkType } from "./resolve"
 
+type StaticLinkOption = {
+	title: string
+	value: string
+}
+
 const staticPageOptions = await compileTime(async () => {
 	const routes = await listStaticRoutes()
 
@@ -13,12 +18,12 @@ const staticPageOptions = await compileTime(async () => {
 	}))
 })
 
-export function staticLinkType(): CustomLinkType {
+export function staticLinkType(options = staticPageOptions): CustomLinkType {
 	return {
 		title: "Static Page",
 		value: staticPageLinkType,
 		icon: LinkIcon,
 		description: "Link to a hardcoded route in the app.",
-		options: staticPageOptions,
+		options: options satisfies StaticLinkOption[],
 	}
 }

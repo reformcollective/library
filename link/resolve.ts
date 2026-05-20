@@ -2,6 +2,8 @@ import { stegaClean } from "next-sanity"
 import { linkIsInternal } from "../functions"
 
 export const staticPageLinkType = "static-page"
+export const smsLinkType = "sms"
+export const documentLinkType = "document"
 
 export type CMSLink = {
 	_type: "link"
@@ -12,7 +14,10 @@ export type CMSLink = {
 	url?: string
 	email?: string
 	phone?: string
+	sms?: string
 	value?: string
+	fileUrl?: string | null
+	fileName?: string | null
 	blank?: boolean
 	parameters?: string
 	anchor?: string
@@ -30,7 +35,11 @@ const normalizeInternalPath = (path: string) => {
 
 export const resolveRoute = (
 	link: LinkHref,
-): { url: string | undefined; newTab: boolean } => {
+): {
+	url: string | undefined
+	newTab: boolean
+	download?: string | boolean
+} => {
 	if (typeof link === "string")
 		return {
 			url: link,
@@ -68,12 +77,27 @@ export const resolveRoute = (
 		}
 	}
 
+	if (link.type === smsLinkType && link.sms) {
+		return {
+			url: `sms:${stegaClean(link.sms || "")}`,
+			newTab: false,
+		}
+	}
+
 	if (link.type === staticPageLinkType && link.value) {
 		const url = `${stegaClean(link.value)}${stegaClean(link.parameters || "")}${stegaClean(link.anchor || "")}`
 
 		return {
 			url,
 			newTab: link.blank ?? !linkIsInternal(url),
+		}
+	}
+
+	if (link.type === documentLinkType && link.fileUrl) {
+		return {
+			url: stegaClean(link.fileUrl),
+			newTab: link.blank ?? true,
+			download: stegaClean(link.fileName || "") || true,
 		}
 	}
 
