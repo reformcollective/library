@@ -1,5 +1,6 @@
 import { InfoOutlineIcon, PlayIcon } from "@sanity/icons"
 import type libraryConfig from "app/libraryConfig"
+import { requiredLinkField } from "library/link/linkField"
 import type { StaticImageData } from "next/image"
 import {
 	MATCH_URL_SPOTIFY,
@@ -21,7 +22,6 @@ import {
 	type Path,
 	type SanityDocument,
 } from "sanity"
-import { requiredLinkField } from "sanity-plugin-link-field"
 
 type HiddenValidationContext = {
 	currentUser?: unknown

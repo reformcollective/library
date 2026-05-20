@@ -86,7 +86,7 @@ export default function UniversalLink({
 		)
 	}
 
-	const { url, newTab: routeNewTab } = resolveRoute(props.href)
+	const { url, newTab: routeNewTab, download } = resolveRoute(props.href)
 	const newTab = openInNewTab ?? routeNewTab
 	const internal = url ? linkIsInternal(url) : false
 
@@ -109,6 +109,7 @@ export default function UniversalLink({
 			href={url as any}
 			ref={ref as Ref<HTMLAnchorElement>}
 			target={newTab ? "_blank" : undefined}
+			download={download}
 			onClick={onClick}
 			suppressHydrationWarning
 			onNavigate={onNavigate}
@@ -121,6 +122,7 @@ export default function UniversalLink({
 			href={url ?? undefined}
 			ref={ref as Ref<HTMLAnchorElement>}
 			target={newTab ? "_blank" : undefined}
+			download={download}
 			onClick={onClick}
 		>
 			{children}

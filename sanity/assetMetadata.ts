@@ -65,7 +65,10 @@ export type LinkField = {
 	url?: string
 	email?: string
 	phone?: string
+	sms?: string
 	value?: string
+	fileUrl?: string | null
+	fileName?: string | null
 	blank?: boolean
 	parameters?: string
 	anchor?: string
@@ -76,6 +79,8 @@ const internalSlugField = `"internalSlug": select(
 		type != "internal" => null,
 		${documentPathProjection("internalLink->")}
 	)` as const
+const fileFields =
+	`"fileUrl": file.asset->url, "fileName": file.asset->originalFilename` as const
 
 const imageDataProjection = `{
 		"lqip": asset->metadata.lqip,
@@ -110,7 +115,7 @@ const muxVideoDataProjection = `{
 		"videoDuration": asset->data.duration
 	}` as const
 
-const linkProjection = `{ ..., ${internalSlugField} }` as const
+const linkProjection = `{ ..., ${internalSlugField}, ${fileFields} }` as const
 
 const imageProjection = `{
 		...,
