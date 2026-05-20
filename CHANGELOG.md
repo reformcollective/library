@@ -1,13 +1,3 @@
-# 2026-05-20
-
-## Link fields support SMS and file downloads
-
-The shared Sanity link field now supports `SMS` and `File Download` link types in addition to internal, external, email, phone, and custom static page links.
-
-Use `linkField(...)` from `library/link/linkField` in Sanity config so these shared link types are available. Existing GROQ link projections should continue using `linkField(...)` from `library/sanity/assetMetadata`; it now includes file download metadata.
-
-Rendered links resolve SMS links to `sms:` URLs. File download links resolve to the uploaded Sanity file asset URL and pass a `download` attribute through `library/link`.
-
 # 2026-05-12
 
 ## CI now validates `pnpm test`
