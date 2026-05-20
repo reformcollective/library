@@ -2,8 +2,10 @@
  * This plugin contains all the logic for setting up the singletons
  */
 
+import type { ComponentType } from "react"
 import { type DocumentDefinition, definePlugin } from "sanity"
 import type {
+	Child,
 	ListItemBuilder,
 	StructureBuilder,
 	StructureResolver,
@@ -41,26 +43,141 @@ type GroupItem = {
 	hiddenTypes: string[]
 }
 
+type StructureListChild =
+	| ListItemBuilder
+	| ReturnType<StructureBuilder["divider"]>
+type StructureGroupItem = string | StructureListChild
+type StructureGroupBase = {
+	title: string
+	icon?: ComponentType
+	hiddenTypes?: string[]
+}
+type StructureGroupWithItems = StructureGroupBase & {
+	items:
+		| StructureGroupItem[]
+		| ((S: StructureBuilder) => StructureGroupItem[] | StructureListChild)
+}
+type StructureGroupWithChild = StructureGroupBase & {
+	child: (S: StructureBuilder) => Child
+}
+type StructureGroup = StructureGroupWithItems | StructureGroupWithChild
+type PageStructureOptions = {
+	singletons: DocumentDefinition[]
+	groups?: StructureGroup[]
+	hiddenTypes?: string[]
+}
+
+function singletonItem(S: StructureBuilder, typeDef: DocumentDefinition) {
+	return S.listItem()
+		.title(typeDef?.title ?? "Untitled")
+		.icon(typeDef.icon)
+		.child(
+			S.editor()
+				.id(typeDef.name)
+				.schemaType(typeDef.name)
+				.documentId(typeDef.name),
+		)
+}
+
+function resolveGroupItem(S: StructureBuilder, item: StructureGroupItem) {
+	if (typeof item === "string") return S.documentTypeListItem(item)
+	return item
+}
+
+function groupItem(S: StructureBuilder, group: StructureGroup) {
+	if ("child" in group) {
+		return S.listItem()
+			.title(group.title)
+			.icon(group.icon)
+			.child(group.child(S))
+	}
+
+	const rawItems =
+		typeof group.items === "function" ? group.items(S) : group.items
+	const items = Array.isArray(rawItems) ? rawItems : [rawItems]
+
+	return S.listItem()
+		.title(group.title)
+		.icon(group.icon)
+		.child(
+			S.list()
+				.title(group.title)
+				.items(items.map((item) => resolveGroupItem(S, item))),
+		)
+}
+
+function getGroupHiddenTypes(groups: StructureGroup[]) {
+	return groups.flatMap((group) => [
+		...(group.hiddenTypes ?? []),
+		...("items" in group && Array.isArray(group.items)
+			? group.items.filter((item): item is string => typeof item === "string")
+			: []),
+	])
+}
+
+function createPageStructure({
+	groups = [],
+	hiddenTypes = [],
+	singletons,
+}: PageStructureOptions): StructureResolver {
+	return (S) => {
+		const singletonItems = singletons.map((typeDef) =>
+			singletonItem(S, typeDef),
+		)
+		const hiddenTypeIds = [
+			...singletons.map((singleton) => singleton.name),
+			...hiddenTypes,
+			...getGroupHiddenTypes(groups),
+		]
+
+		const nonSingletonItems = S.documentTypeListItems().filter(
+			(listItem) => !hiddenTypeIds.includes(listItem.getId() ?? ""),
+		)
+		const middleItems = ["media.tag", "assist.instruction.context"]
+			.map((id) => nonSingletonItems.find((item) => item.getId() === id))
+			.filter(Boolean)
+		const hiddenItems = ["mux.videoAsset"].map((id) =>
+			nonSingletonItems.find((item) => item.getId() === id),
+		)
+		const restOfItems = nonSingletonItems.filter(
+			(item) => !middleItems.includes(item) && !hiddenItems.includes(item),
+		)
+		const groupItems = groups.map((group) => groupItem(S, group))
+
+		return S.list()
+			.title("Content Types")
+			.items([
+				...singletonItems,
+				...groupItems,
+				S.divider(),
+				...middleItems,
+				S.divider(),
+				...restOfItems,
+			])
+	}
+}
+
 // The StructureResolver is how we're changing the DeskTool structure to linking to document (named Singleton)
 // like how "Home" is handled.
-export const pageStructure = (
+export function pageStructure(options: PageStructureOptions): StructureResolver
+export function pageStructure(
 	typeDefArray: DocumentDefinition[],
 	groups?: GroupItem[],
-): StructureResolver => {
+): StructureResolver
+export function pageStructure(
+	optionsOrTypeDefArray: PageStructureOptions | DocumentDefinition[],
+	groups?: GroupItem[],
+): StructureResolver {
+	if (!Array.isArray(optionsOrTypeDefArray))
+		return createPageStructure(optionsOrTypeDefArray)
+
+	const typeDefArray = optionsOrTypeDefArray
 	return (S) => {
 		// Goes through all of the singletons that were provided and translates them into something the
 		// Structure tool can understand
-		const singletonItems = typeDefArray.map((typeDef) => {
-			return S.listItem()
-				.title(typeDef?.title ?? "Untitled")
-				.icon(typeDef.icon)
-				.child(
-					S.editor()
-						.id(typeDef.name)
-						.schemaType(typeDef.name)
-						.documentId(typeDef.name),
-				)
-		})
+		const singletonItems = typeDefArray.map((typeDef) =>
+			singletonItem(S, typeDef),
+		)
 
 		const hiddenTypes = [
 			...typeDefArray.map((s) => s.name),
