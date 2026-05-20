@@ -1,3 +1,11 @@
+# 2026-05-20
+
+## Link fields support SMS and document downloads
+
+The shared link resolver and GROQ projection now support the `sms` and `document` link types from `sanity-plugin-link-field` PR 35. `document` links resolve to the uploaded Sanity file asset URL and pass a `download` attribute through `library/link`.
+
+Projects can use the packed PR build at `library/vendor/sanity-plugin-link-field-pr35-91e3ddb.tgz` until upstream publishes a release.
+
 # 2026-05-12
 
 ## CI now validates `pnpm test`

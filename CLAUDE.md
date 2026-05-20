@@ -14,6 +14,8 @@ Prefer existing utilities and patterns in `library/` over one-off implementation
 
 For styling, use `library/styled/README.md` and existing styled components as the source of truth. Use project tokens from `app/styles/colors` and `app/styles/text`. Do not use inline styles.
 
+Project text styles may use Capsize-generated pseudo-elements. Apply them to the element that directly contains text, not to layout wrappers such as flex or grid containers where `::before`/`::after` would become layout items.
+
 For animation, prefer the shared GSAP pattern built around `library/useAnimation`. 
 
 For images, use `StaticImage` for raster assets and `SanityImage` for CMS images. Reserve `app/images/` for shared global assets and co-locate component-specific assets with the component that uses them. Follow the SVG import patterns from `next.config.ts`: use `*.inline.svg` for React component imports and plain `.svg` for image asset imports.
