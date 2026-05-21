@@ -63,7 +63,7 @@ For routes that read draft mode or cookies, use the three-layer route shape:
 - Dynamic child resolves `getDynamicFetchOptions()` inside `<Suspense>`.
 - Cached child uses `"use cache"` and calls `sanityFetch({ perspective, stega })`.
 
-With Cache Components, remove incompatible segment config exports such as `dynamic`, `dynamicParams`, `revalidate`, and `fetchCache`; express caching with `"use cache"` boundaries instead.
+With Cache Components, remove incompatible segment config exports such as `dynamic`, `dynamicParams`, `revalidate`, and `fetchCache`; express caching with `"use cache"` boundaries instead. This includes removing any app-level re-exports of the old `library/segmentDefaults` module from layouts, pages, and dynamic route segments.
 
 Every `generateStaticParams` must return at least one result. Use the helper for CMS-backed routes that can have no documents in a new dataset:
 
