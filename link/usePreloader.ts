@@ -184,6 +184,16 @@ export const usePreloader = ({
 		await processScroll()
 
 		/**
+		 * wait our specified minimum duration before winding anything down.
+		 * this must happen before slow/stopAnimations so looping animations
+		 * keep running for the full minimum on fast loads — otherwise they're
+		 * stopped the instant hydration completes and freeze early
+		 */
+		const timeSinceStart = performance.now()
+		const timeToWait = Math.max(0, minDuration - timeSinceStart)
+		await sleep(timeToWait)
+
+		/**
 		 * slow down animations
 		 */
 		if (slowAnimations && scope) {
@@ -243,13 +253,6 @@ export const usePreloader = ({
 		if (beforeReady) globalReadyPromises.push(beforeReady)
 		animationReadyPromise.resolve(true)
 		await recursiveAllSettled(globalReadyPromises)
-
-		/**
-		 * wait our specified minimum duration
-		 */
-		const timeSinceStart = performance.now()
-		const timeToWait = Math.max(0, minDuration - timeSinceStart)
-		await sleep(timeToWait)
 
 		// any animations caused by our state update must be part of the preloader!
 		// we can use this to determine the preloader out duration automatically
