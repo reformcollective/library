@@ -3,6 +3,7 @@ import { compileTime } from "./compile-time.ts"
 
 const pageFileGlob = "app/**/page.{js,jsx,ts,tsx}"
 const pageFilePattern = /^page\.(js|jsx|ts|tsx)$/
+const sourceDirectory = process.cwd()
 
 type StaticRouteSegments = Record<string, string | undefined>
 
@@ -65,7 +66,7 @@ function substituteRouteSegments(route: string, segments: StaticRouteSegments) {
 const allRoutes = await compileTime(async () => {
 	const routes = new Set<string>()
 
-	for await (const entry of glob(pageFileGlob)) {
+	for await (const entry of glob(pageFileGlob, { cwd: sourceDirectory })) {
 		routes.add(pageFilePathToRoute(entry))
 	}
 
