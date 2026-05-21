@@ -11,7 +11,7 @@ For upstream background, read the Sanity `next-sanity` docs and the Next.js Cach
 - https://github.com/sanity-io/next-sanity
 - https://nextjs.org/docs/app/guides/migrating-to-cache-components
 
-Those docs explain the underlying APIs, but Reform projects should use the shared library helpers below instead of creating an app-local `defineLive` setup.
+Those docs explain the underlying APIs, but Reform projects should import the shared library helpers below directly instead of creating an app-local `defineLive` setup or `sanity/lib/live` barrel file.
 
 Install the cache-components canary:
 
@@ -33,17 +33,14 @@ const nextConfig: NextConfig = {
 export default nextConfig
 ```
 
-Re-export the shared live helpers from your app's existing Sanity live module:
+Import the shared live helpers directly from `library/sanity/live`:
 
 ```ts
-export {
-	getDynamicFetchOptions,
-	SanityLive,
+import {
+	getDraftModeSanityFetchOptions,
 	sanityFetch,
 	sanityFetchStaticParams,
 } from "library/sanity/live"
-export type { DynamicFetchOptions } from "library/sanity/live"
-export { SanityLive as default } from "library/sanity/live"
 ```
 
 `library/sanity/live` owns the `defineLive` setup, draft/published perspective resolution, static params fetching, and the existing proxy/direct live runtime rules. Do not duplicate this logic in individual apps.
@@ -51,17 +48,19 @@ export { SanityLive as default } from "library/sanity/live"
 The shared Cache Components exports are:
 
 - `sanityFetch`: the `next-sanity` live fetch function for cached Server Component reads.
-- `getDynamicFetchOptions`: resolves `draftMode()`, cookies, perspective, and stega outside `"use cache"` so cached components can receive explicit serializable fetch options.
+- `getDraftModeSanityFetchOptions`: resolves `draftMode()`, Presentation Tool cookies, perspective, and stega outside `"use cache"` so cached components can receive explicit serializable fetch options.
 - `sanityFetchStaticParams`: fetches static params from the published CDN path with stega disabled for `generateStaticParams`.
-- `DynamicFetchOptions`: the return type for `getDynamicFetchOptions`.
+- `DraftModeSanityFetchOptions`: the return type for `getDraftModeSanityFetchOptions`.
 
 Update every `sanityFetch` call to pass explicit `perspective` and `stega`. Use `stega: false` for metadata, sitemaps, static params, and server actions where encoded strings must not leak into output.
 
-For routes that read draft mode or cookies, use the three-layer route shape:
+For routes that read draft mode or cookies, use a three-layer route shape:
 
 - Page/layout reads `draftMode()` and branches.
-- Dynamic child resolves `getDynamicFetchOptions()` inside `<Suspense>`.
+- Dynamic child resolves `getDraftModeSanityFetchOptions()` inside `<Suspense>`.
 - Cached child uses `"use cache"` and calls `sanityFetch({ perspective, stega })`.
+
+For shared chrome such as header, footer, and settings, prefer small server slot components that own their Sanity reads (`HeaderSlot`, `FooterSlot`, `SanityTags`) over fetching all global data directly in the root layout. Keep each request-time slot behind its own `<Suspense>` boundary so Cache Components can prerender the route shell and stream only the dynamic chrome.
 
 With Cache Components, remove incompatible segment config exports such as `dynamic`, `dynamicParams`, `revalidate`, and `fetchCache`; express caching with `"use cache"` boundaries instead. This includes removing any app-level re-exports of the old `library/segmentDefaults` module from layouts, pages, and dynamic route segments.
 

@@ -35,7 +35,7 @@ type LibraryFetchResult<QueryString extends string> = {
 	tags: string[]
 }
 
-export interface DynamicFetchOptions {
+export interface DraftModeSanityFetchOptions {
 	perspective: LivePerspective
 	stega: boolean
 	isDraftMode: boolean
@@ -43,7 +43,12 @@ export interface DynamicFetchOptions {
 
 export const sanityFetch = internalFetch
 
-export async function getDynamicFetchOptions(): Promise<DynamicFetchOptions> {
+/**
+ * Resolve the request-specific Sanity fetch options that depend on draft mode
+ * and Presentation Tool cookies. Call this outside `"use cache"` boundaries,
+ * then pass the returned serializable options into cached Sanity reads.
+ */
+export async function getDraftModeSanityFetchOptions(): Promise<DraftModeSanityFetchOptions> {
 	const { isEnabled: isDraftMode } = await draftMode()
 	if (!isDraftMode) {
 		return { perspective: "published", stega: false, isDraftMode }
@@ -53,6 +58,12 @@ export async function getDynamicFetchOptions(): Promise<DynamicFetchOptions> {
 	const perspective = await resolvePerspectiveFromCookies({ cookies: jar })
 	return { perspective: perspective ?? "drafts", stega: true, isDraftMode }
 }
+
+/**
+ * @deprecated Use getDraftModeSanityFetchOptions.
+ */
+export const getDynamicFetchOptions = getDraftModeSanityFetchOptions
+export type DynamicFetchOptions = DraftModeSanityFetchOptions
 
 export async function sanityFetchStaticParams<
 	const QueryString extends string,
