@@ -1,11 +1,15 @@
-import { draftMode } from "next/headers"
+import { cookies, draftMode } from "next/headers"
 import type {
 	ClientPerspective,
 	ClientReturn,
 	ContentSourceMap,
 	QueryParams,
 } from "next-sanity"
-import { defineLive } from "next-sanity/live"
+import {
+	defineLive,
+	type LivePerspective,
+	resolvePerspectiveFromCookies,
+} from "next-sanity/live"
 import { version as nextSanityVersion } from "next-sanity/package.json"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
@@ -29,6 +33,35 @@ type LibraryFetchResult<QueryString extends string> = {
 	data: UnknownIfAny<ClientReturn<QueryString>>
 	sourceMap: ContentSourceMap | null
 	tags: string[]
+}
+
+export interface DynamicFetchOptions {
+	perspective: LivePerspective
+	stega: boolean
+	isDraftMode: boolean
+}
+
+export const sanityFetch = internalFetch
+
+export async function getDynamicFetchOptions(): Promise<DynamicFetchOptions> {
+	const { isEnabled: isDraftMode } = await draftMode()
+	if (!isDraftMode) {
+		return { perspective: "published", stega: false, isDraftMode }
+	}
+
+	const jar = await cookies()
+	const perspective = await resolvePerspectiveFromCookies({ cookies: jar })
+	return { perspective: perspective ?? "drafts", stega: true, isDraftMode }
+}
+
+export async function sanityFetchStaticParams<
+	const QueryString extends string,
+>({ query, params = {} }: { query: QueryString; params?: QueryParams }) {
+	return client.fetch(query, params, {
+		perspective: "published",
+		stega: false,
+		useCdn: true,
+	})
 }
 
 /**
@@ -72,7 +105,7 @@ const canUseLiveProxy =
 	// other providers should be tested and evaluated as needed
 	!!process.env.VERCEL || process.env.NODE_ENV === "development"
 
-export const LibraryLive = async () => {
+export const LibraryLive = async (_props?: { includeDrafts?: boolean }) => {
 	const { isEnabled: isDraftMode } = await draftMode()
 	const useLiveProxy = canUseLiveProxy && !isDraftMode
 
@@ -82,6 +115,8 @@ export const LibraryLive = async () => {
 		</SanityLiveRuntime>
 	)
 }
+
+export const SanityLive = LibraryLive
 
 /**
  * sanity live handles revalidation

@@ -6,6 +6,13 @@ Sanity-backed Next.js apps are now expected to run with `cacheComponents: true` 
 
 **Migration Advice**
 
+For upstream background, read the Sanity `next-sanity` docs and the Next.js Cache Components migration guide:
+
+- https://github.com/sanity-io/next-sanity
+- https://nextjs.org/docs/app/guides/migrating-to-cache-components
+
+Those docs explain the underlying APIs, but Reform projects should use the shared library helpers below instead of creating an app-local `defineLive` setup.
+
 Install the cache-components canary:
 
 ```bash
@@ -26,54 +33,27 @@ const nextConfig: NextConfig = {
 export default nextConfig
 ```
 
-Replace the old app-level `library/sanity/live` wrapper with a project-local strict `defineLive` setup. Export explicit helpers for dynamic rendering decisions and static params:
+Re-export the shared live helpers from your app's existing Sanity live module:
 
 ```ts
-import { cookies, draftMode } from "next/headers"
-import { type QueryParams } from "next-sanity"
-import {
-	defineLive,
-	resolvePerspectiveFromCookies,
-	type LivePerspective,
-} from "next-sanity/live"
-import { client } from "sanity/lib/client"
-import { token } from "sanity/lib/token"
-
-export interface DynamicFetchOptions {
-	perspective: LivePerspective
-	stega: boolean
-	isDraftMode: boolean
-}
-
-export const { sanityFetch, SanityLive } = defineLive({
-	client,
-	serverToken: token,
-	browserToken: token,
-	strict: true,
-})
-
-export async function getDynamicFetchOptions(): Promise<DynamicFetchOptions> {
-	const { isEnabled: isDraftMode } = await draftMode()
-	if (!isDraftMode) return { perspective: "published", stega: false, isDraftMode }
-
-	const perspective = await resolvePerspectiveFromCookies({ cookies: await cookies() })
-	return { perspective: perspective ?? "drafts", stega: true, isDraftMode }
-}
-
-export async function sanityFetchStaticParams<const QueryString extends string>({
-	query,
-	params = {},
-}: {
-	query: QueryString
-	params?: QueryParams
-}) {
-	return client.fetch(query, params, {
-		perspective: "published",
-		stega: false,
-		useCdn: true,
-	})
-}
+export {
+	getDynamicFetchOptions,
+	SanityLive,
+	sanityFetch,
+	sanityFetchStaticParams,
+} from "library/sanity/live"
+export type { DynamicFetchOptions } from "library/sanity/live"
+export { SanityLive as default } from "library/sanity/live"
 ```
+
+`library/sanity/live` owns the `defineLive` setup, draft/published perspective resolution, static params fetching, and the existing proxy/direct live runtime rules. Do not duplicate this logic in individual apps.
+
+The shared Cache Components exports are:
+
+- `sanityFetch`: the `next-sanity` live fetch function for cached Server Component reads.
+- `getDynamicFetchOptions`: resolves `draftMode()`, cookies, perspective, and stega outside `"use cache"` so cached components can receive explicit serializable fetch options.
+- `sanityFetchStaticParams`: fetches static params from the published CDN path with stega disabled for `generateStaticParams`.
+- `DynamicFetchOptions`: the return type for `getDynamicFetchOptions`.
 
 Update every `sanityFetch` call to pass explicit `perspective` and `stega`. Use `stega: false` for metadata, sitemaps, static params, and server actions where encoded strings must not leak into output.
 
