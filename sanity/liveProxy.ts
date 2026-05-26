@@ -92,7 +92,7 @@ export async function POST(request: Request) {
 
 	if (tags?.length) {
 		for (const tag of tags) {
-			revalidateTag(`sanity:${tag}`, "max")
+			revalidateTag(`sanity:${tag}`, { expire: 0 })
 		}
 	} else {
 		revalidatePath("/", "layout")
