@@ -93,9 +93,14 @@ export async function libraryFetch<const QueryString extends string>({
 	 */
 	disableStega?: boolean
 }): Promise<LibraryFetchResult<QueryString>> {
+	const resolvedParams = await params
+	console.log("sanityFetch body size", {
+		queryBytes: Buffer.byteLength(query),
+		paramsBytes: Buffer.byteLength(JSON.stringify(resolvedParams)),
+	})
 	return await internalFetch({
 		query,
-		params,
+		params: resolvedParams,
 		stega: disableStega ? false : undefined,
 		perspective,
 	})
