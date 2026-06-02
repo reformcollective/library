@@ -121,16 +121,10 @@ export default function useAutoHideHeader(
 
 			const onUpdate = () => {
 				const scroll = window.lenisInstance?.scroll ?? window.scrollY
-				const delta = scroll - lastScroll
+				const rawDelta = scroll - lastScroll
+				const delta = Math.abs(rawDelta) < 100 ? rawDelta : 0
 				lastScroll = scroll
 				const height = (wrapper.current?.offsetHeight ?? 0) + extraOffset
-				if (delta > 100 || delta < -100) {
-					// short circuit on large scrolls, since those are probably page transitions
-					// still update scrolled state so scroll-dependent styles remain correct
-					const el = wrapper.current
-					if (el) el.dataset.headerScrolled = scroll <= 5 ? "false" : "true"
-					return
-				}
 
 				const forceHideHeader = dataHideAreOnScreen.current
 				const forceShowHeader =
@@ -140,8 +134,7 @@ export default function useAutoHideHeader(
 
 				const el = wrapper.current
 				if (el) {
-					if (scroll <= 5) el.dataset.headerScrolled = "false"
-					else if (delta < 0 || isHovered) el.dataset.headerScrolled = "true"
+					el.dataset.headerScrolled = scroll <= 5 ? "false" : "true"
 				}
 
 				// if forced sticky
@@ -171,9 +164,11 @@ export default function useAutoHideHeader(
 
 			const onHover = () => {
 				isHovered = true
+				onUpdate()
 			}
 			const onLeave = () => {
 				isHovered = false
+				onUpdate()
 			}
 
 			const onPopState = () => {
