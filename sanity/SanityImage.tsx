@@ -41,6 +41,11 @@ type SanityProps<CropType> =
 			alt?: undefined
 	  }
 
+type SanityImageQueryParams = {
+	fm?: "jpg" | "pjpg" | "png" | "webp"
+	q?: number
+}
+
 export type SanityImageProps =
 	| (SanityProps<"sanity"> & {
 			objectFit?: "contain" | "cover"
@@ -48,6 +53,7 @@ export type SanityImageProps =
 			loading?: "eager" | "lazy" | "default"
 			width: number
 			height: number
+			queryParams?: SanityImageQueryParams
 	  } & DefaultImageProps)
 	| (SanityProps<"uncropped"> & {
 			objectFit?: undefined
@@ -55,6 +61,7 @@ export type SanityImageProps =
 			loading?: "eager" | "lazy" | "default"
 			width?: undefined
 			height?: undefined
+			queryParams?: SanityImageQueryParams
 	  } & DefaultImageProps)
 	| (SanityProps<"css"> & {
 			objectFit?: "contain" | "cover"
@@ -62,6 +69,7 @@ export type SanityImageProps =
 			loading?: "eager" | "lazy" | "default"
 			width?: number
 			height?: number
+			queryParams?: SanityImageQueryParams
 	  } & DefaultImageProps)
 
 const isStringProps = (
@@ -104,6 +112,7 @@ export default function SanityUniversalImage(
 			dataset={dataset}
 			queryParams={{
 				q: 90,
+				...props.queryParams,
 			}}
 			aspectRatio={
 				props.width && props.height
