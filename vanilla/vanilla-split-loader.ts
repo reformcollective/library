@@ -1,6 +1,8 @@
 import fsSync from "node:fs"
 import fs from "node:fs/promises"
+import crypto from "node:crypto"
 import path from "node:path"
+import { threadId } from "node:worker_threads"
 import turboLoaderRAW, {
 	type TurboLoaderContext,
 	type TurboLoaderOptions,
@@ -64,6 +66,13 @@ const COMPILE_TIME_IMPORT = "compileTime"
 const turboLoader =
 	// @ts-expect-error turbopack loader shape has default export in some builds
 	(turboLoaderRAW.default as typeof turboLoaderRAW) ?? turboLoaderRAW
+
+function safeWrite(filePath: string, content: string): void {
+	const tempPath = `${filePath}.${crypto.randomUUID()}.tmp`
+
+	fsSync.writeFileSync(tempPath, content, "utf8")
+	fsSync.renameSync(tempPath, filePath)
+}
 
 // =============================================================================
 // Tracked import registry
@@ -998,11 +1007,29 @@ async function transform(
 		.join(tmpRoot, `${relPathNoExt}${virtualExt}`)
 		.replace(/\\/g, "/")
 	fsSync.mkdirSync(path.dirname(tmpFile), { recursive: true })
-	fsSync.writeFileSync(tmpFile, virtualSourceResolved, "utf8")
+	safeWrite(tmpFile, virtualSourceResolved)
 
 	// 11) Run VE plugin
 	const veJs = await runVePluginOnTempFile(loaderThis, tmpFile, options)
 	const veJsResolved = rewriteToTsconfig(veJs, tmpFile, rootContext)
+
+	if (veJsResolved.trim() === "") {
+		console.log("[vanilla-split-loader empty]", {
+			pid: process.pid,
+			threadId,
+			resourcePath: loaderThis.resourcePath,
+			tmpFile,
+			virtualSourceLength: virtualSourceResolved.length,
+			veJsLength: veJs.length,
+			veJsResolvedLength: veJsResolved.length,
+			imports: partition.imports,
+			reexports: partition.reexports,
+			compiler: (loaderThis as { _compiler?: { name?: string } })._compiler
+				?.name,
+			compilation: (loaderThis as { _compilation?: { name?: string } })
+				._compilation?.name,
+		})
+	}
 
 	// 12) Embed as data URL and build original module
 	const jsBase64 = Buffer.from(veJsResolved, "utf8").toString("base64")
