@@ -2,7 +2,6 @@ import crypto from "node:crypto"
 import fsSync from "node:fs"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { threadId } from "node:worker_threads"
 import turboLoaderRAW, {
 	type TurboLoaderContext,
 	type TurboLoaderOptions,
@@ -1012,24 +1011,6 @@ async function transform(
 	// 11) Run VE plugin
 	const veJs = await runVePluginOnTempFile(loaderThis, tmpFile, options)
 	const veJsResolved = rewriteToTsconfig(veJs, tmpFile, rootContext)
-
-	if (veJsResolved.trim() === "") {
-		console.log("[vanilla-split-loader empty]", {
-			pid: process.pid,
-			threadId,
-			resourcePath: loaderThis.resourcePath,
-			tmpFile,
-			virtualSourceLength: virtualSourceResolved.length,
-			veJsLength: veJs.length,
-			veJsResolvedLength: veJsResolved.length,
-			imports: partition.imports,
-			reexports: partition.reexports,
-			compiler: (loaderThis as { _compiler?: { name?: string } })._compiler
-				?.name,
-			compilation: (loaderThis as { _compilation?: { name?: string } })
-				._compilation?.name,
-		})
-	}
 
 	// 12) Embed as data URL and build original module
 	const jsBase64 = Buffer.from(veJsResolved, "utf8").toString("base64")

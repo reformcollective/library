@@ -59,6 +59,7 @@ export function VideoEmbed({
 					width="100%"
 					height="100%"
 					controls={controls}
+					playsInline
 					onPlay={
 						resetOnPlay
 							? (e) => {
