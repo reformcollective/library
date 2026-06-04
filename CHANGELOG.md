@@ -1,3 +1,64 @@
+# 2026-06-04
+
+## Sanity query size optimizations
+
+Sanity has a 300KB request body limit. To help keep queries below that size, asset metadata projections now use groq functions.
+
+`library/sanity/assetMetadata` now exports `assetMetadataFunctions`, which defines `reform::image`, `reform::images`, `reform::video`, `reform::videos`, `reform::link`, and `reform::links` for use in groq queries.
+
+`libraryFetch` now also warns when a GROQ query passed to `sanityFetch` exceeds 200kb.
+
+**Migration Advice**
+
+Prepend `assetMetadataFunctions` to any query that uses asset functions and update your query to use groq functions directly.
+
+Before:
+
+```ts
+import { imageField, linkField, videoField } from "library/sanity/assetMetadata"
+
+const pageQuery = defineQuery(`
+	*[_type == "page"][0] {
+		${imageField("myImageField")}
+		${videoField("myVideoField")}
+		${linkField("myLinkField")}
+
+		myImageListField[] {
+			...,
+			"data": {
+				"lqip": asset->metadata.lqip,
+				"url": asset->url
+			}
+		}
+	}
+`)
+```
+
+After:
+
+```ts
+import { assetMetadataFunctions } from "library/sanity/assetMetadata"
+
+const pageQuery = defineQuery(`
+	${assetMetadataFunctions}
+
+	*[_type == "page"][0] {
+		"myImageField": reform::image(myImageField),
+		"myVideoField": reform::video(myVideoField),
+		"myLinkField": reform::link(myLinkField),
+
+		"myImageListField": reform::images(myImageListField),
+		"myVideoListField": reform::videos(myVideoListField),
+		"myLinkListField": reform::links(myLinkListField),
+
+		richTextField[] {
+			...,
+			_type == "inlineImage" => reform::image(@)
+		}
+	}
+`)
+```
+
 # 2026-05-20
 
 ## Link fields support SMS and document downloads
@@ -210,7 +271,7 @@ Update sanity config to import utilities from `library/sanity/document-helpers`
 
 ## removed `fetchAssetMeta` / `enrichAssets`
 
-`fetchAssetMeta` and the `enrichAssets` option on `libraryFetch` / `sanityFetch` have been removed. Asset, video, and link metadata should be resolved inline with `imageField`, `videoField`, or `linkField`.
+`fetchAssetMeta` and the `enrichAssets` option on `libraryFetch` / `sanityFetch` have been removed. Asset, video, and link metadata should be resolved inline with `assetMetadataFunctions` and direct `reform::image`, `reform::video`, or `reform::link` calls.
 
 **Migration Advice**
 
