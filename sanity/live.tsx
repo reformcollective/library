@@ -66,6 +66,8 @@ type LibraryFetchResult<QueryString extends string> = {
 	tags: string[]
 }
 
+const sanityFetchQuerySizeWarningThresholdBytes = 200 * 1024
+
 /**
  * Used to fetch data in Server Components, it has built in support for handling Draft Mode and perspectives.
  * When using the "published" perspective then time-based revalidation is used, set to match the time-to-live on Sanity's API CDN (60 seconds)
@@ -94,10 +96,15 @@ export async function libraryFetch<const QueryString extends string>({
 	disableStega?: boolean
 }): Promise<LibraryFetchResult<QueryString>> {
 	const resolvedParams = await params
-	console.log("sanityFetch body size", {
-		queryBytes: Buffer.byteLength(query),
-		paramsBytes: Buffer.byteLength(JSON.stringify(resolvedParams)),
-	})
+	const queryBytes = Buffer.byteLength(query)
+	const paramsBytes = Buffer.byteLength(JSON.stringify(resolvedParams))
+	if (queryBytes > sanityFetchQuerySizeWarningThresholdBytes) {
+		console.warn("sanityFetch query size exceeds warning threshold", {
+			queryBytes,
+			paramsBytes,
+			thresholdBytes: sanityFetchQuerySizeWarningThresholdBytes,
+		})
+	}
 	return await internalFetch({
 		query,
 		params: resolvedParams,
