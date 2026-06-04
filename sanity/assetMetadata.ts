@@ -6,6 +6,8 @@ import type {
 	SanityImageHotspot,
 } from "sanity.types"
 
+export type DeepAssetMeta<T> = T
+
 // the three types below were directly copied from the starter's generated types
 
 export type ImageField = {
@@ -40,10 +42,10 @@ export type VideoField = {
 		| "wistia"
 		| "youtube"
 	url?: string
-	muxVideo: {
+	muxVideo?: {
 		_type: "mux.video"
 		asset?: MuxVideoAssetReference
-		data: {
+		data?: {
 			playbackId: string | null
 			videoThumbnailUrl: string | null
 			videoBlurUrl: string | null

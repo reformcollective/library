@@ -51,6 +51,7 @@ type Config<
 	 * "media" will wrap entire statements in a media query based on breakpoints
 	 */
 	vanillaExtractEngine: "calc" | "media"
+	stylingSystem?: "both"
 	/**
 	 * if true, override any preloader resolvers that have already been registered
 	 * in most cases you won't want to use this

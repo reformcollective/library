@@ -49,6 +49,7 @@ export async function libraryFetch<const QueryString extends string>({
 	query: QueryString
 	params?: QueryParams | Promise<QueryParams>
 	perspective?: Exclude<ClientPerspective, "raw">
+	enrichAssets?: boolean
 	/**
 	 * Good to know: Always disable stega when calling sanityFetch within these:
 	 *

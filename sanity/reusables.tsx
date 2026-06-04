@@ -72,6 +72,7 @@ export const universalImage = <
 	WithAlt extends boolean | undefined = undefined,
 >({
 	withAlt,
+	cropType: _cropType,
 	...schemaField
 }: Omit<ImageDefinition, "type"> & {
 	/**
@@ -79,6 +80,7 @@ export const universalImage = <
 	 * Omit (or pass `true`) to show and require it.
 	 */
 	withAlt?: WithAlt
+	cropType?: "sanity" | "uncropped"
 }) =>
 	defineField({
 		...schemaField,

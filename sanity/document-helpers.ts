@@ -1,5 +1,4 @@
 import { siteURL } from "library/siteURL"
-import { map } from "rxjs"
 import { documentPaths } from "sanity/lib/slug-resolver"
 import type {
 	DocumentLocationResolver,
@@ -8,6 +7,25 @@ import type {
 
 type SanityDocument = {
 	_type?: string
+}
+type ObserverLike<T> =
+	| ((value: T) => void)
+	| {
+			next?: (value: T) => void
+			error?: (error: unknown) => void
+			complete?: () => void
+	  }
+
+const documentToLocations = (
+	document: SanityDocument | null,
+): DocumentLocationsState => {
+	if (!document) return { locations: [] }
+	const href = resolveDocumentPathname(document)
+	if (!href) return { locations: [] }
+
+	return {
+		locations: [{ href, title: resolveDocumentTitle(document) || "No Title" }],
+	}
 }
 
 const resolveDocumentRoute = (document: unknown) => {
@@ -65,17 +83,21 @@ export const resolveDocumentLocations: DocumentLocationResolver = (
 		{ perspective: "previewDrafts" },
 	)
 
-	return doc$.pipe(
-		map((document: SanityDocument | null) => {
-			if (!document) return { locations: [] }
-			const href = resolveDocumentPathname(document)
-			if (!href) return { locations: [] }
+	return {
+		subscribe(
+			observer: ObserverLike<DocumentLocationsState> | null | undefined,
+		) {
+			const target =
+				typeof observer === "function" ? { next: observer } : observer
+			const subscription = doc$.subscribe({
+				next: (document: SanityDocument | null) => {
+					target?.next?.(documentToLocations(document))
+				},
+				error: (error) => target?.error?.(error),
+				complete: () => target?.complete?.(),
+			})
 
-			return {
-				locations: [
-					{ href, title: resolveDocumentTitle(document) || "No Title" },
-				],
-			} satisfies DocumentLocationsState
-		}),
-	)
+			return subscription
+		},
+	} as ReturnType<DocumentLocationResolver>
 }

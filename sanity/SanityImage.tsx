@@ -33,11 +33,16 @@ import {
 } from "./SanityImage.css"
 
 // todo: ImageField and SanityImageData are the same shape?
-export type SanityImageData<WithAlt extends "true" | "false"> = {
+export type SanityImageData<
+	CropTypeOrWithAlt extends string = "true" | "false",
+	WithAlt extends "true" | "false" = CropTypeOrWithAlt extends "true" | "false"
+		? CropTypeOrWithAlt
+		: "true" | "false",
+> = {
 	asset?: { _ref: string }
 	crop?: SanityImageCrop
 	hotspot?: SanityImageHotspot
-	data: ImageField["data"] | null
+	data?: ImageField["data"] | null
 	alt?: string
 	willHaveAlt?: WithAlt
 }
@@ -55,6 +60,7 @@ type SanityProps =
 export type SanityImageProps = SanityProps & {
 	loading?: "eager" | "lazy" | "default"
 	quality?: number
+	queryParams?: Record<string, string | number | boolean | undefined>
 	width?: number
 	height?: number
 } & Omit<DefaultImageProps, "srcSet">
@@ -114,7 +120,7 @@ export default function SanityUniversalImage(
 }
 
 function SanityImageCore(props: SanityImageProps) {
-	const { src, ref, quality = 90, ...rest } = props
+	const { src, ref, quality = 90, queryParams, ...rest } = props
 	const defaultEager = use(EagerContext)
 	const prioritizedLoading = prioritizeLoading(props.loading, defaultEager)
 	const srcKey = [
@@ -241,9 +247,12 @@ function SanityImageCore(props: SanityImageProps) {
 
 	if (!src?.asset) return null
 
+	const queryQuality =
+		typeof queryParams?.q === "number" ? queryParams.q : Number(queryParams?.q)
+	const resolvedQuality = Number.isFinite(queryQuality) ? queryQuality : quality
 	const base = urlBuilder
 		.image({ _type: "image" as const, asset: src.asset, crop: src.crop })
-		.quality(quality)
+		.quality(resolvedQuality)
 		.auto("format")
 	const imgSrc = base.width(1600).url()
 	const srcSet = SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`).join(
