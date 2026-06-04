@@ -119,15 +119,16 @@ export function InfiniteSideScroll({
 			)
 			const gap =
 				firstLastChild && secondFirstChild
-					? // distance from right edge of first to left edge of second,
+					? // distance from layout right edge of first to layout left edge of second,
 						// minus secondFirstLeftMargin only (already in totalWidth via spaceBefore[0]).
 						// The last item's right margin is NOT subtracted: horizontalLoop's getTotalWidth ends
 						// at the last item's offsetWidth (no trailing margin), so that margin must
 						// remain in paddingRight to produce an even gap at the loop point.
-						Math.abs(
-							firstLastChild.getBoundingClientRect().right -
-								secondFirstChild.getBoundingClientRect().left,
-						) - secondFirstLeftMargin
+						getLayoutGap(
+							firstLastChild,
+							secondFirstChild,
+							secondFirstLeftMargin,
+						)
 					: 0
 
 			const loop = horizontalLoop(rowRef.current.children, {
@@ -318,6 +319,25 @@ export function InfiniteSideScroll({
 				</ButtonWrapper>
 			)}
 		</Wrapper>
+	)
+}
+
+function getLayoutGap(
+	firstLastChild: Element,
+	secondFirstChild: Element,
+	secondFirstLeftMargin: number,
+) {
+	if (
+		!(firstLastChild instanceof HTMLElement) ||
+		!(secondFirstChild instanceof HTMLElement)
+	) {
+		return 0
+	}
+
+	return (
+		secondFirstChild.offsetLeft -
+		(firstLastChild.offsetLeft + firstLastChild.offsetWidth) -
+		secondFirstLeftMargin
 	)
 }
 

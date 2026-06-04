@@ -174,7 +174,7 @@ export function horizontalLoop(items, config) {
 			},
 			onResize = () => refresh(true),
 			proxy
-		gsap.set(items, { x: 0 })
+		gsap.set(items, { x: 0, xPercent: 0 })
 		populateWidths()
 		populateTimeline()
 		populateOffsets()

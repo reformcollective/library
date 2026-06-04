@@ -135,7 +135,9 @@ export default function AutoAnimate({
 
 	// Use state instead of ref since this needs to be accessed during render
 	const [keyBasedCache, setKeyBasedCache] = useState<Record<string, ReactNode>>(
-		{},
+		() => ({
+			[childKey]: children,
+		}),
 	)
 
 	// Update the cache when children change

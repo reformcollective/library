@@ -1,4 +1,5 @@
 import { library } from "library/layers.css"
+import UniversalLink from "library/link"
 import { css, f, styled } from "library/styled"
 import { draftMode } from "next/headers"
 import { redirect } from "next/navigation"
@@ -41,7 +42,7 @@ const Wrapper = styled("div", [
 	},
 ])
 
-const Link = styled("a", [
+const Link = styled(UniversalLink, [
 	{
 		"@layer": {
 			[library]: f.unresponsive(css`
