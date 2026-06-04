@@ -13,39 +13,7 @@ import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
 import { handleError, SanityLiveRuntime } from "./live.client"
 
-// defineLive internally overrides useCdn per-request (`useCdn = perspective === "published"`),
-// making the client-level useCdn: false ineffective. In development, this means published
-// content is served from Sanity's API CDN (60s cache) and never updates without webhooks.
-// The proxy below intercepts every .fetch() call to force useCdn: false, and chains through
-// .withConfig() so the intercept survives defineLive's internal _client.withConfig() call.
-type SanityClientLike = typeof client
-function makeNoCdnProxy(target: SanityClientLike): SanityClientLike {
-	return new Proxy(target, {
-		get(t, prop, receiver) {
-			if (prop === "fetch") {
-				type FetchOptions = Parameters<typeof t.fetch>[2]
-				return (query: string, params?: QueryParams, options?: FetchOptions) =>
-					Reflect.get(t, prop, receiver).call(t, query, params, {
-						...options,
-						useCdn: false,
-					} as FetchOptions)
-			}
-			if (prop === "withConfig") {
-				return (...args: Parameters<typeof t.withConfig>) =>
-					makeNoCdnProxy(Reflect.get(t, prop, receiver).call(t, ...args))
-			}
-			const value = Reflect.get(t, prop, receiver)
-			return typeof value === "function"
-				? (value as (...a: unknown[]) => unknown).bind(t)
-				: value
-		},
-	})
-}
-
-const libraryClient =
-	process.env.NODE_ENV === "development"
-		? makeNoCdnProxy(client)
-		: client.withConfig({ useCdn: false })
+const libraryClient = client.withConfig({ useCdn: false })
 
 /**
  * Use defineLive to enable automatic revalidation and refreshing of your fetched content

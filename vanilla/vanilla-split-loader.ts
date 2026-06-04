@@ -1,3 +1,4 @@
+import crypto from "node:crypto"
 import fsSync from "node:fs"
 import fs from "node:fs/promises"
 import path from "node:path"
@@ -64,6 +65,13 @@ const COMPILE_TIME_IMPORT = "compileTime"
 const turboLoader =
 	// @ts-expect-error turbopack loader shape has default export in some builds
 	(turboLoaderRAW.default as typeof turboLoaderRAW) ?? turboLoaderRAW
+
+function safeWrite(filePath: string, content: string): void {
+	const tempPath = `${filePath}.${crypto.randomUUID()}.tmp`
+
+	fsSync.writeFileSync(tempPath, content, "utf8")
+	fsSync.renameSync(tempPath, filePath)
+}
 
 // =============================================================================
 // Tracked import registry
@@ -998,7 +1006,7 @@ async function transform(
 		.join(tmpRoot, `${relPathNoExt}${virtualExt}`)
 		.replace(/\\/g, "/")
 	fsSync.mkdirSync(path.dirname(tmpFile), { recursive: true })
-	fsSync.writeFileSync(tmpFile, virtualSourceResolved, "utf8")
+	safeWrite(tmpFile, virtualSourceResolved)
 
 	// 11) Run VE plugin
 	const veJs = await runVePluginOnTempFile(loaderThis, tmpFile, options)
