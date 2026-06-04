@@ -1,6 +1,7 @@
 import { InfoOutlineIcon, PlayIcon } from "@sanity/icons"
 import type libraryConfig from "app/libraryConfig"
 import type { StaticImageData } from "next/image"
+import { useEffect } from "react"
 import {
 	MATCH_URL_SPOTIFY,
 	MATCH_URL_TIKTOK,
@@ -17,9 +18,13 @@ import {
 	defineType,
 	getValueAtPath,
 	type ImageDefinition,
+	type InputProps,
+	isObjectInputProps,
 	type ObjectDefinition,
+	PatchEvent,
 	type Path,
 	type SanityDocument,
+	setIfMissing,
 } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
 
@@ -167,10 +172,78 @@ export const universalLink = ({
 				return true
 			}),
 		initialValue: {
+			_type: "link",
 			type: defaultType,
-			toNewTab: defaultToNewTab ?? defaultType === "external",
+			blank: defaultToNewTab ?? defaultType === "external",
 		},
 	})
+
+export function UniversalLinkTypeNormalizerInput(props: InputProps) {
+	useEffect(() => {
+		if (!isObjectInputProps(props) || props.path.length > 0) return
+
+		// Temporary workaround for sanity-plugin-link-field destination/type desync:
+		// https://github.com/winteragency/sanity-plugin-link-field/issues/39
+		const patches = collectLinkTypePatches(props.value)
+		if (patches.length === 0) return
+
+		props.onChange(PatchEvent.from(patches))
+	}, [props])
+
+	return props.renderDefault(props)
+}
+
+function collectLinkTypePatches(value: unknown) {
+	const patches = [] as ReturnType<typeof setIfMissing>[]
+	visitLinkValues(value, [], patches)
+	return patches
+}
+
+function visitLinkValues(
+	value: unknown,
+	path: Path,
+	patches: ReturnType<typeof setIfMissing>[],
+) {
+	if (Array.isArray(value)) {
+		value.forEach((item, index) => {
+			const key =
+				isRecord(item) && typeof item._key === "string"
+					? { _key: item._key }
+					: index
+			visitLinkValues(item, [...path, key], patches)
+		})
+		return
+	}
+
+	if (!isRecord(value)) return
+
+	if (value._type === "link" && !value.type) {
+		patches.push(
+			setIfMissing(inferLinkType(value, "internal"), [...path, "type"]),
+		)
+	}
+
+	for (const [key, child] of Object.entries(value)) {
+		visitLinkValues(child, [...path, key], patches)
+	}
+}
+
+function inferLinkType(value: Record<string, unknown>, defaultType: string) {
+	if (value.internalLink) return "internal"
+	if (value.url) return "external"
+	if (value.email) return "email"
+	if (value.phone) return "phone"
+	if (value.documentLink) return "document"
+	if (value.mediaLink) return "media"
+	if (value.sms) return "sms"
+	if (value.whatsapp) return "whatsapp"
+	if (value.fax) return "fax"
+	return defaultType
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null
+}
 
 export const redirect = defineArrayMember({
 	name: "redirect",
