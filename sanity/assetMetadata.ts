@@ -130,11 +130,11 @@ const muxVideoProjection = `{
 
 const videoProjection = `{ ..., muxVideo ${muxVideoProjection} }` as const
 
-export const linkField = <T extends string>(name: T) =>
-	`${name} ${linkProjection}` as const
-
-export const imageField = <T extends string>(name: T) =>
-	`${name} ${imageProjection}` as const
-
-export const videoField = <T extends string>(name: T) =>
-	`${name} ${videoProjection}` as const
+export const assetMetadataFunctions = `
+	fn reform::link($link) = $link ${linkProjection};
+	fn reform::links($links) = $links[] ${linkProjection};
+	fn reform::image($image) = $image ${imageProjection};
+	fn reform::images($images) = $images[] ${imageProjection};
+	fn reform::video($video) = $video ${videoProjection};
+	fn reform::videos($videos) = $videos[] ${videoProjection};
+` as const
