@@ -6,20 +6,24 @@ import { browserData } from "library/deviceDetection"
 import { useHMR } from "library/useHMR"
 import { usePathname, useRouter } from "next/navigation"
 import { stegaClean } from "next-sanity"
-import {
-	type DraftEnvironment,
-	useDraftModeEnvironment,
-} from "next-sanity/hooks"
+import { useVisualEditingEnvironment } from "next-sanity/hooks"
 import { isCorsOriginError } from "next-sanity/live"
-import { revalidateSyncTags } from "next-sanity/live/server-actions"
 import { VisualEditing } from "next-sanity/visual-editing"
 import type { ComponentProps, ReactNode } from "react"
-import { useEffect, useState, useTransition } from "react"
+import {
+	startTransition,
+	useEffect,
+	useReducer,
+	useState,
+	useTransition,
+} from "react"
 import { studioUrl } from "sanity/lib/api"
 import { Toaster, toast } from "sonner"
 import { disableDraftMode } from "./disableDraftMode"
 
-const isPresentationEnvironment = (environment: DraftEnvironment) =>
+const isPresentationEnvironment = (
+	environment: ReturnType<typeof useVisualEditingEnvironment>,
+) =>
 	environment === "presentation-iframe" || environment === "presentation-window"
 
 const presentationSearchParams = ["sanity-preview-perspective"]
@@ -84,7 +88,7 @@ function SanityLiveDirectRuntime({
 	children: ReactNode
 	isDraftMode: boolean
 }) {
-	const environment = useDraftModeEnvironment()
+	const environment = useVisualEditingEnvironment()
 	const isPresentation = isPresentationEnvironment(environment)
 
 	return (
@@ -98,9 +102,26 @@ function SanityLiveDirectRuntime({
 				isDraftMode={isDraftMode}
 				isPresentation={isPresentation}
 			/>
+			{!isDraftMode && <RefreshOnMount />}
 			{isDraftMode && <FirefoxFix />}
 		</>
 	)
+}
+
+function RefreshOnMount() {
+	const router = useRouter()
+	const [mounted, mount] = useReducer(() => true, false)
+
+	useEffect(() => {
+		if (!mounted) {
+			startTransition(() => {
+				mount()
+				router.refresh()
+			})
+		}
+	}, [mounted, router])
+
+	return null
 }
 
 /**
@@ -118,7 +139,7 @@ export function SanityLiveProxy() {
 		eventSource.onmessage = (e) => {
 			const event = JSON.parse(e.data) as LiveEvent
 			if (event.type === "message") {
-				revalidateSyncTags(event.tags)
+				return
 			} else if (event.type === "restart" || event.type === "reconnect") {
 				router.refresh()
 			}

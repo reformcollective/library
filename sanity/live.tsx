@@ -1,3 +1,4 @@
+import { revalidateTag, updateTag } from "next/cache"
 import { draftMode } from "next/headers"
 import type {
 	ClientPerspective,
@@ -5,7 +6,7 @@ import type {
 	ContentSourceMap,
 	QueryParams,
 } from "next-sanity"
-import { defineLive } from "next-sanity/live"
+import { defineLive, parseTags } from "next-sanity/live"
 import { version as nextSanityVersion } from "next-sanity/package.json"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
@@ -23,8 +24,26 @@ const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	client: libraryClient,
 	serverToken: token,
 	browserToken: token,
-	fetchOptions: { revalidate: Infinity },
 })
+
+async function revalidateLiveTags(unsafeTags: unknown) {
+	"use server"
+
+	const { isEnabled: isDraftMode } = await draftMode()
+	const { tags } = parseTags(unsafeTags)
+
+	for (const tag of tags) {
+		if (isDraftMode) {
+			revalidateTag(tag, "max")
+		} else {
+			updateTag(tag)
+		}
+	}
+
+	if (isDraftMode) {
+		return "refresh"
+	}
+}
 
 type IsAny<T> = 0 extends 1 & T ? true : false
 type UnknownIfAny<T> = IsAny<T> extends true ? unknown : T
@@ -82,11 +101,9 @@ export const LibraryLive = async () => {
 	return (
 		<SanityLiveRuntime isDraftMode={isDraftMode} useLiveProxy={useLiveProxy}>
 			<InternalLive
+				action={revalidateLiveTags}
 				onError={handleError}
-				refreshOnFocus={false}
-				refreshOnMount={true}
-				refreshOnReconnect={true}
-				intervalOnGoAway={false}
+				onGoAway={false}
 			/>
 		</SanityLiveRuntime>
 	)
@@ -95,9 +112,9 @@ export const LibraryLive = async () => {
 /**
  * validate sanity versions - read actual installed versions from node_modules
  */
-if (!semver.satisfies(nextSanityVersion, "^12.0.0")) {
+if (!semver.satisfies(nextSanityVersion, "^13.0.0")) {
 	throw new Error(
-		`next-sanity must satisfy version ^12.0.0! (installed: ${nextSanityVersion})`,
+		`next-sanity must satisfy version ^13.0.0! (installed: ${nextSanityVersion})`,
 	)
 }
 if (!semver.satisfies(sanityVersion, "^5.0.0")) {
