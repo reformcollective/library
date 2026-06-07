@@ -1,6 +1,12 @@
 import { dispatcher } from "next/dist/compiled/next-devtools"
 import type { Dispatcher } from "next/dist/next-devtools/dev-overlay.browser"
-import { createContext, type ReactNode, useContext, useEffect, useEffectEvent } from "react"
+import {
+	createContext,
+	type ReactNode,
+	useContext,
+	useEffect,
+	useEffectEvent,
+} from "react"
 import { isBrowser } from "./deviceDetection"
 import TypedEventEmitter from "./TypedEventEmitter"
 
@@ -85,7 +91,8 @@ export const useHMR =
 				type: "beforeRefresh" | "afterRefresh",
 				callback: (hash: string) => void,
 			) => {
-				if (!useContext(HMRContext)) throw new Error("useHMR requires HMRProvider")
+				if (!useContext(HMRContext))
+					throw new Error("useHMR requires HMRProvider")
 				const sendMessage = useEffectEvent(callback)
 
 				useEffect(() => {
