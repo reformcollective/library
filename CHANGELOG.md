@@ -1,6 +1,6 @@
 # 2026-06-07
 
-## Sanity runtime replaces published SanityLive revalidation
+## Upgraded to next-sanity 13
 
 `next-sanity` has been upgraded to version 13
 
