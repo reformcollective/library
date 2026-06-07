@@ -167,8 +167,9 @@ export const universalLink = ({
 				return true
 			}),
 		initialValue: {
+			_type: "link",
 			type: defaultType,
-			toNewTab: defaultToNewTab ?? defaultType === "external",
+			blank: defaultToNewTab ?? defaultType === "external",
 		},
 	})
 
