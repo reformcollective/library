@@ -10,7 +10,7 @@ The starter has also migrated to smarter typegen scripts. AGENTS.md reflects thi
 
 Create root-level `oxlint.config.ts` and `oxfmt.config.ts` files that re-export `library/config/oxlint.ts` and `library/config/oxfmt.ts`.
 
-Copy the wireit scripts from the starter.
+Copy the wireit scripts from the starter. Reference commit: https://github.com/reformcollective/reform-next-starter/commit/648ab8a
 
 # 2026-06-04
 
