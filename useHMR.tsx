@@ -42,41 +42,10 @@ if (isBrowser) {
 
 const HMRContext = createContext(false)
 
-function installWebSocketPatch() {
-	if (window.__reformHMRPatched) return
-	window.__reformHMRPatched = true
-
-	const OriginalWebSocket = window.WebSocket
-
-	window.WebSocket = class ReformHMRWebSocket extends OriginalWebSocket {
-		constructor(...args: ConstructorParameters<typeof WebSocket>) {
-			super(...args)
-
-			const originalSend = this.send.bind(this)
-			this.send = (data) => {
-				if (typeof data === "string") {
-					try {
-						const message = JSON.parse(data) as { event?: string }
-						if (message.event === "client-success") {
-							window.__reformHMREmitter.dispatchEvent(
-								"afterRefresh",
-								window.__reformHMRCreateId(),
-							)
-						}
-					} catch {}
-				}
-				return originalSend(data)
-			}
-		}
-	}
-}
-
 export const HMRProvider =
 	process.env.NODE_ENV === "development"
 		? ({ children }: { children: ReactNode }) => {
 				useEffect(() => {
-					installWebSocketPatch()
-
 					const handleBeforeUnload = () => {
 						emitter.dispatchEvent("beforeRefresh", createHMRMessageId())
 					}
