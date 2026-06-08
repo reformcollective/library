@@ -1,3 +1,12 @@
+# 2026-06-07
+
+## `useHMR` refactor
+
+- `useHMR` now requires `HMRProvider`. 
+- `"beforeReload"` and `"afterReload"` event types are removed — use `"beforeRefresh"` and `"afterRefresh"` for both cases.
+- `useHMR` may fire multiple `afterRefresh` events for each `beforeRefresh`
+- `SteadyHotScroll` moved to `library/SteadyHotScroll`.
+
 # 2026-06-04
 
 ## Sanity query size optimizations
