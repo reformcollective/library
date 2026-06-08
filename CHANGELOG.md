@@ -43,6 +43,16 @@ Create root-level `oxlint.config.ts` and `oxfmt.config.ts` files that re-export 
 
 Copy the wireit scripts from the starter. Reference commit: https://github.com/reformcollective/reform-next-starter/commit/648ab8a
 
+## Sanity link field 1.5.1 preview
+
+The preview `sanity-plugin-link-field` 1.5.1 tarball is now vendored at `library/vendor/sanity-plugin-link-field-1.5.1.tgz`. This preview build repairs link objects whose destination field exists but whose `type` value is missing, so projects should prefer the plugin fix over app-level normalizer workarounds.
+
+`universalLink` now initializes the plugin's `_type` and `blank` fields instead of the older `toNewTab` field.
+
+**Migration Advice**
+
+Update app package references from `library/vendor/sanity-plugin-link-field-pr35-91e3ddb.tgz` to `library/vendor/sanity-plugin-link-field-1.5.1.tgz`, remove any project-level link normalizer workaround, and run `pnpm install`.
+
 # 2026-06-04
 
 ## Sanity query size optimizations
