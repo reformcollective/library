@@ -1,131 +1,88 @@
 "use client"
 
-import type { LiveEvent } from "@sanity/client"
 import { useInterval } from "ahooks"
 import { browserData } from "library/deviceDetection"
 import { useHMR } from "library/useHMR"
 import { usePathname, useRouter } from "next/navigation"
 import { stegaClean } from "next-sanity"
-import {
-	type DraftEnvironment,
-	useDraftModeEnvironment,
-} from "next-sanity/hooks"
-import { isCorsOriginError } from "next-sanity/live"
-import { revalidateSyncTags } from "next-sanity/live/server-actions"
+import { useVisualEditingEnvironment } from "next-sanity/hooks"
 import { VisualEditing } from "next-sanity/visual-editing"
 import type { ComponentProps, ReactNode } from "react"
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useTransition } from "react"
 import { studioUrl } from "sanity/lib/api"
 import { Toaster, toast } from "sonner"
 import { disableDraftMode } from "./disableDraftMode"
 
-const isPresentationEnvironment = (environment: DraftEnvironment) =>
+const isPresentationEnvironment = (
+	environment: ReturnType<typeof useVisualEditingEnvironment>,
+) =>
 	environment === "presentation-iframe" || environment === "presentation-window"
 
-const presentationSearchParams = ["sanity-preview-perspective"]
-
-const getIsPossiblyPresentationPreview = () => {
-	try {
-		const searchParams = new URLSearchParams(window.location.search)
-		return (
-			window.self !== window.top ||
-			presentationSearchParams.some((param) => searchParams.has(param))
-		)
-	} catch {
-		return true
-	}
-}
-
-/**
- * Owns all browser-only Sanity runtime behavior:
- * subscriptions, draft/presentation UI, and browser stega cleanup.
- */
-export function SanityLiveRuntime({
+export function SanityRuntime({
 	children,
 	isDraftMode,
-	useLiveProxy,
 }: {
-	children: ReactNode
+	children?: ReactNode
 	isDraftMode: boolean
-	useLiveProxy: boolean
 }) {
 	const pathname = usePathname()
 	const isStudio = pathname.startsWith(studioUrl)
-	const [isPossiblyPresentationPreview, setIsPossiblyPresentationPreview] =
-		useState(false)
-
-	useEffect(() => {
-		setIsPossiblyPresentationPreview(getIsPossiblyPresentationPreview())
-	}, [])
+	const environment = useVisualEditingEnvironment()
+	const isPresentation = isPresentationEnvironment(environment)
 
 	if (isStudio) return null
-
-	const useDirectLive =
-		isDraftMode || !useLiveProxy || isPossiblyPresentationPreview
 
 	return (
 		<>
 			<Toaster />
-			{useDirectLive ? (
-				<SanityLiveDirectRuntime isDraftMode={isDraftMode}>
-					{children}
-				</SanityLiveDirectRuntime>
-			) : (
-				<SanityLiveProxy />
-			)}
-		</>
-	)
-}
-
-function SanityLiveDirectRuntime({
-	children,
-	isDraftMode,
-}: {
-	children: ReactNode
-	isDraftMode: boolean
-}) {
-	const environment = useDraftModeEnvironment()
-	const isPresentation = isPresentationEnvironment(environment)
-
-	return (
-		<>
+			<SanityRuntimeRefresh showRefreshToast={isDraftMode} />
 			{children}
 			<SanityPreviewStatusToast
 				isDraftMode={isDraftMode}
 				isPresentation={isPresentation}
 			/>
-			<SanityVisualEditingOverlay
-				isDraftMode={isDraftMode}
-				isPresentation={isPresentation}
-			/>
+			<SanityVisualEditingOverlay isDraftMode={isDraftMode} />
 			{isDraftMode && <FirefoxFix />}
 		</>
 	)
 }
 
-/**
- * a lightweight version of SanityLive
- *
- * - shares connections to sanity between clients
- * - works event without CORS configuration (although you should still configure it for the studio)
- */
-export function SanityLiveProxy() {
+export function SanityRuntimeRefresh({
+	showRefreshToast,
+}: {
+	showRefreshToast: boolean
+}) {
 	const router = useRouter()
+	const [pending, startTransition] = useTransition()
 
 	useEffect(() => {
 		const eventSource = new EventSource("/api/live")
 
 		eventSource.onmessage = (e) => {
-			const event = JSON.parse(e.data) as LiveEvent
-			if (event.type === "message") {
-				revalidateSyncTags(event.tags)
-			} else if (event.type === "restart" || event.type === "reconnect") {
-				router.refresh()
+			const event = JSON.parse(e.data)
+			if (
+				event &&
+				typeof event === "object" &&
+				"type" in event &&
+				event.type === "refresh"
+			) {
+				startTransition(() => {
+					router.refresh()
+				})
 			}
 		}
 
 		return () => eventSource.close()
 	}, [router])
+
+	useEffect(() => {
+		if (!pending || !showRefreshToast) return
+
+		const toastId = toast.loading("Refreshing content...")
+		return () => {
+			toast.dismiss(toastId)
+		}
+	}, [pending, showRefreshToast])
 
 	return null
 }
@@ -146,6 +103,7 @@ export function SanityPreviewStatusToast({
 		const toastId = toast(
 			isDraftMode ? "Viewing Drafted Content" : "Viewing Published Content",
 			{
+				duration: !isDraftMode && isPresentation ? Infinity : undefined,
 				action:
 					isDraftMode && !isPresentation
 						? {
@@ -180,13 +138,11 @@ export function SanityPreviewStatusToast({
 
 export function SanityVisualEditingOverlay({
 	isDraftMode,
-	isPresentation,
 	...props
 }: ComponentProps<typeof VisualEditing> & {
 	isDraftMode: boolean
-	isPresentation: boolean
 }) {
-	if (!isDraftMode || !isPresentation) return null
+	if (!isDraftMode) return null
 
 	return <VisualEditing {...props} />
 }
@@ -208,7 +164,6 @@ const checkZeroWidthChars = (startNode: Node = document.body) => {
 				const computedStyle = getComputedStyle(parent)
 				const letterSpacing = parseFloat(computedStyle.letterSpacing)
 
-				// remove the stega and replace the content
 				if (letterSpacing !== 0) {
 					const cleanContent = stegaClean(node.textContent ?? "")
 					node.textContent = cleanContent
@@ -238,34 +193,4 @@ export const FirefoxFix = () => {
 	})
 
 	return null
-}
-
-export function handleError(error: unknown) {
-	if (isCorsOriginError(error)) {
-		// If the error is a CORS origin error, let's display that specific error.
-		const { addOriginUrl } = error
-		toast.error(`Sanity Live couldn't connect`, {
-			description: "Your origin is blocked by CORS policy",
-			duration: 3000,
-			dismissible: true,
-			action: addOriginUrl
-				? {
-						label: "Manage",
-						onClick: () => window.open(addOriginUrl.toString(), "_blank"),
-					}
-				: undefined,
-		})
-	} else if (error instanceof Error) {
-		console.error(error)
-		toast.error(error.name, {
-			description: error.message,
-			duration: 10_000,
-		})
-	} else {
-		console.error(error)
-		toast.error("Unknown error", {
-			description: "Check the console for more details",
-			duration: 10_000,
-		})
-	}
 }

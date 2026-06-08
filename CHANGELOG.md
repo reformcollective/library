@@ -1,10 +1,34 @@
 # 2026-06-07
 
+## Upgraded to next-sanity 13
+
+`next-sanity` has been upgraded to version 13
+
+Published content revalidation now runs through `library/sanity/liveProxy`. The
+proxy keeps a server-owned Sanity Live Content API subscription alive, posts
+exact sync-tag invalidations through `/api/live`, refreshes connected browsers,
+and broad-revalidates on startup when missed publish events are possible.
+
+Draft mode still renders upstream `SanityLive` so draft previews keep using the
+stock next-sanity live behavior.
+
+**Migration Advice**
+
+Rename layout imports/usages from `SanityLive` to `SanityRuntime`:
+
+```tsx
+import SanityRuntime, { sanityFetch } from "sanity/lib/live"
+```
+
+Keep re-exporting `library/sanity/liveProxy` from `app/(sanity)/api/live/route.ts`.
+
+Include `reformLiveStateType` from `library/sanity/liveState` in the project's Sanity schema types.
+
 ## `useHMR` refactor
 
-- `useHMR` now requires `HMRProvider`. 
+- `useHMR` now requires `HMRProvider`.
 - `"beforeReload"` and `"afterReload"` event types are removed — use `"beforeRefresh"` and `"afterRefresh"` for both cases.
-- `useHMR` may fire multiple `afterRefresh` events for each `beforeRefresh`
+- `useHMR` may fire multiple `afterRefresh` events for each `beforeRefresh`.
 - `SteadyHotScroll` moved to `library/SteadyHotScroll`.
 
 # 2026-06-04

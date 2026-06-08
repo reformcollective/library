@@ -11,19 +11,18 @@ import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
 import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
-import { handleError, SanityLiveRuntime } from "./live.client"
+import { SanityRuntime } from "./live.client"
 
 const libraryClient = client.withConfig({ useCdn: false })
 
 /**
- * Use defineLive to enable automatic revalidation and refreshing of your fetched content
+ * Use defineLive to keep Sanity fetches tagged with Content Lake sync tags.
  * Learn more: https://github.com/sanity-io/next-sanity?tab=readme-ov-file#1-configure-definelive
  */
 const { sanityFetch: internalFetch, SanityLive: InternalLive } = defineLive({
 	client: libraryClient,
 	serverToken: token,
 	browserToken: token,
-	fetchOptions: { revalidate: Infinity },
 })
 
 type IsAny<T> = 0 extends 1 & T ? true : false
@@ -81,35 +80,18 @@ export async function libraryFetch<const QueryString extends string>({
 	})
 }
 
-const canUseLiveProxy =
-	// vercel has fluid compute baybeeee
-	// local obviously is persistent too
-	// other providers should be tested and evaluated as needed
-	!!process.env.VERCEL || process.env.NODE_ENV === "development"
-
-export const LibraryLive = async () => {
+export const LibraryRuntime = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
-	const useLiveProxy = canUseLiveProxy && !isDraftMode
-
 	return (
-		<SanityLiveRuntime isDraftMode={isDraftMode} useLiveProxy={useLiveProxy}>
-			<InternalLive
-				onError={handleError}
-				refreshOnFocus={false}
-				refreshOnMount={true}
-				refreshOnReconnect={true}
-				intervalOnGoAway={false}
-			/>
-		</SanityLiveRuntime>
+		<SanityRuntime isDraftMode={isDraftMode}>
+			{isDraftMode && <InternalLive />}
+		</SanityRuntime>
 	)
 }
 
-/**
- * validate sanity versions - read actual installed versions from node_modules
- */
-if (!semver.satisfies(nextSanityVersion, "^12.0.0")) {
+if (!semver.satisfies(nextSanityVersion, "^13.0.0")) {
 	throw new Error(
-		`next-sanity must satisfy version ^12.0.0! (installed: ${nextSanityVersion})`,
+		`next-sanity must satisfy version ^13.0.0! (installed: ${nextSanityVersion})`,
 	)
 }
 if (!semver.satisfies(sanityVersion, "^5.0.0")) {
