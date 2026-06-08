@@ -11,7 +11,6 @@ import { isBrowser } from "./deviceDetection"
 import TypedEventEmitter from "./TypedEventEmitter"
 
 const nextDispatcher = dispatcher as Dispatcher
-const js = String.raw
 
 let hmrMessageId = 0
 
@@ -27,6 +26,7 @@ declare global {
 	interface Window {
 		__reformHMREmitter: typeof emitter
 		__reformHMRCreateId: typeof createHMRMessageId
+		__reformHMRPatched?: boolean
 	}
 }
 
@@ -42,32 +42,41 @@ if (isBrowser) {
 
 const HMRContext = createContext(false)
 
-const wsPatchScript = js`
-	if (!window.__reformHMRPatched) {
-		window.__reformHMRPatched = true;
-		const originalWebSocket = window.WebSocket;
-		window.WebSocket = function(...args) {
-			const ws = new originalWebSocket(...args);
-			const originalSend = ws.send.bind(ws);
-			ws.send = function(data) {
-				try {
-					const msg = JSON.parse(data);
-					if (msg.event === 'client-success') {
-						window.__reformHMREmitter.dispatchEvent('afterRefresh', window.__reformHMRCreateId());
-					}
-				} catch(e) {}
-				return originalSend(data);
-			};
-			return ws;
-		};
-		window.WebSocket.prototype = originalWebSocket.prototype;
+function installWebSocketPatch() {
+	if (window.__reformHMRPatched) return
+	window.__reformHMRPatched = true
+
+	const OriginalWebSocket = window.WebSocket
+
+	window.WebSocket = class ReformHMRWebSocket extends OriginalWebSocket {
+		constructor(...args: ConstructorParameters<typeof WebSocket>) {
+			super(...args)
+
+			const originalSend = this.send.bind(this)
+			this.send = (data) => {
+				if (typeof data === "string") {
+					try {
+						const message = JSON.parse(data) as { event?: string }
+						if (message.event === "client-success") {
+							window.__reformHMREmitter.dispatchEvent(
+								"afterRefresh",
+								window.__reformHMRCreateId(),
+							)
+						}
+					} catch {}
+				}
+				return originalSend(data)
+			}
+		}
 	}
-`
+}
 
 export const HMRProvider =
 	process.env.NODE_ENV === "development"
 		? ({ children }: { children: ReactNode }) => {
 				useEffect(() => {
+					installWebSocketPatch()
+
 					const handleBeforeUnload = () => {
 						emitter.dispatchEvent("beforeRefresh", createHMRMessageId())
 					}
@@ -77,10 +86,7 @@ export const HMRProvider =
 				}, [])
 
 				return (
-					<HMRContext.Provider value={true}>
-						<script>{wsPatchScript}</script>
-						{children}
-					</HMRContext.Provider>
+					<HMRContext.Provider value={true}>{children}</HMRContext.Provider>
 				)
 			}
 		: ({ children }: { children: ReactNode }) => <>{children}</>
