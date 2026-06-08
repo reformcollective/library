@@ -8,6 +8,25 @@ The preview `sanity-plugin-link-field` 1.6 tarball is now vendored at `library/v
 
 Update `sanity-plugin-link-field` to the vendored version at `library/vendor/sanity-plugin-link-field-1.6-preview.tgz`.
 
+## config and script updates
+
+`library/config` now includes shared TypeScript helpers for Oxlint and Oxfmt config.
+
+The starter has also migrated to smarter typegen scripts. AGENTS.md reflects this, so you'll want to pull those from the starter.
+
+**Migration Advice**
+
+Create root-level `oxlint.config.ts` and `oxfmt.config.ts` files that re-export `library/config/oxlint.ts` and `library/config/oxfmt.ts`.
+
+Copy the wireit scripts from the starter. Reference commit: https://github.com/reformcollective/reform-next-starter/commit/648ab8a
+
+## `useHMR` refactor
+
+- `useHMR` now requires `HMRProvider`. 
+- `"beforeReload"` and `"afterReload"` event types are removed — use `"beforeRefresh"` and `"afterRefresh"` for both cases.
+- `useHMR` may fire multiple `afterRefresh` events for each `beforeRefresh`.
+- `SteadyHotScroll` moved to `library/SteadyHotScroll`.
+
 # 2026-06-04
 
 ## Sanity query size optimizations
