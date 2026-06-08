@@ -1,11 +1,16 @@
 import type { LiveEventMessage } from "@sanity/client"
 import { env } from "app/env"
+import libraryConfig from "app/libraryConfig"
 import { siteURL } from "library/siteURL"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { defineQuery } from "next-sanity"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
 import * as z from "zod"
+import {
+	getLiveProxySupport,
+	getLiveProxyUnsupportedMessage,
+} from "./liveEnvironment"
 
 export const dynamic = "force-dynamic"
 
@@ -286,6 +291,22 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+	const { allowProxy, canUseLiveProxy } = getLiveProxySupport({
+		allowProxy: libraryConfig.allowProxy,
+		currentSiteURL: siteURL,
+	})
+	if (!allowProxy) {
+		return Response.json(
+			{ error: "Sanity live proxy is disabled." },
+			{ status: 404 },
+		)
+	}
+	if (!canUseLiveProxy) {
+		const message = getLiveProxyUnsupportedMessage()
+		console.warn(message)
+		return Response.json({ error: message }, { status: 500 })
+	}
+
 	const responseStream = new TransformStream()
 	const writer = responseStream.writable.getWriter()
 

@@ -21,9 +21,11 @@ const isPresentationEnvironment = (
 export function SanityRuntime({
 	children,
 	isDraftMode,
+	useLiveProxy,
 }: {
 	children?: ReactNode
 	isDraftMode: boolean
+	useLiveProxy: boolean
 }) {
 	const pathname = usePathname()
 	const isStudio = pathname.startsWith(studioUrl)
@@ -35,7 +37,7 @@ export function SanityRuntime({
 	return (
 		<>
 			<Toaster />
-			<SanityRuntimeRefresh showRefreshToast={isDraftMode} />
+			{useLiveProxy && <SanityRuntimeRefresh showRefreshToast={isDraftMode} />}
 			{children}
 			<SanityPreviewStatusToast
 				isDraftMode={isDraftMode}
