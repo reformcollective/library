@@ -57,6 +57,10 @@ type Config<
 	 */
 	overridePreloaderResolvers?: boolean
 	/**
+	 * if true, use the shared Sanity live proxy when the runtime supports it
+	 */
+	allowProxy: boolean
+	/**
 	 * additional responsive utilities to merge into the default f.* set
 	 */
 	utilities: Utilities
@@ -71,6 +75,7 @@ const defaultConfig = {
 	pageSectionGroups: [],
 	vanillaExtractEngine: "calc",
 	overridePreloaderResolvers: false,
+	allowProxy: true,
 	utilities: {},
 } as const satisfies Config
 
