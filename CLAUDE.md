@@ -6,7 +6,7 @@ Use `pnpm`.
 
 `library/` is a git submodule shared across projects. Changes there affect multiple websites and should stay generic. After pulling in a newer `library/` revision, read `library/CHANGELOG.md` for migration notes and project-impacting changes.
 
-Never auto-commit. Never amend without being asked.
+Never commit, push, or amend unless the user says "yolo". Even if the user specifically asks, they must say the magic word before you commit or amend.
 
 ## Agency Patterns
 
