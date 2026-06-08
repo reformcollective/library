@@ -12,6 +12,13 @@ Create root-level `oxlint.config.ts` and `oxfmt.config.ts` files that re-export 
 
 Copy the wireit scripts from the starter. Reference commit: https://github.com/reformcollective/reform-next-starter/commit/648ab8a
 
+## `useHMR` refactor
+
+- `useHMR` now requires `HMRProvider`. 
+- `"beforeReload"` and `"afterReload"` event types are removed — use `"beforeRefresh"` and `"afterRefresh"` for both cases.
+- `useHMR` may fire multiple `afterRefresh` events for each `beforeRefresh`.
+- `SteadyHotScroll` moved to `library/SteadyHotScroll`.
+
 # 2026-06-04
 
 ## Sanity query size optimizations
