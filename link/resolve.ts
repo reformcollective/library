@@ -1,5 +1,5 @@
-import { stegaClean } from "next-sanity"
 import type { LinkField } from "library/sanity/assetMetadata"
+import { stegaClean } from "next-sanity"
 import { linkIsInternal } from "../functions"
 
 export const staticPageLinkType = "static-page"
