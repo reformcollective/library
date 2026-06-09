@@ -1,11 +1,13 @@
 import { dispatcher } from "next/dist/compiled/next-devtools"
 import type { Dispatcher } from "next/dist/next-devtools/dev-overlay.browser"
+import { useServerInsertedHTML } from "next/navigation"
 import {
 	createContext,
 	type ReactNode,
 	useContext,
 	useEffect,
 	useEffectEvent,
+	useRef,
 } from "react"
 import { isBrowser } from "./deviceDetection"
 import TypedEventEmitter from "./TypedEventEmitter"
@@ -27,6 +29,7 @@ declare global {
 	interface Window {
 		__reformHMREmitter: typeof emitter
 		__reformHMRCreateId: typeof createHMRMessageId
+		__reformHMRPatched?: boolean
 	}
 }
 
@@ -67,6 +70,19 @@ const wsPatchScript = js`
 export const HMRProvider =
 	process.env.NODE_ENV === "development"
 		? ({ children }: { children: ReactNode }) => {
+				const insertedScript = useRef(false)
+
+				useServerInsertedHTML(() => {
+					if (insertedScript.current) return null
+					insertedScript.current = true
+					return (
+						<script
+							id="reform-hmr-websocket-patch"
+							dangerouslySetInnerHTML={{ __html: wsPatchScript }}
+						/>
+					)
+				})
+
 				useEffect(() => {
 					const handleBeforeUnload = () => {
 						emitter.dispatchEvent("beforeRefresh", createHMRMessageId())
@@ -77,10 +93,7 @@ export const HMRProvider =
 				}, [])
 
 				return (
-					<HMRContext.Provider value={true}>
-						<script>{wsPatchScript}</script>
-						{children}
-					</HMRContext.Provider>
+					<HMRContext.Provider value={true}>{children}</HMRContext.Provider>
 				)
 			}
 		: ({ children }: { children: ReactNode }) => <>{children}</>
