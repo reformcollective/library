@@ -1,14 +1,14 @@
 import libraryConfig from "app/libraryConfig"
 import { ScrollTrigger } from "gsap/all"
 import { pathnameMatches, sleep } from "library/functions"
-import { createScrollLock, useLenis } from "library/Scroll"
+import { createScrollLock } from "library/Scroll"
 import { useRouter } from "next/navigation"
 import type { MouseEvent } from "react"
 import { use, useCallback } from "react"
 import { flushSync } from "react-dom"
 import { loader, waitForPageCommit } from "./loader"
 import { TransitionsContext } from "./usePageTransition"
-import { getScrollOffset } from "./util"
+import { getScrollOffset, instantScrollToAnchor } from "./util"
 
 const waitForViewTransition = async () => {
 	try {
@@ -84,12 +84,21 @@ export const useTransitioner = () => {
 		}) => {
 			const scrollLock = createScrollLock("lock")
 
-			let canPinToTop = true
+			let canPin = true
 			const pinToTop = () => {
-				if (!canPinToTop) return
+				if (!canPin) return
 
 				scrollTo({ y: 0, durationSeconds: 0 })
 				requestAnimationFrame(pinToTop)
+			}
+			const pinToAnchor = (anchor: string) => {
+				if (!canPin) return
+
+				window.lenisInstance?.scrollTo(anchor, {
+					immediate: true,
+					force: true,
+				})
+				requestAnimationFrame(() => pinToAnchor(anchor))
 			}
 
 			try {
@@ -181,7 +190,10 @@ export const useTransitioner = () => {
 				)
 				await Promise.race([timeout, pageCommit])
 
-				pinToTop()
+				if (destination.hash) {
+					await instantScrollToAnchor(destination.hash)
+					pinToAnchor(destination.hash)
+				} else pinToTop()
 
 				// after the page has changed, an abort does nothing
 				if (signal?.aborted) return
@@ -226,7 +238,7 @@ export const useTransitioner = () => {
 				return
 			} finally {
 				scrollLock.release()
-				canPinToTop = false
+				canPin = false
 			}
 		},
 		[animations, setIsAnimating, router],
