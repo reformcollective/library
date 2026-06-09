@@ -2,7 +2,6 @@ import { useRef } from "react"
 import { useHMR } from "./useHMR"
 
 const scrollStorageKey = "__reformSteadyHotScrollLatestScroll"
-let logId = 0
 
 const setSavedScroll = (scroll: number | null) => {
 	if (scroll === null) sessionStorage.removeItem(scrollStorageKey)
@@ -15,29 +14,6 @@ const getSavedScroll = () => {
 	return Number.parseInt(scroll, 10)
 }
 
-const getScrollDebugState = () => {
-	const scrollingElement = document.scrollingElement ?? document.documentElement
-	return {
-		scrollY: window.scrollY,
-		scrollHeight: scrollingElement.scrollHeight,
-		bodyScrollHeight: document.body.scrollHeight,
-		viewportHeight: window.innerHeight,
-		maxScroll: Math.max(0, scrollingElement.scrollHeight - window.innerHeight),
-	}
-}
-
-const log = (phase: string, details: Record<string, unknown> = {}) => {
-	console.log(
-		"[SteadyHotScroll]",
-		JSON.stringify({
-			id: ++logId,
-			phase,
-			...details,
-			...getScrollDebugState(),
-		}),
-	)
-}
-
 const useSteadyHotScroll =
 	process.env.NODE_ENV === "development"
 		? () => {
@@ -48,13 +24,11 @@ const useSteadyHotScroll =
 						clearTimeout(clearTimerRef.current)
 						clearTimerRef.current = null
 					}
-					log("beforeRefresh", { previousSavedScroll: getSavedScroll() })
 					setSavedScroll(window.scrollY)
 				})
 
 				useHMR("afterRefresh", () => {
 					const savedScroll = getSavedScroll()
-					log("afterRefresh", { savedScroll })
 					if (savedScroll !== null) {
 						if (window.lenisInstance) {
 							window.lenisInstance.scrollTo(savedScroll, {
