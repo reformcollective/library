@@ -82,15 +82,15 @@ export const useTransitioner = () => {
 			 */
 			transitionName?: (typeof libraryConfig.transitionNames)[number]
 		}) => {
-      const scrollLock = createScrollLock("lock")
+			const scrollLock = createScrollLock("lock")
 
-      let canPinToTop = true
-      const pinToTop = () => {
-        if (!canPinToTop) return
+			let canPinToTop = true
+			const pinToTop = () => {
+				if (!canPinToTop) return
 
 				scrollTo({ y: 0, durationSeconds: 0 })
 				requestAnimationFrame(pinToTop)
-      }
+			}
 
 			try {
 				const destination = new URL(to, window.location.origin)
@@ -181,7 +181,7 @@ export const useTransitioner = () => {
 				)
 				await Promise.race([timeout, pageCommit])
 
-        pinToTop()
+				pinToTop()
 
 				// after the page has changed, an abort does nothing
 				if (signal?.aborted) return
@@ -225,7 +225,7 @@ export const useTransitioner = () => {
 
 				return
 			} finally {
-        scrollLock.release()
+				scrollLock.release()
 				canPinToTop = false
 			}
 		},
