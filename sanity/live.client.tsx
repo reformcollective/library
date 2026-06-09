@@ -2,16 +2,24 @@
 
 import { useInterval } from "ahooks"
 import { browserData } from "library/deviceDetection"
+import TypedEventEmitter from "library/TypedEventEmitter"
 import { useHMR } from "library/useHMR"
 import { usePathname, useRouter } from "next/navigation"
 import { stegaClean } from "next-sanity"
 import { useVisualEditingEnvironment } from "next-sanity/hooks"
 import { VisualEditing } from "next-sanity/visual-editing"
 import type { ComponentProps, ReactNode } from "react"
-import { useEffect, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { studioUrl } from "sanity/lib/api"
 import { Toaster, toast } from "sonner"
 import { disableDraftMode } from "./disableDraftMode"
+
+const sanityLiveRefreshEvents = new TypedEventEmitter<{ refresh: [] }>()
+
+export async function notifySanityLiveRefreshAction() {
+	sanityLiveRefreshEvents.dispatchEvent("refresh")
+	return "refresh" as const
+}
 
 const isPresentationEnvironment = (
 	environment: ReturnType<typeof useVisualEditingEnvironment>,
@@ -54,6 +62,7 @@ export function SanityRuntimeRefresh({
 }) {
 	const router = useRouter()
 	const [pending, startTransition] = useTransition()
+	const [, setSanityLiveRefreshSignal] = useState(0)
 
 	useEffect(() => {
 		const eventSource = new EventSource("/api/live")
@@ -74,6 +83,22 @@ export function SanityRuntimeRefresh({
 
 		return () => eventSource.close()
 	}, [router])
+
+	useEffect(() => {
+		const handleSanityLiveRefresh = () => {
+			startTransition(() => {
+				setSanityLiveRefreshSignal((signal) => signal + 1)
+			})
+		}
+
+		sanityLiveRefreshEvents.addEventListener("refresh", handleSanityLiveRefresh)
+		return () => {
+			sanityLiveRefreshEvents.removeEventListener(
+				"refresh",
+				handleSanityLiveRefresh,
+			)
+		}
+	}, [])
 
 	useEffect(() => {
 		if (!pending || !showRefreshToast) return

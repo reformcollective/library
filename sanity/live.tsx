@@ -11,7 +11,7 @@ import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
 import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
-import { SanityRuntime } from "./live.client"
+import { notifySanityLiveRefreshAction, SanityRuntime } from "./live.client"
 
 const libraryClient = client.withConfig({ useCdn: false })
 
@@ -84,7 +84,7 @@ export const LibraryRuntime = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
 	return (
 		<SanityRuntime isDraftMode={isDraftMode}>
-			{isDraftMode && <InternalLive />}
+			{isDraftMode && <InternalLive action={notifySanityLiveRefreshAction} />}
 		</SanityRuntime>
 	)
 }
