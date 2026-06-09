@@ -40,7 +40,7 @@ export const getAnchorScrollPosition = (anchor: string) => {
 	const trigger = ScrollTrigger.create({
 		trigger: anchorEl,
 		/* note: to avoid visible CLS, data-anchor-offset only affects page load if there is a preloader */
-		start: anchorEl?.getAttribute("data-anchor-offset") || "bottom bottom",
+		start: anchorEl?.getAttribute("data-anchor-offset") || "top top",
 	})
 
 	const absoluteStart = trigger.start
