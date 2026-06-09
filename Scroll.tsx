@@ -134,6 +134,9 @@ ScrollTrigger.config({
 export const SmoothScrollStyle = (config: LenisOptions) => {
 	const [lenis, setLenis] = useState<Lenis | undefined>(undefined)
 
+	// we handle anchors, which conflicts with lenis
+	if (config.anchors) throw new Error("don't configure lenis.anchors")
+
 	useEffect(() => {
 		function update(time: number) {
 			lenis?.raf(time * 1000)

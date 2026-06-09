@@ -8,7 +8,11 @@ import { use, useCallback } from "react"
 import { flushSync } from "react-dom"
 import { loader, waitForPageCommit } from "./loader"
 import { TransitionsContext } from "./usePageTransition"
-import { getScrollOffset, instantScrollToAnchor } from "./util"
+import {
+	getAnchorScrollPosition,
+	instantScrollToAnchor,
+	scrollPage,
+} from "./util"
 
 const waitForViewTransition = async () => {
 	try {
@@ -17,35 +21,6 @@ const waitForViewTransition = async () => {
 	} catch {
 		return Promise.resolve()
 	}
-}
-
-const scrollTo = ({
-	y,
-	durationSeconds,
-}: {
-	y: number
-	durationSeconds?: number
-}) => {
-	if (!window.lenisInstance) {
-		const unlock = createScrollLock("unlock")
-		window.scrollTo({
-			top: y,
-			behavior: durationSeconds === 0 ? "instant" : "smooth",
-		})
-		setTimeout(
-			() => {
-				unlock.release()
-			},
-			durationSeconds === 0 ? 0 : 1000,
-		)
-		return
-	}
-
-	window.lenisInstance.scrollTo(y, {
-		duration: durationSeconds,
-		immediate: durationSeconds === 0,
-		force: true,
-	})
 }
 
 export const useTransitioner = () => {
@@ -88,16 +63,13 @@ export const useTransitioner = () => {
 			const pinToTop = () => {
 				if (!canPin) return
 
-				scrollTo({ y: 0, durationSeconds: 0 })
+				scrollPage({ y: 0, instant: true })
 				requestAnimationFrame(pinToTop)
 			}
 			const pinToAnchor = (anchor: string) => {
 				if (!canPin) return
 
-				window.lenisInstance?.scrollTo(anchor, {
-					immediate: true,
-					force: true,
-				})
+				scrollPage({ y: getAnchorScrollPosition(anchor), instant: true })
 				requestAnimationFrame(() => pinToAnchor(anchor))
 			}
 
@@ -121,14 +93,14 @@ export const useTransitioner = () => {
 
 					// scroll to anchor if applicable, otherwise scroll to top
 					if (destination.hash) {
-						const scrollOffset = getScrollOffset(destination.hash)
-						window.lenisInstance?.scrollTo(destination.hash, {
-							offset: scrollOffset,
-							force: true,
+						const y = getAnchorScrollPosition(destination.hash)
+						scrollPage({
+							y,
+							instant: false,
 						})
 						loader.dispatchEvent("scroll", destination.hash)
 					} else {
-						scrollTo({ y: 0 })
+						scrollPage({ y: 0, instant: false })
 						loader.dispatchEvent("scroll", null)
 					}
 
@@ -180,7 +152,7 @@ export const useTransitioner = () => {
 				if (signal?.aborted) return
 
 				const pageCommit = waitForPageCommit()
-				router.push(to as Parameters<typeof router.prefetch>[0])
+				router.push(to as Parameters<typeof router.push>[0], { scroll: false })
 
 				// wait for the new page to commit to the DOM, with a timeout
 				const timeout = new Promise((_, reject) =>
