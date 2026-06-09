@@ -1,6 +1,7 @@
 import type { LiveEventMessage } from "@sanity/client"
 import { env } from "app/env"
 import libraryConfig from "app/libraryConfig"
+import { sleep } from "library/functions"
 import { siteURL } from "library/siteURL"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { defineQuery } from "next-sanity"
@@ -22,6 +23,7 @@ const internalSecret = env.SANITY_AUTH_TOKEN
 const STARTUP_SAFETY_WINDOW_MS = 60_000
 const LIVE_STATE_ID = "_reform.liveState"
 const LIVE_STATE_TYPE = "reformLiveState"
+const WATERMARK_WRITE_MAX_ATTEMPTS = 5
 
 let messageQueue = Promise.resolve()
 let sanitySubscription: LiveSubscription | null = null
@@ -132,7 +134,7 @@ async function writeProcessedWatermark({
 		reason,
 	}
 
-	for (let attempt = 0; attempt < 2; attempt++) {
+	for (let attempt = 0; attempt < WATERMARK_WRITE_MAX_ATTEMPTS; attempt++) {
 		const state = await getLiveState()
 
 		if (
@@ -162,7 +164,23 @@ async function writeProcessedWatermark({
 			})
 			return
 		} catch (error) {
-			if (attempt === 0 && isRevisionConflict(error)) continue
+			if (isRevisionConflict(error)) {
+				if (attempt < WATERMARK_WRITE_MAX_ATTEMPTS - 1) {
+					await sleep(25 * (attempt + 1))
+					continue
+				}
+
+				const latestState = await getLiveState()
+				if (
+					latestState?.processedThroughUpdatedAt &&
+					!isNewerTimestamp(
+						processedThroughUpdatedAt,
+						latestState.processedThroughUpdatedAt ?? undefined,
+					)
+				) {
+					return
+				}
+			}
 			throw error
 		}
 	}

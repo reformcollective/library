@@ -13,7 +13,7 @@ import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
 import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
-import { SanityRuntime } from "./live.client"
+import { notifySanityLiveRefreshAction, SanityRuntime } from "./live.client"
 import {
 	getLiveProxySupport,
 	getLiveProxyUnsupportedMessage,
@@ -99,7 +99,11 @@ export const LibraryRuntime = async () => {
 
 	return (
 		<SanityRuntime isDraftMode={isDraftMode} useLiveProxy={canUseLiveProxy}>
-			{(isDraftMode || !allowProxy) && <InternalLive />}
+			{(isDraftMode || !allowProxy) && (
+				<InternalLive
+					action={isDraftMode ? notifySanityLiveRefreshAction : undefined}
+				/>
+			)}
 		</SanityRuntime>
 	)
 }
