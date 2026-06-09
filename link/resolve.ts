@@ -1,3 +1,4 @@
+import type { LinkField } from "library/sanity/assetMetadata"
 import { stegaClean } from "next-sanity"
 import { linkIsInternal } from "../functions"
 
@@ -5,23 +6,7 @@ export const staticPageLinkType = "static-page"
 export const smsLinkType = "sms"
 export const documentLinkType = "document"
 
-export type CMSLink = {
-	_type: "link"
-	text?: string
-	type?: string
-	/** Resolved by inline GROQ projection; null when not an internal link. */
-	internalSlug?: string | null
-	url?: string
-	email?: string
-	phone?: string
-	sms?: string
-	value?: string
-	fileUrl?: string | null
-	fileName?: string | null
-	blank?: boolean
-	parameters?: string
-	anchor?: string
-}
+export type CMSLink = LinkField
 
 /** All values accepted by resolveRoute / isRouteDefined. */
 export type LinkHref = string | null | undefined | CMSLink

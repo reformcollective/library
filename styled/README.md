@@ -215,11 +215,11 @@ in **string styles** (e.g. `css\`...\`` or string entries in style arrays) you c
 
 ```ts
 base: [
-  css`
-    & > * {
-      color: orange;
-    }
-  `,
+	css`
+		& > * {
+			color: orange;
+		}
+	`,
 ]
 ```
 

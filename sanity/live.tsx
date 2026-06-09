@@ -1,3 +1,5 @@
+import libraryConfig from "app/libraryConfig"
+import { siteURL } from "library/siteURL"
 import { draftMode } from "next/headers"
 import type {
 	ClientPerspective,
@@ -12,6 +14,10 @@ import { token } from "sanity/lib/token"
 import { version as sanityVersion } from "sanity/package.json"
 import semver from "semver"
 import { notifySanityLiveRefreshAction, SanityRuntime } from "./live.client"
+import {
+	getLiveProxySupport,
+	getLiveProxyUnsupportedMessage,
+} from "./liveEnvironment"
 
 const libraryClient = client.withConfig({ useCdn: false })
 
@@ -82,9 +88,22 @@ export async function libraryFetch<const QueryString extends string>({
 
 export const LibraryRuntime = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
+	const { allowProxy, canUseLiveProxy, runtimeSupportsLiveProxy } =
+		getLiveProxySupport({
+			allowProxy: libraryConfig.allowProxy,
+			currentSiteURL: siteURL,
+		})
+	if (allowProxy && !runtimeSupportsLiveProxy) {
+		throw new Error(getLiveProxyUnsupportedMessage())
+	}
+
 	return (
-		<SanityRuntime isDraftMode={isDraftMode}>
-			{isDraftMode && <InternalLive action={notifySanityLiveRefreshAction} />}
+		<SanityRuntime isDraftMode={isDraftMode} useLiveProxy={canUseLiveProxy}>
+			{(isDraftMode || !allowProxy) && (
+				<InternalLive
+					action={isDraftMode ? notifySanityLiveRefreshAction : undefined}
+				/>
+			)}
 		</SanityRuntime>
 	)
 }

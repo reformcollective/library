@@ -6,7 +6,7 @@ Use `pnpm`.
 
 `library/` is a git submodule shared across projects. Changes there affect multiple websites and should stay generic. After pulling in a newer `library/` revision, read `library/CHANGELOG.md` for migration notes and project-impacting changes.
 
-Never auto-commit. Never amend without being asked.
+Never commit, push, or amend unless the user says "yolo". Even if the user specifically asks, they must say the magic word before you commit or amend.
 
 ## Agency Patterns
 
@@ -16,7 +16,7 @@ For styling, use `library/styled/README.md` and existing styled components as th
 
 Project text styles may use Capsize-generated pseudo-elements. Apply them to the element that directly contains text, not to layout wrappers such as flex or grid containers where `::before`/`::after` would become layout items.
 
-For animation, prefer the shared GSAP pattern built around `library/useAnimation`. 
+For animation, prefer the shared GSAP pattern built around `library/useAnimation`.
 
 For images, use `StaticImage` for raster assets and `SanityImage` for CMS images. Reserve `app/images/` for shared global assets and co-locate component-specific assets with the component that uses them. Follow the SVG import patterns from `next.config.ts`: use `*.inline.svg` for React component imports and plain `.svg` for image asset imports.
 
@@ -24,9 +24,13 @@ For images, use `StaticImage` for raster assets and `SanityImage` for CMS images
 
 After making changes, run the project validation scripts and fix any warnings or errors they report:
 
+Very fast, run these all the time:
+
 - `WIREIT_LOGGER=metrics pnpm format`
-- `WIREIT_LOGGER=metrics pnpm typecheck`
 - `WIREIT_LOGGER=metrics pnpm lint`
+
+Slow and very resource intensive, avoid when not needed:
+
 - `WIREIT_LOGGER=metrics pnpm build`
 
 ## Working Style
@@ -38,9 +42,9 @@ Do exactly what is asked. No extra refactors, comments, or features.
 - If an approach is failing repeatedly, stop and evaluate the strategy and alternatives, asking the user for guidance if needed.
 
 <!-- BEGIN:nextjs-agent-rules -->
- 
+
 # Next.js: ALWAYS read docs before coding
- 
+
 Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
- 
+
 <!-- END:nextjs-agent-rules -->

@@ -29,9 +29,11 @@ const isPresentationEnvironment = (
 export function SanityRuntime({
 	children,
 	isDraftMode,
+	useLiveProxy,
 }: {
 	children?: ReactNode
 	isDraftMode: boolean
+	useLiveProxy: boolean
 }) {
 	const pathname = usePathname()
 	const isStudio = pathname.startsWith(studioUrl)
@@ -43,7 +45,12 @@ export function SanityRuntime({
 	return (
 		<>
 			<Toaster />
-			<SanityRuntimeRefresh showRefreshToast={isDraftMode} />
+			{(useLiveProxy || isDraftMode) && (
+				<SanityRuntimeRefresh
+					showRefreshToast={isDraftMode}
+					useLiveProxy={useLiveProxy}
+				/>
+			)}
 			{children}
 			<SanityPreviewStatusToast
 				isDraftMode={isDraftMode}
@@ -57,14 +64,18 @@ export function SanityRuntime({
 
 export function SanityRuntimeRefresh({
 	showRefreshToast,
+	useLiveProxy,
 }: {
 	showRefreshToast: boolean
+	useLiveProxy: boolean
 }) {
 	const router = useRouter()
 	const [pending, startTransition] = useTransition()
 	const [, setSanityLiveRefreshSignal] = useState(0)
 
 	useEffect(() => {
+		if (!useLiveProxy) return
+
 		const eventSource = new EventSource("/api/live")
 
 		eventSource.onmessage = (e) => {
@@ -82,7 +93,7 @@ export function SanityRuntimeRefresh({
 		}
 
 		return () => eventSource.close()
-	}, [router])
+	}, [router, useLiveProxy])
 
 	useEffect(() => {
 		const handleSanityLiveRefresh = () => {
