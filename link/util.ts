@@ -22,9 +22,9 @@ export const scrollPage = ({ y, instant }: { y: number; instant: boolean }) => {
 		immediate: instant,
 		force: true,
 		onComplete: () => {
-			unlock.release
-    },
-		lock:true,
+			unlock.release()
+		},
+		lock: true,
 	})
 }
 
@@ -44,12 +44,14 @@ export const getAnchorScrollPosition = (anchor: string) => {
 	})
 
 	const absoluteStart = trigger.start
+	trigger.kill()
 
 	const cssOffset = Number.parseFloat(
 		getComputedStyle(anchorEl).scrollMarginTop,
 	)
 
-	return absoluteStart - cssOffset
+  const final = absoluteStart - cssOffset
+	return Number.isFinite(final) ? final : 0
 }
 
 /**
@@ -76,10 +78,11 @@ export const instantScrollToAnchor = async (anchor: string) => {
 			ScrollTrigger.refresh()
 			scrollPage({ y: anchorPosition, instant: true })
 			const newPosition = window.scrollY
+			const isAtLeastClose = Math.abs(anchorPosition - scrollY) < 25
 
 			// if we moved less than 10 pixels, count it as a good attempt
 			// otherwise reset the counter
-			if (Math.abs(newPosition - scrollPosition) < 10) {
+			if (isAtLeastClose && Math.abs(newPosition - scrollPosition) < 10) {
 				goodAttemptCount += 1
 			} else {
 				scrollPosition = newPosition
