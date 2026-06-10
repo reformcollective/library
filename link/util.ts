@@ -50,7 +50,7 @@ export const getAnchorScrollPosition = (anchor: string) => {
 		getComputedStyle(anchorEl).scrollMarginTop,
 	)
 
-  const final = absoluteStart - cssOffset
+	const final = absoluteStart - cssOffset
 	return Number.isFinite(final) ? final : 0
 }
 
