@@ -255,7 +255,10 @@ export function definePageSection<const TName extends string>(
 		{
 			...options,
 			groups: [{ name: group }],
-			icon: createSectionPreview(icon, iconBackground ?? libraryConfig.sectionPreviewBackground),
+			icon: createSectionPreview(
+				icon,
+				iconBackground ?? libraryConfig.sectionPreviewBackground,
+			),
 		},
 		secondary,
 	)
