@@ -1,6 +1,7 @@
 import type { LiveEventMessage } from "@sanity/client"
 import { env } from "app/env"
 import libraryConfig from "app/libraryConfig"
+import { sleep } from "library/functions"
 import { siteURL } from "library/siteURL"
 import { revalidatePath, revalidateTag } from "next/cache"
 import { defineQuery } from "next-sanity"
@@ -102,10 +103,6 @@ function isRevisionConflict(error: unknown) {
 		"statusCode" in error &&
 		error.statusCode === 409
 	)
-}
-
-function sleep(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function parsePostPayload(body: unknown): ParsedPostPayload {

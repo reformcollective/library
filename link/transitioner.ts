@@ -8,7 +8,11 @@ import { use, useCallback } from "react"
 import { flushSync } from "react-dom"
 import { loader, waitForPageCommit } from "./loader"
 import { TransitionsContext } from "./usePageTransition"
-import { getScrollOffset } from "./util"
+import {
+	getAnchorScrollPosition,
+	instantScrollToAnchor,
+	scrollPage,
+} from "./util"
 
 const waitForViewTransition = async () => {
 	try {
@@ -20,6 +24,7 @@ const waitForViewTransition = async () => {
 }
 
 export const useTransitioner = () => {
+	"use no memo"
 	const { animations, setIsAnimating } = use(TransitionsContext)
 	const router = useRouter()
 
@@ -52,144 +57,161 @@ export const useTransitioner = () => {
 			 */
 			transitionName?: (typeof libraryConfig.transitionNames)[number]
 		}) => {
-			const destination = new URL(to, window.location.origin)
+			const scrollLock = createScrollLock("lock")
 
-			/**
-			 * ONLY SCROLLING
-			 *
-			 * if we're already on the page we're trying to load, just scroll to the top ( or to anchor )
-			 */
-			if (
-				to.startsWith("#") ||
-				pathnameMatches(destination.pathname, window.location.pathname)
-			) {
-				e?.preventDefault()
-				const scrollLock = createScrollLock("unlock")
+			let canPin = true
+			const pinToTop = () => {
+				if (!canPin) return
 
-				// save the anchor to the URL
-				if (libraryConfig.saveAnchorNames)
-					window.history.replaceState({}, "", to)
+				scrollPage({ y: 0, instant: true })
+				requestAnimationFrame(pinToTop)
+			}
+			const pinToAnchor = (anchor: string) => {
+				if (!canPin) return
 
-				// scroll to anchor if applicable, otherwise scroll to top
-				if (destination.hash) {
-					const scrollOffset = getScrollOffset(destination.hash)
-					window.lenisInstance?.scrollTo(destination.hash, {
-						offset: scrollOffset,
-						onComplete: scrollLock.release,
-					})
-					loader.dispatchEvent("scroll", destination.hash)
-				} else {
-					window.lenisInstance?.scrollTo(0, {
-						onComplete: scrollLock.release,
-					})
-					loader.dispatchEvent("scroll", null)
+				scrollPage({ y: getAnchorScrollPosition(anchor), instant: true })
+				requestAnimationFrame(() => pinToAnchor(anchor))
+			}
+
+			try {
+				const destination = new URL(to, window.location.origin)
+
+				/**
+				 * ONLY SCROLLING
+				 *
+				 * if we're already on the page we're trying to load, just scroll to the top ( or to anchor )
+				 */
+				if (
+					to.startsWith("#") ||
+					pathnameMatches(destination.pathname, window.location.pathname)
+				) {
+					e?.preventDefault()
+
+					// save the anchor to the URL
+					if (libraryConfig.saveAnchorNames)
+						window.history.replaceState({}, "", to)
+
+					// scroll to anchor if applicable, otherwise scroll to top
+					if (destination.hash) {
+						const y = getAnchorScrollPosition(destination.hash)
+						scrollPage({
+							y,
+							instant: false,
+						})
+						loader.dispatchEvent("scroll", destination.hash)
+					} else {
+						scrollPage({ y: 0, instant: false })
+						loader.dispatchEvent("scroll", null)
+					}
+
+					return
 				}
 
+				/**
+				 * TRANSITION TO A NEW PAGE
+				 *
+				 * both instant and animated transitions
+				 */
+				const isInstant = animations.size === 0
+				const allAnimations = Array.from(animations)
+				e?.preventDefault()
+				router.prefetch(to as Parameters<typeof router.prefetch>[0])
+				const onAbort = () => {
+					// cancel the in-progress navigation
+					window.history.pushState(null, document.title, window.location.href)
+				}
+				signal?.addEventListener("abort", onAbort)
+
+				const eventPayload = {
+					type: isInstant ? "instant" : "animated",
+					name: transitionName,
+				} as const
+				loader.dispatchEvent("start", eventPayload)
+
+				// capture animations before state change so we can detect new ones
+				const animationsBeforeBefore = document.body.getAnimations({
+					subtree: true,
+				})
+				flushSync(() => {
+					setIsAnimating("before")
+				})
+				const animationsAfterBefore = document.body.getAnimations({
+					subtree: true,
+				})
+				const newBeforeAnimations = animationsAfterBefore.filter(
+					(a) => !animationsBeforeBefore.includes(a),
+				)
+
+				const beforeAnimations = allAnimations.map(({ animateBefore }) =>
+					animateBefore?.(),
+				)
+				await Promise.all([
+					...beforeAnimations,
+					...newBeforeAnimations.map((a) => a.finished),
+				])
+				if (signal?.aborted) return
+
+				const pageCommit = waitForPageCommit()
+				router.push(to as Parameters<typeof router.push>[0], { scroll: false })
+
+				// wait for the new page to commit to the DOM, with a timeout
+				const timeout = new Promise((_, reject) =>
+					setTimeout(() => {
+						if (!signal?.aborted) reject(new Error("Navigation timeout"))
+					}, 30_000),
+				)
+				await Promise.race([timeout, pageCommit])
+
+				if (destination.hash) {
+					await instantScrollToAnchor(destination.hash)
+					pinToAnchor(destination.hash)
+				} else pinToTop()
+
+				// after the page has changed, an abort does nothing
+				if (signal?.aborted) return
+				signal?.removeEventListener("abort", onAbort)
+				ScrollTrigger.refresh()
+
+				loader.dispatchEvent("routeChange", eventPayload)
+				document.body.inert = true // prevent navigation before we're done animating in
+
+				if (!isInstant) await sleep(10)
+
+				// capture animations before state change so we can detect new ones
+				const animationsBeforeAfter = document.body.getAnimations({
+					subtree: true,
+				})
+				flushSync(() => {
+					setIsAnimating("after")
+				})
+				const animationsAfterAfter = document.body.getAnimations({
+					subtree: true,
+				})
+				const newAfterAnimations = animationsAfterAfter.filter(
+					(a) => !animationsBeforeAfter.includes(a),
+				)
+
+				const afterAnimations = allAnimations.map(({ animateAfter }) =>
+					animateAfter?.(),
+				)
+				await Promise.all([
+					...afterAnimations,
+					...newAfterAnimations.map((a) => a.finished),
+				])
+
+				flushSync(() => {
+					setIsAnimating(false)
+				})
+
+				await waitForViewTransition()
+				document.body.inert = false
+				loader.dispatchEvent("end", eventPayload)
+
 				return
+			} finally {
+				scrollLock.release()
+				canPin = false
 			}
-
-			/**
-			 * TRANSITION TO A NEW PAGE
-			 *
-			 * both instant and animated transitions
-			 */
-			const isInstant = animations.size === 0
-			const allAnimations = Array.from(animations)
-			e?.preventDefault()
-			router.prefetch(to as Parameters<typeof router.prefetch>[0])
-			const onAbort = () => {
-				// cancel the in-progress navigation
-				window.history.pushState(null, document.title, window.location.href)
-			}
-			signal?.addEventListener("abort", onAbort)
-
-			const eventPayload = {
-				type: isInstant ? "instant" : "animated",
-				name: transitionName,
-			} as const
-			loader.dispatchEvent("start", eventPayload)
-
-			// capture animations before state change so we can detect new ones
-			const animationsBeforeBefore = document.body.getAnimations({
-				subtree: true,
-			})
-			flushSync(() => {
-				setIsAnimating("before")
-			})
-			const animationsAfterBefore = document.body.getAnimations({
-				subtree: true,
-			})
-			const newBeforeAnimations = animationsAfterBefore.filter(
-				(a) => !animationsBeforeBefore.includes(a),
-			)
-
-			const beforeAnimations = allAnimations.map(({ animateBefore }) =>
-				animateBefore?.(),
-			)
-			await Promise.all([
-				...beforeAnimations,
-				...newBeforeAnimations.map((a) => a.finished),
-			])
-			if (signal?.aborted) return
-
-			const pageCommit = waitForPageCommit()
-			router.push(to as Parameters<typeof router.prefetch>[0])
-
-			// wait for the new page to commit to the DOM, with a timeout
-			const timeout = new Promise((_, reject) =>
-				setTimeout(() => {
-					if (!signal?.aborted) reject(new Error("Navigation timeout"))
-				}, 30_000),
-			)
-			await Promise.race([timeout, pageCommit])
-
-			if (window.lenisInstance) {
-				window.lenisInstance.scrollTo(0, { immediate: true, force: true })
-			} else {
-				window.scrollTo(0, 0)
-			}
-
-			// after the page has changed, an abort does nothing
-			if (signal?.aborted) return
-			signal?.removeEventListener("abort", onAbort)
-			ScrollTrigger.refresh()
-
-			loader.dispatchEvent("routeChange", eventPayload)
-			document.body.inert = true // prevent navigation before we're done animating in
-
-			if (!isInstant) await sleep(10)
-
-			// capture animations before state change so we can detect new ones
-			const animationsBeforeAfter = document.body.getAnimations({
-				subtree: true,
-			})
-			flushSync(() => {
-				setIsAnimating("after")
-			})
-			const animationsAfterAfter = document.body.getAnimations({
-				subtree: true,
-			})
-			const newAfterAnimations = animationsAfterAfter.filter(
-				(a) => !animationsBeforeAfter.includes(a),
-			)
-
-			const afterAnimations = allAnimations.map(({ animateAfter }) =>
-				animateAfter?.(),
-			)
-			await Promise.all([
-				...afterAnimations,
-				...newAfterAnimations.map((a) => a.finished),
-			])
-
-			flushSync(() => {
-				setIsAnimating(false)
-			})
-
-			await waitForViewTransition()
-			document.body.inert = false
-			loader.dispatchEvent("end", eventPayload)
-
-			return
 		},
 		[animations, setIsAnimating, router],
 	)

@@ -1,4 +1,5 @@
-import { useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
+import { loader } from "./link/loader"
 import { useHMR } from "./useHMR"
 
 const scrollStorageKey = "__reformSteadyHotScrollLatestScroll"
@@ -18,12 +19,30 @@ const useSteadyHotScroll =
 	process.env.NODE_ENV === "development"
 		? () => {
 				const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-				useHMR("beforeRefresh", () => {
+				const clearSavedScroll = useCallback(() => {
 					if (clearTimerRef.current) {
 						clearTimeout(clearTimerRef.current)
 						clearTimerRef.current = null
 					}
+					setSavedScroll(null)
+				}, [])
+
+				useEffect(() => {
+					loader.addEventListener("routeChange", clearSavedScroll)
+					window.addEventListener("wheel", clearSavedScroll, { passive: true })
+					window.addEventListener("touchmove", clearSavedScroll, {
+						passive: true,
+					})
+
+					return () => {
+						loader.removeEventListener("routeChange", clearSavedScroll)
+						window.removeEventListener("wheel", clearSavedScroll)
+						window.removeEventListener("touchmove", clearSavedScroll)
+					}
+				}, [clearSavedScroll])
+
+				useHMR("beforeRefresh", () => {
+					clearSavedScroll()
 					setSavedScroll(window.scrollY)
 				})
 
@@ -40,7 +59,7 @@ const useSteadyHotScroll =
 						}
 						if (clearTimerRef.current) clearTimeout(clearTimerRef.current)
 						clearTimerRef.current = setTimeout(() => {
-							setSavedScroll(null)
+							clearSavedScroll()
 							clearTimerRef.current = null
 						}, 5000)
 					}

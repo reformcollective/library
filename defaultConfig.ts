@@ -61,6 +61,10 @@ type Config<
 	 */
 	allowProxy: boolean
 	/**
+	 * default background color for section preview icons in the Sanity studio
+	 */
+	sectionPreviewBackground: string
+	/**
 	 * additional responsive utilities to merge into the default f.* set
 	 */
 	utilities: Utilities
@@ -76,6 +80,7 @@ const defaultConfig = {
 	vanillaExtractEngine: "calc",
 	overridePreloaderResolvers: false,
 	allowProxy: true,
+	sectionPreviewBackground: "white",
 	utilities: {},
 } as const satisfies Config
 
