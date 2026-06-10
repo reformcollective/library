@@ -1,39 +1,57 @@
 import { ScrollTrigger } from "gsap/all"
-import { refreshScrollLocks } from "library/Scroll"
+import { createScrollLock, refreshScrollLocks } from "library/Scroll"
+
+export const scrollPage = ({ y, instant }: { y: number; instant: boolean }) => {
+	const unlock = createScrollLock("unlock")
+	setTimeout(
+		() => {
+			unlock.release()
+		},
+		instant ? 0 : 1500,
+	)
+
+	if (!window.lenisInstance) {
+		window.scrollTo({
+			top: y,
+			behavior: instant ? "instant" : "smooth",
+		})
+		return
+	}
+
+	window.lenisInstance.scrollTo(y, {
+		immediate: instant,
+		force: true,
+		onComplete: () => {
+			unlock.release()
+		},
+		lock: true,
+	})
+}
 
 /**
  * returns the scroll offset of a given anchor by extracting it from the anchor element
  * this allows fine-tuning of the anchor scroll position
  */
-export const getScrollOffset = (anchor: string) => {
-	const scrollOffset = 0
+export const getAnchorScrollPosition = (anchor: string) => {
+	if (!anchor) return 0
+	const anchorEl = document.querySelector(anchor)
+	if (!anchorEl) return 0
 
-	if (anchor) {
-		const anchorEl = document.querySelector(anchor)
-		if (!anchorEl) return 0
+	const trigger = ScrollTrigger.create({
+		trigger: anchorEl,
+		/* note: to avoid visible CLS, data-anchor-offset only affects page load if there is a preloader */
+		start: anchorEl?.getAttribute("data-anchor-offset") || "top top",
+	})
 
-		const anchorOffset = anchorEl?.getAttribute("data-anchor-offset")
-		if (!anchorOffset) return 0
+	const absoluteStart = trigger.start
+	trigger.kill()
 
-		const startTrigger = ScrollTrigger.create({
-			trigger: anchorEl,
-			start: "top top",
-		})
-		const endTrigger = ScrollTrigger.create({
-			trigger: anchorEl,
-			start: anchorOffset,
-		})
+	const cssOffset = Number.parseFloat(
+		getComputedStyle(anchorEl).scrollMarginTop,
+	)
 
-		const absoluteStart = startTrigger.start
-		const absoluteEnd = endTrigger.start
-
-		startTrigger.kill()
-		endTrigger.kill()
-
-		return absoluteEnd - absoluteStart
-	}
-
-	return scrollOffset
+	const final = absoluteStart - cssOffset
+	return Number.isFinite(final) ? final : 0
 }
 
 /**
@@ -56,18 +74,15 @@ export const instantScrollToAnchor = async (anchor: string) => {
 				return
 			}
 
-			const scrollOffset = getScrollOffset(anchor)
+			const anchorPosition = getAnchorScrollPosition(anchor)
 			ScrollTrigger.refresh()
-			window.lenisInstance?.scrollTo(anchor, {
-				offset: scrollOffset,
-				immediate: true,
-				force: true,
-			})
+			scrollPage({ y: anchorPosition, instant: true })
 			const newPosition = window.scrollY
+			const isAtLeastClose = Math.abs(anchorPosition - scrollY) < 25
 
 			// if we moved less than 10 pixels, count it as a good attempt
 			// otherwise reset the counter
-			if (Math.abs(newPosition - scrollPosition) < 10) {
+			if (isAtLeastClose && Math.abs(newPosition - scrollPosition) < 10) {
 				goodAttemptCount += 1
 			} else {
 				scrollPosition = newPosition
