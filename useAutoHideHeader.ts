@@ -1,7 +1,9 @@
+import { useLatest } from "ahooks"
 import { gsap, ScrollTrigger } from "gsap/all"
 import { usePathname } from "next/navigation"
-import { type RefObject, useEffect, useRef } from "react"
+import { type RefObject, useEffect, useRef, useState } from "react"
 import { useIsSmooth } from "./Scroll"
+import TypedEventEmitter from "./TypedEventEmitter"
 import { useAnimation } from "./useAnimation"
 
 const HEADER_HEIGHT_VAR = "--site-header-height"
@@ -11,6 +13,7 @@ function clamp(value: number, min: number, max: number) {
 	return Math.min(max, Math.max(min, value))
 }
 
+// TODO: package this as a component as AutoHidingHeader instead of a hook
 /**
  * A custom hook that controls header visibility based on scroll position and specified elements.
  *
@@ -25,6 +28,7 @@ export default function useAutoHideHeader(
 	styleIn: "scrub" | "snap" = "scrub",
 	reverse = false,
 	extraOffset = 0,
+	externallyForceVisible = false,
 ) {
 	// scrub style only really works if we're using a smoother
 	const isSmooth = useIsSmooth()
@@ -34,6 +38,17 @@ export default function useAutoHideHeader(
 
 	const dataHideAreOnScreen = useRef(false)
 	const dataStickAreOnScreen = useRef(false)
+
+	const [externalForceEvents] = useState(
+		() =>
+			new TypedEventEmitter<{
+				change: [boolean]
+			}>(),
+	)
+	const latestExternalForceVisible = useLatest(externallyForceVisible)
+	useEffect(() => {
+		externalForceEvents.dispatchEvent("change", externallyForceVisible)
+	}, [externallyForceVisible, externalForceEvents])
 
 	/**
 	 * use intersection observer to check if the elements are in view
@@ -128,7 +143,10 @@ export default function useAutoHideHeader(
 
 				const forceHideHeader = dataHideAreOnScreen.current
 				const forceShowHeader =
-					dataStickAreOnScreen.current || scroll === 0 || window.scrollY <= 5
+					latestExternalForceVisible.current ||
+					dataStickAreOnScreen.current ||
+					scroll === 0 ||
+					window.scrollY <= 5
 				const showHeader = style === "snap" && delta < 0
 				const hideHeader = style === "snap" && delta > 0
 
@@ -185,16 +203,25 @@ export default function useAutoHideHeader(
 			wrapper.current?.addEventListener("pointerenter", onHover)
 			wrapper.current?.addEventListener("pointerleave", onLeave)
 			window.addEventListener("popstate", onPopState)
+			externalForceEvents.addEventListener("change", onUpdate)
 
 			ScrollTrigger.create({ onUpdate })
 			return () => {
 				wrapper.current?.removeEventListener("pointerenter", onHover)
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
 				window.removeEventListener("popstate", onPopState)
+				externalForceEvents.removeEventListener("change", onUpdate)
 				resizeObserver.disconnect()
 			}
 		},
-		[wrapper, style, reverse, extraOffset],
+		[
+			wrapper,
+			style,
+			reverse,
+			extraOffset,
+			latestExternalForceVisible,
+			externalForceEvents,
+		],
 		{
 			// reset to top when pathname changes
 			extraDeps: [pathname],
