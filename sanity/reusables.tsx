@@ -58,7 +58,11 @@ export const createSectionPreview = (
 ) =>
 	function SectionPreview() {
 		const bg =
-			background === "white" ? "#fff" : background === "dark" ? "#000" : undefined
+			background === "white"
+				? "#fff"
+				: background === "dark"
+					? "#000"
+					: undefined
 		return (
 			<div
 				style={{
