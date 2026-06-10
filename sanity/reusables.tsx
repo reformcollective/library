@@ -1,5 +1,5 @@
 import { InfoOutlineIcon, PlayIcon } from "@sanity/icons"
-import type libraryConfig from "app/libraryConfig"
+import libraryConfig from "app/libraryConfig"
 import type { StaticImageData } from "next/image"
 import {
 	MATCH_URL_SPOTIFY,
@@ -54,15 +54,10 @@ function isFieldHidden(
 
 export const createSectionPreview = (
 	image: StaticImageData,
-	background?: "white" | "dark",
+	background?: string,
 ) =>
 	function SectionPreview() {
-		const bg =
-			background === "white"
-				? "#fff"
-				: background === "dark"
-					? "#000"
-					: undefined
+		const bg = background
 		return (
 			<div
 				style={{
@@ -221,7 +216,7 @@ export function definePageSection<const TName extends string>(
 	{
 		group,
 		icon,
-		iconBackground = "white",
+		iconBackground,
 		...options
 	}: Omit<
 		ArrayOfEntry<ObjectDefinition>,
@@ -242,8 +237,8 @@ export function definePageSection<const TName extends string>(
 		 * use browser devtools to capture an image of the section (ideally 1600x900 but can be any size)
 		 */
 		icon: StaticImageData
-		/** optional background color for the section preview icon */
-		iconBackground?: "white" | "dark"
+		/** optional CSS background color for the section preview icon (e.g. "#fff", "black") */
+		iconBackground?: string
 	},
 	secondary?: Parameters<
 		typeof defineArrayMember<
@@ -260,7 +255,7 @@ export function definePageSection<const TName extends string>(
 		{
 			...options,
 			groups: [{ name: group }],
-			icon: createSectionPreview(icon, iconBackground),
+			icon: createSectionPreview(icon, iconBackground ?? libraryConfig.sectionPreviewBackground),
 		},
 		secondary,
 	)
