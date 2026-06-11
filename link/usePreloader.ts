@@ -184,6 +184,13 @@ export const usePreloader = ({
 		await processScroll()
 
 		/**
+		 * wait for any custom ready gate (e.g. critical asset preloads) BEFORE settling the
+		 * looping animations below — they're the visible "still loading" signal and should
+		 * keep running while we wait. allSettled so a rejected gate can't wedge the curtain.
+		 */
+		if (beforeReady) await Promise.allSettled([beforeReady])
+
+		/**
 		 * slow down animations
 		 */
 		if (slowAnimations && scope) {
@@ -240,7 +247,6 @@ export const usePreloader = ({
 		/**
 		 * wait for all animations to settle
 		 */
-		if (beforeReady) globalReadyPromises.push(beforeReady)
 		animationReadyPromise.resolve(true)
 		await recursiveAllSettled(globalReadyPromises)
 

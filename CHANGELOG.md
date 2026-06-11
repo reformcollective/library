@@ -1,3 +1,11 @@
+# 2026-06-10
+
+## usePreloader: beforeReady awaited before animation settling
+
+`customAnimation.beforeReady` is now awaited **before** the `stopAnimations`/`slowAnimations` processing instead of alongside it. Previously the loop-stop was scheduled immediately, so a looping "still loading" animation (e.g. a spinner) froze while a long-running `beforeReady` gate (such as an asset preload) was still pending. Loop animations now keep running until the gate settles, then stop on their usual clean iteration boundary before `ready` flips.
+
+No migration needed unless a project depended on loop animations stopping while `beforeReady` was still pending.
+
 # 2026-06-07
 
 ## Upgraded to next-sanity 13
