@@ -1053,7 +1053,9 @@ async function transform(
 
 	return {
 		code: printed,
-		movedNames: partition.imports,
+		movedNames: partition.imports.map((item) =>
+			typeof item === "string" ? item : item.local,
+		),
 	}
 }
 
