@@ -122,7 +122,7 @@ export function reconstructImports(
  * Creates an import declaration AST node.
  */
 export function createImportDeclaration(
-	names: string[],
+	names: Array<string | { imported: string; local: string }>,
 	fromPath: string,
 ): ts.ImportDeclaration {
 	return ts.factory.createImportDeclaration(
@@ -131,13 +131,18 @@ export function createImportDeclaration(
 			false,
 			undefined,
 			ts.factory.createNamedImports(
-				names.map((n) =>
-					ts.factory.createImportSpecifier(
+				names.map((n) => {
+					const imported = typeof n === "string" ? n : n.imported
+					const local = typeof n === "string" ? n : n.local
+
+					return ts.factory.createImportSpecifier(
 						false,
-						undefined,
-						ts.factory.createIdentifier(n),
-					),
-				),
+						imported === local
+							? undefined
+							: ts.factory.createIdentifier(imported),
+						ts.factory.createIdentifier(local),
+					)
+				}),
 			),
 		),
 		ts.factory.createStringLiteral(fromPath),

@@ -616,9 +616,11 @@ export { Something, SomethingElse, SomethingElseElse }`
 
 			// Should import Something (base, string tag - moved to virtual)
 			expect(importedNames).toContain("Something")
-			// Should import the ___raw versions
-			expect(importedNames).toContain("SomethingElse___raw")
-			expect(importedNames).toContain("SomethingElseElse___raw")
+			// Should import the wrapped components aliased to their ___raw local names
+			expect(importedNames).toContain("SomethingElse as SomethingElse___raw")
+			expect(importedNames).toContain(
+				"SomethingElseElse as SomethingElseElse___raw",
+			)
 			// Should NOT import SomethingElse or SomethingElseElse (they're created in original)
 			expect(importedNames).not.toContain("SomethingElse")
 			expect(importedNames).not.toContain("SomethingElseElse")
@@ -632,9 +634,12 @@ export { Something, SomethingElse, SomethingElseElse }`
 
 			// Virtual should have Something (string tag, moved entirely)
 			expect(virtualModule).toContain("Something")
-			// Virtual should have the raw versions for component-based styled
-			expect(virtualModule).toContain("SomethingElse___raw")
-			expect(virtualModule).toContain("SomethingElseElse___raw")
+			// Virtual should keep component-based styled declarations under their original
+			// names so selector interpolation can reference them locally.
+			expect(virtualModule).toContain("SomethingElse")
+			expect(virtualModule).toContain("SomethingElseElse")
+			expect(virtualModule).not.toContain("SomethingElse___raw")
+			expect(virtualModule).not.toContain("SomethingElseElse___raw")
 		})
 
 		it("should split styled(Component) into raw + wrapper", async () => {
@@ -654,6 +659,47 @@ export const Button = styled(BaseButton, { color: "red" })`
 			// Original should have withComponent wrapper
 			expect(result).toContain("withComponent")
 			expect(result).toContain("Button___raw")
+		})
+
+		it("should keep styled(Component) virtual declarations named for selector interpolation", async () => {
+			await using tmpDir = new TempDir()
+			const source = `import { styled, css } from "library/styled"
+import UniversalLink from "library/link"
+import ArrowIcon from "./arrow.svg"
+
+const CardAnchor = styled(UniversalLink, { color: "red" })
+const Card = styled("div", { color: "blue" })
+const CardLinkArrow = styled(ArrowIcon, [
+	css\`
+		margin-left: 8px;
+
+		\${CardAnchor}:hover &,
+		\${Card}:hover & {
+			margin-left: 16px;
+		}
+	\`,
+])`
+			const ctx = createMockContext(
+				path.join(await tmpDir.getPath(), "app/test.tsx"),
+				await tmpDir.getPath(),
+			)
+
+			const result = await vanillaSplitLoader.call(ctx, source)
+			expectValidTypeScript(result)
+
+			expect(result).toContain("CardAnchor as CardAnchor___raw")
+			expect(result).toContain("withComponent(UniversalLink, CardAnchor___raw)")
+
+			const preProcessPath = path.join(
+				await tmpDir.getPath(),
+				".next/debug/pre-process/app/test.css.tsx",
+			)
+			const virtualModule = await fs.readFile(preProcessPath, "utf-8")
+
+			expect(virtualModule).toContain("export const CardAnchor = styled")
+			expect(virtualModule).not.toContain("CardAnchor___raw")
+			expect(virtualModule).toContain("$" + "{CardAnchor}:hover &")
+			expect(virtualModule).toContain("$" + "{Card}:hover &")
 		})
 
 		it("should keep base component import in original", async () => {

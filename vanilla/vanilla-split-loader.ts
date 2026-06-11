@@ -343,8 +343,8 @@ function analyzeStyledCalls(
 				.join(", ")
 
 			const rawSource = restArgsText
-				? `export const ${rawName} = styled("div", ${restArgsText}, ${JSON.stringify(node.name)});`
-				: `export const ${rawName} = styled("div");`
+				? `export const ${node.name} = styled("div", ${restArgsText}, ${JSON.stringify(node.name)});`
+				: `export const ${node.name} = styled("div");`
 
 			// Extract the component identifier from the first arg for exclusion from virtual deps.
 			// Handles: Component, Menu.Trigger, Thing.Menu.Trigger, Component as Type
@@ -402,7 +402,7 @@ interface SplitPartition {
 	/** Names to re-export from original (tainted + exported) */
 	reexports: string[]
 	/** Names to import from virtual module */
-	imports: string[]
+	imports: Array<string | { imported: string; local: string }>
 }
 
 /**
@@ -538,7 +538,7 @@ function partitionNodes(
 	const virtual: DependencyNode[] = []
 	const original: DependencyNode[] = []
 	const reexports: string[] = []
-	const imports: string[] = []
+	const imports: Array<string | { imported: string; local: string }> = []
 
 	for (const node of graph.ordered) {
 		const key = node.name ?? `__expr_${node.id}`
@@ -574,7 +574,10 @@ function partitionNodes(
 					(t) => t.originalName === node.name,
 				)
 				if (transform?.needsWrapper) {
-					imports.push(transform.rawName)
+					imports.push({
+						imported: transform.originalName,
+						local: transform.rawName,
+					})
 					// Also import the base component if it's tainted AND not itself wrapped
 					// (wrapped components are created in original via withComponent, not imported)
 					if (transform.excludedDep && tainted.has(transform.excludedDep)) {
@@ -590,14 +593,23 @@ function partitionNodes(
 				}
 			}
 
-			if (node.exportInfo) {
+			if (node.exportInfo && !wrappedNames.has(node.name)) {
 				reexports.push(node.name)
 			}
 		}
 	}
 
 	// Dedupe imports
-	return { virtual, original, reexports, imports: [...new Set(imports)] }
+	const seenImports = new Set<string>()
+	const dedupedImports = imports.filter((item) => {
+		const key =
+			typeof item === "string" ? item : `${item.imported} as ${item.local}`
+		if (seenImports.has(key)) return false
+		seenImports.add(key)
+		return true
+	})
+
+	return { virtual, original, reexports, imports: dedupedImports }
 }
 
 // =============================================================================
