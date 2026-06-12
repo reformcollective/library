@@ -16,7 +16,7 @@ afterEach(() => {
 	process.env = originalEnv
 })
 
-function setEnv(env: NodeJS.ProcessEnv) {
+function setEnv(env: Partial<NodeJS.ProcessEnv>) {
 	process.env = { ...originalEnv, ...env }
 }
 
