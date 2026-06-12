@@ -118,8 +118,8 @@ if (!semver.satisfies(nextSanityVersion, "^13.0.0")) {
 		`next-sanity must satisfy version ^13.0.0! (installed: ${nextSanityVersion})`,
 	)
 }
-if (!semver.satisfies(sanityVersion, "^5.0.0")) {
+if (!semver.satisfies(sanityVersion, "^5.0.0 || ^6.0.0")) {
 	throw new Error(
-		`sanity must satisfy version ^5.0.0! (installed: ${sanityVersion})`,
+		`sanity must satisfy version ^5.0.0 || ^6.0.0! (installed: ${sanityVersion})`,
 	)
 }
