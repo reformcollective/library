@@ -216,6 +216,10 @@ const hasUniformOutput = (rules: readonly BreakpointRule[]): boolean =>
 	)
 
 const pixelRegex = /-?\d+(\.\d+)?px/g
+const neverResponsiveUnitRegex = /neverpx/g
+
+const restoreNeverResponsiveUnits = (cssText: string): string =>
+	cssText.replaceAll(neverResponsiveUnitRegex, "px")
 
 const replacePxInAst = (
 	root: csstree.CssNode,
@@ -316,7 +320,9 @@ const calcEngine = (
 	if (!ast) return cssText
 
 	replacePxInAst(ast, (px) => getCalcExpression(px, rules, options))
-	const processed = unwrapGeneratedCss(csstree.generate(ast))
+	const processed = restoreNeverResponsiveUnits(
+		unwrapGeneratedCss(csstree.generate(ast)),
+	)
 	return wrapWithMediaQueries(processed, rules)
 }
 
@@ -336,7 +342,9 @@ const mediaEngine = (
 	for (const rule of rules) {
 		const cloned = csstree.clone(ast)
 		replacePxInAst(cloned, (px) => computeResponsiveValue(px, rule, options))
-		contents.push(unwrapGeneratedCss(csstree.generate(cloned)))
+		contents.push(
+			restoreNeverResponsiveUnits(unwrapGeneratedCss(csstree.generate(cloned))),
+		)
 	}
 
 	const allIdentical =
@@ -371,6 +379,9 @@ const generateStyle = (
 
 const unresponsive = (cssText: string): StyleRule =>
 	toInjectedStyleRule(cssText)
+
+export const neverResponsive = (cssText: string): string =>
+	cssText.replaceAll(pixelRegex, (match) => match.replace("px", "neverpx"))
 
 // =============================================================================
 // Public API
