@@ -13,6 +13,7 @@ export function CarouselBackgroundVideo({
 	play = true,
 	muted = true,
 	minResolution = "480p",
+	maxResolution,
 	className,
 	loop,
 	ref: containerRef,
@@ -44,6 +45,12 @@ export function CarouselBackgroundVideo({
 	 * minimum resolution to play the video at
 	 */
 	minResolution?: "480p" | "540p" | "720p" | "1080p" | "1440p" | "2160p"
+	/**
+	 * maximum resolution to play the video at — caps ABR so small/background
+	 * videos don't climb to high rungs (decode cost matters with many videos,
+	 * especially on Safari)
+	 */
+	maxResolution?: "480p" | "540p" | "720p" | "1080p" | "1440p" | "2160p"
 	loop?: boolean
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
@@ -172,7 +179,9 @@ export function CarouselBackgroundVideo({
 					src={
 						playbackFailure || !playbackId
 							? undefined
-							: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
+							: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}${
+									maxResolution ? `&max_resolution=${maxResolution}` : ""
+								}`
 					}
 					preload="auto"
 					muted={muted}
