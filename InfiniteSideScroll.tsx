@@ -151,6 +151,12 @@ export function InfiniteSideScroll({
 					})
 				},
 			})
+			const toIndex = loop.toIndex.bind(loop)
+			loop.toIndex = (index, vars) =>
+				toIndex(
+					resolveNearestLoopIndex(index, loop.current(), childCount),
+					vars,
+				)
 			internalLoopRef(loop)
 
 			// start centered
@@ -339,6 +345,30 @@ function getLayoutGap(
 		(firstLastChild.offsetLeft + firstLastChild.offsetWidth) -
 		secondFirstLeftMargin
 	)
+}
+
+function resolveNearestLoopIndex(
+	index: number,
+	currentIndex: number,
+	childCount: number,
+) {
+	if (childCount <= 0) return index
+
+	const normalizedIndex = ((index % childCount) + childCount) % childCount
+	const nearestCopy = Math.round((currentIndex - normalizedIndex) / childCount)
+	let nearestIndex = normalizedIndex + nearestCopy * childCount
+	let nearestDistance = Math.abs(nearestIndex - currentIndex)
+
+	for (const copyOffset of [-1, 1]) {
+		const candidate = normalizedIndex + (nearestCopy + copyOffset) * childCount
+		const distance = Math.abs(candidate - currentIndex)
+		if (distance < nearestDistance) {
+			nearestIndex = candidate
+			nearestDistance = distance
+		}
+	}
+
+	return nearestIndex
 }
 
 const Wrapper = styled("div", [
