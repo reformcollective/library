@@ -17,6 +17,7 @@ import { notifySanityLiveRefreshAction, SanityRuntime } from "./live.client"
 import {
 	getLiveProxySupport,
 	getLiveProxyUnsupportedMessage,
+	isNextProductionBuild,
 } from "./liveEnvironment"
 
 const libraryClient = client.withConfig({ useCdn: false })
@@ -88,17 +89,21 @@ export async function libraryFetch<const QueryString extends string>({
 
 export const LibraryRuntime = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
+	const isProductionBuild = isNextProductionBuild()
 	const { allowProxy, canUseLiveProxy, runtimeSupportsLiveProxy } =
 		getLiveProxySupport({
 			allowProxy: libraryConfig.allowProxy,
 			currentSiteURL: siteURL,
 		})
-	if (allowProxy && !runtimeSupportsLiveProxy) {
+	if (allowProxy && !runtimeSupportsLiveProxy && !isProductionBuild) {
 		throw new Error(getLiveProxyUnsupportedMessage())
 	}
 
 	return (
-		<SanityRuntime isDraftMode={isDraftMode} useLiveProxy={canUseLiveProxy}>
+		<SanityRuntime
+			isDraftMode={isDraftMode}
+			useLiveProxy={canUseLiveProxy && !isProductionBuild}
+		>
 			{(isDraftMode || !allowProxy) && (
 				<InternalLive
 					action={isDraftMode ? notifySanityLiveRefreshAction : undefined}
@@ -113,8 +118,8 @@ if (!semver.satisfies(nextSanityVersion, "^13.0.0")) {
 		`next-sanity must satisfy version ^13.0.0! (installed: ${nextSanityVersion})`,
 	)
 }
-if (!semver.satisfies(sanityVersion, "^5.0.0")) {
+if (!semver.satisfies(sanityVersion, "^5.0.0 || ^6.0.0")) {
 	throw new Error(
-		`sanity must satisfy version ^5.0.0! (installed: ${sanityVersion})`,
+		`sanity must satisfy version ^5.0.0 || ^6.0.0! (installed: ${sanityVersion})`,
 	)
 }

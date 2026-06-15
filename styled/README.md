@@ -121,9 +121,25 @@ takes standard css with pixel values and converts them into a responsive `calc()
 
 ```ts
 f.responsive({
-	fontSize: "16px", // becomes a complex calc() covering all breakpoints
+	padding: "16px", // becomes a complex calc() covering all breakpoints
 	margin: "20px 40px",
 })
+```
+
+### `neverResponsive`
+
+wrap css in `neverResponsive(...)` when pixel values should survive responsive conversion.
+
+```ts
+import { css, f, neverResponsive } from "library/styled"
+
+f.responsive(css`
+	padding: 20px;
+	${neverResponsive(css`
+		font-size: 16px;
+		line-height: 20px;
+	`)}
+`)
 ```
 
 ### breakpoint helpers
