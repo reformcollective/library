@@ -3,6 +3,7 @@ import {
 	fluidComputeUnavailableEnvironmentVariables,
 	getLiveProxySupport,
 	isLocalSiteURL,
+	isNextProductionBuild,
 } from "./liveEnvironment"
 
 const originalEnv = process.env
@@ -15,7 +16,7 @@ afterEach(() => {
 	process.env = originalEnv
 })
 
-function setEnv(env: NodeJS.ProcessEnv) {
+function setEnv(env: Partial<NodeJS.ProcessEnv>) {
 	process.env = { ...originalEnv, ...env }
 }
 
@@ -24,6 +25,18 @@ test("detects local site URLs", () => {
 	expect(isLocalSiteURL("http://127.0.0.1:3000")).toBe(true)
 	expect(isLocalSiteURL("http://[::1]:3000")).toBe(true)
 	expect(isLocalSiteURL("https://example.com")).toBe(false)
+})
+
+test("detects Next production builds", () => {
+	setEnv({ NEXT_PHASE: "phase-production-build" })
+
+	expect(isNextProductionBuild()).toBe(true)
+})
+
+test("ignores other Next phases", () => {
+	setEnv({ NEXT_PHASE: "phase-production-server" })
+
+	expect(isNextProductionBuild()).toBe(false)
 })
 
 test("allows the live proxy for local site URLs", () => {
