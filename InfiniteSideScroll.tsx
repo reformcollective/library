@@ -31,6 +31,7 @@ export function InfiniteSideScroll({
 	disableSnap = false,
 	scrollVelocity,
 	onChange,
+	onReady,
 	loopRef,
 	centerMode = true,
 }: {
@@ -80,6 +81,10 @@ export function InfiniteSideScroll({
 	 */
 	onChange?: (index: number) => void
 	/**
+	 * fires after the loop initializes and the initial position has had a frame to paint
+	 */
+	onReady?: (loop: InfiniteLoop) => void
+	/**
 	 * if you need to access the loop, to e.g. manually scroll to a certain index
 	 * you can access the loop via a ref
 	 */
@@ -102,6 +107,7 @@ export function InfiniteSideScroll({
 	)
 
 	const latestOnChange = useLatest(onChange)
+	const latestOnReady = useLatest(onReady)
 
 	const { result: loop } = useAnimation(
 		() => {
@@ -162,6 +168,22 @@ export function InfiniteSideScroll({
 			// start centered
 			if (marqueeSpeed === 0) {
 				loop.toIndex(0, { duration: 0 })
+			}
+
+			if (latestOnReady.current) {
+				gsap.context(() => {
+					let secondFrame: number | null = null
+					const firstFrame = requestAnimationFrame(() => {
+						secondFrame = requestAnimationFrame(() => {
+							latestOnReady.current?.(loop)
+						})
+					})
+
+					return () => {
+						cancelAnimationFrame(firstFrame)
+						if (secondFrame !== null) cancelAnimationFrame(secondFrame)
+					}
+				})
 			}
 
 			if (scrollVelocity)
@@ -233,6 +255,7 @@ export function InfiniteSideScroll({
 			centerMode,
 			snapPaddingLeft,
 			latestOnChange,
+			latestOnReady,
 		],
 		{
 			recreateOnResize: true,
