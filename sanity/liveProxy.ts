@@ -24,6 +24,9 @@ const STARTUP_SAFETY_WINDOW_MS = 60_000
 const LIVE_STATE_ID = "_reform.liveState"
 const LIVE_STATE_TYPE = "reformLiveState"
 const WATERMARK_WRITE_MAX_ATTEMPTS = 5
+const HEARTBEAT_INTERVAL_MS = 25_000
+const MAX_CONNECTION_MS = 280_000
+const RECONNECT_LEAD_TIME_MS = 5_000
 
 let messageQueue = Promise.resolve()
 let sanitySubscription: LiveSubscription | null = null
@@ -276,8 +279,6 @@ function startUpstreamSubscription() {
 	})
 }
 
-const MAX_CONNECTION_MS = 280_000
-
 export async function POST(request: Request) {
 	const bearer = request.headers.get("Authorization")?.replace("Bearer ", "")
 	if (bearer !== internalSecret) {
@@ -327,6 +328,10 @@ export async function GET(request: Request) {
 
 	const responseStream = new TransformStream()
 	const writer = responseStream.writable.getWriter()
+	let isClosed = false
+	let heartbeatInterval: ReturnType<typeof setInterval> | undefined
+	let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
+	let timeout: ReturnType<typeof setTimeout> | undefined
 
 	connectedClients.add(writer)
 	writer
@@ -335,14 +340,30 @@ export async function GET(request: Request) {
 	startUpstreamSubscription()
 
 	const cleanup = () => {
+		if (isClosed) return
+		isClosed = true
+		if (heartbeatInterval) clearInterval(heartbeatInterval)
+		if (reconnectTimeout) clearTimeout(reconnectTimeout)
+		if (timeout) clearTimeout(timeout)
 		connectedClients.delete(writer)
 		writer.close().catch(() => {})
 	}
 
-	const timeout = setTimeout(cleanup, MAX_CONNECTION_MS)
+	heartbeatInterval = setInterval(() => {
+		writer.write(encoder.encode(": ping\n\n")).catch(cleanup)
+	}, HEARTBEAT_INTERVAL_MS)
+	reconnectTimeout = setTimeout(() => {
+		writer
+			.write(
+				encoder.encode(
+					`event: reconnect\ndata: ${JSON.stringify({ reason: "max-duration" })}\n\n`,
+				),
+			)
+			.catch(cleanup)
+	}, MAX_CONNECTION_MS - RECONNECT_LEAD_TIME_MS)
+	timeout = setTimeout(cleanup, MAX_CONNECTION_MS)
 
 	request.signal.addEventListener("abort", () => {
-		clearTimeout(timeout)
 		cleanup()
 	})
 
