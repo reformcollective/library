@@ -3,6 +3,7 @@
 import Link, { type LinkProps } from "next/link"
 import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
+import { css, f, styled } from "../styled"
 import {
 	type CMSLink,
 	isRouteDefined,
@@ -57,6 +58,13 @@ export type UniversalLinkProps = (ButtonProps | AnchorProps) & {
 		| Ref<HTMLButtonElement | HTMLAnchorElement | null>
 }
 
+const UniversalLinkButton = styled(
+	"button",
+	f.unresponsive(css`
+		cursor: pointer;
+	`),
+)
+
 /**
  * a link that navigates when clicked, using the specified transition.
  * @returns
@@ -73,16 +81,9 @@ export default function UniversalLink({
 
 	if (props.type) {
 		return (
-			<button
-				{...props}
-				ref={ref as Ref<HTMLButtonElement>}
-				style={{
-					cursor: "pointer",
-					...props.style,
-				}}
-			>
+			<UniversalLinkButton {...props} ref={ref as Ref<HTMLButtonElement>}>
 				{children}
-			</button>
+			</UniversalLinkButton>
 		)
 	}
 
