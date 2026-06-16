@@ -15,6 +15,7 @@ import { Toaster, toast } from "sonner"
 import { disableDraftMode } from "./disableDraftMode"
 
 const sanityLiveRefreshEvents = new TypedEventEmitter<{ refresh: [] }>()
+const liveProxyReconnectDelayMs = 250
 
 export async function notifySanityLiveRefreshAction() {
 	sanityLiveRefreshEvents.dispatchEvent("refresh")
@@ -76,9 +77,11 @@ export function SanityRuntimeRefresh({
 	useEffect(() => {
 		if (!useLiveProxy) return
 
-		const eventSource = new EventSource("/api/live")
+		let eventSource: EventSource | undefined
+		let reconnectTimer: ReturnType<typeof setTimeout> | undefined
+		let isDisposed = false
 
-		eventSource.onmessage = (e) => {
+		const handleMessage = (e: MessageEvent<string>) => {
 			const event = JSON.parse(e.data)
 			if (
 				event &&
@@ -92,7 +95,25 @@ export function SanityRuntimeRefresh({
 			}
 		}
 
-		return () => eventSource.close()
+		const connect = () => {
+			if (isDisposed) return
+
+			eventSource?.close()
+			eventSource = new EventSource("/api/live")
+			eventSource.onmessage = handleMessage
+			eventSource.addEventListener("reconnect", () => {
+				eventSource?.close()
+				reconnectTimer = setTimeout(connect, liveProxyReconnectDelayMs)
+			})
+		}
+
+		connect()
+
+		return () => {
+			isDisposed = true
+			if (reconnectTimer) clearTimeout(reconnectTimer)
+			eventSource?.close()
+		}
 	}, [router, useLiveProxy])
 
 	useEffect(() => {
