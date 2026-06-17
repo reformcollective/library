@@ -3,13 +3,12 @@
 import { useInterval } from "ahooks"
 import { getDeploymentVersionMetadata } from "library/deploymentVersion"
 import { browserData } from "library/deviceDetection"
-import { pathnameMatches } from "library/functions"
 import TypedEventEmitter from "library/TypedEventEmitter"
 import { useHMR } from "library/useHMR"
-import { usePathname, useRouter } from "next/navigation"
 import { stegaClean } from "next-sanity"
 import { useVisualEditingEnvironment } from "next-sanity/hooks"
 import { VisualEditing } from "next-sanity/visual-editing"
+import { usePathname, useRouter } from "next/navigation"
 import type { ComponentProps, ReactNode } from "react"
 import { useEffect, useState, useTransition } from "react"
 import { studioUrl } from "sanity/lib/api"
@@ -45,8 +44,8 @@ function notifyDeploymentUpdate({
 }) {
 	const { commitSha, deploymentId } = getDeploymentVersionMetadata()
 
-	if (commitSha === liveDeployment?.commitSha) return
 	if (deploymentId === liveDeployment?.deploymentId) return
+	if (commitSha === liveDeployment?.commitSha) return
 	if (!window.location.pathname.startsWith(studioUrl)) return
 
 	toast.warning("New version available", {
