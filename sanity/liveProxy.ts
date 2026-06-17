@@ -1,6 +1,7 @@
 import type { LiveEventMessage } from "@sanity/client"
 import { env } from "app/env"
 import libraryConfig from "app/libraryConfig"
+import { getDeploymentVersionMetadata } from "library/deploymentVersion"
 import { sleep } from "library/functions"
 import { siteURL } from "library/siteURL"
 import { revalidatePath, revalidateTag } from "next/cache"
@@ -12,6 +13,7 @@ import {
 	getLiveProxySupport,
 	getLiveProxyUnsupportedMessage,
 } from "./liveEnvironment"
+import { stringifyLiveProxyEvent } from "./liveProxyEvents"
 
 export const dynamic = "force-dynamic"
 
@@ -87,7 +89,7 @@ async function revalidate(payload: { broad: true } | { tags: string[] }) {
 
 function broadcastRefresh() {
 	const payload = encoder.encode(
-		`data: ${JSON.stringify({ type: "refresh" })}\n\n`,
+		`data: ${stringifyLiveProxyEvent({ type: "refresh" })}\n\n`,
 	)
 	for (const writer of connectedClients) {
 		writer.write(payload).catch(() => {})
@@ -335,7 +337,14 @@ export async function GET(request: Request) {
 
 	connectedClients.add(writer)
 	writer
-		.write(encoder.encode(`data: ${JSON.stringify({ type: "connected" })}\n\n`))
+		.write(
+			encoder.encode(
+				`data: ${stringifyLiveProxyEvent({
+					deployment: getDeploymentVersionMetadata(),
+					type: "connected",
+				})}\n\n`,
+			),
+		)
 		.catch(() => {})
 	startUpstreamSubscription()
 
