@@ -49,7 +49,7 @@ function notifyDeploymentUpdate({
 
 	toast.warning("New version available", {
 		id: "deployment-update-available",
-		description: "Drafted content is saved in Sanity and will not be lost.",
+		description: "Drafted content is saved by Sanity",
 		duration: Infinity,
 		action: {
 			label: "Update",
