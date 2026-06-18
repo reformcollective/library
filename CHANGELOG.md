@@ -1,3 +1,14 @@
+# 2026-06-10
+
+## Site URL moved to the compile-time API
+
+`library/siteURL` now resolves deployment URLs through `compileTime`, so app code can import `siteURL` directly without carrying a runtime environment check into the browser bundle.
+
+**Migration Advice**
+
+Remove site url determining code from your next config, it isn't used anymore.
+
+
 # 2026-06-07
 
 ## Upgraded to next-sanity 13
