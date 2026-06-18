@@ -20,7 +20,7 @@ import {
 	isNextProductionBuild,
 } from "./liveEnvironment"
 
-const libraryClient = client.withConfig({ useCdn: false })
+const libraryClient = client.withConfig({ useCdn: true })
 
 /**
  * Use defineLive to keep Sanity fetches tagged with Content Lake sync tags.
