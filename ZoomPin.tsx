@@ -127,6 +127,7 @@ export const ZoomPinProvider = ({
 					endTrigger: toEl.parentElement,
 					end: "center center",
 					scrub: true,
+					// oxlint-disable-next-line unicorn/no-useless-fallback-in-spread typescript/no-misused-spread
 					...(stableOptions?.scrollTrigger ?? {}),
 				},
 			})
