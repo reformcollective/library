@@ -12,7 +12,6 @@ type ReformMuxVideoProps = Pick<
 	| "onPlay"
 	| "onPause"
 	| "playbackId"
-	| "onPlay"
 	| "className"
 	| "style"
 	| "muted"
