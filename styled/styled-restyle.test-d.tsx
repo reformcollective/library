@@ -1,29 +1,23 @@
 import { Component, type FC } from "react"
 import { expectTypeOf, test } from "vitest"
-import { styled } from "./index"
+
 import type { StyledComponent } from "./types"
 
+import { styled } from "./index"
+
 test("basic component type is preserved", () => {
-	const component = ({
-		className,
-		name,
-	}: {
-		className: string
-		name: string
-	}) => <div className={className}>{name}</div>
+	const component = ({ className, name }: { className: string; name: string }) => (
+		<div className={className}>{name}</div>
+	)
 	const extended = styled(component, {})
 
 	expectTypeOf(extended).toExtend<typeof component>()
 })
 
 test("additional property types are added", () => {
-	const component = ({
-		className,
-		name,
-	}: {
-		className: string
-		name: string
-	}) => <div className={className}>{name}</div>
+	const component = ({ className, name }: { className: string; name: string }) => (
+		<div className={className}>{name}</div>
+	)
 	const extended = styled(component, {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
@@ -44,13 +38,9 @@ test("additional property types are added", () => {
 })
 
 test("style props are filtered from the component props", () => {
-	const component = ({
-		className,
-		color,
-	}: {
-		className: string
-		color?: number
-	}) => <div className={className}>{color}</div>
+	const component = ({ className, color }: { className: string; color?: number }) => (
+		<div className={className}>{color}</div>
+	)
 	const extended = styled(component, {
 		variants: { color: { red: [{ color: "red" }] } },
 	})
@@ -75,13 +65,9 @@ test("style props are filtered from the component props", () => {
 })
 
 test("style props are allowed to override the component type", () => {
-	const component = ({
-		className,
-		color,
-	}: {
-		className: string
-		color: number
-	}) => <div className={className}>{color}</div>
+	const component = ({ className, color }: { className: string; color: number }) => (
+		<div className={className}>{color}</div>
+	)
 
 	const Component = styled(component, {
 		variants: { color: { red: [{ color: "red" }] } },
@@ -91,9 +77,7 @@ test("style props are allowed to override the component type", () => {
 })
 
 test("extra properties are not allowed", () => {
-	const Component = ({ className }: { className: string }) => (
-		<div className={className} />
-	)
+	const Component = ({ className }: { className: string }) => <div className={className} />
 	const Extended = styled(Component, { color: "red" })
 	const ExtendedWithProps = styled(Extended, {
 		variants: { color: { red: [{ color: "red" }] } },
@@ -253,10 +237,7 @@ test("generic types are preserved even when partially overwritten by style props
 })
 
 test("generic types with multiple generics are preserved", () => {
-	const Component = <
-		SomeText extends string,
-		AnotherText extends string,
-	>(_props: {
+	const Component = <SomeText extends string, AnotherText extends string>(_props: {
 		id: `id-${SomeText}-${AnotherText}`
 		one: NoInfer<SomeText>
 		two: NoInfer<AnotherText>
@@ -313,8 +294,8 @@ test("components that return non-element react nodes are allowed", () => {
 })
 
 test("async components are allowed", () => {
-	const Component: (props: { className?: string }) => Promise<React.ReactNode> =
-		() => Promise.resolve(null)
+	const Component: (props: { className?: string }) => Promise<React.ReactNode> = () =>
+		Promise.resolve(null)
 	const _Extended = styled(Component, { color: "red" })
 })
 

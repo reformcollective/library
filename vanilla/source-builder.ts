@@ -1,5 +1,6 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: generated code */
 import ts from "typescript"
+
 import type { DependencyNode } from "./dependency-graph.ts"
 
 // =============================================================================
@@ -27,11 +28,7 @@ export function reconstructSource(
 	nodes: DependencyNode[],
 	options: ReconstructOptions = {},
 ): string {
-	const {
-		exportNames = new Set(),
-		transforms = new Map(),
-		append = [],
-	} = options
+	const { exportNames = new Set(), transforms = new Map(), append = [] } = options
 
 	const seenIds = new Set<number>()
 	const parts: string[] = []
@@ -57,11 +54,7 @@ export function reconstructSource(
 		// Add export if needed and not already exported
 		if (node.name && exportNames.has(node.name) && !node.exportInfo) {
 			// Only add export to variable/function/class declarations
-			if (
-				node.kind === "variable" ||
-				node.kind === "function" ||
-				node.kind === "class"
-			) {
+			if (node.kind === "variable" || node.kind === "function" || node.kind === "class") {
 				src = `export ${src}`
 			}
 		}
@@ -85,10 +78,7 @@ export function reconstructSource(
  * Builds a minimal import statement for the given nodes.
  * Groups imports by module and reconstructs them.
  */
-export function reconstructImports(
-	nodes: DependencyNode[],
-	sourceFile: ts.SourceFile,
-): string {
+export function reconstructImports(nodes: DependencyNode[], sourceFile: ts.SourceFile): string {
 	// Group import nodes by their statement id (same import statement)
 	const byStatementId = new Map<number, DependencyNode[]>()
 
@@ -137,9 +127,7 @@ export function createImportDeclaration(
 
 					return ts.factory.createImportSpecifier(
 						false,
-						imported === local
-							? undefined
-							: ts.factory.createIdentifier(imported),
+						imported === local ? undefined : ts.factory.createIdentifier(imported),
 						ts.factory.createIdentifier(local),
 					)
 				}),
@@ -152,20 +140,13 @@ export function createImportDeclaration(
 /**
  * Creates a re-export declaration AST node.
  */
-export function createReExportDeclaration(
-	names: string[],
-	fromPath: string,
-): ts.ExportDeclaration {
+export function createReExportDeclaration(names: string[], fromPath: string): ts.ExportDeclaration {
 	return ts.factory.createExportDeclaration(
 		undefined,
 		false,
 		ts.factory.createNamedExports(
 			names.map((n) =>
-				ts.factory.createExportSpecifier(
-					false,
-					undefined,
-					ts.factory.createIdentifier(n),
-				),
+				ts.factory.createExportSpecifier(false, undefined, ts.factory.createIdentifier(n)),
 			),
 		),
 		ts.factory.createStringLiteral(fromPath),

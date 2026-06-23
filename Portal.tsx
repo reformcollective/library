@@ -2,6 +2,7 @@
 
 import { Suspense } from "react"
 import { createPortal } from "react-dom"
+
 import ClientOnly from "./ClientOnly"
 import { isBrowser } from "./deviceDetection"
 

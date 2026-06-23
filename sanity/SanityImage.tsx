@@ -1,20 +1,15 @@
 "use client"
 
+import type { ImageField } from "library/sanity/assetMetadata"
+import type { SanityImageCrop, SanityImageHotspot } from "sanity.types"
+
 import { createImageUrlBuilder } from "@sanity/image-url"
 import { setElementVars } from "@vanilla-extract/dynamic"
-import type { ImageField } from "library/sanity/assetMetadata"
 import { styled } from "library/styled"
 import { stegaClean } from "next-sanity"
-import {
-	type SyntheticEvent,
-	use,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-	useState,
-} from "react"
+import { type SyntheticEvent, use, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { dataset, projectId } from "sanity/lib/api"
-import type { SanityImageCrop, SanityImageHotspot } from "sanity.types"
+
 import StaticImage, {
 	type DefaultImageProps,
 	EagerContext,
@@ -63,10 +58,7 @@ const urlBuilder = createImageUrlBuilder({ projectId, dataset })
 
 const SRCSET_WIDTHS = [400, 800, 1200, 1600, 2400]
 
-function checkLqipTransparency(
-	lqip: string,
-	onResult: (hasTransparency: boolean) => void,
-): void {
+function checkLqipTransparency(lqip: string, onResult: (hasTransparency: boolean) => void): void {
 	if (!lqip.startsWith("data:image/png;base64,")) {
 		onResult(false)
 		return
@@ -98,13 +90,9 @@ const isStringProps = (
 const isNextProps = (
 	props: SanityImageProps | StaticImageProps,
 ): props is Exclude<StaticImageProps, { src: string }> =>
-	!!props.src &&
-	!isStringProps(props) &&
-	("default" in props.src || "src" in props.src)
+	!!props.src && !isStringProps(props) && ("default" in props.src || "src" in props.src)
 
-export default function SanityUniversalImage(
-	props: SanityImageProps | StaticImageProps,
-) {
+export default function SanityUniversalImage(props: SanityImageProps | StaticImageProps) {
 	if (!props.src) return null
 	if (isStringProps(props) || isNextProps(props)) {
 		return <StaticImage {...props} />
@@ -195,20 +183,11 @@ function SanityImageCore(props: SanityImageProps) {
 			const containerW = el.offsetWidth
 			const containerH = el.offsetHeight
 			if (!containerW || !containerH) return
-			const s = Math.max(
-				containerW / el.naturalWidth,
-				containerH / el.naturalHeight,
-			)
+			const s = Math.max(containerW / el.naturalWidth, containerH / el.naturalHeight)
 			const scaledW = el.naturalWidth * s
 			const scaledH = el.naturalHeight * s
-			const ox = Math.max(
-				containerW - scaledW,
-				Math.min(0, containerW / 2 - scaledW * hx),
-			)
-			const oy = Math.max(
-				containerH - scaledH,
-				Math.min(0, containerH / 2 - scaledH * hy),
-			)
+			const ox = Math.max(containerW - scaledW, Math.min(0, containerW / 2 - scaledW * hx))
+			const oy = Math.max(containerH - scaledH, Math.min(0, containerH / 2 - scaledH * hy))
 			setElementVars(el, { [hotspotObjectPositionVar]: `${ox}px ${oy}px` })
 		}
 
@@ -246,9 +225,7 @@ function SanityImageCore(props: SanityImageProps) {
 		.quality(quality)
 		.auto("format")
 	const imgSrc = base.width(1600).url()
-	const srcSet = SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`).join(
-		", ",
-	)
+	const srcSet = SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`).join(", ")
 
 	const lqip = !loaded && src.data?.lqip
 	const lqipProps = lqip

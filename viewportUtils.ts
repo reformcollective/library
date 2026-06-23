@@ -8,6 +8,7 @@ import {
 	tabletDesignSize,
 } from "app/styles/media"
 import { use, useEffect, useState } from "react"
+
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext, useDebouncedEventListener } from "./ScreenContext"
 import { getMedia } from "./useMedia"
@@ -180,8 +181,7 @@ export function getResponsivePixels(px: number, singleScaleFully = false) {
 
 	// short circuit if we're not using responsive pixels
 	const adjustedPx =
-		(Number.parseFloat(((px / desktopDesignSize) * 100).toFixed(3)) / 100) *
-		desktopBreakpoint
+		(Number.parseFloat(((px / desktopDesignSize) * 100).toFixed(3)) / 100) * desktopBreakpoint
 
 	if (!config.scaleFully) return getMedia(adjustedPx, value, value, value)
 

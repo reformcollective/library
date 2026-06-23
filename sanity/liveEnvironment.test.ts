@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "vitest"
+
 import {
 	fluidComputeUnavailableEnvironmentVariables,
 	getLiveProxySupport,
@@ -42,10 +43,9 @@ test("ignores other Next phases", () => {
 test("allows the live proxy for local site URLs", () => {
 	setEnv({ NODE_ENV: "production", VERCEL: undefined })
 
-	expect(
-		getLiveProxySupport({ currentSiteURL: "http://localhost:3000" })
-			.canUseLiveProxy,
-	).toBe(true)
+	expect(getLiveProxySupport({ currentSiteURL: "http://localhost:3000" }).canUseLiveProxy).toBe(
+		true,
+	)
 })
 
 test("disables the live proxy when config opts out", () => {
@@ -93,8 +93,5 @@ test("blocks the live proxy on Vercel without Fluid Compute", () => {
 test("blocks the live proxy outside Vercel production", () => {
 	setEnv({ NODE_ENV: "production", VERCEL: undefined })
 
-	expect(
-		getLiveProxySupport({ currentSiteURL: "https://example.com" })
-			.canUseLiveProxy,
-	).toBe(false)
+	expect(getLiveProxySupport({ currentSiteURL: "https://example.com" }).canUseLiveProxy).toBe(false)
 })

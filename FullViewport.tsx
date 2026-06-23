@@ -1,15 +1,8 @@
 import { browserData } from "library/deviceDetection"
 import { useBrowserData } from "library/deviceDetection/react"
 import { css, f, styled } from "library/styled"
-
 import { useVH } from "library/viewportUtils"
-import {
-	type CSSProperties,
-	type ReactNode,
-	type Ref,
-	useImperativeHandle,
-	useRef,
-} from "react"
+import { type CSSProperties, type ReactNode, type Ref, useImperativeHandle, useRef } from "react"
 
 export const useSafariOversizeHeight = () => {
 	const screenHeight = useVH(100)
@@ -53,11 +46,7 @@ export function FullViewport({
 		<>
 			{hideSticky ? null : (
 				<Page>
-					<StickyVariant
-						ref={stickyRef}
-						className={className}
-						style={{ ...style, height }}
-					>
+					<StickyVariant ref={stickyRef} className={className} style={{ ...style, height }}>
 						{children}
 					</StickyVariant>
 				</Page>
@@ -78,7 +67,7 @@ const Page = styled("div", [
 		height: 100%;
 		width: 100%;
 		z-index: 99;
-        pointer-events: none;
+		pointer-events: none;
 
 		/* prevent adding overflow from this div's content */
 		overflow: clip;
@@ -86,26 +75,27 @@ const Page = styled("div", [
 ])
 
 const StickyVariant = styled("div", [
-	f.responsive(css`/* stick to center of viewport */
-        position: sticky;
-        top: 50%;
-        left: 0;
-        height: 100%;
-        width: 100%;
-        transform: translateY(-50%);
+	f.responsive(css`
+		/* stick to center of viewport */
+		position: sticky;
+		top: 50%;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		transform: translateY(-50%);
 
-        /* never stop sticking */
-        margin-bottom: -100vmax;
-    `),
+		/* never stop sticking */
+		margin-bottom: -100vmax;
+	`),
 ])
 
 const FixedVariant = styled("div", [
 	f.responsive(css`
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 100%;
-        z-index: 99;
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 100%;
+		width: 100%;
+		z-index: 99;
 	`),
 ])

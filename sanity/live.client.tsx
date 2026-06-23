@@ -1,18 +1,20 @@
 "use client"
 
+import type { ComponentProps, ReactNode } from "react"
+
 import { useInterval } from "ahooks"
 import { getDeploymentVersionMetadata } from "library/deploymentVersion"
 import { browserData } from "library/deviceDetection"
 import TypedEventEmitter from "library/TypedEventEmitter"
 import { useHMR } from "library/useHMR"
-import { usePathname, useRouter } from "next/navigation"
 import { stegaClean } from "next-sanity"
 import { useVisualEditingEnvironment } from "next-sanity/hooks"
 import { VisualEditing } from "next-sanity/visual-editing"
-import type { ComponentProps, ReactNode } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
 import { studioUrl } from "sanity/lib/api"
 import { Toaster, toast } from "sonner"
+
 import { disableDraftMode } from "./disableDraftMode"
 import { type LiveProxyEvent, liveProxyEventSchema } from "./liveProxyEvents"
 
@@ -24,9 +26,7 @@ export async function notifySanityLiveRefreshAction() {
 	return "refresh" as const
 }
 
-const isPresentationEnvironment = (
-	environment: ReturnType<typeof useVisualEditingEnvironment>,
-) =>
+const isPresentationEnvironment = (environment: ReturnType<typeof useVisualEditingEnvironment>) =>
 	environment === "presentation-iframe" || environment === "presentation-window"
 
 function parseLiveProxyEvent(data: string): LiveProxyEvent | null {
@@ -76,10 +76,7 @@ export function RuntimeClient({
 		return (
 			<>
 				<Toaster />
-				<SanityRuntimeRefresh
-					showRefreshToast={false}
-					useLiveProxy={useLiveProxy}
-				/>
+				<SanityRuntimeRefresh showRefreshToast={false} useLiveProxy={useLiveProxy} />
 			</>
 		)
 	}
@@ -88,16 +85,10 @@ export function RuntimeClient({
 		<>
 			<Toaster />
 			{(useLiveProxy || isDraftMode) && (
-				<SanityRuntimeRefresh
-					showRefreshToast={isDraftMode}
-					useLiveProxy={useLiveProxy}
-				/>
+				<SanityRuntimeRefresh showRefreshToast={isDraftMode} useLiveProxy={useLiveProxy} />
 			)}
 			{children}
-			<SanityPreviewStatusToast
-				isDraftMode={isDraftMode}
-				isPresentation={isPresentation}
-			/>
+			<SanityPreviewStatusToast isDraftMode={isDraftMode} isPresentation={isPresentation} />
 			<SanityVisualEditingOverlay isDraftMode={isDraftMode} />
 			{isDraftMode && <FirefoxFix />}
 		</>
@@ -172,10 +163,7 @@ export function SanityRuntimeRefresh({
 
 		sanityLiveRefreshEvents.addEventListener("refresh", handleSanityLiveRefresh)
 		return () => {
-			sanityLiveRefreshEvents.removeEventListener(
-				"refresh",
-				handleSanityLiveRefresh,
-			)
+			sanityLiveRefreshEvents.removeEventListener("refresh", handleSanityLiveRefresh)
 		}
 	}, [])
 
@@ -204,24 +192,21 @@ export function SanityPreviewStatusToast({
 	useEffect(() => {
 		if (!isPresentation && !isDraftMode) return
 
-		const toastId = toast(
-			isDraftMode ? "Viewing Drafted Content" : "Viewing Published Content",
-			{
-				duration: !isDraftMode && isPresentation ? Infinity : undefined,
-				action:
-					isDraftMode && !isPresentation
-						? {
-								label: "Disable",
-								onClick: async () => {
-									await disableDraftMode()
-									startTransition(() => {
-										router.refresh()
-									})
-								},
-							}
-						: undefined,
-			},
-		)
+		const toastId = toast(isDraftMode ? "Viewing Drafted Content" : "Viewing Published Content", {
+			duration: !isDraftMode && isPresentation ? Infinity : undefined,
+			action:
+				isDraftMode && !isPresentation
+					? {
+							label: "Disable",
+							onClick: async () => {
+								await disableDraftMode()
+								startTransition(() => {
+									router.refresh()
+								})
+							},
+						}
+					: undefined,
+		})
 
 		return () => {
 			toast.dismiss(toastId)

@@ -39,17 +39,10 @@ function isStyledCall(node: AstNode, styledNames: Set<string>) {
 	if (node.type !== "CallExpression") return false
 
 	const callee = node.callee
-	return (
-		isNode(callee) &&
-		callee.type === "Identifier" &&
-		styledNames.has(callee.name as string)
-	)
+	return isNode(callee) && callee.type === "Identifier" && styledNames.has(callee.name as string)
 }
 
-function containsTextStyleReference(
-	source: string,
-	textStyleAliases: Set<string>,
-) {
+function containsTextStyleReference(source: string, textStyleAliases: Set<string>) {
 	if (TEXT_STYLE_MEMBER_RE.test(source)) return true
 
 	for (const alias of textStyleAliases) {
@@ -59,10 +52,7 @@ function containsTextStyleReference(
 	return false
 }
 
-function sameLevelTextStyleAndLayout(
-	source: string,
-	textStyleAliases: Set<string>,
-) {
+function sameLevelTextStyleAndLayout(source: string, textStyleAliases: Set<string>) {
 	let depth = 0
 	const depthsWithTextStyle = new Set<number>()
 	const depthsWithLayout = new Set<number>()
@@ -211,11 +201,7 @@ const noLayoutTextStyle = {
 		function inspectStyleExpression(node: AstNode | null | undefined) {
 			if (!node) return
 
-			const mixedNode = findNearestMixedStyleNode(
-				node,
-				getText,
-				textStyleAliases,
-			)
+			const mixedNode = findNearestMixedStyleNode(node, getText, textStyleAliases)
 			if (mixedNode) reportMixedStyle(mixedNode)
 		}
 
@@ -225,10 +211,7 @@ const noLayoutTextStyle = {
 				if (!isNode(source) || source.type !== "StringLiteral") return
 
 				const importSource = source.value
-				if (
-					importSource === "library/styled" ||
-					importSource === "library/styled/alpha"
-				) {
+				if (importSource === "library/styled" || importSource === "library/styled/alpha") {
 					for (const specifier of getNodeArray(node.specifiers)) {
 						if (
 							specifier.type === "ImportSpecifier" &&

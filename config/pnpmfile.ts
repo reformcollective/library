@@ -1,12 +1,12 @@
+import type { default as Semver } from "semver"
+
 import { readFileSync, realpathSync } from "node:fs"
 import { createRequire } from "node:module"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import type { default as Semver } from "semver"
 
 const require = createRequire(import.meta.url)
-const semver =
-	require("../../node_modules/.pnpm-config/semver/index.js") as typeof Semver
+const semver = require("../../node_modules/.pnpm-config/semver/index.js") as typeof Semver
 
 type PackageManifest = {
 	name?: string
@@ -25,10 +25,7 @@ const FORBIDDEN_DEPENDENCY_FIELDS = [
 	"optionalDependencies",
 	"peerDependencies",
 ] satisfies Array<keyof PackageManifest>
-const PUBLIC_LIBRARY_DEPENDENCY_PATTERNS = [
-	"stylelint-config-*",
-	"stylelint-plugin-*",
-]
+const PUBLIC_LIBRARY_DEPENDENCY_PATTERNS = ["stylelint-config-*", "stylelint-plugin-*"]
 
 function readManifest(url: URL): PackageManifest {
 	return JSON.parse(readFileSync(url, "utf8")) as PackageManifest
@@ -46,15 +43,10 @@ function isFileSpecifier(specifier: string) {
 }
 
 function resolveFileSpecifier(specifier: string, manifestDirectory: string) {
-	return realpathSync(
-		resolve(manifestDirectory, specifier.slice("file:".length)),
-	)
+	return realpathSync(resolve(manifestDirectory, specifier.slice("file:".length)))
 }
 
-function fileSpecifiersPointToSameFile(
-	rootRange: string,
-	libraryRange: string,
-) {
+function fileSpecifiersPointToSameFile(rootRange: string, libraryRange: string) {
 	return (
 		resolveFileSpecifier(rootRange, rootManifestDirectory) ===
 		resolveFileSpecifier(libraryRange, libraryManifestDirectory)
@@ -149,10 +141,7 @@ function updateConfig(config: PnpmConfig) {
 	return {
 		...config,
 		publicHoistPattern: Array.from(
-			new Set([
-				...(config.publicHoistPattern ?? []),
-				...PUBLIC_LIBRARY_DEPENDENCY_PATTERNS,
-			]),
+			new Set([...(config.publicHoistPattern ?? []), ...PUBLIC_LIBRARY_DEPENDENCY_PATTERNS]),
 		),
 	}
 }

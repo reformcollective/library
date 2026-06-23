@@ -1,4 +1,5 @@
 import { keyframes } from "@vanilla-extract/css"
+
 import { eases } from "../eases"
 
 export const startGoopAnimation = keyframes({

@@ -1,6 +1,8 @@
+import type { StaticImageData } from "next/image"
+import type { PreviewValue, StrictDefinition } from "sanity"
+
 import { InfoOutlineIcon, PlayIcon } from "@sanity/icons"
 import libraryConfig from "app/libraryConfig"
-import type { StaticImageData } from "next/image"
 import {
 	MATCH_URL_SPOTIFY,
 	MATCH_URL_TIKTOK,
@@ -9,7 +11,6 @@ import {
 	MATCH_URL_WISTIA,
 	MATCH_URL_YOUTUBE,
 } from "react-player/patterns"
-import type { PreviewValue, StrictDefinition } from "sanity"
 import {
 	type ArrayOfEntry,
 	defineArrayMember,
@@ -30,10 +31,7 @@ type HiddenValidationContext = {
 	path?: Path
 }
 
-function isFieldHidden(
-	hidden: ImageDefinition["hidden"],
-	context: HiddenValidationContext,
-) {
+function isFieldHidden(hidden: ImageDefinition["hidden"], context: HiddenValidationContext) {
 	if (!hidden) return false
 	if (typeof hidden !== "function") return Boolean(hidden)
 	const path = Array.isArray(context.path) ? context.path : []
@@ -43,19 +41,14 @@ function isFieldHidden(
 		hidden({
 			currentUser: context.currentUser as never,
 			document: context.document,
-			parent: context.document
-				? getValueAtPath(context.document, containerPath)
-				: undefined,
+			parent: context.document ? getValueAtPath(context.document, containerPath) : undefined,
 			path: fieldPath,
 			value: context.parent,
 		}),
 	)
 }
 
-export const createSectionPreview = (
-	image: StaticImageData,
-	background?: string,
-) =>
+export const createSectionPreview = (image: StaticImageData, background?: string) =>
 	function SectionPreview() {
 		const bg = background
 		return (
@@ -84,9 +77,7 @@ export const createSectionPreview = (
 		)
 	}
 
-export const universalImage = <
-	WithAlt extends boolean | undefined = undefined,
->({
+export const universalImage = <WithAlt extends boolean | undefined = undefined>({
 	withAlt,
 	...schemaField
 }: Omit<ImageDefinition, "type"> & {
@@ -170,11 +161,7 @@ export const universalLink = ({
 		options: { enableText: withText },
 		validation: (rule) =>
 			rule.custom((field?: { type?: string; url?: string }) => {
-				if (
-					field?.type === "external" &&
-					field?.url &&
-					!field?.url.startsWith("http")
-				)
+				if (field?.type === "external" && field?.url && !field?.url.startsWith("http"))
 					return {
 						message: "External links must start with https://",
 						path: ["url"],
@@ -219,10 +206,7 @@ export function definePageSection<const TName extends string>(
 		icon,
 		iconBackground,
 		...options
-	}: Omit<
-		ArrayOfEntry<ObjectDefinition>,
-		"name" | "groups" | "icon" | "preview"
-	> & {
+	}: Omit<ArrayOfEntry<ObjectDefinition>, "name" | "groups" | "icon" | "preview"> & {
 		name: TName
 		preview?: {
 			select?: Record<string, string>
@@ -242,24 +226,14 @@ export function definePageSection<const TName extends string>(
 		iconBackground?: string
 	},
 	secondary?: Parameters<
-		typeof defineArrayMember<
-			"object",
-			TName,
-			undefined,
-			undefined,
-			undefined,
-			StrictDefinition
-		>
+		typeof defineArrayMember<"object", TName, undefined, undefined, undefined, StrictDefinition>
 	>[1],
 ) {
 	return defineArrayMember(
 		{
 			...options,
 			groups: [{ name: group }],
-			icon: createSectionPreview(
-				icon,
-				iconBackground ?? libraryConfig.sectionPreviewBackground,
-			),
+			icon: createSectionPreview(icon, iconBackground ?? libraryConfig.sectionPreviewBackground),
 		},
 		secondary,
 	)
@@ -322,20 +296,15 @@ export const video = defineType({
 			name: "url",
 			type: "url",
 			title: "Video URL",
-			hidden: ({ parent }) =>
-				!parent?.sourceType || parent.sourceType === "mux",
+			hidden: ({ parent }) => !parent?.sourceType || parent.sourceType === "mux",
 			validation: (rule) =>
 				rule.custom((value, context) => {
-					const sourceType = (context.parent as { sourceType?: string })
-						?.sourceType
-					if (!sourceType || sourceType === "mux" || sourceType === "url")
-						return true
+					const sourceType = (context.parent as { sourceType?: string })?.sourceType
+					if (!sourceType || sourceType === "mux" || sourceType === "url") return true
 					if (!value) return "URL is required"
 					const pattern = videoSourceValidation[sourceType]
 					if (pattern && !pattern.test(value)) {
-						const label = videoSourceTypes.find(
-							(s) => s.value === sourceType,
-						)?.title
+						const label = videoSourceTypes.find((s) => s.value === sourceType)?.title
 						return `This doesn't look like a valid ${label} URL`
 					}
 					return true

@@ -8,17 +8,11 @@ const HOTSPOT_CONTAINER_SELECTOR =
 function updateHotspotPreviewScale(container: Element) {
 	const frame = container.firstElementChild
 	const cropBox = frame?.children.item(1)
-	if (!(container instanceof HTMLElement) || !(cropBox instanceof HTMLElement))
-		return
+	if (!(container instanceof HTMLElement) || !(cropBox instanceof HTMLElement)) return
 
 	const width = Number.parseFloat(cropBox.style.width)
 	const height = Number.parseFloat(cropBox.style.height)
-	if (
-		!Number.isFinite(width) ||
-		!Number.isFinite(height) ||
-		width <= 0 ||
-		height <= 0
-	) {
+	if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
 		return
 	}
 
@@ -28,9 +22,7 @@ function updateHotspotPreviewScale(container: Element) {
 }
 
 function updateHotspotPreviewScales(root: ParentNode = document) {
-	root
-		.querySelectorAll(HOTSPOT_CONTAINER_SELECTOR)
-		.forEach(updateHotspotPreviewScale)
+	root.querySelectorAll(HOTSPOT_CONTAINER_SELECTOR).forEach(updateHotspotPreviewScale)
 }
 
 export function StudioHotspotCoverPreviews() {

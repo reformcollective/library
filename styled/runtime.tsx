@@ -36,25 +36,16 @@ export type RuntimeArgs = {
 	}>
 }
 
-export function runtimeStyled({
-	tag,
-	cvaBase,
-	cvaOptions,
-	tokenDefs,
-}: RuntimeArgs) {
+export function runtimeStyled({ tag, cvaBase, cvaOptions, tokenDefs }: RuntimeArgs) {
 	// @ts-expect-error generated value won't match for cva
 	const resolve = cva(cvaBase, cvaOptions)
 
 	// compute blocked keys set once
-	const variantKeys = Object.keys(
-		(cvaOptions?.variants ?? {}) as Record<string, unknown>,
-	)
+	const variantKeys = Object.keys((cvaOptions?.variants ?? {}) as Record<string, unknown>)
 	const tokenKeys = (tokenDefs ?? []).map((d) => d.propName)
 	const blockedSet = new Set<string>([...variantKeys, ...tokenKeys, "as"])
 
-	const Component = function StyledRuntime(
-		props: Record<string, unknown> = {},
-	) {
+	const Component = function StyledRuntime(props: Record<string, unknown> = {}) {
 		const { className, style, children, ...rest } = props
 
 		// compute css variable inline styles from props using pre-normalized token defs

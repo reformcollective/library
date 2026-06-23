@@ -1,7 +1,9 @@
 import { style } from "@vanilla-extract/css"
 import { addFunctionSerializer } from "@vanilla-extract/css/functionSerializer"
-import { type RuntimeArgs, runtimeStyled } from "./runtime"
+
 import type { StyledInput, StyledOptions, StyleRules } from "./types"
+
+import { type RuntimeArgs, runtimeStyled } from "./runtime"
 
 // normalize input into a config object
 function isStyledOptions(input: StyledInput): input is StyledOptions {
@@ -38,9 +40,7 @@ function normalizeConfig(input: StyledInput): StyledOptions {
 type InfinitelyFlattened<T> = T extends unknown[] ? never : T
 function flattenArray<T>(input: T): InfinitelyFlattened<T>[] {
 	if (!input) return [] as InfinitelyFlattened<T>[]
-	return (Array.isArray(input) ? input : [input]).flat(
-		Infinity as 1,
-	) as InfinitelyFlattened<T>[]
+	return (Array.isArray(input) ? input : [input]).flat(Infinity as 1) as InfinitelyFlattened<T>[]
 }
 
 function classFromStyleRules(input: StyleRules | undefined, debugId?: string) {
@@ -60,8 +60,7 @@ function classFromStyleRules(input: StyleRules | undefined, debugId?: string) {
 function processTokens(tokens: StyledOptions["tokens"]) {
 	const tokenDefs = []
 	for (const [propName, tokenSpec] of Object.entries(tokens ?? {})) {
-		const isPrimitive =
-			typeof tokenSpec === "string" || typeof tokenSpec === "number"
+		const isPrimitive = typeof tokenSpec === "string" || typeof tokenSpec === "number"
 		const tokenObj = isPrimitive ? undefined : tokenSpec
 		const rawToken = isPrimitive ? String(tokenSpec) : tokenObj?.token
 		const unit = tokenObj?.unit
@@ -81,10 +80,7 @@ export function styledCore(tag: string, input: StyledInput, debugId?: string) {
 	const config = normalizeConfig(input)
 
 	// 1) base: generate classname and collect any plain class strings
-	const baseClass = classFromStyleRules(
-		config.base,
-		debugId ? debugId : undefined,
-	)
+	const baseClass = classFromStyleRules(config.base, debugId ? debugId : undefined)
 
 	// 2) variants → classes
 	const cvaVariants: Record<string, Record<string, string | null>> = {}

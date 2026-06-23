@@ -1,18 +1,17 @@
 import type { LiveEventMessage } from "@sanity/client"
+
 import { env } from "app/env"
 import libraryConfig from "app/libraryConfig"
 import { getDeploymentVersionMetadata } from "library/deploymentVersion"
 import { sleep } from "library/functions"
 import { siteURL } from "library/siteURL"
-import { revalidatePath, revalidateTag } from "next/cache"
 import { defineQuery } from "next-sanity"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
 import * as z from "zod"
-import {
-	getLiveProxySupport,
-	getLiveProxyUnsupportedMessage,
-} from "./liveEnvironment"
+
+import { getLiveProxySupport, getLiveProxyUnsupportedMessage } from "./liveEnvironment"
 import { stringifyLiveProxyEvent } from "./liveProxyEvents"
 
 export const dynamic = "force-dynamic"
@@ -88,9 +87,7 @@ async function revalidate(payload: { broad: true } | { tags: string[] }) {
 }
 
 function broadcastRefresh() {
-	const payload = encoder.encode(
-		`data: ${stringifyLiveProxyEvent({ type: "refresh" })}\n\n`,
-	)
+	const payload = encoder.encode(`data: ${stringifyLiveProxyEvent({ type: "refresh" })}\n\n`)
 	for (const writer of connectedClients) {
 		writer.write(payload).catch(() => {})
 	}
@@ -103,10 +100,7 @@ function isNewerTimestamp(candidate: string, current?: string) {
 
 function isRevisionConflict(error: unknown) {
 	return (
-		typeof error === "object" &&
-		error !== null &&
-		"statusCode" in error &&
-		error.statusCode === 409
+		typeof error === "object" && error !== null && "statusCode" in error && error.statusCode === 409
 	)
 }
 
@@ -144,21 +138,14 @@ async function writeProcessedWatermark({
 
 		if (
 			state?.processedThroughUpdatedAt &&
-			!isNewerTimestamp(
-				processedThroughUpdatedAt,
-				state.processedThroughUpdatedAt ?? undefined,
-			)
+			!isNewerTimestamp(processedThroughUpdatedAt, state.processedThroughUpdatedAt ?? undefined)
 		) {
 			return
 		}
 
 		try {
 			if (state?._rev) {
-				await stateClient
-					.patch(LIVE_STATE_ID)
-					.ifRevisionId(state._rev)
-					.set(nextState)
-					.commit()
+				await stateClient.patch(LIVE_STATE_ID).ifRevisionId(state._rev).set(nextState).commit()
 				return
 			}
 
@@ -209,19 +196,13 @@ async function runStartupCatchup(workerStartedAt: Date) {
 		getLiveState(),
 	])
 	const latestPublishedUpdatedAt =
-		latestPublishedResult.status === "fulfilled"
-			? latestPublishedResult.value
-			: null
+		latestPublishedResult.status === "fulfilled" ? latestPublishedResult.value : null
 	const state = stateResult.status === "fulfilled" ? stateResult.value : null
 	let shouldBroadRevalidate =
-		latestPublishedResult.status === "rejected" ||
-		stateResult.status === "rejected"
+		latestPublishedResult.status === "rejected" || stateResult.status === "rejected"
 
 	if (latestPublishedResult.status === "rejected") {
-		console.error(
-			"Unable to read latest published Sanity update",
-			latestPublishedResult.reason,
-		)
+		console.error("Unable to read latest published Sanity update", latestPublishedResult.reason)
 	}
 	if (stateResult.status === "rejected") {
 		console.error("Unable to read Sanity live state", stateResult.reason)
@@ -229,15 +210,13 @@ async function runStartupCatchup(workerStartedAt: Date) {
 
 	if (latestPublishedUpdatedAt) {
 		const latestPublishedMs = Date.parse(latestPublishedUpdatedAt)
-		const isNearStartup =
-			latestPublishedMs >= workerStartedAt.getTime() - STARTUP_SAFETY_WINDOW_MS
+		const isNearStartup = latestPublishedMs >= workerStartedAt.getTime() - STARTUP_SAFETY_WINDOW_MS
 		const isNewerThanWatermark = isNewerTimestamp(
 			latestPublishedUpdatedAt,
 			state?.processedThroughUpdatedAt ?? undefined,
 		)
 
-		shouldBroadRevalidate =
-			shouldBroadRevalidate || isNearStartup || isNewerThanWatermark
+		shouldBroadRevalidate = shouldBroadRevalidate || isNearStartup || isNewerThanWatermark
 	}
 
 	if (!shouldBroadRevalidate) return
@@ -317,10 +296,7 @@ export async function GET(request: Request) {
 		currentSiteURL: siteURL,
 	})
 	if (!allowProxy) {
-		return Response.json(
-			{ error: "Sanity live proxy is disabled." },
-			{ status: 404 },
-		)
+		return Response.json({ error: "Sanity live proxy is disabled." }, { status: 404 })
 	}
 	if (!canUseLiveProxy) {
 		const message = getLiveProxyUnsupportedMessage()
@@ -364,9 +340,7 @@ export async function GET(request: Request) {
 	reconnectTimeout = setTimeout(() => {
 		writer
 			.write(
-				encoder.encode(
-					`event: reconnect\ndata: ${JSON.stringify({ reason: "max-duration" })}\n\n`,
-				),
+				encoder.encode(`event: reconnect\ndata: ${JSON.stringify({ reason: "max-duration" })}\n\n`),
 			)
 			.catch(cleanup)
 	}, MAX_CONNECTION_MS - RECONNECT_LEAD_TIME_MS)

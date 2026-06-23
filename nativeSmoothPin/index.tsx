@@ -22,14 +22,10 @@ export default function nativeSmoothPin({
 	const negativeTop = Number.parseFloat(top) <= 0
 	if (negativeTop) {
 		if (!containerAware)
-			console.error(
-				"nativeSmoothPin: top must be greater than 0 when containerAware is false",
-			)
+			console.error("nativeSmoothPin: top must be greater than 0 when containerAware is false")
 	} else {
 		if (containerAware)
-			console.warn(
-				"nativeSmoothPin: containerAware is true, but you don't need it",
-			)
+			console.warn("nativeSmoothPin: containerAware is true, but you don't need it")
 	}
 
 	if (negativeTop && goopType !== "start") {
@@ -47,26 +43,22 @@ export default function nativeSmoothPin({
 		animation-name: ${startGoopAnimation}, ${endGoopAnimation};
 		/* stylelint-disable-next-line plugin/use-baseline */
 		animation-timeline: view(y);
-		${
-			containerAware
-				? css`
+		${containerAware
+			? css`
 					/* stylelint-disable-next-line plugin/use-baseline */
 					animation-range:
-						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) 
-						entry-crossing calc(100dvh - ${top} + ${goopLevel}px),
-
-						entry calc(100vh + 100cqh - ${top} - 100% - ${goopLevel}px)
-						entry calc(100vh + 100cqh - ${top} - 100% + ${goopLevel}px);
+						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) entry-crossing
+							calc(100dvh - ${top} + ${goopLevel}px),
+						entry calc(100vh + 100cqh - ${top} - 100% - ${goopLevel}px) entry
+							calc(100vh + 100cqh - ${top} - 100% + ${goopLevel}px);
 				`
-				: css`
+			: css`
 					/* stylelint-disable-next-line plugin/use-baseline */
 					animation-range:
-						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) 
-						entry-crossing calc(100dvh - ${top} + ${goopLevel}px),
-
-						exit-crossing calc(calc(-1 * ${top}) - ${goopLevel}px) 
-						exit-crossing calc(calc(-1 * ${top}) + ${goopLevel}px);
-				`
-		}
+						entry-crossing calc(100dvh - ${top} - ${goopLevel}px) entry-crossing
+							calc(100dvh - ${top} + ${goopLevel}px),
+						exit-crossing calc(calc(-1 * ${top}) - ${goopLevel}px) exit-crossing
+							calc(calc(-1 * ${top}) + ${goopLevel}px);
+				`}
 	`
 }

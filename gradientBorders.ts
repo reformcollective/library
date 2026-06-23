@@ -8,16 +8,12 @@ import { css } from "./styled"
  * @param gradient - the gradient to use for the border
  * @param borderSize - the size of the border in pixels
  */
-export const generateGradientBorder = (
-	gradient: string,
-	borderSize: number,
-) => css`
+export const generateGradientBorder = (gradient: string, borderSize: number) => css`
 	/* make the background the gradient */
 	border: ${borderSize}px solid transparent;
 	background: ${gradient};
 	background-repeat: no-repeat;
-	background-size: calc(100% + ${borderSize * 4}px)
-		calc(100% + ${borderSize * 4}px);
+	background-size: calc(100% + ${borderSize * 4}px) calc(100% + ${borderSize * 4}px);
 	background-position: 50% 50%;
 
 	/* clip out the background so we get transparency */
@@ -37,19 +33,19 @@ const gradientBorderPseudo =
 	(type: string) =>
 	(gradient: string, borderSize = 1) =>
 		css`
-		position: relative;
-		isolation: isolate;
+			position: relative;
+			isolation: isolate;
 
-		&::${type} {
-			position: absolute;
-			content: "";
-			inset: 0;
-			z-index: 1;
-			border-radius: inherit;
-			pointer-events: none;
-			${generateGradientBorder(gradient, borderSize)}
-		}
-	`
+			&::${type} {
+				position: absolute;
+				content: "";
+				inset: 0;
+				z-index: 1;
+				border-radius: inherit;
+				pointer-events: none;
+				${generateGradientBorder(gradient, borderSize)}
+			}
+		`
 
 export const gradientBorderBefore = gradientBorderPseudo("before")
 export const gradientBorderAfter = gradientBorderPseudo("after")

@@ -101,10 +101,7 @@ export function analyzeDependencies(
 	}
 
 	// --- Helper: collect all identifier references in a node ---
-	const collectDependencies = (
-		node: ts.Node,
-		excludeName?: string,
-	): string[] => {
+	const collectDependencies = (node: ts.Node, excludeName?: string): string[] => {
 		const deps = new Set<string>()
 		const visit = (n: ts.Node) => {
 			if (ts.isIdentifier(n)) {
@@ -254,8 +251,7 @@ export function analyzeDependencies(
 		// 2. VARIABLES
 		if (ts.isVariableStatement(stmt)) {
 			const isExported =
-				stmt.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ??
-				false
+				stmt.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false
 
 			for (const decl of stmt.declarationList.declarations) {
 				if (!ts.isIdentifier(decl.name)) continue
@@ -283,10 +279,8 @@ export function analyzeDependencies(
 
 		// 3. FUNCTIONS
 		if (ts.isFunctionDeclaration(stmt)) {
-			const isExported =
-				(ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Export) !== 0
-			const isDefault =
-				(ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Default) !== 0
+			const isExported = (ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Export) !== 0
+			const isDefault = (ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Default) !== 0
 			const name = stmt.name?.text ?? (isDefault ? "default" : undefined)
 
 			if (name) {
@@ -311,10 +305,8 @@ export function analyzeDependencies(
 
 		// 4. CLASSES
 		if (ts.isClassDeclaration(stmt)) {
-			const isExported =
-				(ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Export) !== 0
-			const isDefault =
-				(ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Default) !== 0
+			const isExported = (ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Export) !== 0
+			const isDefault = (ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Default) !== 0
 			const name = stmt.name?.text ?? (isDefault ? "default" : undefined)
 
 			if (name) {
@@ -393,8 +385,7 @@ export function analyzeDependencies(
 				dependsOn: [], // Type declarations have no runtime dependencies
 			}
 
-			const isExported =
-				(ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Export) !== 0
+			const isExported = (ts.getCombinedModifierFlags(stmt) & ts.ModifierFlags.Export) !== 0
 			if (isExported) {
 				node.exportInfo = { name, isDefault: false }
 			}
@@ -407,9 +398,7 @@ export function analyzeDependencies(
 		// 8. EXPORT DECLARATIONS (re-exports, export { }, export default)
 		if (ts.isExportDeclaration(stmt)) {
 			const key = `__export_${id}`
-			const deps = stmt.exportClause
-				? collectDependencies(stmt.exportClause)
-				: []
+			const deps = stmt.exportClause ? collectDependencies(stmt.exportClause) : []
 			const node: DependencyNode = {
 				id,
 				kind: "export",

@@ -1,15 +1,12 @@
+import type { ClientPerspective, ClientReturn, ContentSourceMap, QueryParams } from "next-sanity"
+
 import libraryConfig from "app/libraryConfig"
 import { siteURL } from "library/siteURL"
-import { draftMode } from "next/headers"
-import type {
-	ClientPerspective,
-	ClientReturn,
-	ContentSourceMap,
-	QueryParams,
-} from "next-sanity"
 import { defineLive } from "next-sanity/live"
+import { draftMode } from "next/headers"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
+
 import { notifySanityLiveRefreshAction, RuntimeClient } from "./live.client"
 import {
 	getLiveProxySupport,
@@ -87,24 +84,18 @@ export async function libraryFetch<const QueryString extends string>({
 export const LibraryRuntime = async () => {
 	const { isEnabled: isDraftMode } = await draftMode()
 	const isProductionBuild = isNextProductionBuild()
-	const { allowProxy, canUseLiveProxy, runtimeSupportsLiveProxy } =
-		getLiveProxySupport({
-			allowProxy: libraryConfig.allowProxy,
-			currentSiteURL: siteURL,
-		})
+	const { allowProxy, canUseLiveProxy, runtimeSupportsLiveProxy } = getLiveProxySupport({
+		allowProxy: libraryConfig.allowProxy,
+		currentSiteURL: siteURL,
+	})
 	if (allowProxy && !runtimeSupportsLiveProxy && !isProductionBuild) {
 		throw new Error(getLiveProxyUnsupportedMessage())
 	}
 
 	return (
-		<RuntimeClient
-			isDraftMode={isDraftMode}
-			useLiveProxy={canUseLiveProxy && !isProductionBuild}
-		>
+		<RuntimeClient isDraftMode={isDraftMode} useLiveProxy={canUseLiveProxy && !isProductionBuild}>
 			{(isDraftMode || !allowProxy) && (
-				<InternalLive
-					action={isDraftMode ? notifySanityLiveRefreshAction : undefined}
-				/>
+				<InternalLive action={isDraftMode ? notifySanityLiveRefreshAction : undefined} />
 			)}
 		</RuntimeClient>
 	)

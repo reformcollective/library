@@ -47,10 +47,7 @@ export const getRandomFloat = (min: number, max: number) => {
 	return Math.random() * (max - min) + min
 }
 
-export function measureSticky<T>(
-	element: Element | null | undefined,
-	value: T,
-) {
+export function measureSticky<T>(element: Element | null | undefined, value: T) {
 	return () => {
 		if (!element) return value
 		if (!(element instanceof HTMLElement)) return value
