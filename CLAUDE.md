@@ -6,7 +6,7 @@ Use `pnpm`.
 
 `library/` is a git submodule shared across projects. Changes there affect multiple websites and should stay generic. After pulling in a newer `library/` revision, read `library/CHANGELOG.md` for migration notes and project-impacting changes.
 
-Never commit, push, or amend unless the user says "yolo". Even if the user specifically asks, they must say the magic word before you commit or amend.
+Never commit, push, start a merge/rebase, or amend unless the user says "yolo". Even if the user specifically asks, they must say the magic word before you commit or amend.
 
 ## Agency Patterns
 
@@ -18,18 +18,24 @@ Project text styles may use Capsize-generated pseudo-elements. Apply them to the
 
 For animation, prefer the shared GSAP pattern built around `library/useAnimation`.
 
-For images, use `StaticImage` for raster assets and `SanityImage` for CMS images. Reserve `app/images/` for shared global assets and co-locate component-specific assets with the component that uses them. Follow the SVG import patterns from `next.config.ts`: use `*.inline.svg` for React component imports and plain `.svg` for image asset imports.
+For images, use `StaticImage` for raster assets and `SanityImage` for CMS images. Reserve `app/images/` for shared global assets and co-locate component-specific assets with the component that uses them. For SVGs prefer `*.inline.svg` for React component imports and plain `.svg` for image asset imports.
+
+## Common Mistakes
+
+- violating capsize rules around pseudo elements
+- using the `css` helper without using a utility like `f.responsive` or `f.unresponsive`
+- adding SVGs as react components instead of standalone `*.svg` or `*.inline.svg` files
 
 ## Validation
 
-After making changes, run the project validation scripts and fix any warnings or errors they report:
+After making changes, check for common mistakes and run the project validation scripts and fix any warnings or errors they report:
 
 Very fast, run these all the time:
 
 - `WIREIT_LOGGER=metrics pnpm format`
 - `WIREIT_LOGGER=metrics pnpm lint`
 
-Slow and very resource intensive, avoid when not needed:
+Slow and very resource intensive, run only when needed:
 
 - `WIREIT_LOGGER=metrics pnpm build`
 
