@@ -69,6 +69,7 @@ export const createSectionPreview = (
 					background: bg,
 				}}
 			>
+				{/* biome-ignore lint/performance/noImgElement: Sanity preview thumbnails are fixed-size studio-only images */}
 				<img
 					alt=""
 					src={image.src}

@@ -78,6 +78,7 @@ export const HMRProvider =
 					return (
 						<script
 							id="reform-hmr-websocket-patch"
+							// biome-ignore lint/security/noDangerouslySetInnerHtml: script content is static and only patches the development websocket URL
 							dangerouslySetInnerHTML={{ __html: wsPatchScript }}
 						/>
 					)

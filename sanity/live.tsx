@@ -8,10 +8,8 @@ import type {
 	QueryParams,
 } from "next-sanity"
 import { defineLive } from "next-sanity/live"
-import { version as nextSanityVersion } from "next-sanity/package.json"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
-import { version as sanityVersion } from "sanity/package.json"
 import { notifySanityLiveRefreshAction, RuntimeClient } from "./live.client"
 import {
 	getLiveProxySupport,

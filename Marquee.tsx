@@ -310,6 +310,7 @@ export function Marquee({
 				data-vertical={isVertical || undefined}
 			>
 				{Array.from({ length: numberNeeded }, (_, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: repeated children are static clones for the scrolling track
 					<Fragment key={index}>{children}</Fragment>
 				))}
 			</Row>

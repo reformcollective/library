@@ -25,7 +25,10 @@ const FORBIDDEN_DEPENDENCY_FIELDS = [
 	"optionalDependencies",
 	"peerDependencies",
 ] satisfies Array<keyof PackageManifest>
-const PUBLIC_LIBRARY_DEPENDENCY_PATTERNS = ["stylelint*"]
+const PUBLIC_LIBRARY_DEPENDENCY_PATTERNS = [
+	"stylelint-config-*",
+	"stylelint-plugin-*",
+]
 
 function readManifest(url: URL): PackageManifest {
 	return JSON.parse(readFileSync(url, "utf8")) as PackageManifest
@@ -93,7 +96,7 @@ function filterDependencies(dependencies: Record<string, string> | undefined) {
 		if (!rootRange) {
 			filteredDependencies[name] = libraryRange
 			continue
-    }
+		}
 
 		const libraryValidRange = semver.validRange(libraryRange)
 		const rootValidRange = semver.validRange(rootRange)
@@ -133,7 +136,7 @@ function filterDependencies(dependencies: Record<string, string> | undefined) {
 	return filteredDependencies
 }
 
-function readPackage(pkg: PackageManifest, context: PnpmHookContext) {
+function readPackage(pkg: PackageManifest) {
 	if (pkg.name !== libraryManifest.name) return pkg
 
 	assertDependencyFields(libraryManifest)

@@ -320,6 +320,7 @@ export function InfiniteSideScroll({
 		<Wrapper ref={wrapperRef} className={className}>
 			<Row ref={rowRef} className="track">
 				{Array.from({ length: numberNeeded }, (_, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: repeated children are static clones for the scrolling track
 					<Fragment key={index}>{children}</Fragment>
 				))}
 			</Row>
