@@ -131,6 +131,17 @@ function filterDependencies(dependencies: Record<string, string> | undefined) {
 function readPackage(pkg: PackageManifest) {
 	if (pkg.name !== libraryManifest.name) return pkg
 
+	for (const field of FORBIDDEN_DEPENDENCY_FIELDS) {
+		if (
+			Object.hasOwn(libraryManifest, field) &&
+			Object.keys(libraryManifest[field] ?? {}).length === 0
+		) {
+			delete libraryManifest[field]
+			delete pkg[field]
+		}
+	}
+
+	assertDependencyFields(libraryManifest)
 	assertDependencyFields(libraryManifest)
 	pkg.dependencies = filterDependencies(pkg.dependencies)
 
