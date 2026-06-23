@@ -1,9 +1,18 @@
+import { fileURLToPath } from "node:url"
 import { defineConfig } from "oxlint"
 
-export default defineConfig({
-	jsPlugins: ["./library/config/capsize.ts"],
-	options: { typeAware: true, typeCheck: true },
-	rules: {
-		"capsize/no-layout-text-style": "warn",
-	},
-})
+type OxlintConfigOptions = {
+	typeChecking?: boolean
+}
+
+export function createOxlintConfig({ typeChecking = true }: OxlintConfigOptions = {}) {
+	return defineConfig({
+		jsPlugins: [fileURLToPath(new URL("./capsize.ts", import.meta.url))],
+		...(typeChecking ? { options: { typeAware: true, typeCheck: true } } : {}),
+		rules: {
+			"capsize/no-layout-text-style": "warn",
+		},
+	})
+}
+
+export default createOxlintConfig()

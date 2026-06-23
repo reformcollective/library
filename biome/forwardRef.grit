@@ -1,4 +1,0 @@
-`$fn` where {
-	$fn <: or { `forwardRef` },
-	register_diagnostic(span=$fn, message="In React 19+ ref is a normal prop and forwardRef is not needed.", severity="error")
-}
