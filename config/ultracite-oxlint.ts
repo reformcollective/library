@@ -1,184 +1,27 @@
+import { fileURLToPath } from "node:url"
+
 import { defineConfig } from "oxlint"
 import core from "ultracite/oxlint/core"
 import next from "ultracite/oxlint/next"
 import react from "ultracite/oxlint/react"
 import vitest from "ultracite/oxlint/vitest"
 
-const disabledVitestRules = {
-	"vitest/max-expects": "off",
-	"vitest/prefer-called-once": "off",
-	"vitest/prefer-called-with": "off",
-	"vitest/prefer-describe-function-title": "off",
-	"vitest/prefer-import-in-mock": "off",
-	"vitest/prefer-mock-return-shorthand": "off",
-	"vitest/prefer-strict-equal": "off",
-	"vitest/prefer-to-be-falsy": "off",
-	"vitest/prefer-to-be-truthy": "off",
-	"vitest/require-mock-type-parameters": "off",
-	"vitest/require-top-level-describe": "off",
-	"vitest/valid-expect": "off",
+type OxlintConfigOptions = {
+	typeChecking?: boolean
 }
 
-const vitestConfig = defineConfig({
-	...vitest,
-	overrides: vitest.overrides?.map((override) => ({
-		...override,
+export function createOxlintConfig({
+	typeChecking = true,
+}: OxlintConfigOptions = {}) {
+	return defineConfig({
+		extends: [core, next, react, vitest],
+		ignorePatterns: core.ignorePatterns,
+		jsPlugins: [fileURLToPath(new URL("./capsize.ts", import.meta.url))],
+		...(typeChecking ? { options: { typeAware: true, typeCheck: true } } : {}),
 		rules: {
-			...override.rules,
-			...disabledVitestRules,
+			"capsize/no-layout-text-style": "warn",
 		},
-	})),
-})
+	})
+}
 
-const compatibility = defineConfig({
-	overrides: [
-		{
-			files: [
-				"**/*.{test,spec}.{ts,tsx,js,jsx}",
-				"**/__tests__/**/*.{ts,tsx,js,jsx}",
-			],
-			rules: {
-				"vitest/max-expects": "off",
-				"vitest/require-mock-type-parameters": "off",
-				"vitest/require-top-level-describe": "off",
-				"vitest/valid-expect": "off",
-			},
-		},
-	],
-	rules: {
-		"eslint/arrow-body-style": "off",
-		"eslint/no-div-regex": "off",
-		"eslint/prefer-arrow-callback": "off",
-		"eslint/prefer-template": "off",
-		"eslint/preserve-caught-error": "off",
-		"import/newline-after-import": "off",
-		"import/consistent-type-specifier-style": "off",
-		"typescript/consistent-type-definitions": "off",
-		"typescript/consistent-indexed-object-style": "off",
-		"typescript/consistent-type-imports": "off",
-		"typescript/no-import-type-side-effects": "off",
-		"unicorn/catch-error-name": "off",
-		"unicorn/consistent-existence-index-check": "off",
-		"unicorn/no-array-reverse": "off",
-		"unicorn/no-array-sort": "off",
-		"unicorn/numeric-separators-style": "off",
-		"unicorn/prefer-at": "off",
-		"unicorn/prefer-code-point": "off",
-		"unicorn/prefer-number-properties": "off",
-		"unicorn/prefer-spread": "off",
-		"unicorn/prefer-string-replace-all": "off",
-		"unicorn/switch-case-braces": "off",
-		"unicorn/text-encoding-identifier-case": "off",
-	},
-})
-
-export default defineConfig({
-	extends: [core, next, react, vitestConfig, compatibility],
-	ignorePatterns: [...core.ignorePatterns, "library/**"],
-	jsPlugins: ["./library/config/capsize.ts"],
-	options: { typeAware: false, typeCheck: false },
-	overrides: [
-		{
-			files: [
-				"**/*.{test,spec}.{ts,tsx,js,jsx}",
-				"**/__tests__/**/*.{ts,tsx,js,jsx}",
-			],
-			rules: {
-				"vitest/max-expects": "off",
-				"vitest/require-mock-type-parameters": "off",
-				"vitest/require-top-level-describe": "off",
-				"vitest/valid-expect": "off",
-			},
-		},
-	],
-	rules: {
-		"capsize/no-layout-text-style": "warn",
-		"eslint/accessor-pairs": "off",
-		"eslint/array-callback-return": "off",
-		"eslint/class-methods-use-this": "off",
-		"eslint/complexity": "off",
-		"eslint/curly": "off",
-		"eslint/default-case": "off",
-		"eslint/eqeqeq": "off",
-		"eslint/func-style": "off",
-		"eslint/max-classes-per-file": "off",
-		"eslint/no-await-in-loop": "off",
-		"eslint/no-empty": "off",
-		"eslint/no-empty-function": "off",
-		"eslint/no-eq-null": "off",
-		"eslint/no-inline-comments": "off",
-		"eslint/no-negated-condition": "off",
-		"eslint/no-nested-ternary": "off",
-		"eslint/no-plusplus": "off",
-		"eslint/no-promise-executor-return": "off",
-		"eslint/no-shadow": "off",
-		"eslint/no-use-before-define": "off",
-		"eslint/no-useless-return": "off",
-		"eslint/no-warning-comments": "off",
-		"eslint/prefer-destructuring": "off",
-		"eslint/prefer-named-capture-group": "off",
-		"eslint/prefer-regex-literals": "off",
-		"eslint/require-await": "off",
-		"eslint/require-unicode-regexp": "off",
-		"eslint/sort-keys": "off",
-		"import/first": "off",
-		"import/consistent-type-specifier-style": "off",
-		"import/no-named-default": "off",
-		"jsx-a11y/prefer-tag-over-role": "off",
-		"nextjs/no-img-element": "off",
-		"node/callback-return": "off",
-		"oxc/no-barrel-file": "off",
-		"promise/avoid-new": "off",
-		"promise/param-names": "off",
-		"promise/prefer-await-to-callbacks": "off",
-		"promise/prefer-await-to-then": "off",
-		"react-hooks/exhaustive-deps": "off",
-		"react/no-object-type-as-default-prop": "off",
-		"react/no-unstable-nested-components": "off",
-		"typescript/array-type": "off",
-		"typescript/consistent-return": "off",
-		"typescript/consistent-type-imports": "off",
-		"typescript/no-deprecated": "off",
-		"typescript/no-dynamic-delete": "off",
-		"typescript/no-explicit-any": "off",
-		"typescript/no-misused-promises": "off",
-		"typescript/no-non-null-assertion": "off",
-		"typescript/no-unnecessary-type-conversion": "off",
-		"typescript/no-unsafe-argument": "off",
-		"typescript/no-unsafe-assignment": "off",
-		"typescript/no-unsafe-call": "off",
-		"typescript/no-unsafe-member-access": "off",
-		"typescript/no-unsafe-return": "off",
-		"typescript/no-unsafe-type-assertion": "off",
-		"typescript/parameter-properties": "off",
-		"typescript/prefer-find": "off",
-		"typescript/prefer-nullish-coalescing": "off",
-		"typescript/prefer-promise-reject-errors": "off",
-		"typescript/promise-function-async": "off",
-		"typescript/strict-boolean-expressions": "off",
-		"typescript/strict-void-return": "off",
-		"typescript/use-unknown-in-catch-callback-variable": "off",
-		"unicorn/consistent-function-scoping": "off",
-		"unicorn/filename-case": "off",
-		"unicorn/no-anonymous-default-export": "off",
-		"unicorn/no-array-for-each": "off",
-		"unicorn/no-array-reduce": "off",
-		"unicorn/no-await-expression-member": "off",
-		"unicorn/no-lonely-if": "off",
-		"unicorn/no-negated-condition": "off",
-		"unicorn/no-nested-ternary": "off",
-		"unicorn/no-object-as-default-parameter": "off",
-		"unicorn/no-unreadable-array-destructuring": "off",
-		"unicorn/no-useless-undefined": "off",
-		"unicorn/no-useless-collection-argument": "off",
-		"unicorn/prefer-array-find": "off",
-		"unicorn/prefer-native-coercion-functions": "off",
-		"unicorn/prefer-query-selector": "off",
-		"unicorn/prefer-response-static-json": "off",
-		"unicorn/prefer-set-has": "off",
-		"vitest/max-expects": "off",
-		"vitest/require-mock-type-parameters": "off",
-		"vitest/require-top-level-describe": "off",
-		"vitest/valid-expect": "off",
-	},
-})
+export default createOxlintConfig()
