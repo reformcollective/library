@@ -135,13 +135,13 @@ const Wrapper = styled(
 	"div",
 	f.unresponsive(css`
 		position: fixed;
+		z-index: 1000;
 		top: 0;
 		left: 0;
+		opacity: 0;
+		pointer-events: none;
 		transform: translate(-50%, -50%) scale(0);
 		will-change: transform, opacity;
-		z-index: 1000;
-		pointer-events: none;
-		opacity: 0;
 
 		@media (hover: none) {
 			visibility: hidden;

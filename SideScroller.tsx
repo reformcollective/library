@@ -153,9 +153,9 @@ const Inner = styled("div", {
 	base: [
 		f.unresponsive(css`
 			position: absolute;
-			width: fit-content;
 			top: 0;
 			left: 0;
+			width: fit-content;
 
 			> div {
 				width: fit-content;

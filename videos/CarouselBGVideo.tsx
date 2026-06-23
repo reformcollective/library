@@ -207,8 +207,8 @@ const Container = styled("div", [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
-				isolation: isolate;
 				overflow: clip;
+				isolation: isolate;
 			`),
 		},
 	},
@@ -218,9 +218,9 @@ const MainVideo = styled(MuxVideo, [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
+				display: block;
 				width: 100%;
 				height: 100%;
-				display: block;
 				object-fit: cover;
 				object-position: center;
 			`),
@@ -234,8 +234,8 @@ const PlaceholderDiv = styled("div", [
 			[library]: f.responsive(css`
 				width: 100%;
 				height: 100%;
-				background-size: cover;
 				background-position: center;
+				background-size: cover;
 			`),
 		},
 	},

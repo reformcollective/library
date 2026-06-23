@@ -358,16 +358,16 @@ const AnimationWrapper = styled("div", {
 		"@layer": {
 			[library]: f.unresponsive(css`
 				display: grid;
-				place-items: ${alignment};
 				place-content: ${alignment};
+				place-items: ${alignment};
 
 				> * {
-					grid-area: 1 / 1 / 2 / 2;
+					display: grid;
 					min-width: 100%;
 					min-height: 100%;
-					display: grid;
-					place-items: ${alignment};
+					grid-area: 1 / 1 / 2 / 2;
 					place-content: ${alignment};
+					place-items: ${alignment};
 
 					&:empty {
 						pointer-events: none;

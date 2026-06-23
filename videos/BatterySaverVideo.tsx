@@ -176,29 +176,29 @@ const LowPowerOverlay = styled(
 	"button",
 	f.unresponsive(css`
 		position: fixed;
-		inset: 0;
+		z-index: 9999;
 		display: grid;
-		place-content: center;
-		place-items: center;
+		animation: ${fadeIn} 1s ${eases.cubic.inOut};
+		backdrop-filter: blur(5px);
 		background: rgb(0 0 0 / 5%);
 		cursor: pointer;
-		z-index: 9999;
-		backdrop-filter: blur(5px);
-		animation: ${fadeIn} 1s ${eases.cubic.inOut};
+		inset: 0;
+		place-content: center;
+		place-items: center;
 	`),
 )
 
 const PlayButton = styled(
 	"div",
 	f.unresponsive(css`
+		display: flex;
 		width: 64px;
 		height: 64px;
+		align-items: center;
+		justify-content: center;
 		border-radius: 50%;
 		background: rgb(255 255 255 / 80%);
 		color: black;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	`),
 )
 
@@ -215,9 +215,9 @@ const LowPowerMessage = styled(
 	"div",
 	f.unresponsive(css`
 		color: white;
-		text-align: center;
 		font-size: 14px;
 		font-weight: 500;
 		line-height: 1.4;
+		text-align: center;
 	`),
 )

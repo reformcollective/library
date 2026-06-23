@@ -31,13 +31,13 @@ const Wrapper = styled("div", [
 	{
 		"@layer": {
 			[library]: f.unresponsive(css`
-				grid-column: main;
 				height: 100vh;
 				padding: 100px;
 				background: white;
 				color: black;
-				text-align: center;
+				grid-column: main;
 				overflow-wrap: break-word;
+				text-align: center;
 			`),
 		},
 	},

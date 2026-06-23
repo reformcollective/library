@@ -403,8 +403,8 @@ const Wrapper = styled("div", [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
-				display: grid;
 				position: relative;
+				display: grid;
 			`),
 		},
 	},
@@ -415,8 +415,8 @@ const Row = styled("div", [
 		"@layer": {
 			[library]: f.responsive(css`
 				display: flex;
-				width: 100%;
 				overflow: hidden;
+				width: 100%;
 
 				& > * {
 					flex-shrink: 0;

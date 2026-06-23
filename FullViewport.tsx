@@ -72,15 +72,15 @@ const Page = styled("div", [
 	f.unresponsive(css`
 		/* cover the entire page with an absolute div */
 		position: absolute;
+		z-index: 99;
 		top: 0;
 		left: 0;
-		height: 100%;
-		width: 100%;
-		z-index: 99;
-		pointer-events: none;
 
 		/* prevent adding overflow from this div's content */
 		overflow: clip;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
 	`),
 ])
 
@@ -90,22 +90,22 @@ const StickyVariant = styled("div", [
 		position: sticky;
 		top: 50%;
 		left: 0;
-		height: 100%;
 		width: 100%;
-		transform: translateY(-50%);
+		height: 100%;
 
 		/* never stop sticking */
 		margin-bottom: -100vmax;
+		transform: translateY(-50%);
 	`),
 ])
 
 const FixedVariant = styled("div", [
 	f.responsive(css`
 		position: fixed;
+		z-index: 99;
 		top: 0;
 		left: 0;
-		height: 100%;
 		width: 100%;
-		z-index: 99;
+		height: 100%;
 	`),
 ])
