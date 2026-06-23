@@ -12,7 +12,6 @@ import { version as nextSanityVersion } from "next-sanity/package.json"
 import { client } from "sanity/lib/client"
 import { token } from "sanity/lib/token"
 import { version as sanityVersion } from "sanity/package.json"
-import semver from "semver"
 import { notifySanityLiveRefreshAction, RuntimeClient } from "./live.client"
 import {
 	getLiveProxySupport,
@@ -110,16 +109,5 @@ export const LibraryRuntime = async () => {
 				/>
 			)}
 		</RuntimeClient>
-	)
-}
-
-if (!semver.satisfies(nextSanityVersion, "^13.0.0")) {
-	throw new Error(
-		`next-sanity must satisfy version ^13.0.0! (installed: ${nextSanityVersion})`,
-	)
-}
-if (!semver.satisfies(sanityVersion, "^5.0.0 || ^6.0.0")) {
-	throw new Error(
-		`sanity must satisfy version ^5.0.0 || ^6.0.0! (installed: ${sanityVersion})`,
 	)
 }

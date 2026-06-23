@@ -1,3 +1,20 @@
+# 2026-06-23
+
+The library now provides hooks to verify your installed versions satisfy its requirements.
+
+**Migration Advice**
+
+Create `.pnpmfile.mjs` with the following content:
+```
+export { hooks } from "./library/config/pnpmfile.ts"
+```
+
+And add this to your `pnpm-workspace.yaml`:
+```
+configDependencies:
+  semver: 7.8.5+sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==
+```
+
 # 2026-06-10
 
 ## Site URL moved to the compile-time API
