@@ -9,9 +9,10 @@ import type {} from "react/canary"
 import { usePreloader } from "./link/usePreloader"
 
 type ClassProps = "default" | "enter" | "exit" | "share" | "update"
+type TransitionClass = "auto" | "none" | (string & Record<never, never>)
 
 type TransitionProps = {
-	[key in ClassProps]?: string | "auto" | "none"
+	[key in ClassProps]?: TransitionClass
 } & Omit<ComponentProps<typeof ReactViewTransition>, ClassProps>
 
 const mask = (completed: boolean) => (cls: string | undefined) =>

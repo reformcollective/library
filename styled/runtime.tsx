@@ -63,7 +63,11 @@ export function runtimeStyled({
 			const raw = props[def.propName]
 			if (raw === undefined || raw === null) continue
 			tokenStyle[def.cssVarName] =
-				typeof raw === "number" && def.unit ? `${raw}${def.unit}` : String(raw)
+				typeof raw === "number" && def.unit
+					? `${raw}${def.unit}`
+					: typeof raw === "string"
+						? raw
+						: (JSON.stringify(raw) ?? "")
 		}
 
 		// filter dynamic props so they don't leak to the DOM

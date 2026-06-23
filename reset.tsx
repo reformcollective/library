@@ -288,6 +288,6 @@ display:revert; revert to element instead of attribute */
 	}
 `
 
-const builtStyle = await compileTime(() => style)
+const builtStyle = compileTime(() => style)
 
 export const ResetStyles = () => <style>{builtStyle}</style>

@@ -72,7 +72,7 @@ export type LinkField = {
 	blank?: boolean
 	parameters?: string
 	anchor?: string
-	internalSlug: null | string | "/"
+	internalSlug: null | string
 }
 
 const internalSlugField = `"internalSlug": select(

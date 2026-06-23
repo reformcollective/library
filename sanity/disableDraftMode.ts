@@ -4,9 +4,9 @@ import { draftMode } from "next/headers"
 
 export async function disableDraftMode() {
 	"use server"
-	await Promise.allSettled([
-		(await draftMode()).disable(),
-		// Simulate a delay to show the loading state
-		new Promise((resolve) => setTimeout(resolve, 1000)),
-	])
+	const draft = await draftMode()
+	draft.disable()
+
+	// Simulate a delay to show the loading state
+	await new Promise((resolve) => setTimeout(resolve, 1000))
 }

@@ -95,7 +95,7 @@ export function horizontalLoop(items, config) {
 					: config.snapOffset
 						? (tl.duration() * config.snapOffset) / totalWidth
 						: 0
-				center &&
+				if (center) {
 					times.forEach((t, i) => {
 						times[i] = timeWrap(
 							tl.labels["label" + i] +
@@ -103,11 +103,12 @@ export function horizontalLoop(items, config) {
 								timeOffset,
 						)
 					})
-				!center &&
-					config.snapOffset &&
+				}
+				if (!center && config.snapOffset) {
 					times.forEach((t, i) => {
 						times[i] = timeWrap(tl.labels["label" + i] - timeOffset)
 					})
+				}
 			},
 			getClosest = (values, value, wrap) => {
 				let i = values.length,
@@ -167,11 +168,13 @@ export function horizontalLoop(items, config) {
 				let progress = tl.progress()
 				tl.progress(0, true)
 				populateWidths()
-				deep && populateTimeline()
+				if (deep) populateTimeline()
 				populateOffsets()
-				deep && tl.draggable && tl.paused()
-					? tl.time(times[curIndex], true)
-					: tl.progress(progress, true)
+				if (deep && tl.draggable && tl.paused()) {
+					tl.time(times[curIndex], true)
+				} else {
+					tl.progress(progress, true)
+				}
 			},
 			onResize = () => refresh(true),
 			proxy
@@ -182,8 +185,9 @@ export function horizontalLoop(items, config) {
 		if (manageResize) window.addEventListener("resize", onResize)
 		function toIndex(index, vars) {
 			vars = vars || {}
-			Math.abs(index - curIndex) > length / 2 &&
-				(index += index > curIndex ? -length : length) // always go in the shortest direction
+			if (Math.abs(index - curIndex) > length / 2) {
+				index += index > curIndex ? -length : length // always go in the shortest direction
+			}
 			let newIndex = gsap.utils.wrap(0, length, index),
 				time = times[newIndex]
 			if (time > tl.time() !== index > curIndex && index !== curIndex) {
@@ -224,7 +228,6 @@ export function horizontalLoop(items, config) {
 				ratio,
 				startProgress,
 				draggable,
-				dragSnap,
 				lastSnap,
 				initChangeX,
 				wasPlaying,
@@ -235,10 +238,11 @@ export function horizontalLoop(items, config) {
 						wrap(startProgress + (draggable.startX - draggable.x) * ratio),
 					),
 				syncIndex = () => tl.closestIndex(true)
-			typeof InertiaPlugin === "undefined" &&
+			if (typeof InertiaPlugin === "undefined") {
 				console.warn(
 					"InertiaPlugin required for momentum-based scrolling and snapping. https://greensock.com/club",
 				)
+			}
 			draggable = Draggable.create(proxy, {
 				trigger: items[0].parentNode,
 				type: "x",
@@ -284,8 +288,9 @@ export function horizontalLoop(items, config) {
 								wrappedTime = timeWrap(time),
 								snapTime = times[getClosest(times, wrappedTime, tl.duration())],
 								dif = snapTime - wrappedTime
-							Math.abs(dif) > tl.duration() / 2 &&
-								(dif += dif < 0 ? tl.duration() : -tl.duration())
+							if (Math.abs(dif) > tl.duration() / 2) {
+								dif += dif < 0 ? tl.duration() : -tl.duration()
+							}
 							lastSnap = (time + dif) / tl.duration() / -ratio
 							return lastSnap
 						},
@@ -295,7 +300,11 @@ export function horizontalLoop(items, config) {
 						indexIsDirty = true
 					} else if (wasPlaying) {
 						// REFORM CHANGE: resume marquee when no throw, preserving direction
-						wasReversed ? tl.reverse() : tl.play()
+						if (wasReversed) {
+							tl.reverse()
+						} else {
+							tl.play()
+						}
 						// REFORM CHANGE: clear resume intent flags
 						wasPlaying = false
 						wasReversed = false
@@ -305,7 +314,11 @@ export function horizontalLoop(items, config) {
 					syncIndex()
 					if (wasPlaying) {
 						// REFORM CHANGE: resume marquee after throw, preserving direction
-						wasReversed ? tl.reverse() : tl.play()
+						if (wasReversed) {
+							tl.reverse()
+						} else {
+							tl.play()
+						}
 						// REFORM CHANGE: clear resume intent flags
 						wasPlaying = false
 						wasReversed = false
@@ -323,13 +336,13 @@ export function horizontalLoop(items, config) {
 		}
 		tl.closestIndex(true)
 		lastIndex = curIndex
-		onChange && onChange(items[curIndex], curIndex)
+		if (onChange) onChange(items[curIndex], curIndex)
 		timeline = tl
 		// REFORM CHANGE: better cleanup
 		return () => {
 			if (manageResize) window.removeEventListener("resize", onResize)
 			try {
-				timeline && timeline.destroy && timeline.destroy()
+				if (timeline?.destroy) timeline.destroy()
 			} catch {}
 		}
 	})

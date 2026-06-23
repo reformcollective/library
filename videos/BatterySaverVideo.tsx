@@ -106,7 +106,7 @@ export function BatterySaverVideo({
 
 	useEffect(() => {
 		if (autoPlay) {
-			attemptPlay()
+			void attemptPlay()
 		}
 	}, [autoPlay, attemptPlay])
 

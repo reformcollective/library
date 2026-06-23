@@ -1,5 +1,9 @@
 import postcssSyntax from "postcss-styled-syntax"
 
+const yearAgo = new Date(new Date().setFullYear(new Date().getFullYear() - 1))
+	.toISOString()
+	.split("T")[0]
+
 export default {
 	extends: "stylelint-config-standard",
 	customSyntax: postcssSyntax,
@@ -16,13 +20,14 @@ export default {
 		"plugin/use-baseline": [
 			true,
 			{
-				available: 2024,
+				available: yearAgo,
 				ignoreSelectors: ["/^view-transition-/"],
 				ignoreProperties: {
 					"background-clip": ["text"],
 					"view-transition-name": [],
 					"text-wrap": ["pretty"],
 					"user-select": ["none"],
+					"overscroll-behavior": ["contain"],
 				},
 			},
 		],

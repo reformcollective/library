@@ -82,7 +82,7 @@ export function BackgroundVideo({
 		if (playbackId && loadVideo && !videoHasFinished)
 			// we never want to interrupt a play call with another play call
 			// so wait for any previous play call to finish before starting a new one
-			videoPlayPromise.current.then(() => {
+			void videoPlayPromise.current.then(() => {
 				if (video.current)
 					videoPlayPromise.current = video.current
 						?.play()

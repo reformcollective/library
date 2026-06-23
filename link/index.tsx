@@ -99,7 +99,7 @@ export default function UniversalLink({
 		onBeforeNavigate?.()
 
 		if (internal && !newTab) {
-			transitioner({ e, to: url })
+			void transitioner({ e, to: url })
 		} else {
 			window.open(url, newTab ? "_blank" : "_self")
 		}

@@ -11,7 +11,7 @@ type StaticLinkOption = {
 }
 
 const staticPageOptions = await compileTime(async () => {
-	const routes = await listStaticRoutes()
+	const routes = listStaticRoutes()
 
 	return routes.map((route) => ({
 		title: route,

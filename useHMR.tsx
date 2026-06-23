@@ -37,7 +37,8 @@ declare global {
 if (isBrowser) {
 	window.__reformHMREmitter = emitter
 	window.__reformHMRCreateId = createHMRMessageId
-	const previousOnBeforeRefresh = nextDispatcher.onBeforeRefresh
+	const previousOnBeforeRefresh =
+		nextDispatcher.onBeforeRefresh.bind(nextDispatcher)
 	nextDispatcher.onBeforeRefresh = () => {
 		previousOnBeforeRefresh()
 		emitter.dispatchEvent("beforeRefresh", createHMRMessageId())

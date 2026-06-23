@@ -254,8 +254,7 @@ export function SanityVisualEditingOverlay({
 
 let hasWarned = false
 
-// biome-ignore lint/suspicious/noMisleadingCharacterClass: directly copied from sanity
-const zeroWidthChars = /[\u200B\u200C\u200D\uFEFF]/g
+const zeroWidthChars = /\u200B|\u200C|\u200D|\uFEFF/g
 
 const checkZeroWidthChars = (startNode: Node = document.body) => {
 	const walk = (node: Node) => {

@@ -7,7 +7,7 @@ import type { GetSectionType } from "page"
 import { library } from "library/layers.css"
 
 export async function Redirect({ link }: GetSectionType<"redirect">) {
-	const isDraft = await (await draftMode()).isEnabled
+	const { isEnabled: isDraft } = await draftMode()
 
 	if (isDraft) {
 		return (

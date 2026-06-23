@@ -91,7 +91,7 @@ export function verticalLoop(items, config) {
 				timeOffset = center
 					? (tl.duration() * (container.offsetHeight / 2)) / totalHeight
 					: 0
-				center &&
+				if (center) {
 					times.forEach((t, i) => {
 						times[i] = timeWrap(
 							tl.labels["label" + i] +
@@ -99,6 +99,7 @@ export function verticalLoop(items, config) {
 								timeOffset,
 						)
 					})
+				}
 			},
 			getClosest = (values, value, wrap) => {
 				let i = values.length,
@@ -159,11 +160,13 @@ export function verticalLoop(items, config) {
 				let progress = tl.progress()
 				tl.progress(0, true)
 				populateHeights()
-				deep && populateTimeline()
+				if (deep) populateTimeline()
 				populateOffsets()
-				deep && tl.draggable && tl.paused()
-					? tl.time(times[curIndex], true)
-					: tl.progress(progress, true)
+				if (deep && tl.draggable && tl.paused()) {
+					tl.time(times[curIndex], true)
+				} else {
+					tl.progress(progress, true)
+				}
 			},
 			onResize = () => refresh(true),
 			proxy
@@ -174,8 +177,9 @@ export function verticalLoop(items, config) {
 		if (manageResize) window.addEventListener("resize", onResize)
 		function toIndex(index, vars) {
 			vars = vars || {}
-			Math.abs(index - curIndex) > length / 2 &&
-				(index += index > curIndex ? -length : length)
+			if (Math.abs(index - curIndex) > length / 2) {
+				index += index > curIndex ? -length : length
+			}
 			let newIndex = gsap.utils.wrap(0, length, index),
 				time = times[newIndex]
 			if (time > tl.time() !== index > curIndex && index !== curIndex) {
@@ -225,10 +229,11 @@ export function verticalLoop(items, config) {
 						wrap(startProgress + (draggable.startY - draggable.y) * ratio),
 					),
 				syncIndex = () => tl.closestIndex(true)
-			typeof InertiaPlugin === "undefined" &&
+			if (typeof InertiaPlugin === "undefined") {
 				console.warn(
 					"InertiaPlugin required for momentum-based scrolling and snapping. https://greensock.com/club",
 				)
+			}
 			draggable = Draggable.create(proxy, {
 				trigger: items[0].parentNode,
 				type: "y",
@@ -286,7 +291,11 @@ export function verticalLoop(items, config) {
 						indexIsDirty = true
 					} else if (wasPlaying) {
 						// REFORM CHANGE: resume marquee when no throw, preserving direction
-						wasReversed ? tl.reverse() : tl.play()
+						if (wasReversed) {
+							tl.reverse()
+						} else {
+							tl.play()
+						}
 						// REFORM CHANGE: clear resume intent flags
 						wasPlaying = false
 						wasReversed = false
@@ -296,7 +305,11 @@ export function verticalLoop(items, config) {
 					syncIndex()
 					if (wasPlaying) {
 						// REFORM CHANGE: resume marquee after throw, preserving direction
-						wasReversed ? tl.reverse() : tl.play()
+						if (wasReversed) {
+							tl.reverse()
+						} else {
+							tl.play()
+						}
 						// REFORM CHANGE: clear resume intent flags
 						wasPlaying = false
 						wasReversed = false
@@ -314,13 +327,13 @@ export function verticalLoop(items, config) {
 		}
 		tl.closestIndex(true)
 		lastIndex = curIndex
-		onChange && onChange(items[curIndex], curIndex)
+		if (onChange) onChange(items[curIndex], curIndex)
 		timeline = tl
 		// REFORM CHANGE: better cleanup
 		return () => {
 			if (manageResize) window.removeEventListener("resize", onResize)
 			try {
-				timeline && timeline.destroy && timeline.destroy()
+				if (timeline?.destroy) timeline.destroy()
 			} catch {}
 		}
 	})

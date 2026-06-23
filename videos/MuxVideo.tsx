@@ -52,7 +52,7 @@ export function MuxVideo({
 	onEnded,
 	onTimeUpdate,
 	playbackId,
-	preloadTrackable,
+	preloadTrackable = true,
 	onPlay,
 	onPause,
 	...props
@@ -129,7 +129,7 @@ export function MuxVideo({
 				backBufferLength: 0,
 			}}
 			playbackId={playbackId}
-			data-preload-track={playbackId}
+			data-preload-track={preloadTrackable ? playbackId : undefined}
 			{...props}
 		/>
 	)
