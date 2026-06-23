@@ -251,8 +251,8 @@ display:revert; revert to element instead of attribute */
 
 	/* need this so that fonts match figma */
 	* {
-		text-rendering: geometricprecision;
 		-webkit-font-smoothing: antialiased;
+		text-rendering: geometricprecision;
 	}
 
 	/**
@@ -275,15 +275,15 @@ display:revert; revert to element instead of attribute */
 */
 	@supports not (cursor: cell) {
 		body::before {
-			content: "";
-			pointer-events: none;
 			position: fixed;
+			z-index: 999;
 			top: 100lvh;
 			left: 0;
 			width: 100vw;
 			height: 100lvh;
 			background: red;
-			z-index: 999;
+			content: "";
+			pointer-events: none;
 		}
 	}
 `

@@ -42,10 +42,10 @@ const gradientBorderPseudo =
 
 			&::${type} {
 				position: absolute;
-				content: "";
-				inset: 0;
 				z-index: 1;
 				border-radius: inherit;
+				content: "";
+				inset: 0;
 				pointer-events: none;
 				${generateGradientBorder(gradient, borderSize)}
 			}
