@@ -9,6 +9,7 @@ const layerRegex = /@layer\s+(reset|foundation|library)\b/
 
 export default function cssLoader(css: string) {
 	const cleaned = css.replaceAll(ignoredRegex, "")
-	if (!layerRegex.test(cleaned) || cleaned.trimStart().startsWith(layerPrelude)) return cleaned
+	if (!layerRegex.test(cleaned) || cleaned.trimStart().startsWith(layerPrelude))
+		return cleaned
 	return `${layerPrelude}\n${cleaned}`
 }

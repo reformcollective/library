@@ -1,11 +1,25 @@
 "use client"
 
-import { desktopBreakpoint, mobileBreakpoint, tabletBreakpoint } from "app/styles/media"
-import { createContext, useCallback, useEffect, useRef, useState, useTransition } from "react"
+import {
+	desktopBreakpoint,
+	mobileBreakpoint,
+	tabletBreakpoint,
+} from "app/styles/media"
+import {
+	createContext,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+	useTransition,
+} from "react"
 
 import { getVH } from "./viewportUtils"
 
-type HydrationPhase = "hydrating-react" | "hydrating-utilities" | "hydration-complete"
+type HydrationPhase =
+	| "hydrating-react"
+	| "hydrating-utilities"
+	| "hydration-complete"
 
 /**
  * Gives easy access to media queries
@@ -58,8 +72,14 @@ export function ScreenProvider({ children }: Props) {
 
 	const setScreenContext = useCallback(() => {
 		setM(window.innerWidth <= mobileBreakpoint)
-		setT(window.innerWidth > mobileBreakpoint && window.innerWidth <= tabletBreakpoint)
-		setD(window.innerWidth > tabletBreakpoint && window.innerWidth <= desktopBreakpoint)
+		setT(
+			window.innerWidth > mobileBreakpoint &&
+				window.innerWidth <= tabletBreakpoint,
+		)
+		setD(
+			window.innerWidth > tabletBreakpoint &&
+				window.innerWidth <= desktopBreakpoint,
+		)
 		setFw(window.innerWidth > desktopBreakpoint)
 		setInnerWidth(window.innerWidth)
 		setViewportHeight(getVH(100))
@@ -101,7 +121,8 @@ export function ScreenProvider({ children }: Props) {
 						dataType: "track-entry",
 						track: "Screen Context",
 						color: "secondary",
-						tooltipText: "Utilities, like useAnimation and useMedia, are hydrating",
+						tooltipText:
+							"Utilities, like useAnimation and useMedia, are hydrating",
 					},
 				},
 			})
@@ -140,7 +161,8 @@ export function ScreenProvider({ children }: Props) {
 				tablet: t,
 				mobile: m,
 				viewportHeight,
-				shouldHydrateUtilities: phase === "hydrating-utilities" || phase === "hydration-complete",
+				shouldHydrateUtilities:
+					phase === "hydrating-utilities" || phase === "hydration-complete",
 				initComplete: phase === "hydration-complete",
 			}}
 		>
@@ -153,7 +175,9 @@ export function ScreenProvider({ children }: Props) {
  * hook version of adding debounced event listener
  * separate because needs to use ref for persistence
  */
-export const useDebouncedEventListener = <K extends keyof GlobalEventHandlersEventMap>(
+export const useDebouncedEventListener = <
+	K extends keyof GlobalEventHandlersEventMap,
+>(
 	event: K,
 	listener: (ev: GlobalEventHandlersEventMap[K]) => unknown,
 	delay = 500,
@@ -176,7 +200,9 @@ export const useDebouncedEventListener = <K extends keyof GlobalEventHandlersEve
 /**
  * imperative version of adding debounced event listener
  */
-export const createDebouncedEventListener = <K extends keyof GlobalEventHandlersEventMap>(
+export const createDebouncedEventListener = <
+	K extends keyof GlobalEventHandlersEventMap,
+>(
 	event: K,
 	listener: (ev: GlobalEventHandlersEventMap[K]) => unknown,
 	delay = 500,

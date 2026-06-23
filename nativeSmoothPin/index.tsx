@@ -22,10 +22,14 @@ export default function nativeSmoothPin({
 	const negativeTop = Number.parseFloat(top) <= 0
 	if (negativeTop) {
 		if (!containerAware)
-			console.error("nativeSmoothPin: top must be greater than 0 when containerAware is false")
+			console.error(
+				"nativeSmoothPin: top must be greater than 0 when containerAware is false",
+			)
 	} else {
 		if (containerAware)
-			console.warn("nativeSmoothPin: containerAware is true, but you don't need it")
+			console.warn(
+				"nativeSmoothPin: containerAware is true, but you don't need it",
+			)
 	}
 
 	if (negativeTop && goopType !== "start") {

@@ -74,7 +74,9 @@ export default function useAutoHideHeader(
 		})
 
 		const observe = () => {
-			const elements = document.querySelectorAll("[data-header-hide], [data-header-stick]")
+			const elements = document.querySelectorAll(
+				"[data-header-hide], [data-header-stick]",
+			)
 			for (const element of elements) {
 				observer.observe(element)
 			}
@@ -102,7 +104,10 @@ export default function useAutoHideHeader(
 				const root = document.documentElement
 
 				root.style.setProperty(HEADER_HEIGHT_VAR, `${height}px`)
-				root.style.setProperty(HEADER_VISIBLE_OFFSET_VAR, `${clamp(visibleOffset, 0, height)}px`)
+				root.style.setProperty(
+					HEADER_VISIBLE_OFFSET_VAR,
+					`${clamp(visibleOffset, 0, height)}px`,
+				)
 			}
 
 			// reset header position on route change. This is important because otherwise the header could get stuck in the wrong position if the user navigates while it's hidden
@@ -190,7 +195,8 @@ export default function useAutoHideHeader(
 					ScrollTrigger.refresh()
 					const scroll = window.lenisInstance?.scroll ?? window.scrollY
 					if (wrapper.current) {
-						wrapper.current.dataset.headerScrolled = scroll <= 5 ? "false" : "true"
+						wrapper.current.dataset.headerScrolled =
+							scroll <= 5 ? "false" : "true"
 					}
 				})
 			}
@@ -209,7 +215,14 @@ export default function useAutoHideHeader(
 				resizeObserver.disconnect()
 			}
 		},
-		[wrapper, style, reverse, extraOffset, latestExternalForceVisible, externalForceEvents],
+		[
+			wrapper,
+			style,
+			reverse,
+			extraOffset,
+			latestExternalForceVisible,
+			externalForceEvents,
+		],
 		{
 			// reset to top when pathname changes
 			extraDeps: [pathname],

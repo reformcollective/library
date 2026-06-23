@@ -1,9 +1,9 @@
+import path from "node:path"
+
+import { createVanillaExtractPlugin } from "@vanilla-extract/next-plugin"
 import type { TurboLoaderOptions } from "@vanilla-extract/turbopack-plugin"
 import type { NextConfig } from "next"
 import type { TurbopackLoaderItem } from "next/dist/server/config-shared"
-
-import { createVanillaExtractPlugin } from "@vanilla-extract/next-plugin"
-import path from "node:path"
 
 const withVanillaExtract = createVanillaExtractPlugin({
 	unstable_turbopack: { mode: "on" },

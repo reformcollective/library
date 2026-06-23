@@ -1,10 +1,10 @@
-import type { GetSectionType } from "page"
-
-import { library } from "library/layers.css"
 import UniversalLink from "library/link"
 import { css, f, styled } from "library/styled"
 import { draftMode } from "next/headers"
 import { redirect } from "next/navigation"
+import type { GetSectionType } from "page"
+
+import { library } from "library/layers.css"
 
 export async function Redirect({ link }: GetSectionType<"redirect">) {
 	const isDraft = await (await draftMode()).isEnabled
@@ -13,8 +13,8 @@ export async function Redirect({ link }: GetSectionType<"redirect">) {
 		return (
 			<Wrapper>
 				<p>
-					This page is configured as a redirect. If someone tries to navigate to this page in any
-					way, they will be redirected to{" "}
+					This page is configured as a redirect. If someone tries to navigate to
+					this page in any way, they will be redirected to{" "}
 					{link ? <Link href={link}>{link}</Link> : "an unset destination"}
 				</p>
 				<br />

@@ -25,11 +25,15 @@ try {
 	// Using `git ls-files --stage` rather than `git -C library rev-parse HEAD`
 	// because in git worktrees the submodule's .git redirect can cause the
 	// latter to resolve HEAD against the wrong context.
-	const lsOutput = execSync(`git ls-files --stage -- ${submoduleName}`).toString().trim()
+	const lsOutput = execSync(`git ls-files --stage -- ${submoduleName}`)
+		.toString()
+		.trim()
 	// Output format: "160000 <hash> 0\t<name>"
 	const latestHash = lsOutput.split(/\s+/)[1]
 	if (!latestHash)
-		throw new Error(`Could not determine submodule hash for "${submoduleName}" from git index`)
+		throw new Error(
+			`Could not determine submodule hash for "${submoduleName}" from git index`,
+		)
 
 	// Update all files in the workflows folder
 	const files = fs.readdirSync(workflowsPath)
@@ -41,9 +45,12 @@ try {
 			const content = fs.readFileSync(filePath, "utf8")
 
 			// Replace the old hash with the new one
-			const updatedContent = content.replace(submoduleRegex, (_match, fileName, _oldHash) => {
-				return `${fileName}.yml@${latestHash}`
-			})
+			const updatedContent = content.replace(
+				submoduleRegex,
+				(_match, fileName, _oldHash) => {
+					return `${fileName}.yml@${latestHash}`
+				},
+			)
 
 			// Write back the updated content if it has changed
 			if (content !== updatedContent) {

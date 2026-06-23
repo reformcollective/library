@@ -56,7 +56,9 @@ const recursiveAllSettled = async (
 	promises: Promise<unknown>[],
 	promisesToExclude: Promise<unknown>[] = [],
 ): Promise<void> => {
-	const promisesCopy = [...promises].filter((promise) => !promisesToExclude.includes(promise))
+	const promisesCopy = [...promises].filter(
+		(promise) => !promisesToExclude.includes(promise),
+	)
 	if (promisesCopy.length === 0) return
 
 	await Promise.allSettled(promisesCopy)
@@ -193,7 +195,9 @@ export const usePreloader = ({
 		 * slow down animations
 		 */
 		if (slowAnimations && scope) {
-			const animatedElements = Array.from(scope.current?.querySelectorAll(slowAnimations) ?? [])
+			const animatedElements = Array.from(
+				scope.current?.querySelectorAll(slowAnimations) ?? [],
+			)
 			for (const element of animatedElements) {
 				const animations = element.getAnimations()
 				for (const animation of animations) {
@@ -218,9 +222,14 @@ export const usePreloader = ({
 				stopAnimations ? scope.current?.querySelectorAll(stopAnimations) : [],
 			).map((element) => ({ element, type: "wait" }))
 			const noWaitAnimatedElements = Array.from(
-				stopNoWaitAnimations ? scope.current?.querySelectorAll(stopNoWaitAnimations) : [],
+				stopNoWaitAnimations
+					? scope.current?.querySelectorAll(stopNoWaitAnimations)
+					: [],
 			).map((element) => ({ element, type: "noWait" }))
-			for (const { element, type } of [...animatedElements, ...noWaitAnimatedElements]) {
+			for (const { element, type } of [
+				...animatedElements,
+				...noWaitAnimatedElements,
+			]) {
 				const animations = element.getAnimations()
 				for (const animation of animations) {
 					const totalDuration = Number(animation.effect?.getTiming().duration)
@@ -262,7 +271,9 @@ export const usePreloader = ({
 			}))
 		})
 		const afterAnimations = document.body.getAnimations({ subtree: true })
-		const newAnimations = afterAnimations.filter((a) => !beforeAnimations.includes(a))
+		const newAnimations = afterAnimations.filter(
+			(a) => !beforeAnimations.includes(a),
+		)
 		for (const animation of newAnimations) {
 			globalCompletePromises.push(animation.finished)
 		}

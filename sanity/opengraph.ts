@@ -1,6 +1,5 @@
-import type { SanityImageCrop, SanityImageHotspot } from "sanity.types"
-
 import { createImageUrlBuilder } from "@sanity/image-url"
+import type { SanityImageCrop, SanityImageHotspot } from "sanity.types"
 import { dataset, projectId } from "sanity/lib/api"
 
 export type MainImage = NonNullable<Parameters<typeof urlForImage>[0]>
@@ -36,7 +35,11 @@ export const urlForImage = (source: URLForImageType) => {
 	return imageBuilder?.image(source).auto("format").fit("max")
 }
 
-export function resolveOpenGraphImage(image: MainImage, width = 1200, height = 627) {
+export function resolveOpenGraphImage(
+	image: MainImage,
+	width = 1200,
+	height = 627,
+) {
 	if (!image) return
 	// biome-ignore lint/suspicious/noFocusedTests: false positive
 	const url = urlForImage(image)?.width(1200).height(627).fit("crop").url()

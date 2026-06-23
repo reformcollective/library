@@ -5,7 +5,8 @@ import { useAnimation } from "./useAnimation"
 
 gsap.registerPlugin(DrawSVGPlugin)
 
-const randomNumber = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
+const randomNumber = (min: number, max: number) =>
+	Math.floor(Math.random() * (max - min + 1)) + min
 
 export function AnimatedPaths({
 	children,
@@ -111,7 +112,9 @@ export function AnimatedPaths({
 			}
 
 			if (wrapper) {
-				const allPaths: SVGPathElement[] = Array.from(wrapper.querySelectorAll(selector))
+				const allPaths: SVGPathElement[] = Array.from(
+					wrapper.querySelectorAll(selector),
+				)
 
 				const tl = gsap.timeline({
 					repeat: -1,
@@ -120,7 +123,9 @@ export function AnimatedPaths({
 						trigger: wrapper,
 						start: "top 90%",
 						end: "bottom top",
-						toggleActions: continuous ? "play play play play" : "play pause resume pause",
+						toggleActions: continuous
+							? "play play play play"
+							: "play pause resume pause",
 					},
 				})
 

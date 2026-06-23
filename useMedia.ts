@@ -1,4 +1,8 @@
-import { desktopBreakpoint, mobileBreakpoint, tabletBreakpoint } from "app/styles/media"
+import {
+	desktopBreakpoint,
+	mobileBreakpoint,
+	tabletBreakpoint,
+} from "app/styles/media"
 import { use } from "react"
 
 import { isBrowser } from "./deviceDetection"
@@ -25,8 +29,16 @@ export function useMedia<A, B, C, D>(fw: A, d: B, t: C, m: D) {
 export function getMedia<A, B, C, D>(fw: A, d: B, t: C, m: D) {
 	if (!isBrowser) return m
 	if (window.innerWidth <= mobileBreakpoint) return m
-	if (window.innerWidth > mobileBreakpoint && window.innerWidth <= tabletBreakpoint) return t
-	if (window.innerWidth > tabletBreakpoint && window.innerWidth <= desktopBreakpoint) return d
+	if (
+		window.innerWidth > mobileBreakpoint &&
+		window.innerWidth <= tabletBreakpoint
+	)
+		return t
+	if (
+		window.innerWidth > tabletBreakpoint &&
+		window.innerWidth <= desktopBreakpoint
+	)
+		return d
 	if (window.innerWidth > desktopBreakpoint) return fw
 
 	return m

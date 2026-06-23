@@ -34,10 +34,14 @@ type ReformMuxVideoProps = Pick<
 const DEFAULT_ENDED_MOE = 0.034
 const isApproximatelyEqual = (x: number, y: number, moe = DEFAULT_ENDED_MOE) =>
 	Math.abs(x - y) <= moe
-export const isPseudoEnded = (mediaEl: HTMLMediaElement, moe = DEFAULT_ENDED_MOE) => {
+export const isPseudoEnded = (
+	mediaEl: HTMLMediaElement,
+	moe = DEFAULT_ENDED_MOE,
+) => {
 	return (
 		mediaEl.currentTime >= mediaEl.duration ||
-		(mediaEl.paused && isApproximatelyEqual(mediaEl.currentTime, mediaEl.duration, moe))
+		(mediaEl.paused &&
+			isApproximatelyEqual(mediaEl.currentTime, mediaEl.duration, moe))
 	)
 }
 
@@ -82,7 +86,8 @@ export function MuxVideo({
 				.catch((e: Error) => {
 					if (e.name === "NotAllowedError") {
 						if (localRef.current) {
-							localRef.current.currentTime = autoPlayFallbackTime ?? localRef.current?.duration
+							localRef.current.currentTime =
+								autoPlayFallbackTime ?? localRef.current?.duration
 							localRef.current.preload = "metadata"
 
 							// can't play, dispatch ended immediately

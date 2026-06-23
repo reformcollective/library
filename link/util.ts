@@ -46,7 +46,9 @@ export const getAnchorScrollPosition = (anchor: string) => {
 	const absoluteStart = trigger.start
 	trigger.kill()
 
-	const cssOffset = Number.parseFloat(getComputedStyle(anchorEl).scrollMarginTop)
+	const cssOffset = Number.parseFloat(
+		getComputedStyle(anchorEl).scrollMarginTop,
+	)
 
 	const final = absoluteStart - cssOffset
 	return Number.isFinite(final) ? final : 0

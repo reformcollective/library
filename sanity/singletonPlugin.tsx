@@ -3,9 +3,13 @@
  */
 
 import type { ComponentType } from "react"
-import type { Child, ListItemBuilder, StructureBuilder, StructureResolver } from "sanity/structure"
-
 import { type DocumentDefinition, definePlugin } from "sanity"
+import type {
+	Child,
+	ListItemBuilder,
+	StructureBuilder,
+	StructureResolver,
+} from "sanity/structure"
 
 export const singletonPlugin = definePlugin((types: string[]) => {
 	return {
@@ -15,7 +19,9 @@ export const singletonPlugin = definePlugin((types: string[]) => {
 			// https://user-images.githubusercontent.com/81981/195728798-e0c6cf7e-d442-4e58-af3a-8cd99d7fcc28.png
 			newDocumentOptions: (prev, { creationContext }) => {
 				if (creationContext.type === "global") {
-					return prev.filter((templateItem) => !types.includes(templateItem.templateId))
+					return prev.filter(
+						(templateItem) => !types.includes(templateItem.templateId),
+					)
 				}
 
 				return prev
@@ -37,7 +43,9 @@ type GroupItem = {
 	hiddenTypes: string[]
 }
 
-type StructureListChild = ListItemBuilder | ReturnType<StructureBuilder["divider"]>
+type StructureListChild =
+	| ListItemBuilder
+	| ReturnType<StructureBuilder["divider"]>
 type StructureGroupItem = string | StructureListChild
 type StructureGroupBase = {
 	title: string
@@ -45,7 +53,9 @@ type StructureGroupBase = {
 	hiddenTypes?: string[]
 }
 type StructureGroupWithItems = StructureGroupBase & {
-	items: StructureGroupItem[] | ((S: StructureBuilder) => StructureGroupItem[] | StructureListChild)
+	items:
+		| StructureGroupItem[]
+		| ((S: StructureBuilder) => StructureGroupItem[] | StructureListChild)
 }
 type StructureGroupWithChild = StructureGroupBase & {
 	child: (S: StructureBuilder) => Child
@@ -61,7 +71,12 @@ function singletonItem(S: StructureBuilder, typeDef: DocumentDefinition) {
 	return S.listItem()
 		.title(typeDef?.title ?? "Untitled")
 		.icon(typeDef.icon)
-		.child(S.editor().id(typeDef.name).schemaType(typeDef.name).documentId(typeDef.name))
+		.child(
+			S.editor()
+				.id(typeDef.name)
+				.schemaType(typeDef.name)
+				.documentId(typeDef.name),
+		)
 }
 
 function resolveGroupItem(S: StructureBuilder, item: StructureGroupItem) {
@@ -71,10 +86,14 @@ function resolveGroupItem(S: StructureBuilder, item: StructureGroupItem) {
 
 function groupItem(S: StructureBuilder, group: StructureGroup) {
 	if ("child" in group) {
-		return S.listItem().title(group.title).icon(group.icon).child(group.child(S))
+		return S.listItem()
+			.title(group.title)
+			.icon(group.icon)
+			.child(group.child(S))
 	}
 
-	const rawItems = typeof group.items === "function" ? group.items(S) : group.items
+	const rawItems =
+		typeof group.items === "function" ? group.items(S) : group.items
 	const items = Array.isArray(rawItems) ? rawItems : [rawItems]
 
 	return S.listItem()
@@ -102,7 +121,9 @@ function createPageStructure({
 	singletons,
 }: PageStructureOptions): StructureResolver {
 	return (S) => {
-		const singletonItems = singletons.map((typeDef) => singletonItem(S, typeDef))
+		const singletonItems = singletons.map((typeDef) =>
+			singletonItem(S, typeDef),
+		)
 		const hiddenTypeIds = [
 			...singletons.map((singleton) => singleton.name),
 			...hiddenTypes,
@@ -147,13 +168,16 @@ export function pageStructure(
 	optionsOrTypeDefArray: PageStructureOptions | DocumentDefinition[],
 	groups?: GroupItem[],
 ): StructureResolver {
-	if (!Array.isArray(optionsOrTypeDefArray)) return createPageStructure(optionsOrTypeDefArray)
+	if (!Array.isArray(optionsOrTypeDefArray))
+		return createPageStructure(optionsOrTypeDefArray)
 
 	const typeDefArray = optionsOrTypeDefArray
 	return (S) => {
 		// Goes through all of the singletons that were provided and translates them into something the
 		// Structure tool can understand
-		const singletonItems = typeDefArray.map((typeDef) => singletonItem(S, typeDef))
+		const singletonItems = typeDefArray.map((typeDef) =>
+			singletonItem(S, typeDef),
+		)
 
 		const hiddenTypes = [
 			...typeDefArray.map((s) => s.name),

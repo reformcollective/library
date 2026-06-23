@@ -1,8 +1,7 @@
 "use client"
 
-import type { VideoField } from "library/sanity/assetMetadata"
-
 import ClientOnly from "library/ClientOnly"
+import type { VideoField } from "library/sanity/assetMetadata"
 import { css, f, styled } from "library/styled"
 import { useCombinedRefs } from "library/useCombinedRefs"
 import { stegaClean } from "next-sanity"

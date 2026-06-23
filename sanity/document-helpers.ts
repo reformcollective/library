@@ -1,9 +1,11 @@
 import type { DocumentPathResolver } from "library/sanity/define-document-paths"
-import type { DocumentLocationResolver, DocumentLocationsState } from "sanity/presentation"
-
 import { siteURL } from "library/siteURL"
 import { map } from "rxjs"
 import { documentPaths } from "sanity/lib/slug-resolver"
+import type {
+	DocumentLocationResolver,
+	DocumentLocationsState,
+} from "sanity/presentation"
 
 export type SanityDocument = {
 	_type?: string
@@ -24,15 +26,25 @@ export type DocumentUrlResolverContext = {
 export type DocumentHelpersOptions = {
 	documentPaths?: DocumentPathResolver
 	documentQuery?: string
-	resolveLocationHref?: (context: DocumentUrlResolverContext) => string | null | undefined
-	resolveProductionUrl?: (context: DocumentUrlResolverContext) => string | null | undefined
+	resolveLocationHref?: (
+		context: DocumentUrlResolverContext,
+	) => string | null | undefined
+	resolveProductionUrl?: (
+		context: DocumentUrlResolverContext,
+	) => string | null | undefined
 }
 
-function resolveRoute(documentPathsOption: DocumentPathResolver, document: unknown) {
+function resolveRoute(
+	documentPathsOption: DocumentPathResolver,
+	document: unknown,
+) {
 	const sanityDocument = document as SanityDocument | null | undefined
 	if (!sanityDocument?._type) return null
 
-	const resolver = documentPathsOption[sanityDocument._type as keyof typeof documentPathsOption]
+	const resolver =
+		documentPathsOption[
+			sanityDocument._type as keyof typeof documentPathsOption
+		]
 	if (!resolver) return null
 
 	const route = resolver(sanityDocument as never)
@@ -98,7 +110,10 @@ export function createDocumentHelpers({
 	/**
 	 * Adapts document path declarations to Sanity Presentation's locations API
 	 */
-	const resolveDocumentLocations: DocumentLocationResolver = ({ id }, context) => {
+	const resolveDocumentLocations: DocumentLocationResolver = (
+		{ id },
+		context,
+	) => {
 		const doc$ = context.documentStore.listenQuery(
 			documentQuery,
 			{ id },
@@ -138,9 +153,11 @@ const defaultDocumentHelpers = createDocumentHelpers()
 
 export const getLinkableTypes = defaultDocumentHelpers.getLinkableTypes
 
-export const resolveDocumentLocations = defaultDocumentHelpers.resolveDocumentLocations
+export const resolveDocumentLocations =
+	defaultDocumentHelpers.resolveDocumentLocations
 
-export const resolveDocumentPathname = defaultDocumentHelpers.resolveDocumentPathname
+export const resolveDocumentPathname =
+	defaultDocumentHelpers.resolveDocumentPathname
 
 export const resolveDocumentTitle = defaultDocumentHelpers.resolveDocumentTitle
 

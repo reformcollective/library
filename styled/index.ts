@@ -1,5 +1,6 @@
 import type { ComponentClass, ComponentProps, JSX } from "react"
 
+import { styledCore } from "./core"
 import type {
 	DefaultVariantsSchema,
 	FunctionComponent,
@@ -11,8 +12,6 @@ import type {
 	TokensSchema,
 	VariantsSchema,
 } from "./types"
-
-import { styledCore } from "./core"
 
 export * from "./vanilla"
 
@@ -32,7 +31,9 @@ export function styled<
 	Component: Tag,
 	config: GenericConfig<Variants, Tokens, DefaultVariants> | StyleRules,
 	debugId?: string,
-): StyledComponent<StyledOutProps<ComponentProps<Tag>, Variants, Tokens, DefaultVariants>>
+): StyledComponent<
+	StyledOutProps<ComponentProps<Tag>, Variants, Tokens, DefaultVariants>
+>
 
 // Overload: component target (function)
 export function styled<
@@ -88,7 +89,8 @@ export function styled<
 	debugId?: string,
 ): unknown {
 	try {
-		if (typeof target === "string") return styledCore(target, config as StyledInput, debugId)
+		if (typeof target === "string")
+			return styledCore(target, config as StyledInput, debugId)
 
 		// this will be intercepted by the vanilla split loader
 		return styledCore("div", config as StyledInput, debugId)

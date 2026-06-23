@@ -1,6 +1,3 @@
-import type { ReactNode } from "react"
-
-import { library } from "library/layers.css"
 import UniversalLink from "library/link"
 import { styled } from "library/styled"
 import {
@@ -9,8 +6,18 @@ import {
 	PortableText,
 	type PortableTextComponents,
 } from "next-sanity"
+import type { ReactNode } from "react"
 
-type PossibleMarks = "strong" | "em" | "code" | "underline" | "strike-through" | "super" | "sub"
+import { library } from "library/layers.css"
+
+type PossibleMarks =
+	| "strong"
+	| "em"
+	| "code"
+	| "underline"
+	| "strike-through"
+	| "super"
+	| "sub"
 
 type Input = {
 	_type: string
@@ -23,9 +30,9 @@ type Input = {
 	}> | null
 }
 
-type UnionToIntersection<U> = (U extends unknown ? (x: U) => void : never) extends (
-	x: infer I,
-) => void
+type UnionToIntersection<U> = (
+	U extends unknown ? (x: U) => void : never
+) extends (x: infer I) => void
 	? I
 	: never
 
@@ -65,7 +72,9 @@ type GetMarkDefinition<Item extends Input> = Item extends unknown
 			}
 		: {
 				types: {
-					[itemType in Exclude<Item["_type"], "block">]: ValueComponent<Item & { _type: itemType }>
+					[itemType in Exclude<Item["_type"], "block">]: ValueComponent<
+						Item & { _type: itemType }
+					>
 				}
 			}
 	: never
@@ -181,13 +190,27 @@ const DefaultBlockQuote = styled("blockquote", {
 })
 
 const defaultBlocks = {
-	normal: ({ children }: { children: ReactNode }) => <DefaultNormal>{children}</DefaultNormal>,
-	h1: ({ children }: { children: ReactNode }) => <DefaultH1>{children}</DefaultH1>,
-	h2: ({ children }: { children: ReactNode }) => <DefaultH2>{children}</DefaultH2>,
-	h3: ({ children }: { children: ReactNode }) => <DefaultH3>{children}</DefaultH3>,
-	h4: ({ children }: { children: ReactNode }) => <DefaultH4>{children}</DefaultH4>,
-	h5: ({ children }: { children: ReactNode }) => <DefaultH5>{children}</DefaultH5>,
-	h6: ({ children }: { children: ReactNode }) => <DefaultH6>{children}</DefaultH6>,
+	normal: ({ children }: { children: ReactNode }) => (
+		<DefaultNormal>{children}</DefaultNormal>
+	),
+	h1: ({ children }: { children: ReactNode }) => (
+		<DefaultH1>{children}</DefaultH1>
+	),
+	h2: ({ children }: { children: ReactNode }) => (
+		<DefaultH2>{children}</DefaultH2>
+	),
+	h3: ({ children }: { children: ReactNode }) => (
+		<DefaultH3>{children}</DefaultH3>
+	),
+	h4: ({ children }: { children: ReactNode }) => (
+		<DefaultH4>{children}</DefaultH4>
+	),
+	h5: ({ children }: { children: ReactNode }) => (
+		<DefaultH5>{children}</DefaultH5>
+	),
+	h6: ({ children }: { children: ReactNode }) => (
+		<DefaultH6>{children}</DefaultH6>
+	),
 	blockquote: ({ children }: { children: ReactNode }) => (
 		<DefaultBlockQuote>{children}</DefaultBlockQuote>
 	),
@@ -211,8 +234,12 @@ const DefaultNumber = styled("ol", {
 })
 
 const defaultList = {
-	bullet: ({ children }: { children: ReactNode }) => <DefaultBullet>{children}</DefaultBullet>,
-	number: ({ children }: { children: ReactNode }) => <DefaultNumber>{children}</DefaultNumber>,
+	bullet: ({ children }: { children: ReactNode }) => (
+		<DefaultBullet>{children}</DefaultBullet>
+	),
+	number: ({ children }: { children: ReactNode }) => (
+		<DefaultNumber>{children}</DefaultNumber>
+	),
 }
 
 const DefaultStrong = styled("strong", {
@@ -279,17 +306,27 @@ const DefaultLink = styled(UniversalLink, {
 })
 
 const defaultMarks = {
-	strong: ({ children }: { children: ReactNode }) => <DefaultStrong>{children}</DefaultStrong>,
-	em: ({ children }: { children: ReactNode }) => <DefaultEm>{children}</DefaultEm>,
-	code: ({ children }: { children: ReactNode }) => <DefaultCode>{children}</DefaultCode>,
+	strong: ({ children }: { children: ReactNode }) => (
+		<DefaultStrong>{children}</DefaultStrong>
+	),
+	em: ({ children }: { children: ReactNode }) => (
+		<DefaultEm>{children}</DefaultEm>
+	),
+	code: ({ children }: { children: ReactNode }) => (
+		<DefaultCode>{children}</DefaultCode>
+	),
 	underline: ({ children }: { children: ReactNode }) => (
 		<DefaultUnderline>{children}</DefaultUnderline>
 	),
 	"strike-through": ({ children }: { children: ReactNode }) => (
 		<DefaultStrikeThrough>{children}</DefaultStrikeThrough>
 	),
-	super: ({ children }: { children: ReactNode }) => <DefaultSuper>{children}</DefaultSuper>,
-	sub: ({ children }: { children: ReactNode }) => <DefaultSub>{children}</DefaultSub>,
+	super: ({ children }: { children: ReactNode }) => (
+		<DefaultSuper>{children}</DefaultSuper>
+	),
+	sub: ({ children }: { children: ReactNode }) => (
+		<DefaultSub>{children}</DefaultSub>
+	),
 	link: ({
 		value,
 		children,

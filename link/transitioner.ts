@@ -1,16 +1,19 @@
-import type { MouseEvent } from "react"
-
 import libraryConfig from "app/libraryConfig"
 import { ScrollTrigger } from "gsap/all"
 import { pathnameMatches, sleep } from "library/functions"
 import { createScrollLock } from "library/Scroll"
 import { useRouter } from "next/navigation"
+import type { MouseEvent } from "react"
 import { use, useCallback } from "react"
 import { flushSync } from "react-dom"
 
 import { loader, waitForPageCommit } from "./loader"
 import { TransitionsContext } from "./usePageTransition"
-import { getAnchorScrollPosition, instantScrollToAnchor, scrollPage } from "./util"
+import {
+	getAnchorScrollPosition,
+	instantScrollToAnchor,
+	scrollPage,
+} from "./util"
 
 const waitForViewTransition = async () => {
 	try {
@@ -79,11 +82,15 @@ export const useTransitioner = () => {
 				 *
 				 * if we're already on the page we're trying to load, just scroll to the top ( or to anchor )
 				 */
-				if (to.startsWith("#") || pathnameMatches(destination.pathname, window.location.pathname)) {
+				if (
+					to.startsWith("#") ||
+					pathnameMatches(destination.pathname, window.location.pathname)
+				) {
 					e?.preventDefault()
 
 					// save the anchor to the URL
-					if (libraryConfig.saveAnchorNames) window.history.replaceState({}, "", to)
+					if (libraryConfig.saveAnchorNames)
+						window.history.replaceState({}, "", to)
 
 					// scroll to anchor if applicable, otherwise scroll to top
 					if (destination.hash) {
@@ -136,8 +143,13 @@ export const useTransitioner = () => {
 					(a) => !animationsBeforeBefore.includes(a),
 				)
 
-				const beforeAnimations = allAnimations.map(({ animateBefore }) => animateBefore?.())
-				await Promise.all([...beforeAnimations, ...newBeforeAnimations.map((a) => a.finished)])
+				const beforeAnimations = allAnimations.map(({ animateBefore }) =>
+					animateBefore?.(),
+				)
+				await Promise.all([
+					...beforeAnimations,
+					...newBeforeAnimations.map((a) => a.finished),
+				])
 				if (signal?.aborted) return
 
 				const pageCommit = waitForPageCommit()
@@ -180,8 +192,13 @@ export const useTransitioner = () => {
 					(a) => !animationsBeforeAfter.includes(a),
 				)
 
-				const afterAnimations = allAnimations.map(({ animateAfter }) => animateAfter?.())
-				await Promise.all([...afterAnimations, ...newAfterAnimations.map((a) => a.finished)])
+				const afterAnimations = allAnimations.map(({ animateAfter }) =>
+					animateAfter?.(),
+				)
+				await Promise.all([
+					...afterAnimations,
+					...newAfterAnimations.map((a) => a.finished),
+				])
 
 				flushSync(() => {
 					setIsAnimating(false)

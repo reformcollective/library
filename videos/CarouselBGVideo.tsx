@@ -1,9 +1,10 @@
 import MuxVideo from "@mux/mux-video-react"
 import { browserData } from "library/deviceDetection"
-import { library } from "library/layers.css"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
 import { use, useEffect, useRef, useState } from "react"
+
+import { library } from "library/layers.css"
 
 export function CarouselBackgroundVideo({
 	playbackId,
@@ -71,7 +72,10 @@ export function CarouselBackgroundVideo({
 		videoId: string
 	}>()
 	const { innerWidth } = use(ScreenContext)
-	const posterSize = Math.min(1920, Math.max(300, Math.round(innerWidth / 100) * 100))
+	const posterSize = Math.min(
+		1920,
+		Math.max(300, Math.round(innerWidth / 100) * 100),
+	)
 	const [isSafari, setIsSafari] = useState(false)
 	useEffect(() => {
 		setIsSafari(browserData.isSafari === true)
@@ -79,7 +83,9 @@ export function CarouselBackgroundVideo({
 	const useSafariOptimization = safariOptimized && isSafari
 
 	// This state now ONLY controls if the <MainVideo> component is rendered.
-	const [shouldRenderVideo, setShouldRenderVideo] = useState(useSafariOptimization)
+	const [shouldRenderVideo, setShouldRenderVideo] = useState(
+		useSafariOptimization,
+	)
 
 	/***
 	 * if our video id changes, clear the playback failure

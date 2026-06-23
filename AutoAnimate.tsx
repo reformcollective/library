@@ -1,22 +1,27 @@
 "use client"
 
-import type { ReactNode, RefObject } from "react"
-
 import { createVar } from "@vanilla-extract/css"
 import { useEventListener } from "ahooks"
 import { gsap } from "gsap/all"
 import { css, f, styled } from "library/styled"
+import type { ReactNode, RefObject } from "react"
 import { useEffect, useRef, useState } from "react"
 
-import { library } from "./layers.css"
 import { useBetterThrottle } from "./useBetterThrottle"
+
+import { library } from "./layers.css"
 
 const extractKey = (item: unknown): string => {
 	if (Array.isArray(item) && item.every((i) => typeof i === "string")) {
 		return item.join("")
 	}
 
-	if (typeof item === "object" && item !== null && "key" in item && typeof item.key === "string") {
+	if (
+		typeof item === "object" &&
+		item !== null &&
+		"key" in item &&
+		typeof item.key === "string"
+	) {
 		return item.key
 	}
 	if (typeof item === "object" && item !== null)
@@ -42,9 +47,11 @@ const getSize = (element: React.RefObject<HTMLElement | null>) => {
 	// we prefer bounds because offset size is rounded which can cause text wrapping oddness
 	// but bounds is affected by transforms, so we'll only use it if it's very close to offset size
 	const canUseBounds =
-		Math.round(boundsWidth) === offsetWidth && Math.round(boundsHeight) === offsetHeight
+		Math.round(boundsWidth) === offsetWidth &&
+		Math.round(boundsHeight) === offsetHeight
 
-	if (canUseBounds) return { width: Math.ceil(boundsWidth), height: Math.ceil(boundsHeight) }
+	if (canUseBounds)
+		return { width: Math.ceil(boundsWidth), height: Math.ceil(boundsHeight) }
 	// if we must use bounds, increase width by 1 to mitigate wrapping issues in exchange for very minor sizing issues
 	return { width: offsetWidth + 1, height: offsetHeight }
 }
@@ -129,9 +136,11 @@ export default function AutoAnimate({
 	const childKey = extractKey(children)
 
 	// Use state instead of ref since this needs to be accessed during render
-	const [keyBasedCache, setKeyBasedCache] = useState<Record<string, ReactNode>>(() => ({
-		[childKey]: children,
-	}))
+	const [keyBasedCache, setKeyBasedCache] = useState<Record<string, ReactNode>>(
+		() => ({
+			[childKey]: children,
+		}),
+	)
 
 	// Update the cache when children change
 	useEffect(() => {
@@ -152,7 +161,9 @@ export default function AutoAnimate({
 	 * to prevent flickering, we alternate between two 'slots'
 	 */
 	const lastUsedSlot = useRef<"A" | "B">("A")
-	const [slotA, setSlotA] = useState<string | null>(skipFirstAnimation ? childKey : null)
+	const [slotA, setSlotA] = useState<string | null>(
+		skipFirstAnimation ? childKey : null,
+	)
 	const [slotB, setSlotB] = useState<string | null>(null)
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: we very specifically control when this effect runs
@@ -303,7 +314,12 @@ export default function AutoAnimate({
 
 	return (
 		<Wrapper className={className} clip={clip}>
-			<AnimationWrapper ref={sizer} alignment={alignment} clip={clip} style={{ display: "none" }}>
+			<AnimationWrapper
+				ref={sizer}
+				alignment={alignment}
+				clip={clip}
+				style={{ display: "none" }}
+			>
 				<div>{getNodeFromKey(currentKey)}</div>
 			</AnimationWrapper>
 			<AnimationWrapper ref={wrapper} alignment={alignment} clip={clip}>

@@ -96,26 +96,36 @@ export const MouseFollower = ({
 				})
 			})
 
-			const position = subscribeToMousePosition(({ clientX, clientY, isWithinElement }) => {
-				const currentScale = gsap.getProperty(follower, "scale") as number
-				if (currentScale < 0.01) {
-					// if our scale is effectively 0, instantly update the position instead of animating
-					xTo(clientX, clientX)
-					yTo(clientY, clientY)
-				} else {
-					xTo(clientX)
-					yTo(clientY)
-				}
+			const position = subscribeToMousePosition(
+				({ clientX, clientY, isWithinElement }) => {
+					const currentScale = gsap.getProperty(follower, "scale") as number
+					if (currentScale < 0.01) {
+						// if our scale is effectively 0, instantly update the position instead of animating
+						xTo(clientX, clientX)
+						yTo(clientY, clientY)
+					} else {
+						xTo(clientX)
+						yTo(clientY)
+					}
 
-				if (isWithinElement) showFollower()
-				else hideFollower()
-			}, hoverTargetRef?.current)
+					if (isWithinElement) showFollower()
+					else hideFollower()
+				},
+				hoverTargetRef?.current,
+			)
 
 			return () => {
 				position.unsubscribe()
 			}
 		},
-		[isUsingMouse, hoverTargetRef, stableVars, onHideLatest, onShowLatest, entering],
+		[
+			isUsingMouse,
+			hoverTargetRef,
+			stableVars,
+			onHideLatest,
+			onShowLatest,
+			entering,
+		],
 	)
 
 	return <Wrapper ref={followerRef}>{children}</Wrapper>

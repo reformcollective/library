@@ -63,10 +63,15 @@ export default function CustomTextOverflow({
 			const ellipsisAtEnd = truncatePosition === 0
 			const textBeforeEllipsis = ellipsisAtEnd
 				? children.slice(0, children.length - numberOfCharsToRemove)
-				: children.slice(0, truncatePosition - (shrinkBefore ? numberOfCharsToRemove : 0))
+				: children.slice(
+						0,
+						truncatePosition - (shrinkBefore ? numberOfCharsToRemove : 0),
+					)
 			const textAfterEllipsis = ellipsisAtEnd
 				? ""
-				: children.slice(truncatePosition + (shrinkBefore ? 0 : numberOfCharsToRemove))
+				: children.slice(
+						truncatePosition + (shrinkBefore ? 0 : numberOfCharsToRemove),
+					)
 
 			const newText = `${textBeforeEllipsis}${ellipsis}${textAfterEllipsis}`
 
@@ -112,8 +117,8 @@ export default function CustomTextOverflow({
 	if (ellipsis === "..." && truncatePosition === 0)
 		return (
 			<>
-				This component should only be used if you need a custom ellipsis or custom truncation
-				position. Otherwise, use CSS.
+				This component should only be used if you need a custom ellipsis or
+				custom truncation position. Otherwise, use CSS.
 			</>
 		)
 	return (

@@ -2,7 +2,13 @@ import { browserData } from "library/deviceDetection"
 import { useBrowserData } from "library/deviceDetection/react"
 import { css, f, styled } from "library/styled"
 import { useVH } from "library/viewportUtils"
-import { type CSSProperties, type ReactNode, type Ref, useImperativeHandle, useRef } from "react"
+import {
+	type CSSProperties,
+	type ReactNode,
+	type Ref,
+	useImperativeHandle,
+	useRef,
+} from "react"
 
 export const useSafariOversizeHeight = () => {
 	const screenHeight = useVH(100)
@@ -46,7 +52,11 @@ export function FullViewport({
 		<>
 			{hideSticky ? null : (
 				<Page>
-					<StickyVariant ref={stickyRef} className={className} style={{ ...style, height }}>
+					<StickyVariant
+						ref={stickyRef}
+						className={className}
+						style={{ ...style, height }}
+					>
 						{children}
 					</StickyVariant>
 				</Page>

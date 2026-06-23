@@ -26,7 +26,10 @@ function setRef<T>(ref: OptionalRef<T>, value: T): Cleanup {
 	}
 }
 
-export function useCombinedRefs<T>(externalRef: OptionalRef<T>, internalRef: OptionalRef<T>) {
+export function useCombinedRefs<T>(
+	externalRef: OptionalRef<T>,
+	internalRef: OptionalRef<T>,
+) {
 	return useCallback(
 		(value: T | null) => {
 			const cleanups: Cleanup[] = []

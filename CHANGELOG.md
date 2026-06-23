@@ -182,7 +182,10 @@ import {
 } from "library/sanity/reusableFetch"
 
 // after
-import { LibraryLive as SanityLive, libraryFetch as sanityFetch } from "library/sanity/live"
+import {
+	LibraryLive as SanityLive,
+	libraryFetch as sanityFetch,
+} from "library/sanity/live"
 ```
 
 Remove any direct imports of `FirefoxFix`, `SanityLiveProxy`, `SanityPreviewStatusToast`, or `SanityVisualEditingOverlay`; those are now internal to `LibraryLive`.
@@ -325,7 +328,8 @@ import { defineDocumentPaths } from "library/sanity/define-document-paths"
 
 export const documentPaths = defineDocumentPaths({
 	page: (document) => ({
-		path: document.slug?.current === "home" ? "/" : `/${document.slug?.current}`,
+		path:
+			document.slug?.current === "home" ? "/" : `/${document.slug?.current}`,
 		title: document.title ?? "Untitled Page",
 	}),
 })

@@ -1,5 +1,4 @@
 import type { StyleRule } from "node_modules/@vanilla-extract/css/dist/vanilla-extract-css.cjs"
-
 import { expect, test, vi } from "vitest"
 
 vi.mock("./breakpoints.css", () => ({

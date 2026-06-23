@@ -1,6 +1,5 @@
-import type { StyleRule } from "@vanilla-extract/css"
-
 import * as csstree from "@eslint/css-tree"
+import type { StyleRule } from "@vanilla-extract/css"
 import config from "app/libraryConfig"
 import {
 	desktopBreakpoint,
@@ -11,13 +10,20 @@ import {
 	tabletDesignSize,
 } from "app/styles/media"
 
-import type { Breakpoint, BreakpointRule, DesignSize, UtilityConfig } from "../defaultConfig"
-
+import type {
+	Breakpoint,
+	BreakpointRule,
+	DesignSize,
+	UtilityConfig,
+} from "../defaultConfig"
 import { isBrowser } from "../deviceDetection"
+
 import { isDesktop, isFull, isMobile, isTablet } from "./breakpoints.css"
 
 if (isBrowser && process.env.NODE_ENV === "development")
-	throw new Error("style system was loaded in the browser! this will explode your bundle size!")
+	throw new Error(
+		"style system was loaded in the browser! this will explode your bundle size!",
+	)
 
 // =============================================================================
 // Types
@@ -69,7 +75,10 @@ const DEFAULT_UTILITIES = {
 		},
 	],
 
-	small: [{ breakpoint: "mobile", designSize: "mobile", output: "fluid" }, TABLET_RULE],
+	small: [
+		{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
+		TABLET_RULE,
+	],
 
 	fullWidth: [
 		{
@@ -157,14 +166,22 @@ const getDesignSize = (size: DesignSize, options?: FOptions): number =>
 const toVw = (px: number, designSize: number): string =>
 	`${((px / designSize) * 100).toFixed(VW_PRECISION)}vw`
 
-const toPx = (px: number, designSize: number, breakpoint: Breakpoint): string => {
+const toPx = (
+	px: number,
+	designSize: number,
+	breakpoint: Breakpoint,
+): string => {
 	const minWidth = BREAKPOINT_MIN[breakpoint]
 	const scaled = (px / designSize) * minWidth
 	const str = scaled.toFixed(PIXEL_PRECISION)
 	return `${str}px`.replace(".00px", "px")
 }
 
-const computeResponsiveValue = (px: number, rule: BreakpointRule, options?: FOptions): string => {
+const computeResponsiveValue = (
+	px: number,
+	rule: BreakpointRule,
+	options?: FOptions,
+): string => {
 	const designSize = getDesignSize(rule.designSize, options)
 
 	switch (rule.output) {
@@ -174,23 +191,31 @@ const computeResponsiveValue = (px: number, rule: BreakpointRule, options?: FOpt
 			return toPx(px, designSize, rule.breakpoint)
 		case "scaleFullyConfig": {
 			const shouldScale = options?.scaleFully ?? config.scaleFully
-			return shouldScale ? toVw(px, designSize) : toPx(px, designSize, rule.breakpoint)
+			return shouldScale
+				? toVw(px, designSize)
+				: toPx(px, designSize, rule.breakpoint)
 		}
 	}
 }
 
-const getBreakpointCombo = (rules: readonly BreakpointRule[]): BreakpointCombo | null => {
+const getBreakpointCombo = (
+	rules: readonly BreakpointRule[],
+): BreakpointCombo | null => {
 	const breakpoints = new Set(rules.map((r) => r.breakpoint))
 	if (breakpoints.size === 4) return "all"
 	if (breakpoints.size === 2) {
 		if (breakpoints.has("mobile") && breakpoints.has("tablet")) return "small"
-		if (breakpoints.has("desktop") && breakpoints.has("fullWidth")) return "large"
+		if (breakpoints.has("desktop") && breakpoints.has("fullWidth"))
+			return "large"
 	}
 	return null
 }
 
 const hasUniformOutput = (rules: readonly BreakpointRule[]): boolean =>
-	rules.every((r) => r.designSize === rules[0]?.designSize && r.output === rules[0]?.output)
+	rules.every(
+		(r) =>
+			r.designSize === rules[0]?.designSize && r.output === rules[0]?.output,
+	)
 
 const pixelRegex = /-?\d+(\.\d+)?px/g
 const neverResponsiveUnitRegex = /neverpx/g
@@ -198,7 +223,10 @@ const neverResponsiveUnitRegex = /neverpx/g
 const restoreNeverResponsiveUnits = (cssText: string): string =>
 	cssText.replaceAll(neverResponsiveUnitRegex, "px")
 
-const replacePxInAst = (root: csstree.CssNode, transform: PxTransform): void => {
+const replacePxInAst = (
+	root: csstree.CssNode,
+	transform: PxTransform,
+): void => {
 	csstree.walk(root, {
 		visit: "Declaration",
 		enter(node) {
@@ -215,7 +243,10 @@ const replacePxInAst = (root: csstree.CssNode, transform: PxTransform): void => 
 
 			// Post-process to fix any spacing issues with calc expressions
 			// This handles cases like "0calc(" -> "0 calc("
-			const fixedValue = newValue.replace(/(\w|\d|%|px|em|rem|vw|vh|\)|"|')calc\(/g, "$1 calc(")
+			const fixedValue = newValue.replace(
+				/(\w|\d|%|px|em|rem|vw|vh|\)|"|')calc\(/g,
+				"$1 calc(",
+			)
 
 			if (fixedValue !== nodeValueAsString) {
 				node.value = {
@@ -264,7 +295,10 @@ const getCalcExpression = (
 	return `calc(${terms.join(" + ")})`
 }
 
-const wrapWithMediaQueries = (cssText: string, rules: readonly BreakpointRule[]): string => {
+const wrapWithMediaQueries = (
+	cssText: string,
+	rules: readonly BreakpointRule[],
+): string => {
 	const combo = getBreakpointCombo(rules)
 
 	if (combo === "all") return cssText
@@ -274,7 +308,9 @@ const wrapWithMediaQueries = (cssText: string, rules: readonly BreakpointRule[])
 	}
 
 	const uniqueBreakpoints = [...new Set(rules.map((r) => r.breakpoint))]
-	return uniqueBreakpoints.map((bp) => `@media ${MEDIA_QUERIES[bp]}{${cssText}}`).join("")
+	return uniqueBreakpoints
+		.map((bp) => `@media ${MEDIA_QUERIES[bp]}{${cssText}}`)
+		.join("")
 }
 
 const calcEngine = (
@@ -286,7 +322,9 @@ const calcEngine = (
 	if (!ast) return cssText
 
 	replacePxInAst(ast, (px) => getCalcExpression(px, rules, options))
-	const processed = restoreNeverResponsiveUnits(unwrapGeneratedCss(csstree.generate(ast)))
+	const processed = restoreNeverResponsiveUnits(
+		unwrapGeneratedCss(csstree.generate(ast)),
+	)
 	return wrapWithMediaQueries(processed, rules)
 }
 
@@ -306,15 +344,22 @@ const mediaEngine = (
 	for (const rule of rules) {
 		const cloned = csstree.clone(ast)
 		replacePxInAst(cloned, (px) => computeResponsiveValue(px, rule, options))
-		contents.push(restoreNeverResponsiveUnits(unwrapGeneratedCss(csstree.generate(cloned))))
+		contents.push(
+			restoreNeverResponsiveUnits(unwrapGeneratedCss(csstree.generate(cloned))),
+		)
 	}
 
-	const allIdentical = contents.length > 0 && contents.every((c) => c === contents[0])
+	const allIdentical =
+		contents.length > 0 && contents.every((c) => c === contents[0])
 	if (allIdentical && getBreakpointCombo(rules) === "all") {
 		return contents[0] ?? ""
 	}
 
-	return rules.map((rule, i) => `@media ${MEDIA_QUERIES[rule.breakpoint]}{${contents[i]}}`).join("")
+	return rules
+		.map(
+			(rule, i) => `@media ${MEDIA_QUERIES[rule.breakpoint]}{${contents[i]}}`,
+		)
+		.join("")
 }
 
 // =============================================================================
@@ -328,11 +373,14 @@ const generateStyle = (
 ): StyleRule => {
 	const engine = options?.engine ?? DEFAULT_ENGINE
 	const processed =
-		engine === "calc" ? calcEngine(cssText, rules, options) : mediaEngine(cssText, rules, options)
+		engine === "calc"
+			? calcEngine(cssText, rules, options)
+			: mediaEngine(cssText, rules, options)
 	return toInjectedStyleRule(processed)
 }
 
-const unresponsive = (cssText: string): StyleRule => toInjectedStyleRule(cssText)
+const unresponsive = (cssText: string): StyleRule =>
+	toInjectedStyleRule(cssText)
 
 export const neverResponsive = (cssText: string): string =>
 	cssText.replaceAll(pixelRegex, (match) => match.replace("px", "neverpx"))
@@ -352,7 +400,8 @@ type FApi = {
 export const f = Object.fromEntries(
 	Object.entries(UTILITIES).map(([name, rules]) => [
 		name,
-		(cssText: string, options?: FOptions) => generateStyle(cssText, rules, options),
+		(cssText: string, options?: FOptions) =>
+			generateStyle(cssText, rules, options),
 	]),
 ) as FApi
 

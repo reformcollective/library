@@ -1,5 +1,4 @@
 import type libraryConfig from "app/libraryConfig"
-
 import TypedEventEmitter from "library/TypedEventEmitter"
 
 /**

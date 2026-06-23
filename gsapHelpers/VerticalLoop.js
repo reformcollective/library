@@ -39,7 +39,8 @@ export function verticalLoop(items, config) {
 					},
 				paused: config.paused,
 				defaults: { ease: "none" },
-				onReverseComplete: () => tl.totalTime(tl.rawTime() + tl.duration() * 100),
+				onReverseComplete: () =>
+					tl.totalTime(tl.rawTime() + tl.duration() * 100),
 			}),
 			length = items.length,
 			startY = items[0].offsetTop,
@@ -51,7 +52,8 @@ export function verticalLoop(items, config) {
 			indexIsDirty = false,
 			center = config.center,
 			pixelsPerSecond = (config.speed || 1) * 100,
-			snap = config.snap === false ? (v) => v : gsap.utils.snap(config.snap || 1),
+			snap =
+				config.snap === false ? (v) => v : gsap.utils.snap(config.snap || 1),
 			timeOffset = 0,
 			container =
 				center === true
@@ -63,7 +65,8 @@ export function verticalLoop(items, config) {
 				(yPercents[length - 1] / 100) * heights[length - 1] -
 				startY +
 				spaceBefore[0] +
-				items[length - 1].offsetHeight * gsap.getProperty(items[length - 1], "scaleY") +
+				items[length - 1].offsetHeight *
+					gsap.getProperty(items[length - 1], "scaleY") +
 				(parseFloat(config.paddingBottom) || 0),
 			populateHeights = () => {
 				let b1 = container.getBoundingClientRect(),
@@ -85,11 +88,15 @@ export function verticalLoop(items, config) {
 			},
 			timeWrap,
 			populateOffsets = () => {
-				timeOffset = center ? (tl.duration() * (container.offsetHeight / 2)) / totalHeight : 0
+				timeOffset = center
+					? (tl.duration() * (container.offsetHeight / 2)) / totalHeight
+					: 0
 				center &&
 					times.forEach((t, i) => {
 						times[i] = timeWrap(
-							tl.labels["label" + i] + (tl.duration() * heights[i]) / 2 / totalHeight - timeOffset,
+							tl.labels["label" + i] +
+								(tl.duration() * heights[i]) / 2 / totalHeight -
+								timeOffset,
 						)
 					})
 			},
@@ -117,7 +124,8 @@ export function verticalLoop(items, config) {
 					item = items[i]
 					curY = (yPercents[i] / 100) * heights[i]
 					distanceToStart = item.offsetTop + curY - startY + spaceBefore[0]
-					distanceToLoop = distanceToStart + heights[i] * gsap.getProperty(item, "scaleY")
+					distanceToLoop =
+						distanceToStart + heights[i] * gsap.getProperty(item, "scaleY")
 					tl.to(
 						item,
 						{
@@ -129,11 +137,15 @@ export function verticalLoop(items, config) {
 						.fromTo(
 							item,
 							{
-								yPercent: snap(((curY - distanceToLoop + totalHeight) / heights[i]) * 100),
+								yPercent: snap(
+									((curY - distanceToLoop + totalHeight) / heights[i]) * 100,
+								),
 							},
 							{
 								yPercent: yPercents[i],
-								duration: (curY - distanceToLoop + totalHeight - curY) / pixelsPerSecond,
+								duration:
+									(curY - distanceToLoop + totalHeight - curY) /
+									pixelsPerSecond,
 								immediateRender: false,
 							},
 							distanceToLoop / pixelsPerSecond,
@@ -162,7 +174,8 @@ export function verticalLoop(items, config) {
 		if (manageResize) window.addEventListener("resize", onResize)
 		function toIndex(index, vars) {
 			vars = vars || {}
-			Math.abs(index - curIndex) > length / 2 && (index += index > curIndex ? -length : length)
+			Math.abs(index - curIndex) > length / 2 &&
+				(index += index > curIndex ? -length : length)
 			let newIndex = gsap.utils.wrap(0, length, index),
 				time = times[newIndex]
 			if (time > tl.time() !== index > curIndex && index !== curIndex) {
@@ -174,7 +187,9 @@ export function verticalLoop(items, config) {
 			curIndex = newIndex
 			vars.overwrite = true
 			gsap.killTweensOf(proxy)
-			return vars.duration === 0 ? tl.time(timeWrap(time)) : tl.tweenTo(time, vars)
+			return vars.duration === 0
+				? tl.time(timeWrap(time))
+				: tl.tweenTo(time, vars)
 		}
 		tl.toIndex = (index, vars) => toIndex(index, vars)
 		tl.closestIndex = (setCurrent) => {
@@ -205,7 +220,10 @@ export function verticalLoop(items, config) {
 				wasPlaying,
 				// REFORM CHANGE: track reversed direction to resume correctly
 				wasReversed,
-				align = () => tl.progress(wrap(startProgress + (draggable.startY - draggable.y) * ratio)),
+				align = () =>
+					tl.progress(
+						wrap(startProgress + (draggable.startY - draggable.y) * ratio),
+					),
 				syncIndex = () => tl.closestIndex(true)
 			typeof InertiaPlugin === "undefined" &&
 				console.warn(

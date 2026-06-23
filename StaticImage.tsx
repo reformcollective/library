@@ -1,9 +1,8 @@
 "use client"
 
+import { styled } from "library/styled"
 import type { PlaceholderValue } from "next/dist/shared/lib/get-img-props"
 import type { StaticImageData } from "next/image"
-
-import { styled } from "library/styled"
 import Image from "next/image"
 import { createContext, type ImgHTMLAttributes, use } from "react"
 
@@ -83,12 +82,15 @@ export default function StaticImage({
 				{...props}
 				src={src}
 				sizes={sizes}
-				aspectRatio={props.width && props.height ? `${props.width}/${props.height}` : ""}
+				aspectRatio={
+					props.width && props.height ? `${props.width}/${props.height}` : ""
+				}
 			/>
 		)
 	}
 
-	const isSVG = src.src.endsWith(".svg") || src.src.startsWith("data:image/svg+xml")
+	const isSVG =
+		src.src.endsWith(".svg") || src.src.startsWith("data:image/svg+xml")
 	return (
 		<DefaultNextImage
 			placeholder={isSVG ? undefined : placeholder}
@@ -97,7 +99,11 @@ export default function StaticImage({
 			quality={quality}
 			priority={priority}
 			sizes={sizes ?? "100vw"}
-			aspectRatio={props.width && props.height ? `${props.width}/${props.height}` : undefined}
+			aspectRatio={
+				props.width && props.height
+					? `${props.width}/${props.height}`
+					: undefined
+			}
 		/>
 	)
 }

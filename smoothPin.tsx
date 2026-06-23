@@ -49,7 +49,8 @@ export default function createSmoothPin({
 	if (options.pinType === "fixed") return trigger
 	if (goopLevel === 0) return trigger
 
-	const goop = options.pin?.parentElement ?? options.trigger?.parentElement ?? null
+	const goop =
+		options.pin?.parentElement ?? options.trigger?.parentElement ?? null
 	const clampGoopLevel = (value: number) => {
 		const max = (trigger.end - trigger.start) / 2
 		return Math.min(max, value)

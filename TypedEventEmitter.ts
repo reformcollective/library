@@ -2,7 +2,9 @@ import { useEffect, useRef } from "react"
 
 type Listener<T extends unknown[]> = (...args: T) => void
 
-export default class TypedEventEmitter<EventMap extends Record<string, unknown[]>> {
+export default class TypedEventEmitter<
+	EventMap extends Record<string, unknown[]>,
+> {
 	private eventListeners: {
 		[K in keyof EventMap]?: Set<Listener<EventMap[K]>>
 	} = {}
@@ -32,7 +34,10 @@ export default class TypedEventEmitter<EventMap extends Record<string, unknown[]
 		this.resetHappyEvents = options?.resetHappyEvents ?? []
 	}
 
-	public addEventListener<K extends keyof EventMap>(eventName: K, listener: Listener<EventMap[K]>) {
+	public addEventListener<K extends keyof EventMap>(
+		eventName: K,
+		listener: Listener<EventMap[K]>,
+	) {
 		const listeners = this.eventListeners[eventName] ?? new Set()
 		listeners.add(listener)
 		this.eventListeners[eventName] = listeners
@@ -55,8 +60,14 @@ export default class TypedEventEmitter<EventMap extends Record<string, unknown[]
 		this.eventListeners[eventName] = listeners
 	}
 
-	public dispatchEvent<K extends keyof EventMap>(eventName: K, ...args: EventMap[K]) {
-		if (this.resetHappyEvents.includes(eventName) || this.triggerHappyEvents.includes(eventName))
+	public dispatchEvent<K extends keyof EventMap>(
+		eventName: K,
+		...args: EventMap[K]
+	) {
+		if (
+			this.resetHappyEvents.includes(eventName) ||
+			this.triggerHappyEvents.includes(eventName)
+		)
 			this.mostRecentHappyEvent = { name: eventName, args }
 
 		const listeners = this.eventListeners[eventName] ?? new Set()
@@ -65,7 +76,10 @@ export default class TypedEventEmitter<EventMap extends Record<string, unknown[]
 		}
 	}
 
-	public useEventListener<K extends keyof EventMap>(eventName: K, listener: Listener<EventMap[K]>) {
+	public useEventListener<K extends keyof EventMap>(
+		eventName: K,
+		listener: Listener<EventMap[K]>,
+	) {
 		const latestListener = useRef(listener)
 		latestListener.current = listener
 

@@ -1,8 +1,14 @@
-import type { Dispatcher } from "next/dist/next-devtools/dev-overlay.browser"
-
 import { dispatcher } from "next/dist/compiled/next-devtools"
+import type { Dispatcher } from "next/dist/next-devtools/dev-overlay.browser"
 import { useServerInsertedHTML } from "next/navigation"
-import { createContext, type ReactNode, useContext, useEffect, useEffectEvent, useRef } from "react"
+import {
+	createContext,
+	type ReactNode,
+	useContext,
+	useEffect,
+	useEffectEvent,
+	useRef,
+} from "react"
 
 import { isBrowser } from "./deviceDetection"
 import TypedEventEmitter from "./TypedEventEmitter"
@@ -84,17 +90,24 @@ export const HMRProvider =
 						emitter.dispatchEvent("beforeRefresh", createHMRMessageId())
 					}
 					window.addEventListener("beforeunload", handleBeforeUnload)
-					return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+					return () =>
+						window.removeEventListener("beforeunload", handleBeforeUnload)
 				}, [])
 
-				return <HMRContext.Provider value={true}>{children}</HMRContext.Provider>
+				return (
+					<HMRContext.Provider value={true}>{children}</HMRContext.Provider>
+				)
 			}
 		: ({ children }: { children: ReactNode }) => <>{children}</>
 
 export const useHMR =
 	process.env.NODE_ENV === "development"
-		? (type: "beforeRefresh" | "afterRefresh", callback: (hash: string) => void) => {
-				if (!useContext(HMRContext)) throw new Error("useHMR requires HMRProvider")
+		? (
+				type: "beforeRefresh" | "afterRefresh",
+				callback: (hash: string) => void,
+			) => {
+				if (!useContext(HMRContext))
+					throw new Error("useHMR requires HMRProvider")
 				const sendMessage = useEffectEvent(callback)
 
 				useEffect(() => {

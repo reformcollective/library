@@ -13,7 +13,8 @@ export function useSearchResults<
 	indexableFields: (keyof T)[],
 	idField?: K, // defaults to "_id" if present, else "id"
 ) {
-	const resolvedIdField = (idField ?? ("_id" in (items[0] ?? {}) ? ("_id" as K) : ("id" as K))) as K
+	const resolvedIdField = (idField ??
+		("_id" in (items[0] ?? {}) ? ("_id" as K) : ("id" as K))) as K
 
 	const fuzzyMatcher = useDeepCompareMemo(() => {
 		return new MiniSearch<T>({
@@ -43,7 +44,10 @@ export function useSearchResults<
 
 	return found
 		.map((res) =>
-			items.find((it) => String(it[resolvedIdField] as IdLike | undefined) === String(res.id)),
+			items.find(
+				(it) =>
+					String(it[resolvedIdField] as IdLike | undefined) === String(res.id),
+			),
 		)
 		.filter(Boolean) as T[]
 }

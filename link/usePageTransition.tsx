@@ -14,8 +14,14 @@ export const TransitionsContext = createContext({
 	setIsAnimating: (_isAnimating: false | "before" | "after") => {},
 })
 
-export const PageTransitionProvider = ({ children }: { children: React.ReactNode }) => {
-	const [isAnimating, setIsAnimating] = useState<false | "before" | "after">(false)
+export const PageTransitionProvider = ({
+	children,
+}: {
+	children: React.ReactNode
+}) => {
+	const [isAnimating, setIsAnimating] = useState<false | "before" | "after">(
+		false,
+	)
 	const [animations] = useState(() => new Set<PageTransition>())
 
 	const pathname = usePathname()
@@ -24,7 +30,9 @@ export const PageTransitionProvider = ({ children }: { children: React.ReactNode
 	}, [pathname])
 
 	return (
-		<TransitionsContext.Provider value={{ animations, isAnimating, setIsAnimating }}>
+		<TransitionsContext.Provider
+			value={{ animations, isAnimating, setIsAnimating }}
+		>
 			{children}
 		</TransitionsContext.Provider>
 	)
