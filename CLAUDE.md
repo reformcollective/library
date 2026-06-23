@@ -18,7 +18,7 @@ Project text styles may use Capsize-generated pseudo-elements. Apply them to the
 
 For animation, prefer the shared GSAP pattern built around `library/useAnimation`.
 
-For images, use `StaticImage` for raster assets and `SanityImage` for CMS images. Reserve `app/images/` for shared global assets and co-locate component-specific assets with the component that uses them. For SVGs prefer `*.inline.svg` for React component imports and plain `.svg` for image asset imports.
+For images, use `StaticImage` for raster assets and `SanityImage` for CMS images. Reserve `app/images/` for shared global assets and co-locate component-specific assets with the component that uses them. Follow the SVG import patterns from `next.config.ts`: use `*.inline.svg` for React component imports and plain `.svg` for image asset imports.
 
 ## Figma Design Matching
 
