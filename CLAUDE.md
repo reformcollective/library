@@ -20,6 +20,28 @@ For animation, prefer the shared GSAP pattern built around `library/useAnimation
 
 For images, use `StaticImage` for raster assets and `SanityImage` for CMS images. Reserve `app/images/` for shared global assets and co-locate component-specific assets with the component that uses them. For SVGs prefer `*.inline.svg` for React component imports and plain `.svg` for image asset imports.
 
+## Figma Design Matching
+
+Treat Figma as the source of truth unless stated otherwise. Don't guess from screenshots. Pixel values are always scaled (using `f.responsive` or `f.small`) unless stated otherwise.
+
+Before implementing from Figma:
+- Inspect whether key visuals are components, instances, variants, vectors, or exportable assets.
+- Reuse existing Figma components, styles, variables, and design-system assets before recreating anything.
+
+For icons:
+- Export or inspect exact SVG/vector data from Figma; don't approximate.
+- Preserve real bounds, strokes, fills, and state variants.
+- If exact export is not possible, ask for assets or permission to approximate.
+
+For states and animation:
+- Inspect variants, component properties, prototype reactions, and documented state frames.
+- If states or animation timing are unclear, ask before coding.
+
+For background graphics and complex visuals:
+- Export the exact Figma node/layer; don't recreate it by eye.
+- Export PNG assets at 4x scale so `next/image` has quality to optimize from.
+- If a high-quality export is not possible, ask for one.
+
 ## Common Mistakes
 
 - violating capsize rules around pseudo elements
