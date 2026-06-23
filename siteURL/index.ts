@@ -37,9 +37,7 @@ export const siteURL = await compileTime(async () => {
 	// Netlify URL logic
 	const netlifyURL = (() => {
 		if (!isNetlify) return null
-		return process.env.HEAD === "main"
-			? process.env.URL
-			: process.env.DEPLOY_URL
+		return process.env.HEAD === "main" ? process.env.URL : process.env.DEPLOY_URL
 	})()
 
 	// Vercel URL logic
@@ -53,11 +51,7 @@ export const siteURL = await compileTime(async () => {
 	// Debug logging in CI environments
 	if (isCI) {
 		const platform = isVercel ? "Vercel" : isNetlify ? "Netlify" : "Other CI"
-		const platformColor = isVercel
-			? colors.cyan
-			: isNetlify
-				? colors.green
-				: colors.yellow
+		const platformColor = isVercel ? colors.cyan : isNetlify ? colors.green : colors.yellow
 
 		console.log(
 			`\n${colors.bright}${colors.blue}⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯${colors.reset}`,
@@ -67,25 +61,17 @@ export const siteURL = await compileTime(async () => {
 		)
 
 		if (isNetlify) {
-			console.log(
-				`\n${colors.green}${colors.bright}Netlify Details:${colors.reset}`,
-			)
-			console.log(
-				`  ${colors.dim}HEAD:${colors.reset} ${process.env.HEAD || "undefined"}`,
-			)
+			console.log(`\n${colors.green}${colors.bright}Netlify Details:${colors.reset}`)
+			console.log(`  ${colors.dim}HEAD:${colors.reset} ${process.env.HEAD || "undefined"}`)
 			console.log(
 				`  ${colors.dim}DEPLOY_PRIME_URL:${colors.reset} ${process.env.DEPLOY_PRIME_URL || "undefined"}`,
 			)
-			console.log(
-				`  ${colors.dim}URL:${colors.reset} ${process.env.URL || "undefined"}`,
-			)
+			console.log(`  ${colors.dim}URL:${colors.reset} ${process.env.URL || "undefined"}`)
 			console.log(
 				`  ${colors.dim}DEPLOY_URL:${colors.reset} ${process.env.DEPLOY_URL || "undefined"}`,
 			)
 		} else if (isVercel) {
-			console.log(
-				`\n${colors.cyan}${colors.bright}Vercel Details:${colors.reset}`,
-			)
+			console.log(`\n${colors.cyan}${colors.bright}Vercel Details:${colors.reset}`)
 			console.log(
 				`  ${colors.dim}VERCEL_ENV:${colors.reset} ${process.env.VERCEL_ENV || "undefined"}`,
 			)
@@ -107,9 +93,7 @@ export const siteURL = await compileTime(async () => {
 		console.log(
 			`\n${colors.bright}Site URL:${colors.reset} ${colors.magenta}${siteUrl}${colors.reset}`,
 		)
-		console.log(
-			`${colors.blue}⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯${colors.reset}\n`,
-		)
+		console.log(`${colors.blue}⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯${colors.reset}\n`)
 	}
 
 	const serverSiteURL = vercelURL || netlifyURL || `http://localhost:${PORT}`

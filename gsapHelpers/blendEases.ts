@@ -8,8 +8,7 @@ export function blendEases(
 	endEase: gsap.EaseString | gsap.EaseFunction,
 	blender?: any,
 ) {
-	var parse = (ease: any) =>
-			typeof ease === "function" ? ease : gsap.parseEase("power4.inOut"),
+	var parse = (ease: any) => (typeof ease === "function" ? ease : gsap.parseEase("power4.inOut")),
 		s = gsap.parseEase(startEase),
 		e = gsap.parseEase(endEase),
 		blender = parse(blender)

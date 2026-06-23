@@ -1,13 +1,7 @@
 import { Flip, gsap } from "gsap/all"
-import {
-	type ComponentProps,
-	createContext,
-	type ReactNode,
-	use,
-	useEffect,
-	useState,
-} from "react"
+import { type ComponentProps, createContext, type ReactNode, use, useEffect, useState } from "react"
 import { useDeepCompareMemo } from "use-deep-compare"
+
 import { usePinType } from "./Scroll"
 import createSmoothPin from "./smoothPin"
 import { useAnimation } from "./useAnimation"
@@ -103,8 +97,7 @@ export const ZoomPinProvider = ({
 			/**
 			 * capture the end state of the animation (where we want fromEl to end at)
 			 */
-			const topDiff =
-				fromEl.getBoundingClientRect().top - toEl.getBoundingClientRect().top
+			const topDiff = fromEl.getBoundingClientRect().top - toEl.getBoundingClientRect().top
 			const heightDiff = (fromSize.height ?? 0) - (toSize.height ?? 0)
 			gsap.set(toEl, {
 				y: topDiff + heightDiff / 2,
@@ -127,6 +120,7 @@ export const ZoomPinProvider = ({
 					endTrigger: toEl.parentElement,
 					end: "center center",
 					scrub: true,
+					// oxlint-disable-next-line unicorn/no-useless-fallback-in-spread typescript/no-misused-spread
 					...(stableOptions?.scrollTrigger ?? {}),
 				},
 			})

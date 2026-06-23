@@ -1,10 +1,11 @@
-import { documentPathProjection } from "sanity/lib/slug-resolver"
 import type {
 	MuxVideoAssetReference,
 	SanityImageAssetReference,
 	SanityImageCrop,
 	SanityImageHotspot,
 } from "sanity.types"
+
+import { documentPathProjection } from "sanity/lib/slug-resolver"
 
 // the three types below were directly copied from the starter's generated types
 
@@ -30,15 +31,7 @@ export type ImageField = {
 
 export type VideoField = {
 	_type: "video"
-	sourceType?:
-		| "mux"
-		| "spotify"
-		| "tiktok"
-		| "twitch"
-		| "url"
-		| "vimeo"
-		| "wistia"
-		| "youtube"
+	sourceType?: "mux" | "spotify" | "tiktok" | "twitch" | "url" | "vimeo" | "wistia" | "youtube"
 	url?: string
 	muxVideo: {
 		_type: "mux.video"

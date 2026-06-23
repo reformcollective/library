@@ -65,16 +65,12 @@ export type GenericConfig<
 	/** CSS variable definitions. */
 	tokens?: Tokens
 	/** Rules for applying styles when multiple variants are active. */
-	compoundVariants?: NoInfer<
-		Array<CompoundVariant<VariantProps<Variants, DefaultVariants>>>
-	>
+	compoundVariants?: NoInfer<Array<CompoundVariant<VariantProps<Variants, DefaultVariants>>>>
 }
 
 // helpers
 // biome-ignore lint/suspicious/noExplicitAny: necessary for distributive omit
-type DistributiveOmit<Type, Keys extends keyof any> = Type extends any
-	? Omit<Type, Keys>
-	: never
+type DistributiveOmit<Type, Keys extends keyof any> = Type extends any ? Omit<Type, Keys> : never
 
 type SafeKeyOf<T> = T extends never ? never : keyof T
 
@@ -90,9 +86,7 @@ export type StyledOutProps<
 	Props,
 	SafeKeyOf<VariantProps<Variants, never>> | SafeKeyOf<TokenProps<Tokens>>
 > &
-	([Variants] extends [never]
-		? unknown
-		: VariantProps<Variants, DefaultVariants>) &
+	([Variants] extends [never] ? unknown : VariantProps<Variants, DefaultVariants>) &
 	([Tokens] extends [never] ? unknown : TokenProps<Tokens>)
 
 /** className from Props is preserved so Base UI-style function className works */
@@ -102,9 +96,7 @@ export type StyledComponent<Props> = (
 		: never,
 ) => JSX.Element
 
-export type FunctionComponent<Props> = (
-	props: Props,
-) => ReactNode | Promise<ReactNode>
+export type FunctionComponent<Props> = (props: Props) => ReactNode | Promise<ReactNode>
 
 /**
  * Internal type for styled options object.

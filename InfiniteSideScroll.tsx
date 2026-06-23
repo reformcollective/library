@@ -2,14 +2,8 @@ import { useDebounceFn, useLatest } from "ahooks"
 import { gsap, Observer, ScrollTrigger } from "gsap/all"
 import { library } from "library/layers.css"
 import { css, f, styled } from "library/styled"
-import {
-	Fragment,
-	type ReactNode,
-	type RefObject,
-	useEffect,
-	useRef,
-	useState,
-} from "react"
+import { Fragment, type ReactNode, type RefObject, useEffect, useRef, useState } from "react"
+
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { createDebouncedEventListener } from "./ScreenContext"
 import { useAnimation } from "./useAnimation"
@@ -101,10 +95,9 @@ export function InfiniteSideScroll({
 	const [refreshSignal, setRefreshSignal] = useState(0)
 
 	// debounce refreshSignal updates to prevent rapid re-creations
-	const { run: debouncedRefresh } = useDebounceFn(
-		() => setRefreshSignal((s) => s + 1),
-		{ wait: 150 },
-	)
+	const { run: debouncedRefresh } = useDebounceFn(() => setRefreshSignal((s) => s + 1), {
+		wait: 150,
+	})
 
 	const latestOnChange = useLatest(onChange)
 	const latestOnReady = useLatest(onReady)
@@ -120,9 +113,7 @@ export function InfiniteSideScroll({
 			const childCount = rowRef.current.children.length / numberNeeded
 			const firstLastChild = rowRef.current.children[childCount - 1]
 			const secondFirstChild = rowRef.current.children[childCount]
-			const secondFirstLeftMargin = Number(
-				gsap.getProperty(secondFirstChild ?? null, "marginLeft"),
-			)
+			const secondFirstLeftMargin = Number(gsap.getProperty(secondFirstChild ?? null, "marginLeft"))
 			const gap =
 				firstLastChild && secondFirstChild
 					? // distance from layout right edge of first to layout left edge of second,
@@ -130,11 +121,7 @@ export function InfiniteSideScroll({
 						// The last item's right margin is NOT subtracted: horizontalLoop's getTotalWidth ends
 						// at the last item's offsetWidth (no trailing margin), so that margin must
 						// remain in paddingRight to produce an even gap at the loop point.
-						getLayoutGap(
-							firstLastChild,
-							secondFirstChild,
-							secondFirstLeftMargin,
-						)
+						getLayoutGap(firstLastChild, secondFirstChild, secondFirstLeftMargin)
 					: 0
 
 			const loop = horizontalLoop(rowRef.current.children, {
@@ -159,10 +146,7 @@ export function InfiniteSideScroll({
 			})
 			const toIndex = loop.toIndex.bind(loop)
 			loop.toIndex = (index, vars) =>
-				toIndex(
-					resolveNearestLoopIndex(index, loop.current(), childCount),
-					vars,
-				)
+				toIndex(resolveNearestLoopIndex(index, loop.current(), childCount), vars)
 			internalLoopRef(loop)
 
 			// start centered
@@ -277,9 +261,7 @@ export function InfiniteSideScroll({
 				setNumberNeeded((oldNumber) => {
 					const widthPerRepeat = totalChildrenWidth / oldNumber
 					const newNumber = Math.ceil(window.innerWidth / widthPerRepeat) + 1
-					return Number.isFinite(newNumber) && newNumber > 0
-						? newNumber
-						: oldNumber
+					return Number.isFinite(newNumber) && newNumber > 0 ? newNumber : oldNumber
 				})
 			}
 		}
@@ -287,9 +269,7 @@ export function InfiniteSideScroll({
 		update()
 
 		// update when the marquee children change size
-		const elementsToObserve = Array.from(
-			rowRef.current?.querySelectorAll("*") ?? [],
-		)
+		const elementsToObserve = Array.from(rowRef.current?.querySelectorAll("*") ?? [])
 		const observer = new ResizeObserver(() => {
 			update()
 			debouncedRefresh()
@@ -320,6 +300,7 @@ export function InfiniteSideScroll({
 		<Wrapper ref={wrapperRef} className={className}>
 			<Row ref={rowRef} className="track">
 				{Array.from({ length: numberNeeded }, (_, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: repeated children are static clones for the scrolling track
 					<Fragment key={index}>{children}</Fragment>
 				))}
 			</Row>
@@ -356,10 +337,7 @@ function getLayoutGap(
 	secondFirstChild: Element,
 	secondFirstLeftMargin: number,
 ) {
-	if (
-		!(firstLastChild instanceof HTMLElement) ||
-		!(secondFirstChild instanceof HTMLElement)
-	) {
+	if (!(firstLastChild instanceof HTMLElement) || !(secondFirstChild instanceof HTMLElement)) {
 		return 0
 	}
 
@@ -370,11 +348,7 @@ function getLayoutGap(
 	)
 }
 
-function resolveNearestLoopIndex(
-	index: number,
-	currentIndex: number,
-	childCount: number,
-) {
+function resolveNearestLoopIndex(index: number, currentIndex: number, childCount: number) {
 	if (childCount <= 0) return index
 
 	const normalizedIndex = ((index % childCount) + childCount) % childCount

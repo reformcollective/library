@@ -7,6 +7,7 @@ import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
 import SanityUniversalImage from "library/UniversalImage"
 import { use, useEffect, useRef, useState } from "react"
+
 import type { ImageField } from "../sanity/assetMetadata"
 
 type SanityPosterImage = ImageField
@@ -78,10 +79,7 @@ export function BackgroundVideo({
 		videoId: string
 	}>()
 	const { innerWidth } = use(ScreenContext)
-	const posterSize = Math.min(
-		1920,
-		Math.max(300, Math.round(innerWidth / 100) * 100),
-	)
+	const posterSize = Math.min(1920, Math.max(300, Math.round(innerWidth / 100) * 100))
 	const [loadVideo, setLoadVideo] = useState(eager ?? false)
 	const [videoCanPlay, setVideoCanPlay] = useState(true)
 
@@ -230,9 +228,7 @@ export function BackgroundVideo({
 				// instead of using a thumbnail. This video is smaller so we get a fast poster load
 				data-poster
 				src={
-					playbackId
-						? `https://stream.mux.com/${playbackId}.m3u8?max_resolution=720p`
-						: undefined
+					playbackId ? `https://stream.mux.com/${playbackId}.m3u8?max_resolution=720p` : undefined
 				}
 				preload="metadata"
 				muted={muted}

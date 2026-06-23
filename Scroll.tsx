@@ -1,9 +1,11 @@
-import { gsap, ScrollTrigger } from "gsap/all"
 import type Lenis from "lenis"
 import type { LenisOptions } from "lenis"
+
+import { gsap, ScrollTrigger } from "gsap/all"
 import "lenis/dist/lenis.css"
 import { type LenisRef, ReactLenis, useLenis } from "lenis/react"
 import { useEffect, useState } from "react"
+
 import { isBrowser } from "./deviceDetection"
 import TypedEventEmitter from "./TypedEventEmitter"
 
@@ -53,10 +55,7 @@ export const createScrollLock = (type: "lock" | "unlock" = "lock") => {
  *
  * you can also set the value via the second argument if you have external state
  */
-export const useScrollLock = (
-	type: "lock" | "unlock" = "lock",
-	value?: boolean,
-) => {
+export const useScrollLock = (type: "lock" | "unlock" = "lock", value?: boolean) => {
 	const [locked, setLocked] = useState(false)
 	const shouldLock = value ?? locked
 
@@ -85,8 +84,7 @@ export const usePinType = () => {
  */
 export const useIsSmooth = () => {
 	const [smooth, setSmooth] = useState(
-		typeof window !== "undefined" &&
-			window.matchMedia("(hover: hover)").matches,
+		typeof window !== "undefined" && window.matchMedia("(hover: hover)").matches,
 	)
 
 	useEffect(() => {
@@ -169,9 +167,7 @@ export const SmoothScrollStyle = (config: LenisOptions) => {
 		requestAnimationFrame(check)
 
 		const onChange = () => {
-			const unlockers = locks.find(
-				(lock) => lock.description === "scroll-unlock",
-			)
+			const unlockers = locks.find((lock) => lock.description === "scroll-unlock")
 			const lockers = locks.find((lock) => lock.description === "scroll-lock")
 
 			if (unlockers) lenis.start()

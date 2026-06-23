@@ -1,4 +1,5 @@
 import { glob } from "node:fs/promises"
+
 import { compileTime } from "./compile-time.ts"
 
 const pageFileGlob = "app/**/page.{js,jsx,ts,tsx}"

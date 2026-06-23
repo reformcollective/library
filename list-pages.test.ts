@@ -28,9 +28,7 @@ describe("static route listing helpers", () => {
 	test("converts page file paths to route patterns", async () => {
 		const { pageFilePathToRoute } = await importListPagesWithRoutes([])
 
-		expect(pageFilePathToRoute("app/(shop)/[site]/text-demo/page.tsx")).toBe(
-			"/[site]/text-demo",
-		)
+		expect(pageFilePathToRoute("app/(shop)/[site]/text-demo/page.tsx")).toBe("/[site]/text-demo")
 	})
 
 	test("lists only fully static routes", async () => {
@@ -62,13 +60,9 @@ describe("static route listing helpers", () => {
 	})
 
 	test("rejects invalid segment values", async () => {
-		const { listRoutes } = await importListPagesWithRoutes([
-			"app/[site]/shop/page.tsx",
-		])
+		const { listRoutes } = await importListPagesWithRoutes(["app/[site]/shop/page.tsx"])
 
 		expect(() => listRoutes({ site: "" })).toThrow("must not be empty")
-		expect(() => listRoutes({ site: "temple/shop" })).toThrow(
-			"single path segment",
-		)
+		expect(() => listRoutes({ site: "temple/shop" })).toThrow("single path segment")
 	})
 })

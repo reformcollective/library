@@ -25,13 +25,9 @@ test("default f utility surface is intentionally small", () => {
 })
 
 test("basic component type is preserved", () => {
-	const component = ({
-		className,
-		name,
-	}: {
-		className: string
-		name: string
-	}) => <div className={className}>{name}</div>
+	const component = ({ className, name }: { className: string; name: string }) => (
+		<div className={className}>{name}</div>
+	)
 	const extended = styled(component, {})
 
 	expectTypeOf(extended).toExtend<typeof component>()
@@ -83,9 +79,7 @@ test("variants with defaults are optional; without defaults are required", () =>
 
 	// type-level assertions
 	type SBProps = ComponentProps<typeof StyledButton>
-	expectTypeOf<SBProps["color"]>().toEqualTypeOf<
-		"primary" | "secondary" | undefined
-	>()
+	expectTypeOf<SBProps["color"]>().toEqualTypeOf<"primary" | "secondary" | undefined>()
 	expectTypeOf<SBProps["size"]>().toEqualTypeOf<"small" | "large" | undefined>()
 
 	type NDProps = ComponentProps<typeof NoDefault>
@@ -289,8 +283,7 @@ test("styled components return a class selector when stringified", () => {
 // ---------- Base UI Field.Control + styled ----------
 
 test("type is preserved when className is unconventional", () => {
-	const CustomComponent = (() =>
-		null) as unknown as React.ForwardRefExoticComponent<
+	const CustomComponent = (() => null) as unknown as React.ForwardRefExoticComponent<
 		{
 			type?: string
 			onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
@@ -303,11 +296,7 @@ test("type is preserved when className is unconventional", () => {
 
 	const _ok = (
 		<>
-			<CustomComponent
-				type="text"
-				onChange={(_event) => null}
-				className="custom"
-			/>
+			<CustomComponent type="text" onChange={(_event) => null} className="custom" />
 			<StyledInput type="text" onChange={(_event) => null} className="custom" />
 			<CustomComponent
 				type="text"
@@ -377,10 +366,7 @@ test.fails("generic types are preserved with tokens config", () => {
 // ---------- generics with multiple generics and variants ----------
 
 test.fails("generic types with multiple generics are preserved with variants", () => {
-	const Component = <
-		SomeText extends string,
-		AnotherText extends string,
-	>(_props: {
+	const Component = <SomeText extends string, AnotherText extends string>(_props: {
 		id: `id-${SomeText}-${AnotherText}`
 		one: NoInfer<SomeText>
 		two: NoInfer<AnotherText>

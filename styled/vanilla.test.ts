@@ -1,3 +1,5 @@
+import type { StyleRule } from "node_modules/@vanilla-extract/css/dist/vanilla-extract-css.cjs"
+
 import { expect, test, vi } from "vitest"
 
 vi.mock("./breakpoints.css", () => ({
@@ -9,8 +11,7 @@ vi.mock("./breakpoints.css", () => ({
 
 const css = String.raw
 
-const getGeneratedCss = (rule: Record<string, unknown>) =>
-	Object.values(rule).join("")
+const getGeneratedCss = (rule: StyleRule) => Object.values(rule).join("")
 
 test("responsive utilities preserve pixels marked with neverResponsive", async () => {
 	const { f, neverResponsive } = await import("./vanilla")

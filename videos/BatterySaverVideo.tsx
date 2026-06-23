@@ -10,24 +10,15 @@ import {
 	useRef,
 	useState,
 } from "react"
+
 import { MuxVideo } from "./MuxVideo"
 
 // Set to true to simulate NotAllowedError for testing
 const FORCE_FAIL = false
 
-const INTERACTION_EVENTS = [
-	"pointerdown",
-	"pointermove",
-	"wheel",
-	"touchstart",
-	"keydown",
-] as const
+const INTERACTION_EVENTS = ["pointerdown", "pointermove", "wheel", "touchstart", "keydown"] as const
 
-export function BatterySaverVideo({
-	ref,
-	autoPlay,
-	...props
-}: ComponentProps<typeof MuxVideo>) {
+export function BatterySaverVideo({ ref, autoPlay, ...props }: ComponentProps<typeof MuxVideo>) {
 	"use no memo"
 	const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
 	const playPromiseRef = useRef<Promise<void> | null>(null)
@@ -97,11 +88,9 @@ export function BatterySaverVideo({
 		return playPromiseRef.current
 	}, [videoEl])
 
-	useImperativeHandle<HTMLVideoElement | null, HTMLVideoElement | null>(
-		ref,
-		() => videoEl,
-		[videoEl],
-	)
+	useImperativeHandle<HTMLVideoElement | null, HTMLVideoElement | null>(ref, () => videoEl, [
+		videoEl,
+	])
 
 	useEffect(() => {
 		if (autoPlay) {

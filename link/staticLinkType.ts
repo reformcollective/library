@@ -1,7 +1,9 @@
+import type { CustomLinkType } from "sanity-plugin-link-field"
+
 import { LinkIcon } from "@sanity/icons"
 import { compileTime } from "library/compile-time"
 import { listStaticRoutes } from "library/list-pages"
-import type { CustomLinkType } from "sanity-plugin-link-field"
+
 import { staticPageLinkType } from "./resolve"
 
 type StaticLinkOption = {

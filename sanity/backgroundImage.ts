@@ -1,6 +1,7 @@
 import { css } from "library/styled"
-import { dataset, projectId } from "sanity/lib/api"
 import { buildSrcSet } from "sanity-image"
+import { dataset, projectId } from "sanity/lib/api"
+
 import type { ImageField } from "./assetMetadata"
 
 const baseUrl = `https://cdn.sanity.io/images/${projectId}/${dataset}/`
@@ -32,9 +33,7 @@ export const sanityImageToBackgroundImage = (
 		const [url, size] = src.split(" ")
 		return url && size && url !== "" && size !== ""
 			? css`
-					@media (min-width: ${
-						Number.parseInt(size, 10) / (2 * scaleFactor)
-					}px) {
+					@media (min-width: ${Number.parseInt(size, 10) / (2 * scaleFactor)}px) {
 						background-image: url(${url});
 					}
 				`

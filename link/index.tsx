@@ -1,14 +1,11 @@
 "use client"
 
-import Link, { type LinkProps } from "next/link"
 import type { ComponentProps, Ref } from "react"
+
+import Link, { type LinkProps } from "next/link"
+
 import { linkIsInternal } from "../functions"
-import {
-	type CMSLink,
-	isRouteDefined,
-	type LinkHref,
-	resolveRoute,
-} from "./resolve"
+import { type CMSLink, isRouteDefined, type LinkHref, resolveRoute } from "./resolve"
 import { buttonClass } from "./styles.css"
 import { useTransitioner } from "./transitioner"
 
@@ -73,16 +70,10 @@ export default function UniversalLink({
 	const transitioner = useTransitioner()
 
 	if (props.type) {
-		const className = props.className
-			? `${buttonClass} ${props.className}`
-			: buttonClass
+		const className = props.className ? `${buttonClass} ${props.className}` : buttonClass
 
 		return (
-			<button
-				{...props}
-				className={className}
-				ref={ref as Ref<HTMLButtonElement>}
-			>
+			<button {...props} className={className} ref={ref as Ref<HTMLButtonElement>}>
 				{children}
 			</button>
 		)

@@ -11,6 +11,7 @@ import {
 	useRef,
 	useState,
 } from "react"
+
 import { horizontalLoop } from "./gsapHelpers/horizontalLoop"
 import { verticalLoop } from "./gsapHelpers/VerticalLoop"
 import { createDebouncedEventListener } from "./ScreenContext"
@@ -19,9 +20,7 @@ import { useCombinedRefs } from "./useCombinedRefs"
 
 gsap.registerPlugin(Observer, ScrollTrigger)
 
-export type MarqueeLoop =
-	| ReturnType<typeof horizontalLoop>
-	| ReturnType<typeof verticalLoop>
+export type MarqueeLoop = ReturnType<typeof horizontalLoop> | ReturnType<typeof verticalLoop>
 
 export function Marquee({
 	children,
@@ -93,10 +92,9 @@ export function Marquee({
 	const [numberNeeded, setNumberNeeded] = useState(1)
 	const [refreshSignal, setRefreshSignal] = useState(0)
 
-	const { run: debouncedRefresh } = useDebounceFn(
-		() => setRefreshSignal((s) => s + 1),
-		{ wait: 150 },
-	)
+	const { run: debouncedRefresh } = useDebounceFn(() => setRefreshSignal((s) => s + 1), {
+		wait: 150,
+	})
 
 	const latestOnChange = useRef(onChange)
 	useLayoutEffect(() => {
@@ -259,8 +257,7 @@ export function Marquee({
 		const update = () => {
 			if (rowRef.current) {
 				const totalChildrenSize = Array.from(rowRef.current.children).reduce(
-					(total, child) =>
-						total + (isVertical ? child.clientHeight : child.clientWidth),
+					(total, child) => total + (isVertical ? child.clientHeight : child.clientWidth),
 					0,
 				)
 
@@ -268,18 +265,14 @@ export function Marquee({
 					const sizePerRepeat = totalChildrenSize / oldNumber
 					const screenSize = isVertical ? window.innerHeight : window.innerWidth
 					const newNumber = Math.ceil(screenSize / sizePerRepeat) + 1
-					return Number.isFinite(newNumber) && newNumber > 0
-						? newNumber
-						: oldNumber
+					return Number.isFinite(newNumber) && newNumber > 0 ? newNumber : oldNumber
 				})
 			}
 		}
 
 		update()
 
-		const elementsToObserve = Array.from(
-			rowRef.current?.querySelectorAll("*") ?? [],
-		)
+		const elementsToObserve = Array.from(rowRef.current?.querySelectorAll("*") ?? [])
 		const observer = new ResizeObserver(() => {
 			update()
 			debouncedRefresh()
@@ -304,12 +297,9 @@ export function Marquee({
 
 	return (
 		<Wrapper className={className}>
-			<Row
-				ref={rowRef}
-				className="track"
-				data-vertical={isVertical || undefined}
-			>
+			<Row ref={rowRef} className="track" data-vertical={isVertical || undefined}>
 				{Array.from({ length: numberNeeded }, (_, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: repeated children are static clones for the scrolling track
 					<Fragment key={index}>{children}</Fragment>
 				))}
 			</Row>

@@ -1,5 +1,7 @@
 import type { LinkField } from "library/sanity/assetMetadata"
+
 import { stegaClean } from "next-sanity"
+
 import { linkIsInternal } from "../functions"
 
 export const staticPageLinkType = "static-page"
@@ -13,9 +15,7 @@ export type LinkHref = string | null | undefined | CMSLink
 
 const normalizeInternalPath = (path: string) => {
 	const cleanPath = stegaClean(path)
-	return cleanPath.startsWith("/")
-		? cleanPath.replace(/^\/+/, "/")
-		: `/${cleanPath}`
+	return cleanPath.startsWith("/") ? cleanPath.replace(/^\/+/, "/") : `/${cleanPath}`
 }
 
 export const resolveRoute = (
@@ -100,6 +100,5 @@ export const resolveRoute = (
  * destination has been selected by the editor, so a plain truthiness check will
  * always be true regardless of whether the link goes anywhere.
  */
-export const isRouteDefined = (
-	link: LinkHref,
-): link is Exclude<LinkHref, null | undefined> => !!resolveRoute(link).url
+export const isRouteDefined = (link: LinkHref): link is Exclude<LinkHref, null | undefined> =>
+	!!resolveRoute(link).url

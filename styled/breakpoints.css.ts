@@ -1,9 +1,5 @@
 import { createVar, globalStyle } from "@vanilla-extract/css"
-import {
-	desktopBreakpoint,
-	mobileBreakpoint,
-	tabletBreakpoint,
-} from "app/styles/media"
+import { desktopBreakpoint, mobileBreakpoint, tabletBreakpoint } from "app/styles/media"
 import { foundation } from "library/layers.css"
 
 export const isMobile = createVar()

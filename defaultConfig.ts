@@ -84,11 +84,7 @@ const defaultConfig = {
 	utilities: {},
 } as const satisfies Config
 
-type ConfigInput<
-	TransitionNames,
-	GroupNames,
-	Utilities extends UtilityConfig,
-> = Partial<
+type ConfigInput<TransitionNames, GroupNames, Utilities extends UtilityConfig> = Partial<
 	Omit<Config<TransitionNames, GroupNames, Utilities>, "utilities">
 > & {
 	utilities?: Utilities

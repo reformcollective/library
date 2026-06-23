@@ -1,10 +1,9 @@
 "use client"
 
-import {
-	type ComponentProps,
-	ViewTransition as ReactViewTransition,
-} from "react"
 import type {} from "react/canary"
+
+import { type ComponentProps, ViewTransition as ReactViewTransition } from "react"
+
 import { usePreloader } from "./link/usePreloader"
 
 type ClassProps = "default" | "enter" | "exit" | "share" | "update"
@@ -13,8 +12,7 @@ type TransitionProps = {
 	[key in ClassProps]?: string | "auto" | "none"
 } & Omit<ComponentProps<typeof ReactViewTransition>, ClassProps>
 
-const mask = (completed: boolean) => (cls: string | undefined) =>
-	completed ? cls : "none"
+const mask = (completed: boolean) => (cls: string | undefined) => (completed ? cls : "none")
 
 export function Transition({
 	children,

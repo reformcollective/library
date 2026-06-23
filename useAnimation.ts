@@ -11,21 +11,18 @@ import {
 	useRef,
 	useState,
 } from "react"
+
 import { isBrowser } from "./deviceDetection"
 import { ScreenContext } from "./ScreenContext"
 import { useHMR } from "./useHMR"
 
 let microtaskWaiting = false
 
-const useIsomorphicLayoutEffect =
-	typeof document !== "undefined" ? useLayoutEffect : useEffect
+const useIsomorphicLayoutEffect = typeof document !== "undefined" ? useLayoutEffect : useEffect
 
 // biome-ignore lint/complexity/noBannedTypes: gsap types go brrrrr
 type ContextSafeFunc = <T extends Function>(func: T) => T
-type Creation = (arg: {
-	context: gsap.Context
-	contextSafe: ContextSafeFunc
-}) => unknown
+type Creation = (arg: { context: gsap.Context; contextSafe: ContextSafeFunc }) => unknown
 
 gsap.config({
 	nullTargetWarn: false,
@@ -101,8 +98,7 @@ export const useAnimation = <InputFn extends Creation>(
 		updateBehavior = "revert",
 		unmountBehavior = "kill",
 	} = options ?? {}
-	const { innerWidth, viewportHeight, shouldHydrateUtilities } =
-		use(ScreenContext)
+	const { innerWidth, viewportHeight, shouldHydrateUtilities } = use(ScreenContext)
 
 	const dependencies = [...deps, ...extraDeps]
 
@@ -204,8 +200,7 @@ export const useAnimation = <InputFn extends Creation>(
 
 			const result = createAnimations({
 				context: self,
-				contextSafe: ((func) =>
-					context.add(null as unknown as string, func)) as ContextSafeFunc,
+				contextSafe: ((func) => context.add(null as unknown as string, func)) as ContextSafeFunc,
 			})
 
 			if (typeof result === "function") {
@@ -256,6 +251,4 @@ declare global {
 
 const versions = isBrowser ? (window.gsapVersions ?? []) : []
 if (versions.length > 1)
-	throw new Error(
-		"Multiple versions of gsap detected! This will cause MAJOR issues!",
-	)
+	throw new Error("Multiple versions of gsap detected! This will cause MAJOR issues!")

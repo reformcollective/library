@@ -1,12 +1,13 @@
-import crypto from "node:crypto"
-import fsSync from "node:fs"
-import fs from "node:fs/promises"
-import path from "node:path"
 import turboLoaderRAW, {
 	type TurboLoaderContext,
 	type TurboLoaderOptions,
 } from "@vanilla-extract/turbopack-plugin"
+import crypto from "node:crypto"
+import fsSync from "node:fs"
+import fs from "node:fs/promises"
+import path from "node:path"
 import ts from "typescript"
+
 import {
 	analyzeDependencies,
 	type DependencyGraph,
@@ -25,11 +26,7 @@ import {
 
 type ModulesConfig = Record<string, string[]>
 
-const STYLED_MODULES = [
-	"library/styled",
-	"library/styled/index",
-	"library/styled/alpha",
-] as const
+const STYLED_MODULES = ["library/styled", "library/styled/index", "library/styled/alpha"] as const
 
 const TRACKED_MODULES: ModulesConfig = {
 	"@vanilla-extract/css": [
@@ -136,21 +133,14 @@ function isVariableFunctionLike(node: DependencyNode): boolean {
 		if (!ts.isIdentifier(decl.name) || decl.name.text !== node.name) continue
 		const init = decl.initializer
 		if (!init) continue
-		if (
-			ts.isArrowFunction(init) ||
-			ts.isFunctionExpression(init) ||
-			ts.isClassExpression(init)
-		) {
+		if (ts.isArrowFunction(init) || ts.isFunctionExpression(init) || ts.isClassExpression(init)) {
 			return true
 		}
 	}
 	return false
 }
 
-function computeTaintedNodes(
-	graph: DependencyGraph,
-	registry: TrackedRegistry,
-): TaintResult {
+function computeTaintedNodes(graph: DependencyGraph, registry: TrackedRegistry): TaintResult {
 	const tainted = new Set<string>()
 	const invalidTainted: DependencyNode[] = []
 
@@ -158,9 +148,7 @@ function computeTaintedNodes(
 		if (node.kind === "import") continue
 
 		// Check if this node directly depends on a tracked function
-		const usesTracked = node.dependsOn.some((dep) =>
-			registry.trackedNames.has(dep),
-		)
+		const usesTracked = node.dependsOn.some((dep) => registry.trackedNames.has(dep))
 
 		if (usesTracked) {
 			if (node.name) tainted.add(node.name)
@@ -168,11 +156,7 @@ function computeTaintedNodes(
 
 			// Functions and classes can't be moved to .css.ts
 			// Also catch arrow functions/function expressions assigned to variables
-			if (
-				node.kind === "function" ||
-				node.kind === "class" ||
-				isVariableFunctionLike(node)
-			) {
+			if (node.kind === "function" || node.kind === "class" || isVariableFunctionLike(node)) {
 				invalidTainted.push(node)
 			}
 		}
@@ -181,10 +165,7 @@ function computeTaintedNodes(
 	return { tainted, invalidTainted }
 }
 
-function getTrackedImportLocalNames(
-	registry: TrackedRegistry,
-	importedName: string,
-) {
+function getTrackedImportLocalNames(registry: TrackedRegistry, importedName: string) {
 	return new Set(
 		[...registry.trackedNames].filter(
 			(name) => registry.localToImported.get(name) === importedName,
@@ -214,14 +195,8 @@ function isAwaitedExpression(expression: ts.Expression) {
 	return ts.isAwaitExpression(parent) && parent.expression === current
 }
 
-function assertCompileTimeCallsAreAwaited(
-	sourceFile: ts.SourceFile,
-	registry: TrackedRegistry,
-) {
-	const compileTimeLocalNames = getTrackedImportLocalNames(
-		registry,
-		COMPILE_TIME_IMPORT,
-	)
+function assertCompileTimeCallsAreAwaited(sourceFile: ts.SourceFile, registry: TrackedRegistry) {
+	const compileTimeLocalNames = getTrackedImportLocalNames(registry, COMPILE_TIME_IMPORT)
 	if (compileTimeLocalNames.size === 0) return
 
 	function visit(node: ts.Node) {
@@ -311,17 +286,13 @@ function analyzeStyledCalls(
 		const firstArg = args[0]
 
 		const isStringTag =
-			firstArg &&
-			(ts.isStringLiteral(firstArg) ||
-				ts.isNoSubstitutionTemplateLiteral(firstArg))
+			firstArg && (ts.isStringLiteral(firstArg) || ts.isNoSubstitutionTemplateLiteral(firstArg))
 
 		if (isStringTag) {
 			// styled('tag', config) -> move entirely, add debugId
 			const firstArgText = firstArg.getText(graph.sourceFile)
 			const restArgs = args.slice(1)
-			const restArgsText = restArgs
-				.map((a) => a.getText(graph.sourceFile))
-				.join(", ")
+			const restArgsText = restArgs.map((a) => a.getText(graph.sourceFile)).join(", ")
 
 			const rawSource =
 				restArgs.length > 0
@@ -338,9 +309,7 @@ function analyzeStyledCalls(
 			// styled(Component, config) -> split into raw + wrapper
 			const rawName = `${node.name}___raw`
 			const restArgs = args.slice(1)
-			const restArgsText = restArgs
-				.map((a) => a.getText(graph.sourceFile))
-				.join(", ")
+			const restArgsText = restArgs.map((a) => a.getText(graph.sourceFile)).join(", ")
 
 			const rawSource = restArgsText
 				? `export const ${node.name} = styled("div", ${restArgsText}, ${JSON.stringify(node.name)});`
@@ -565,14 +534,10 @@ function partitionNodes(
 			// Only import runtime values (variables, functions, classes)
 			// Skip types, expressions, statements, exports
 			const isRuntimeValue =
-				node.kind === "variable" ||
-				node.kind === "function" ||
-				node.kind === "class"
+				node.kind === "variable" || node.kind === "function" || node.kind === "class"
 			if (isRuntimeValue) {
 				// For wrapped components, import the ___raw version
-				const transform = styledTransforms.find(
-					(t) => t.originalName === node.name,
-				)
+				const transform = styledTransforms.find((t) => t.originalName === node.name)
 				if (transform?.needsWrapper) {
 					imports.push({
 						imported: transform.originalName,
@@ -602,8 +567,7 @@ function partitionNodes(
 	// Dedupe imports
 	const seenImports = new Set<string>()
 	const dedupedImports = imports.filter((item) => {
-		const key =
-			typeof item === "string" ? item : `${item.imported} as ${item.local}`
+		const key = typeof item === "string" ? item : `${item.imported} as ${item.local}`
 		if (seenImports.has(key)) return false
 		seenImports.add(key)
 		return true
@@ -753,16 +717,11 @@ function buildOriginalStatements(
 					newInit,
 				)
 
-				const newDeclList = ts.factory.updateVariableDeclarationList(
-					stmt.declarationList,
-					[newDecl],
-				)
+				const newDeclList = ts.factory.updateVariableDeclarationList(stmt.declarationList, [
+					newDecl,
+				])
 
-				const newStmt = ts.factory.updateVariableStatement(
-					stmt,
-					stmt.modifiers,
-					newDeclList,
-				)
+				const newStmt = ts.factory.updateVariableStatement(stmt, stmt.modifiers, newDeclList)
 
 				statements.push(newStmt)
 				if (node.kind === "import") lastImportIdx = statements.length - 1
@@ -784,12 +743,7 @@ function buildOriginalStatements(
 	const toInsert: ts.Statement[] = []
 
 	if (needsWithComponent) {
-		toInsert.push(
-			createImportDeclaration(
-				["withComponent"],
-				"library/styled/withComponent",
-			),
-		)
+		toInsert.push(createImportDeclaration(["withComponent"], "library/styled/withComponent"))
 	}
 
 	if (partition.imports.length > 0) {
@@ -812,18 +766,8 @@ function buildOriginalStatements(
 /**
  * Rewrites relative imports to tsconfig-safe specifiers.
  */
-function rewriteToTsconfig(
-	code: string,
-	originalFilePath: string,
-	rootDir: string,
-): string {
-	const sf = ts.createSourceFile(
-		"rewrite.ts",
-		code,
-		ts.ScriptTarget.ES2020,
-		true,
-		ts.ScriptKind.TS,
-	)
+function rewriteToTsconfig(code: string, originalFilePath: string, rootDir: string): string {
+	const sf = ts.createSourceFile("rewrite.ts", code, ts.ScriptTarget.ES2020, true, ts.ScriptKind.TS)
 
 	const updates: Array<{ node: ts.ImportDeclaration; newSpec: string }> = []
 
@@ -870,10 +814,7 @@ function rewriteToTsconfig(
 // Vanilla-extract plugin integration
 // =============================================================================
 
-function handleVanillaExtractError(
-	err: Error,
-	reject: (reason: Error) => void,
-): void {
+function handleVanillaExtractError(err: Error, reject: (reason: Error) => void): void {
 	const rawMsg = err?.message || String(err)
 	const stack = err?.stack || ""
 
@@ -982,19 +923,10 @@ async function transform(
 	const partition = partitionNodes(graph, tainted, styledTransforms)
 
 	// 8) Build virtual module source
-	const virtualSource = buildVirtualSource(
-		graph,
-		partition,
-		tainted,
-		styledTransforms,
-	)
+	const virtualSource = buildVirtualSource(graph, partition, tainted, styledTransforms)
 
 	// 9) Rewrite imports to tsconfig-safe specifiers
-	const virtualSourceResolved = rewriteToTsconfig(
-		virtualSource,
-		filePath,
-		rootContext,
-	)
+	const virtualSourceResolved = rewriteToTsconfig(virtualSource, filePath, rootContext)
 
 	// Paths for debug and temp files
 	const relPath = path.relative(rootContext, filePath).replace(/\\/g, "/")
@@ -1014,9 +946,7 @@ async function transform(
 
 	// 10) Write temp file
 	const tmpRoot = path.join(rootContext, ".next", "vanilla")
-	const tmpFile = path
-		.join(tmpRoot, `${relPathNoExt}${virtualExt}`)
-		.replace(/\\/g, "/")
+	const tmpFile = path.join(tmpRoot, `${relPathNoExt}${virtualExt}`).replace(/\\/g, "/")
 	fsSync.mkdirSync(path.dirname(tmpFile), { recursive: true })
 	safeWrite(tmpFile, virtualSourceResolved)
 
@@ -1041,21 +971,13 @@ async function transform(
 	const printed = printSourceFile(updated)
 
 	// Write final debug file
-	const finalDebugPath = path.join(
-		rootContext,
-		".next",
-		"debug",
-		"final",
-		relPath,
-	)
+	const finalDebugPath = path.join(rootContext, ".next", "debug", "final", relPath)
 	await fs.mkdir(path.dirname(finalDebugPath), { recursive: true })
 	await fs.writeFile(finalDebugPath, printed)
 
 	return {
 		code: printed,
-		movedNames: partition.imports.map((item) =>
-			typeof item === "string" ? item : item.local,
-		),
+		movedNames: partition.imports.map((item) => (typeof item === "string" ? item : item.local)),
 	}
 }
 
@@ -1068,10 +990,7 @@ export default async function vanillaSplitLoader(
 	sourceCode: string,
 ) {
 	// Pass through pure vanilla-extract files untouched
-	if (
-		this.resourcePath.endsWith(".css.ts") ||
-		this.resourcePath.endsWith(".css.tsx")
-	) {
+	if (this.resourcePath.endsWith(".css.ts") || this.resourcePath.endsWith(".css.tsx")) {
 		return sourceCode
 	}
 
@@ -1081,13 +1000,7 @@ export default async function vanillaSplitLoader(
 	}
 
 	const options = this.getOptions ? this.getOptions() : {}
-	const { code } = await transform(
-		this,
-		this.rootContext,
-		this.resourcePath,
-		sourceCode,
-		options,
-	)
+	const { code } = await transform(this, this.rootContext, this.resourcePath, sourceCode, options)
 
 	return code
 }

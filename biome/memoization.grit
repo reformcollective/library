@@ -1,4 +1,0 @@
-`$fn` where {
-	$fn <: or { `useMemo` },
-	register_diagnostic(span=$fn, message="React Compiler automatically adds useMemo and useCallback, manual memoization is not necessary.", severity="info")
-}

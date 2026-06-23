@@ -1,5 +1,6 @@
 import { usePathname } from "next/navigation"
 import { createContext, use, useEffect, useState } from "react"
+
 import { loader } from "./loader"
 
 type PageTransition = {
@@ -13,14 +14,8 @@ export const TransitionsContext = createContext({
 	setIsAnimating: (_isAnimating: false | "before" | "after") => {},
 })
 
-export const PageTransitionProvider = ({
-	children,
-}: {
-	children: React.ReactNode
-}) => {
-	const [isAnimating, setIsAnimating] = useState<false | "before" | "after">(
-		false,
-	)
+export const PageTransitionProvider = ({ children }: { children: React.ReactNode }) => {
+	const [isAnimating, setIsAnimating] = useState<false | "before" | "after">(false)
 	const [animations] = useState(() => new Set<PageTransition>())
 
 	const pathname = usePathname()
@@ -29,9 +24,7 @@ export const PageTransitionProvider = ({
 	}, [pathname])
 
 	return (
-		<TransitionsContext.Provider
-			value={{ animations, isAnimating, setIsAnimating }}
-		>
+		<TransitionsContext.Provider value={{ animations, isAnimating, setIsAnimating }}>
 			{children}
 		</TransitionsContext.Provider>
 	)

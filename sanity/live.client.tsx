@@ -1,18 +1,22 @@
 "use client"
 
+import type { ComponentProps, ReactNode } from "react"
+
 import { useInterval } from "ahooks"
+import { getDeploymentVersionMetadata } from "library/deploymentVersion"
 import { browserData } from "library/deviceDetection"
 import TypedEventEmitter from "library/TypedEventEmitter"
 import { useHMR } from "library/useHMR"
-import { usePathname, useRouter } from "next/navigation"
 import { stegaClean } from "next-sanity"
 import { useVisualEditingEnvironment } from "next-sanity/hooks"
 import { VisualEditing } from "next-sanity/visual-editing"
-import type { ComponentProps, ReactNode } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
 import { studioUrl } from "sanity/lib/api"
 import { Toaster, toast } from "sonner"
+
 import { disableDraftMode } from "./disableDraftMode"
+import { type LiveProxyEvent, liveProxyEventSchema } from "./liveProxyEvents"
 
 const sanityLiveRefreshEvents = new TypedEventEmitter<{ refresh: [] }>()
 const liveProxyReconnectDelayMs = 250
@@ -22,12 +26,39 @@ export async function notifySanityLiveRefreshAction() {
 	return "refresh" as const
 }
 
-const isPresentationEnvironment = (
-	environment: ReturnType<typeof useVisualEditingEnvironment>,
-) =>
+const isPresentationEnvironment = (environment: ReturnType<typeof useVisualEditingEnvironment>) =>
 	environment === "presentation-iframe" || environment === "presentation-window"
 
-export function SanityRuntime({
+function parseLiveProxyEvent(data: string): LiveProxyEvent | null {
+	try {
+		return liveProxyEventSchema.parse(JSON.parse(data))
+	} catch {
+		return null
+	}
+}
+
+function notifyDeploymentUpdate({
+	liveDeployment,
+}: {
+	liveDeployment?: ReturnType<typeof getDeploymentVersionMetadata>
+}) {
+	const { deploymentId } = getDeploymentVersionMetadata()
+
+	if (deploymentId === liveDeployment?.deploymentId) return
+	if (!window.location.pathname.startsWith(studioUrl)) return
+
+	toast.warning("New version available", {
+		id: "deployment-update-available",
+		description: "Drafted content is saved by Sanity",
+		duration: Infinity,
+		action: {
+			label: "Update",
+			onClick: () => window.location.reload(),
+		},
+	})
+}
+
+export function RuntimeClient({
 	children,
 	isDraftMode,
 	useLiveProxy,
@@ -41,22 +72,23 @@ export function SanityRuntime({
 	const environment = useVisualEditingEnvironment()
 	const isPresentation = isPresentationEnvironment(environment)
 
-	if (isStudio) return null
+	if (isStudio) {
+		return (
+			<>
+				<Toaster />
+				<SanityRuntimeRefresh showRefreshToast={false} useLiveProxy={useLiveProxy} />
+			</>
+		)
+	}
 
 	return (
 		<>
 			<Toaster />
 			{(useLiveProxy || isDraftMode) && (
-				<SanityRuntimeRefresh
-					showRefreshToast={isDraftMode}
-					useLiveProxy={useLiveProxy}
-				/>
+				<SanityRuntimeRefresh showRefreshToast={isDraftMode} useLiveProxy={useLiveProxy} />
 			)}
 			{children}
-			<SanityPreviewStatusToast
-				isDraftMode={isDraftMode}
-				isPresentation={isPresentation}
-			/>
+			<SanityPreviewStatusToast isDraftMode={isDraftMode} isPresentation={isPresentation} />
 			<SanityVisualEditingOverlay isDraftMode={isDraftMode} />
 			{isDraftMode && <FirefoxFix />}
 		</>
@@ -82,17 +114,23 @@ export function SanityRuntimeRefresh({
 		let isDisposed = false
 
 		const handleMessage = (e: MessageEvent<string>) => {
-			const event = JSON.parse(e.data)
-			if (
-				event &&
-				typeof event === "object" &&
-				"type" in event &&
-				event.type === "refresh"
-			) {
+			const event = parseLiveProxyEvent(e.data)
+			if (!event) return
+
+			if (event.type === "connected") {
+				notifyDeploymentUpdate({ liveDeployment: event.deployment })
+				return
+			} else if (event.type === "refresh") {
+				if (window.location.pathname.startsWith(studioUrl)) return
+
 				startTransition(() => {
 					router.refresh()
 				})
+
+				return
 			}
+
+			event satisfies never
 		}
 
 		const connect = () => {
@@ -125,10 +163,7 @@ export function SanityRuntimeRefresh({
 
 		sanityLiveRefreshEvents.addEventListener("refresh", handleSanityLiveRefresh)
 		return () => {
-			sanityLiveRefreshEvents.removeEventListener(
-				"refresh",
-				handleSanityLiveRefresh,
-			)
+			sanityLiveRefreshEvents.removeEventListener("refresh", handleSanityLiveRefresh)
 		}
 	}, [])
 
@@ -157,24 +192,21 @@ export function SanityPreviewStatusToast({
 	useEffect(() => {
 		if (!isPresentation && !isDraftMode) return
 
-		const toastId = toast(
-			isDraftMode ? "Viewing Drafted Content" : "Viewing Published Content",
-			{
-				duration: !isDraftMode && isPresentation ? Infinity : undefined,
-				action:
-					isDraftMode && !isPresentation
-						? {
-								label: "Disable",
-								onClick: async () => {
-									await disableDraftMode()
-									startTransition(() => {
-										router.refresh()
-									})
-								},
-							}
-						: undefined,
-			},
-		)
+		const toastId = toast(isDraftMode ? "Viewing Drafted Content" : "Viewing Published Content", {
+			duration: !isDraftMode && isPresentation ? Infinity : undefined,
+			action:
+				isDraftMode && !isPresentation
+					? {
+							label: "Disable",
+							onClick: async () => {
+								await disableDraftMode()
+								startTransition(() => {
+									router.refresh()
+								})
+							},
+						}
+					: undefined,
+		})
 
 		return () => {
 			toast.dismiss(toastId)

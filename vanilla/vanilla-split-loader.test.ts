@@ -1,12 +1,11 @@
+import type { TurboLoaderContext, TurboLoaderOptions } from "@vanilla-extract/turbopack-plugin"
+
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import type {
-	TurboLoaderContext,
-	TurboLoaderOptions,
-} from "@vanilla-extract/turbopack-plugin"
 import ts from "typescript"
 import { assert, describe, expect, it, vi } from "vitest"
+
 import { analyzeDependencies } from "./dependency-graph.ts"
 import { default as vanillaSplitLoader } from "./vanilla-split-loader.ts"
 
@@ -14,10 +13,7 @@ import { default as vanillaSplitLoader } from "./vanilla-split-loader.ts"
  * Checks for duplicate identifier declarations in the code.
  * This catches bugs where we import a name AND define it locally.
  */
-function findDuplicateIdentifiers(
-	code: string,
-	filename = "test.tsx",
-): string[] {
+function findDuplicateIdentifiers(code: string, filename = "test.tsx"): string[] {
 	const sourceFile = ts.createSourceFile(
 		filename,
 		code,
@@ -95,8 +91,8 @@ function expectValidTypeScript(code: string, filename = "test.tsx") {
 }
 
 function decodeDataUrlModules(code: string) {
-	return [...code.matchAll(/data:text\/javascript;base64,([^"]+)/g)].map(
-		(match) => Buffer.from(match[1] ?? "", "base64").toString("utf8"),
+	return [...code.matchAll(/data:text\/javascript;base64,([^"]+)/g)].map((match) =>
+		Buffer.from(match[1] ?? "", "base64").toString("utf8"),
 	)
 }
 
@@ -341,15 +337,9 @@ export const Button = styled("button", { color: "red" })`
 				.map((l: string) => l.trim())
 				.filter((l: string) => l)
 
-			const directiveIdx = lines.findIndex((l: string) =>
-				l.includes('"use client"'),
-			)
-			const reactImportIdx = lines.findIndex((l: string) =>
-				l.includes('from "react"'),
-			)
-			const virtualImportIdx = lines.findIndex((l: string) =>
-				l.includes("data:text/javascript"),
-			)
+			const directiveIdx = lines.findIndex((l: string) => l.includes('"use client"'))
+			const reactImportIdx = lines.findIndex((l: string) => l.includes('from "react"'))
+			const virtualImportIdx = lines.findIndex((l: string) => l.includes("data:text/javascript"))
 
 			expect(directiveIdx).toBeLessThan(reactImportIdx)
 			expect(reactImportIdx).toBeLessThan(virtualImportIdx)
@@ -608,9 +598,7 @@ export { Something, SomethingElse, SomethingElseElse }`
 			// Key bug fix: SomethingElse should NOT be imported from virtual module
 			// because it's created in original via withComponent(Something, SomethingElse___raw)
 			// Extract the import statement from the data URL
-			const importMatch = result.match(
-				/import \{([^}]+)\} from "data:text\/javascript/,
-			)
+			const importMatch = result.match(/import \{([^}]+)\} from "data:text\/javascript/)
 			expect(importMatch).toBeTruthy()
 			const importedNames = importMatch?.[1]?.split(",").map((s) => s.trim())
 
@@ -618,9 +606,7 @@ export { Something, SomethingElse, SomethingElseElse }`
 			expect(importedNames).toContain("Something")
 			// Should import the wrapped components aliased to their ___raw local names
 			expect(importedNames).toContain("SomethingElse as SomethingElse___raw")
-			expect(importedNames).toContain(
-				"SomethingElseElse as SomethingElseElse___raw",
-			)
+			expect(importedNames).toContain("SomethingElseElse as SomethingElseElse___raw")
 			// Should NOT import SomethingElse or SomethingElseElse (they're created in original)
 			expect(importedNames).not.toContain("SomethingElse")
 			expect(importedNames).not.toContain("SomethingElseElse")
@@ -1152,10 +1138,7 @@ export const Button = styled("button", { color: "red" })`
 				await tmpDir.getPath(),
 				".next/debug/pre-process/app/test.css.tsx",
 			)
-			const finalPath = path.join(
-				await tmpDir.getPath(),
-				".next/debug/final/app/test.tsx",
-			)
+			const finalPath = path.join(await tmpDir.getPath(), ".next/debug/final/app/test.tsx")
 
 			await expect(fs.access(preProcessPath)).resolves.toBeUndefined()
 			await expect(fs.access(finalPath)).resolves.toBeUndefined()

@@ -10,9 +10,9 @@
   - Preserves file formatting by performing targeted range edits, not full reprints
 */
 
+import { globby } from "globby"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { globby } from "globby"
 import ts from "typescript"
 
 const args = process.argv.slice(2)
@@ -159,8 +159,7 @@ function transformFile(sourceText, fileName) {
 		}
 	}
 
-	if (edits.length === 0)
-		return { changed: false, text: sourceText, converted, skipped }
+	if (edits.length === 0) return { changed: false, text: sourceText, converted, skipped }
 	const newText = applyEdits(sourceText, edits)
 	return { changed: true, text: newText, converted, skipped }
 }
@@ -168,12 +167,7 @@ function transformFile(sourceText, fileName) {
 async function run() {
 	const files = await globby(patterns.length ? patterns : defaultPatterns, {
 		gitignore: true,
-		ignore: [
-			"**/node_modules/**",
-			"**/.next/**",
-			"**/dist/**",
-			"**/library/**",
-		],
+		ignore: ["**/node_modules/**", "**/.next/**", "**/dist/**", "**/library/**"],
 		onlyFiles: true,
 		expandDirectories: false,
 	})
@@ -193,9 +187,7 @@ async function run() {
 		if (changed) {
 			changedFiles++
 			if (dryRun) {
-				console.log(
-					`[dry] would update ${file} (converted: ${converted}, skipped: ${skipped})`,
-				)
+				console.log(`[dry] would update ${file} (converted: ${converted}, skipped: ${skipped})`)
 			} else {
 				await fs.writeFile(abs, text, "utf8")
 				log(`updated ${file} (converted: ${converted}, skipped: ${skipped})`)
@@ -203,9 +195,7 @@ async function run() {
 		}
 	}
 	const summary = `${changedFiles} file(s) ${dryRun ? "would be" : ""} updated; ${totalConverted} converted, ${totalSkipped} skipped.`
-	console.log(
-		dryRun ? `Dry run complete. ${summary}` : `Codemod complete. ${summary}`,
-	)
+	console.log(dryRun ? `Dry run complete. ${summary}` : `Codemod complete. ${summary}`)
 }
 
 run().catch((err) => {

@@ -1,5 +1,6 @@
 import { useEventListener } from "ahooks"
 import { useEffect, useRef, useState } from "react"
+
 import { isBrowser } from "./deviceDetection"
 
 /**
