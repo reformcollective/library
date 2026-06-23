@@ -11,14 +11,7 @@ export default {
 	plugins: [...(ultracite.plugins ?? []), "stylelint-plugin-use-baseline"],
 	rules: {
 		...ultracite.rules,
-		"no-empty-source": null,
-		"order/properties-order": null,
-		"block-no-empty": null,
-		"media-query-no-invalid": null,
 		"custom-property-empty-line-before": null,
-		"nesting-selector-no-missing-scoping-root": null,
-		"layer-name-pattern": null,
-		"at-rule-prelude-no-invalid": null,
 		"plugin/use-baseline": [
 			true,
 			{
@@ -32,5 +25,25 @@ export default {
 				},
 			},
 		],
+		/**
+		 * in the particularly likely event that one of these rules triggers when it should not
+		 * disable the rule here and paste an example of failing css
+		 */
+		/*
+    @media (min-width: ${Number.parseInt(size, 10) /
+						(2 * scaleFactor)}px) {
+						background-image: url(${url});
+					}
+				 */
+		"media-query-no-invalid": null,
+		/*
+		@layer ${foundation} { ... }
+
+	 */
+		"at-rule-prelude-no-invalid": null,
+		"layer-name-pattern": null,
+		// "no-empty-source": null,
+		// "block-no-empty": null,
+		// "nesting-selector-no-missing-scoping-root": null,
 	},
 }

@@ -26,10 +26,7 @@ const FORBIDDEN_DEPENDENCY_FIELDS = [
 	"optionalDependencies",
 	"peerDependencies",
 ] satisfies Array<keyof PackageManifest>
-const PUBLIC_LIBRARY_DEPENDENCY_PATTERNS = [
-	"stylelint-config-*",
-	"stylelint-plugin-*",
-]
+const PUBLIC_LIBRARY_DEPENDENCY_PATTERNS = ["stylelint-*"]
 
 function readManifest(url: URL): PackageManifest {
 	return JSON.parse(readFileSync(url, "utf8")) as PackageManifest
