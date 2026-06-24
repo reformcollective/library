@@ -21,6 +21,7 @@ export function CarouselBackgroundVideo({
 	onTimeUpdate,
 	onLoadedMetadata,
 	safariOptimized = false,
+	eager = false,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -60,6 +61,13 @@ export function CarouselBackgroundVideo({
 	 * recommended for carousel/preview videos
 	 */
 	safariOptimized?: boolean
+	/**
+	 * load the video immediately on mount, bypassing the lazy intersection observer.
+	 * more aggressive than lazy loading — use when the video is above the fold or must
+	 * be ready the moment it appears.
+	 * @default false
+	 */
+	eager?: boolean
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
@@ -83,14 +91,24 @@ export function CarouselBackgroundVideo({
 
 	// This state now ONLY controls if the <MainVideo> component is rendered.
 	const [shouldRenderVideo, setShouldRenderVideo] = useState(
-		useSafariOptimization,
+		useSafariOptimization || eager,
 	)
 
+	// drives the video's fade-in over the persistent poster (set on `canplay`)
+	const [videoReady, setVideoReady] = useState(false)
+	// track the id the ready flag belongs to, so a new clip fades in fresh instead of
+	// flashing the previous (already-ready) frame
+	const [readyForId, setReadyForId] = useState(playbackId)
+
 	/***
-	 * if our video id changes, clear the playback failure
+	 * if our video id changes, clear the playback failure and reset the fade-in
 	 */
 	if (playbackFailure && playbackFailure.videoId !== playbackId) {
 		setPlaybackFailure(undefined)
+	}
+	if (readyForId !== playbackId) {
+		setReadyForId(playbackId)
+		setVideoReady(false)
 	}
 
 	// This effect ONLY handles playing and pausing the video.
@@ -116,7 +134,7 @@ export function CarouselBackgroundVideo({
 	 * either immediately on Safari or lazily on others.
 	 */
 	useEffect(() => {
-		if (useSafariOptimization) {
+		if (useSafariOptimization || eager) {
 			setShouldRenderVideo(true)
 			return
 		}
@@ -137,7 +155,7 @@ export function CarouselBackgroundVideo({
 		const elementToObserve = placeholderRef.current
 		if (elementToObserve) observer.observe(elementToObserve)
 		return () => observer.disconnect()
-	}, [useSafariOptimization])
+	}, [useSafariOptimization, eager])
 
 	const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
 		const videoElement = e.currentTarget
@@ -164,16 +182,19 @@ export function CarouselBackgroundVideo({
 				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
 			}}
 		>
-			{!shouldRenderVideo ? (
-				<PlaceholderDiv
-					ref={placeholderRef}
-					style={{
-						backgroundImage: playbackId
-							? `url(https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize})`
-							: undefined,
-					}}
-				/>
-			) : (
+			{/* Poster stays mounted underneath the video for the element's whole life, so we never
+			    expose the bare container: it covers the gap before the video can play (no black
+			    flash) and reappears if iOS evicts a paused offscreen frame (video not "missing"
+			    on scroll-back). */}
+			<PlaceholderDiv
+				ref={placeholderRef}
+				style={{
+					backgroundImage: playbackId
+						? `url(https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize})`
+						: undefined,
+				}}
+			/>
+			{shouldRenderVideo && (
 				<MainVideo
 					ref={video}
 					src={
@@ -193,6 +214,8 @@ export function CarouselBackgroundVideo({
 							: `https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize}`
 					}
 					streamType="on-demand"
+					style={{ opacity: videoReady ? 1 : 0 }}
+					onCanPlay={() => setVideoReady(true)}
 					onEnded={onEnded}
 					onTimeUpdate={handleTimeUpdate}
 					onLoadedMetadata={handleLoadedMetadata}
@@ -206,6 +229,7 @@ const Container = styled("div", [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
+				position: relative;
 				isolation: isolate;
 				overflow: clip;
 			`),
@@ -217,11 +241,14 @@ const MainVideo = styled(MuxVideo, [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
+				position: absolute;
+				inset: 0;
 				width: 100%;
 				height: 100%;
 				display: block;
 				object-fit: cover;
 				object-position: center;
+				transition: opacity 0.2s ease-in-out;
 			`),
 		},
 	},
@@ -231,6 +258,8 @@ const PlaceholderDiv = styled("div", [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
+				position: absolute;
+				inset: 0;
 				width: 100%;
 				height: 100%;
 				background-size: cover;
