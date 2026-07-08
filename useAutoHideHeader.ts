@@ -8,6 +8,9 @@ import { useAnimation } from "./useAnimation"
 
 const HEADER_HEIGHT_VAR = "--site-header-height"
 const HEADER_VISIBLE_OFFSET_VAR = "--site-header-visible-offset"
+const SCROLLED_THRESHOLD = 100
+// extra px beyond the measured height so no sliver of the header remains visible when hidden
+const HIDE_BUFFER = 8
 
 function clamp(value: number, min: number, max: number) {
 	return Math.min(max, Math.max(min, value))
@@ -114,7 +117,8 @@ export default function useAutoHideHeader(
 				gsap.set(target, { y: 0 })
 				if (target) {
 					target.dataset.headerHiding = "false"
-					target.dataset.headerScrolled = "false"
+					const scroll = window.lenisInstance?.scroll ?? window.scrollY
+					target.dataset.headerScrolled = scroll <= SCROLLED_THRESHOLD ? "false" : "true"
 					publishHeaderVars(target)
 				}
 			}
@@ -152,7 +156,7 @@ export default function useAutoHideHeader(
 
 				const el = wrapper.current
 				if (el) {
-					el.dataset.headerScrolled = scroll <= 5 ? "false" : "true"
+					el.dataset.headerScrolled = scroll <= SCROLLED_THRESHOLD ? "false" : "true"
 				}
 
 				// if forced sticky
@@ -162,7 +166,8 @@ export default function useAutoHideHeader(
 				}
 				// if forced not sticky
 				else if (forceHideHeader || hideHeader) {
-					yTo(reverse ? height : -height)
+					const hiddenY = height + HIDE_BUFFER
+					yTo(reverse ? hiddenY : -hiddenY)
 					if (el) el.dataset.headerHiding = "true"
 				}
 				// if hovered
@@ -172,8 +177,9 @@ export default function useAutoHideHeader(
 				}
 				// scrub behavior, if needed
 				else if (style === "scrub") {
+					const hiddenHeight = height + HIDE_BUFFER
 					const currentY = Number(gsap.getProperty(wrapper.current, "y"))
-					const newY = Math.min(0, Math.max(-height, currentY - delta))
+					const newY = Math.min(0, Math.max(-hiddenHeight, currentY - delta))
 					const newPotentiallyReversedY = reverse ? -newY : newY
 					yTo(newPotentiallyReversedY, newPotentiallyReversedY)
 					if (el) el.dataset.headerHiding = String(delta > 0)
@@ -195,7 +201,7 @@ export default function useAutoHideHeader(
 					const scroll = window.lenisInstance?.scroll ?? window.scrollY
 					if (wrapper.current) {
 						wrapper.current.dataset.headerScrolled =
-							scroll <= 5 ? "false" : "true"
+							scroll <= SCROLLED_THRESHOLD ? "false" : "true"
 					}
 				})
 			}
