@@ -118,7 +118,8 @@ export default function useAutoHideHeader(
 				if (target) {
 					target.dataset.headerHiding = "false"
 					const scroll = window.lenisInstance?.scroll ?? window.scrollY
-					target.dataset.headerScrolled = scroll <= SCROLLED_THRESHOLD ? "false" : "true"
+					target.dataset.headerScrolled =
+						scroll <= SCROLLED_THRESHOLD ? "false" : "true"
 					publishHeaderVars(target)
 				}
 			}
@@ -156,7 +157,8 @@ export default function useAutoHideHeader(
 
 				const el = wrapper.current
 				if (el) {
-					el.dataset.headerScrolled = scroll <= SCROLLED_THRESHOLD ? "false" : "true"
+					el.dataset.headerScrolled =
+						scroll <= SCROLLED_THRESHOLD ? "false" : "true"
 				}
 
 				// if forced sticky

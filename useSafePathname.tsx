@@ -5,7 +5,11 @@ import { createContext, Suspense, use, useEffect, useState } from "react"
 
 const SafePathnameContext = createContext<string | null>(null)
 
-function PathnameReporter({ onPathname }: { onPathname: (pathname: string) => void }) {
+function PathnameReporter({
+	onPathname,
+}: {
+	onPathname: (pathname: string) => void
+}) {
 	const pathname = usePathname()
 	useEffect(() => {
 		onPathname(pathname)
@@ -19,7 +23,11 @@ function PathnameReporter({ onPathname }: { onPathname: (pathname: string) => vo
  * prerendering. Render this once, near the root of the app (e.g. alongside other
  * global providers) — everything that needs `useSafePathname` must be nested inside.
  */
-export function SafePathnameProvider({ children }: { children: React.ReactNode }) {
+export function SafePathnameProvider({
+	children,
+}: {
+	children: React.ReactNode
+}) {
 	const [pathname, setPathname] = useState<string | null>(null)
 
 	return (

@@ -1,4 +1,4 @@
-import { type RefObject, useEffect, useRef, useState } from "react"
+import { type RefObject, useEffect, useState } from "react"
 import { createDebouncedEventListener } from "./ScreenContext"
 import TypedEventEmitter from "./TypedEventEmitter"
 import useSafePathname from "./useSafePathname"
@@ -20,9 +20,12 @@ let currentTheme: SectionTheme = "light"
  *
  * @param headerRef ref pointing to the sticky header element, used to measure its height
  */
-export default function useSectionTheme(headerRef: RefObject<HTMLElement | null>) {
+export default function useSectionTheme(
+	headerRef: RefObject<HTMLElement | null>,
+) {
 	const pathname = useSafePathname()
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname is only a re-run trigger on route change, not read in the effect
 	useEffect(() => {
 		let observer: IntersectionObserver | null = null
 		const observed = new Set<Element>()
@@ -40,7 +43,8 @@ export default function useSectionTheme(headerRef: RefObject<HTMLElement | null>
 			observer?.disconnect()
 			activeElements = []
 
-			const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 0
+			const headerHeight =
+				headerRef.current?.getBoundingClientRect().height ?? 0
 			// a thin strip right at the header's bottom edge — whichever section
 			// crosses it (in either scroll direction) is the one behind the header
 			const rootMargin = `-${headerHeight}px 0px -${Math.max(window.innerHeight - headerHeight - 1, 0)}px 0px`
@@ -78,7 +82,10 @@ export default function useSectionTheme(headerRef: RefObject<HTMLElement | null>
 		scan()
 
 		const interval = setInterval(scan, 1_000)
-		const resizeListener = createDebouncedEventListener("resize", createObserver)
+		const resizeListener = createDebouncedEventListener(
+			"resize",
+			createObserver,
+		)
 
 		return () => {
 			observer?.disconnect()
