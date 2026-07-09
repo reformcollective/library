@@ -136,6 +136,7 @@ export const LibraryRuntime = async () => {
 		>
 			{(isDraftMode || !allowProxy) && (
 				<InternalLive
+					includeDrafts={isDraftMode}
 					action={isDraftMode ? notifySanityLiveRefreshAction : undefined}
 				/>
 			)}
