@@ -67,11 +67,6 @@ export function RuntimeClient({
 	isDraftMode: boolean
 	useLiveProxy: boolean
 }) {
-	useEffect(() => {
-		console.log("[DIAGNOSTIC] RuntimeClient mounted")
-		return () => console.log("[DIAGNOSTIC] RuntimeClient unmounted")
-	}, [])
-
 	const pathname = usePathname()
 	const isStudio = pathname.startsWith(studioUrl)
 	const environment = useVisualEditingEnvironment()
