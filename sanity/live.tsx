@@ -94,8 +94,8 @@ export async function libraryFetch<const QueryString extends string>({
 }
 
 /**
- * Used to fetch draft/preview content in Server Components. Never cached — always hits the live
- * API fresh. Call this from an uncached component (not marked `"use cache"`) after resolving
+ * TEMP TEST (option A): wrapped in "use cache" per next-sanity's documented Cache Components
+ * pattern. Call this from an uncached component (not marked `"use cache"`) after resolving
  * `perspective` yourself, typically only when `draftMode()` is enabled.
  */
 export async function libraryFetchDynamic<const QueryString extends string>({
@@ -106,6 +106,7 @@ export async function libraryFetchDynamic<const QueryString extends string>({
 }: LibraryFetchArgs<QueryString> & {
 	perspective: Exclude<ClientPerspective, "raw">
 }): Promise<LibraryFetchResult<QueryString>> {
+	"use cache"
 	const resolvedParams = await params
 	warnIfQueryTooLarge(query, resolvedParams)
 	return await internalFetch({

@@ -1,7 +1,7 @@
-import { usePathname } from "next/navigation"
 import { type RefObject, useEffect, useRef, useState } from "react"
 import { createDebouncedEventListener } from "./ScreenContext"
 import TypedEventEmitter from "./TypedEventEmitter"
+import useSafePathname from "./useSafePathname"
 
 export type SectionTheme = "dark" | "light"
 
@@ -21,7 +21,7 @@ let currentTheme: SectionTheme = "light"
  * @param headerRef ref pointing to the sticky header element, used to measure its height
  */
 export default function useSectionTheme(headerRef: RefObject<HTMLElement | null>) {
-	const pathname = usePathname()
+	const pathname = useSafePathname()
 
 	useEffect(() => {
 		let observer: IntersectionObserver | null = null
