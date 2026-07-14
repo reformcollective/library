@@ -158,6 +158,7 @@ export function SanityRuntimeRefresh({
 		const handleSanityLiveRefresh = () => {
 			startTransition(() => {
 				setSanityLiveRefreshSignal((signal) => signal + 1)
+				router.refresh()
 			})
 		}
 
@@ -165,7 +166,7 @@ export function SanityRuntimeRefresh({
 		return () => {
 			sanityLiveRefreshEvents.removeEventListener("refresh", handleSanityLiveRefresh)
 		}
-	}, [])
+	}, [router])
 
 	useEffect(() => {
 		if (!pending || !showRefreshToast) return
