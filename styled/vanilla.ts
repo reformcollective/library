@@ -56,7 +56,11 @@ const DEFAULT_UTILITIES = {
 	responsive: [
 		{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
 		TABLET_RULE,
-		{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
+		// designPixel (was fluid): vw in the desktop band forced every
+		// fresponsive value to recalculate + relayout on each resize frame.
+		// Tablet already uses fixed px in Breezy; freezing desktop at the same
+		// design-px as non-scaling fullWidth removes the jump at 1441.
+		{ breakpoint: "desktop", designSize: "desktop", output: "designPixel" },
 		{
 			breakpoint: "fullWidth",
 			designSize: "desktop",
@@ -65,7 +69,7 @@ const DEFAULT_UTILITIES = {
 	],
 
 	large: [
-		{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
+		{ breakpoint: "desktop", designSize: "desktop", output: "designPixel" },
 		{
 			breakpoint: "fullWidth",
 			designSize: "desktop",
@@ -86,7 +90,9 @@ const DEFAULT_UTILITIES = {
 		},
 	],
 
-	desktop: [{ breakpoint: "desktop", designSize: "desktop", output: "fluid" }],
+	desktop: [
+		{ breakpoint: "desktop", designSize: "desktop", output: "designPixel" },
+	],
 
 	tablet: [TABLET_RULE],
 
@@ -187,6 +193,14 @@ const computeResponsiveValue = (
 			return toVw(px, designSize)
 		case "pixel":
 			return toPx(px, designSize, rule.breakpoint)
+		// Same value fullWidth renders when scaleFully is off — fixed in-band
+		// and continuous across the 1441 boundary. Honors scaleFully → vw.
+		case "designPixel": {
+			const shouldScale = options?.scaleFully ?? config.scaleFully
+			return shouldScale
+				? toVw(px, designSize)
+				: toPx(px, designSize, "fullWidth")
+		}
 		case "scaleFullyConfig": {
 			const shouldScale = options?.scaleFully ?? config.scaleFully
 			return shouldScale

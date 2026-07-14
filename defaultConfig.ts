@@ -5,7 +5,11 @@
 
 export type Breakpoint = "mobile" | "tablet" | "desktop" | "fullWidth"
 export type DesignSize = "mobile" | "tablet" | "desktop"
-export type UtilityOutput = "fluid" | "pixel" | "scaleFullyConfig"
+export type UtilityOutput =
+	| "fluid"
+	| "pixel"
+	| "designPixel"
+	| "scaleFullyConfig"
 
 export type BreakpointRule = {
 	breakpoint: Breakpoint
