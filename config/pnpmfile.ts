@@ -20,8 +20,9 @@ type PnpmConfig = {
 	publicHoistPattern?: Array<string>
 }
 
+// devDependencies is intentionally allowed: it's dev/lint/test tooling for
+// working on the library itself, never installed by or deduplicated with consumers.
 const FORBIDDEN_DEPENDENCY_FIELDS = [
-	"devDependencies",
 	"optionalDependencies",
 	"peerDependencies",
 ] satisfies Array<keyof PackageManifest>
@@ -141,7 +142,6 @@ function readPackage(pkg: PackageManifest) {
 		}
 	}
 
-	assertDependencyFields(libraryManifest)
 	assertDependencyFields(libraryManifest)
 	pkg.dependencies = filterDependencies(pkg.dependencies)
 
