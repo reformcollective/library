@@ -1,8 +1,8 @@
-import postcssSyntax from "postcss-styled-syntax"
+import { parse, stringify } from "postcss-styled-syntax"
 
 export default {
 	extends: "stylelint-config-standard",
-	customSyntax: postcssSyntax,
+	customSyntax: { parse, stringify },
 	overrides: [{ files: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"] }],
 	plugins: ["stylelint-plugin-use-baseline"],
 	rules: {
