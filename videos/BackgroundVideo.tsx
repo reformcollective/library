@@ -287,6 +287,9 @@ const Container = styled("div", [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
+				position: relative;
+				width: 100%;
+				height: 100%;
 				isolation: isolate;
 				overflow: clip;
 			`),
