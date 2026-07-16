@@ -3,6 +3,7 @@ import { browserData } from "library/deviceDetection"
 import { library } from "library/layers.css"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
+import { useCombinedRefs } from "library/useCombinedRefs"
 import { use, useEffect, useRef, useState } from "react"
 
 export function CarouselBackgroundVideo({
@@ -17,6 +18,7 @@ export function CarouselBackgroundVideo({
 	className,
 	loop,
 	ref: containerRef,
+	videoRef: externalVideoRef,
 	onEnded,
 	onTimeUpdate,
 	onLoadedMetadata,
@@ -56,6 +58,10 @@ export function CarouselBackgroundVideo({
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
 	/**
+	 * exposes the underlying `<video>` element, e.g. to seek `currentTime` from a custom scrubber
+	 */
+	videoRef?: React.Ref<HTMLVideoElement>
+	/**
 	 * use safari-optimized loading strategy (immediate load with metadata preload)
 	 * @default false
 	 * recommended for carousel/preview videos
@@ -74,6 +80,7 @@ export function CarouselBackgroundVideo({
 	onLoadedMetadata?: (duration: number) => void
 }) {
 	const video = useRef<HTMLVideoElement>(null)
+	const combinedVideoRef = useCombinedRefs(externalVideoRef, video)
 	const placeholderRef = useRef<HTMLDivElement>(null)
 	const [playbackFailure, setPlaybackFailure] = useState<{
 		videoId: string
@@ -113,20 +120,49 @@ export function CarouselBackgroundVideo({
 
 	// This effect ONLY handles playing and pausing the video.
 	useEffect(() => {
-		if (!shouldRenderVideo || !video.current || playbackFailure) {
+		const videoEl = video.current
+		if (!shouldRenderVideo || !videoEl || playbackFailure) {
 			return
 		}
 
-		if (play) {
-			video.current.play().catch(() => {
-				if (playbackId) {
-					setPlaybackFailure({ videoId: playbackId })
-				}
-				onEnded?.()
-			})
-		} else {
-			video.current.pause()
+		if (!play) {
+			videoEl.pause()
+			return
 		}
+
+		const fail = () => {
+			if (playbackId) setPlaybackFailure({ videoId: playbackId })
+			onEnded?.()
+		}
+
+		const attemptPlay = () => {
+			videoEl.play().catch(fail)
+		}
+
+		// a rejected play() can be a real failure, or just a timing artifact from
+		// calling play() before the element has buffered enough — readyState < 3
+		// (HAVE_FUTURE_DATA) means it hasn't, so retry once it signals it's ready
+		// rather than immediately giving up and permanently clearing the video's src.
+		// re-check readyState right before attaching: it may have become ready
+		// in the gap between this effect scheduling and running (e.g. right after
+		// the <video> element itself just mounted), in which case canplay has
+		// already fired and would never fire again, leaving us waiting forever.
+		if (videoEl.readyState < 3) {
+			videoEl.addEventListener("canplay", attemptPlay, { once: true })
+			videoEl.addEventListener("error", fail, { once: true })
+			if (videoEl.readyState >= 3) {
+				videoEl.removeEventListener("canplay", attemptPlay)
+				videoEl.removeEventListener("error", fail)
+				attemptPlay()
+				return
+			}
+			return () => {
+				videoEl.removeEventListener("canplay", attemptPlay)
+				videoEl.removeEventListener("error", fail)
+			}
+		}
+
+		attemptPlay()
 	}, [play, shouldRenderVideo, playbackId, playbackFailure, onEnded])
 
 	/**
@@ -196,7 +232,7 @@ export function CarouselBackgroundVideo({
 			/>
 			{shouldRenderVideo && (
 				<MainVideo
-					ref={video}
+					ref={combinedVideoRef}
 					src={
 						playbackFailure || !playbackId
 							? undefined
