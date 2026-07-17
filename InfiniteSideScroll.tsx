@@ -77,9 +77,11 @@ export function InfiniteSideScroll({
 	 */
 	scrollVelocity?: number | ((velocity: number) => number)
 	/**
-	 * fires when the marquee moves with the current index
+	 * fires when the marquee moves with the current index and the specific
+	 * rendered element that's now active (useful for identifying which physical
+	 * copy is active when children are repeated to fill the viewport)
 	 */
-	onChange?: (index: number) => void
+	onChange?: (index: number, element: Element) => void
 	/**
 	 * fires after the loop initializes and the initial position has had a frame to paint
 	 */
@@ -151,9 +153,9 @@ export function InfiniteSideScroll({
 				paddingRight: gap,
 				// pixel offset from left edge where items snap (ignored in center mode)
 				snapOffset: centerMode ? undefined : snapPaddingLeft || undefined,
-				onChange: (_, index) => {
+				onChange: (element, index) => {
 					queueMicrotask(() => {
-						latestOnChange.current?.(index)
+						latestOnChange.current?.(index, element)
 					})
 				},
 			})
