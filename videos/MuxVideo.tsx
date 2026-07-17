@@ -51,7 +51,7 @@ export function MuxVideo({
 	onEnded,
 	onTimeUpdate,
 	playbackId,
-	preloadTrackable,
+	preloadTrackable: _preloadTrackable,
 	onPlay,
 	onPause,
 	...props

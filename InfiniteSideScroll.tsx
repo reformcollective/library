@@ -155,7 +155,7 @@ export function InfiniteSideScroll({
 				snapOffset: centerMode ? undefined : snapPaddingLeft || undefined,
 				onChange: (element, index) => {
 					queueMicrotask(() => {
-						latestOnChange.current?.(index, element)
+						latestOnChange.current?.(index, element as Element)
 					})
 				},
 			})

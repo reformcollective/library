@@ -10,7 +10,7 @@ import { usePreloader } from "./link/usePreloader"
 type ClassProps = "default" | "enter" | "exit" | "share" | "update"
 
 type TransitionProps = {
-	[key in ClassProps]?: string | "auto" | "none"
+	[key in ClassProps]?: string
 } & Omit<ComponentProps<typeof ReactViewTransition>, ClassProps>
 
 const mask = (completed: boolean) => (cls: string | undefined) =>
