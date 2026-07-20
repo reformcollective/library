@@ -33,8 +33,19 @@ export default function useSectionTheme(
 		// in the order they most recently entered it
 		let activeElements: Element[] = []
 
+		// a pinned section (given a negative z-index so the section after it can
+		// scroll up and visually cover it) can re-enter this strip on a small
+		// scroll reversal without the covering section ever exiting — so whenever
+		// another, non-pinned section is also behind the header, prefer that one
 		const getActiveTheme = (): SectionTheme | null => {
-			const element = activeElements.at(-1)
+			const isPinnedBehind = (el: Element) =>
+				Number.parseInt(getComputedStyle(el).zIndex, 10) < 0
+
+			const candidates = activeElements.some((el) => !isPinnedBehind(el))
+				? activeElements.filter((el) => !isPinnedBehind(el))
+				: activeElements
+
+			const element = candidates.at(-1)
 			const mode = element?.getAttribute("data-header-mode")
 			return mode === "dark" || mode === "light" ? mode : null
 		}
