@@ -164,6 +164,28 @@ export function Marquee({
 
 			internalLoopRef(loop)
 
+			// pause the auto-scroll while off screen, so it doesn't keep animating
+			// (and burning cycles) when the user can't see it
+			if (marqueeSpeed !== 0) {
+				gsap.context(() => {
+					const target = rowRef.current
+					if (!target) return
+
+					const visibilityObserver = new IntersectionObserver(
+						([entry]) => {
+							if (entry?.isIntersecting) loop.play()
+							else loop.pause()
+						},
+						{ threshold: 0 },
+					)
+					visibilityObserver.observe(target)
+
+					return () => {
+						visibilityObserver.disconnect()
+					}
+				})
+			}
+
 			// start centered
 			if (marqueeSpeed === 0) {
 				loop.toIndex(0)

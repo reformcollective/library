@@ -22,6 +22,7 @@ export function CarouselBackgroundVideo({
 	onEnded,
 	onTimeUpdate,
 	onLoadedMetadata,
+	onPlaying,
 	safariOptimized = false,
 	eager = false,
 }: {
@@ -78,6 +79,12 @@ export function CarouselBackgroundVideo({
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
 	onLoadedMetadata?: (duration: number) => void
+	/**
+	 * fires when playback actually begins producing frames (not just when `play()`
+	 * is requested) — the right anchor point for starting a timer/animation that
+	 * needs to stay in sync with the video's real start
+	 */
+	onPlaying?: () => void
 }) {
 	const video = useRef<HTMLVideoElement>(null)
 	const combinedVideoRef = useCombinedRefs(externalVideoRef, video)
@@ -255,6 +262,7 @@ export function CarouselBackgroundVideo({
 					onEnded={onEnded}
 					onTimeUpdate={handleTimeUpdate}
 					onLoadedMetadata={handleLoadedMetadata}
+					onPlaying={onPlaying}
 				/>
 			)}
 		</Container>
