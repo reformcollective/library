@@ -118,6 +118,22 @@ export function BackgroundVideo({
 		attemptPlay()
 	}, [play, shouldRenderVideo, playbackId, playbackFailure, onEnded])
 
+	// mirror of the playback race-guard above: the fade-in relies on the one-shot
+	// `canplay` event, but on a warm cache the element can become playable before React
+	// attaches onCanPlay — the event fires with nobody listening and never fires again,
+	// leaving opacity stuck at 0 (video plays invisibly). reconcile from readyState.
+	useEffect(() => {
+		const videoEl = video.current
+		if (!shouldRenderVideo || !videoEl || playbackFailure) return
+		if (videoEl.readyState >= 3) {
+			setVideoReady(true)
+			return
+		}
+		const onReady = () => setVideoReady(true)
+		videoEl.addEventListener("canplay", onReady, { once: true })
+		return () => videoEl.removeEventListener("canplay", onReady)
+	}, [shouldRenderVideo, playbackId, playbackFailure])
+
 	/**
 	 * lazy load — use an intersection observer to watch for when the element is
 	 * getting close to the screen, and trigger rendering the video
