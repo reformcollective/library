@@ -41,7 +41,7 @@ export function BackgroundVideo({
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 }) {
 	const video = useRef<HTMLVideoElement>(null)
-	const videoPlayPromise = useRef(Promise.resolve())
+	const placeholderRef = useRef<HTMLDivElement>(null)
 	const [playbackFailure, setPlaybackFailure] = useState<{
 		videoId: string
 	}>()
@@ -50,53 +50,83 @@ export function BackgroundVideo({
 		1920,
 		Math.max(300, Math.round(innerWidth / 100) * 100),
 	)
-	const [loadVideo, setLoadVideo] = useState(false)
-	const [videoCanPlay, setVideoCanPlay] = useState(true)
+
+	// This state now ONLY controls if the <MainVideo> component is rendered.
+	const [shouldRenderVideo, setShouldRenderVideo] = useState(false)
+
+	// drives the video's fade-in over the persistent poster (set on `canplay`)
+	const [videoReady, setVideoReady] = useState(false)
+	// track the id the ready flag belongs to, so a new clip fades in fresh instead of
+	// flashing the previous (already-ready) frame
+	const [readyForId, setReadyForId] = useState(playbackId)
 
 	/***
-	 * if our video id changes, clear the playback failure
+	 * if our video id changes, clear the playback failure and reset the fade-in
 	 */
 	if (playbackFailure && playbackFailure.videoId !== playbackId) {
 		setPlaybackFailure(undefined)
 	}
+	if (readyForId !== playbackId) {
+		setReadyForId(playbackId)
+		setVideoReady(false)
+	}
+
+	// This effect ONLY handles playing and pausing the video.
+	useEffect(() => {
+		const videoEl = video.current
+		if (!shouldRenderVideo || !videoEl || playbackFailure) {
+			return
+		}
+
+		if (!play) {
+			videoEl.pause()
+			return
+		}
+
+		const fail = () => {
+			if (playbackId) setPlaybackFailure({ videoId: playbackId })
+			onEnded?.()
+		}
+
+		const attemptPlay = () => {
+			videoEl.play().catch(fail)
+		}
+
+		// a rejected play() can be a real failure, or just a timing artifact from
+		// calling play() before the element has buffered enough — readyState < 3
+		// (HAVE_FUTURE_DATA) means it hasn't, so retry once it signals it's ready
+		// rather than immediately giving up and permanently clearing the video's src.
+		// re-check readyState right before attaching: it may have become ready
+		// in the gap between this effect scheduling and running (e.g. right after
+		// the <video> element itself just mounted), in which case canplay has
+		// already fired and would never fire again, leaving us waiting forever.
+		if (videoEl.readyState < 3) {
+			videoEl.addEventListener("canplay", attemptPlay, { once: true })
+			videoEl.addEventListener("error", fail, { once: true })
+			if (videoEl.readyState >= 3) {
+				videoEl.removeEventListener("canplay", attemptPlay)
+				videoEl.removeEventListener("error", fail)
+				attemptPlay()
+				return
+			}
+			return () => {
+				videoEl.removeEventListener("canplay", attemptPlay)
+				videoEl.removeEventListener("error", fail)
+			}
+		}
+
+		attemptPlay()
+	}, [play, shouldRenderVideo, playbackId, playbackFailure, onEnded])
 
 	/**
-	 * autoplay
+	 * lazy load — use an intersection observer to watch for when the element is
+	 * getting close to the screen, and trigger rendering the video
 	 */
 	useEffect(() => {
-		if (playbackFailure) return
-
-		const videoHasFinished = video.current?.ended
-
-		if (playbackId && loadVideo && !videoHasFinished)
-			// we never want to interrupt a play call with another play call
-			// so wait for any previous play call to finish before starting a new one
-			videoPlayPromise.current.then(() => {
-				if (video.current)
-					videoPlayPromise.current = video.current
-						?.play()
-						.then(() => {
-							// even if we don't want to play the video, we still want to try!
-							// if autoplay is unavailable we want to know about it ASAP
-							// even if we're not planning on playing the video
-							if (!play) video.current?.pause()
-						})
-						.catch(() => {
-							setPlaybackFailure({ videoId: playbackId })
-							onEnded?.()
-						})
-			})
-	})
-
-	/**
-	 * lazy load
-	 */
-	useEffect(() => {
-		// use an intersection observer to watch for when the element is on screen, and trigger the video load
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries[0]?.isIntersecting) {
-					setLoadVideo(true)
+					setShouldRenderVideo(true)
 					observer.disconnect()
 				}
 			},
@@ -105,7 +135,8 @@ export function BackgroundVideo({
 				rootMargin: "400px",
 			},
 		)
-		if (video.current) observer.observe(video.current)
+		const elementToObserve = placeholderRef.current
+		if (elementToObserve) observer.observe(elementToObserve)
 		return () => observer.disconnect()
 	}, [])
 
@@ -120,52 +151,49 @@ export function BackgroundVideo({
 				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
 			}}
 		>
-			<PosterVideo
-				// mux thumbnails will have different colors than the video itself, so we can't seamlessly
-				// switch between the two without some extra effort. we'll rely on the first frame for this
-				// instead of using a thumbnail. This video is smaller so we get a fast poster load
-				data-poster
-				src={
-					playbackId
-						? `https://stream.mux.com/${playbackId}.m3u8?max_resolution=720p`
-						: undefined
-				}
-				preload="metadata"
-				muted
-				playsInline
-				style={{ opacity: videoCanPlay ? 1 : 0 }}
+			{/* Poster stays mounted underneath the video for the element's whole life, so we never
+				expose the bare container: it covers the gap before the video can play (no black
+				flash) and reappears if iOS evicts a paused offscreen frame (video not "missing"
+				on scroll-back). */}
+			<PlaceholderDiv
+				ref={placeholderRef}
+				style={{
+					backgroundImage: playbackId
+						? `url(https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize})`
+						: undefined,
+				}}
 			/>
-			<MainVideo
-				ref={video}
-				src={
-					// don't attempt to load a video if we don't have one, or if it already failed
-					playbackFailure || !playbackId
-						? undefined
-						: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
-				}
-				// a value of 'metadata' will load the first frame, but not the rest of the video
-				// auto will generally load the first few seconds
-				preload={loadVideo ? "auto" : "metadata"}
-				onCanPlay={() => setVideoCanPlay(false)}
-				muted
-				playsInline
-				loop={loop}
-				poster={
-					playbackFailure
-						? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${
-								videoDuration
-							}&width=${posterSize}`
-						: undefined
-				}
-				streamType="on-demand"
-				onEnded={onEnded}
-			/>
+			{shouldRenderVideo && (
+				<MainVideo
+					ref={video}
+					src={
+						// don't attempt to load a video if we don't have one, or if it already failed
+						playbackFailure || !playbackId
+							? undefined
+							: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}`
+					}
+					preload="auto"
+					muted
+					playsInline
+					loop={loop}
+					poster={
+						playbackFailure
+							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${posterSize}`
+							: `https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize}`
+					}
+					streamType="on-demand"
+					style={{ opacity: videoReady ? 1 : 0 }}
+					onCanPlay={() => setVideoReady(true)}
+					onEnded={onEnded}
+				/>
+			)}
 		</Container>
 	)
 }
 
 const Container = styled("div", {
 	...f.responsive(css`
+		position: relative;
 		isolation: isolate;
 		overflow: clip;
 	`),
@@ -173,18 +201,24 @@ const Container = styled("div", {
 
 const MainVideo = styled(MuxVideo, {
 	...f.responsive(css`
+		position: absolute;
+		inset: 0;
 		width: 100%;
 		height: 100%;
 		display: block;
 		object-fit: cover;
 		object-position: center;
+		transition: opacity 0.2s ease-in-out;
 	`),
 })
 
-const PosterVideo = styled(MainVideo, {
+const PlaceholderDiv = styled("div", {
 	...f.responsive(css`
 		position: absolute;
-		transition: opacity 0.2s ease-in-out;
-		pointer-events: none;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		background-size: cover;
+		background-position: center;
 	`),
 })
