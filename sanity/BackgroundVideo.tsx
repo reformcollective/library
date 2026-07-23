@@ -132,7 +132,7 @@ export function BackgroundVideo({
 		const onReady = () => setVideoReady(true)
 		videoEl.addEventListener("canplay", onReady, { once: true })
 		return () => videoEl.removeEventListener("canplay", onReady)
-	}, [shouldRenderVideo, playbackId, playbackFailure])
+	}, [shouldRenderVideo, playbackFailure])
 
 	/**
 	 * lazy load — use an intersection observer to watch for when the element is
