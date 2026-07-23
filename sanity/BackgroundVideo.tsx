@@ -192,6 +192,11 @@ export function BackgroundVideo({
 					muted
 					playsInline
 					loop={loop}
+					// force hls.js/MSE instead of native HLS. without this, iOS Safari
+					// (which reports native HLS support) takes the native path, where these
+					// lazily-mounted background videos don't reliably autoplay. the previous
+					// version of this component set this on every video for the same reason.
+					preferPlayback="mse"
 					poster={
 						playbackFailure
 							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${posterSize}`
