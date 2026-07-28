@@ -18,6 +18,12 @@ import { type LiveProxyEvent, liveProxyEventSchema } from "./liveProxyEvents"
 
 const sanityLiveRefreshEvents = new TypedEventEmitter<{ refresh: [] }>()
 const liveProxyReconnectDelayMs = 250
+/**
+ * ignore a "refresh" event received within this long after connecting —
+ * it's almost certainly the server's own startup catchup reacting to the
+ * request that just loaded this page, not new content to fetch
+ */
+const startupRefreshGraceMs = 5_000
 
 export async function notifySanityLiveRefreshAction() {
 	sanityLiveRefreshEvents.dispatchEvent("refresh")
@@ -135,6 +141,7 @@ export function SanityRuntimeRefresh({
 		let eventSource: EventSource | undefined
 		let reconnectTimer: ReturnType<typeof setTimeout> | undefined
 		let isDisposed = false
+		let connectedAt = 0
 
 		const handleMessage = (e: MessageEvent<string>) => {
 			const event = parseLiveProxyEvent(e.data)
@@ -153,6 +160,16 @@ export function SanityRuntimeRefresh({
 				appendToPreloaderDebugLog(entry)
 				if (window.location.pathname.startsWith(studioUrl)) return
 
+				/**
+				 * the live proxy runs a "startup catchup" broad revalidation whenever a
+				 * serverless worker cold-starts, to guard against missed content updates.
+				 * that catchup fires on this same connection's first request, so telling
+				 * this client (which just rendered fresh content) to router.refresh() is
+				 * redundant — and if it lands mid-animation it visibly restarts the
+				 * preloader. skip refreshing for the first moment after connecting.
+				 */
+				if (performance.now() - connectedAt < startupRefreshGraceMs) return
+
 				startTransition(() => {
 					router.refresh()
 				})
@@ -167,6 +184,7 @@ export function SanityRuntimeRefresh({
 			if (isDisposed) return
 
 			eventSource?.close()
+			connectedAt = performance.now()
 			eventSource = new EventSource("/api/live")
 			eventSource.onmessage = handleMessage
 			eventSource.addEventListener("reconnect", () => {
