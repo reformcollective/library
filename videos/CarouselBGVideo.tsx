@@ -137,40 +137,41 @@ export function CarouselBackgroundVideo({
 			return
 		}
 
+		let retryTimeout: ReturnType<typeof setTimeout>
+		let cancelled = false
+
 		const fail = () => {
+			cancelled = true
+			clearTimeout(retryTimeout)
 			if (playbackId) setPlaybackFailure({ videoId: playbackId })
 			onEnded?.()
 		}
 
-		const attemptPlay = () => {
-			videoEl.play().catch(fail)
-		}
-
 		// a rejected play() can be a real failure, or just a timing artifact from
-		// calling play() before the element has buffered enough — readyState < 3
-		// (HAVE_FUTURE_DATA) means it hasn't, so retry once it signals it's ready
-		// rather than immediately giving up and permanently clearing the video's src.
-		// re-check readyState right before attaching: it may have become ready
-		// in the gap between this effect scheduling and running (e.g. right after
-		// the <video> element itself just mounted), in which case canplay has
-		// already fired and would never fire again, leaving us waiting forever.
-		if (videoEl.readyState < 3) {
-			videoEl.addEventListener("canplay", attemptPlay, { once: true })
-			videoEl.addEventListener("error", fail, { once: true })
-			if (videoEl.readyState >= 3) {
-				videoEl.removeEventListener("canplay", attemptPlay)
-				videoEl.removeEventListener("error", fail)
-				attemptPlay()
-				return
-			}
-			return () => {
-				videoEl.removeEventListener("canplay", attemptPlay)
-				videoEl.removeEventListener("error", fail)
-			}
+		// calling play() before the element has buffered enough. we can't tell
+		// which without trying, so keep retrying on a short interval until it
+		// succeeds or this effect is cleaned up (play/prop change, unmount) —
+		// mirrors the retry loop TestimonialCard drives directly on its <video>
+		// element, which never gets stuck the way a one-shot `canplay` listener does.
+		// a genuine failure (bad src, network error) surfaces via the element's
+		// `error` event below rather than via play() rejection.
+		const attemptPlay = () => {
+			if (cancelled) return
+			videoEl.play().catch(() => {
+				if (cancelled) return
+				retryTimeout = setTimeout(attemptPlay, 250)
+			})
 		}
 
+		videoEl.addEventListener("error", fail)
 		attemptPlay()
-	}, [play, shouldRenderVideo, playbackId, playbackFailure, onEnded])
+
+		return () => {
+			cancelled = true
+			clearTimeout(retryTimeout)
+			videoEl.removeEventListener("error", fail)
+		}
+	}, [play, shouldRenderVideo, playbackFailure, playbackId, onEnded])
 
 	/**
 	 * This effect handles rendering the video component,
