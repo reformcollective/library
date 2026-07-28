@@ -34,6 +34,7 @@ export function Marquee({
 	disableSnap = false,
 	scrollVelocity,
 	onChange,
+	onLoopChange,
 	loopRef,
 	centerMode = true,
 	mode = "horizontal",
@@ -75,6 +76,13 @@ export function Marquee({
 	 * fires when the marquee moves with the current index
 	 */
 	onChange?: (index: number) => void
+	/**
+	 * fires whenever the underlying loop instance is (re)created, e.g. after
+	 * the auto-calculated repeat count changes post-mount. useful if you're
+	 * driving the loop imperatively from a parent (via loopRef) and need to
+	 * know when to re-attach your own logic to the current instance
+	 */
+	onLoopChange?: (loop: MarqueeLoop) => void
 	/**
 	 * if you need to access the loop, to e.g. manually scroll to a certain index
 	 */
@@ -284,6 +292,15 @@ export function Marquee({
 			extraDeps: [refreshSignal],
 		},
 	)
+
+	const latestOnLoopChange = useRef(onLoopChange)
+	useLayoutEffect(() => {
+		latestOnLoopChange.current = onLoopChange
+	}, [onLoopChange])
+
+	useEffect(() => {
+		if (loop) latestOnLoopChange.current?.(loop)
+	}, [loop])
 
 	useEffect(() => {
 		/**
