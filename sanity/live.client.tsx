@@ -130,7 +130,25 @@ export function SanityRuntimeRefresh({
 				notifyDeploymentUpdate({ liveDeployment: event.deployment })
 				return
 			} else if (event.type === "refresh") {
-				console.log("PRELOADER_DEBUG_REFRESH_TRIGGERED", { time: performance.now() })
+				const entry = {
+					tag: "PRELOADER_DEBUG_REFRESH_TRIGGERED",
+					time: performance.now(),
+					wallTime: new Date().toISOString(),
+				}
+				console.log(entry.tag, entry)
+				try {
+					const parsed = JSON.parse(
+						sessionStorage.getItem("preloaderDebugLog") ?? "[]",
+					)
+					const existing: unknown[] = Array.isArray(parsed) ? parsed : []
+					existing.push(entry)
+					sessionStorage.setItem(
+						"preloaderDebugLog",
+						JSON.stringify(existing.slice(-200)),
+					)
+				} catch {
+					// storage unavailable, console.log above is the fallback
+				}
 				if (window.location.pathname.startsWith(studioUrl)) return
 
 				startTransition(() => {
