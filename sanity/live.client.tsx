@@ -104,6 +104,20 @@ export function RuntimeClient({
 	)
 }
 
+function appendToPreloaderDebugLog(entry: unknown) {
+	const storedLog = sessionStorage.getItem("preloaderDebugLog")
+	const rawLog = storedLog === null ? "[]" : storedLog
+	let parsed: unknown
+	try {
+		parsed = JSON.parse(rawLog)
+	} catch {
+		parsed = []
+	}
+	const existing: unknown[] = Array.isArray(parsed) ? parsed : []
+	existing.push(entry)
+	sessionStorage.setItem("preloaderDebugLog", JSON.stringify(existing.slice(-200)))
+}
+
 export function SanityRuntimeRefresh({
 	showRefreshToast,
 	useLiveProxy,
@@ -136,19 +150,7 @@ export function SanityRuntimeRefresh({
 					wallTime: new Date().toISOString(),
 				}
 				console.log(entry.tag, entry)
-				try {
-					const parsed = JSON.parse(
-						sessionStorage.getItem("preloaderDebugLog") ?? "[]",
-					)
-					const existing: unknown[] = Array.isArray(parsed) ? parsed : []
-					existing.push(entry)
-					sessionStorage.setItem(
-						"preloaderDebugLog",
-						JSON.stringify(existing.slice(-200)),
-					)
-				} catch {
-					// storage unavailable, console.log above is the fallback
-				}
+				appendToPreloaderDebugLog(entry)
 				if (window.location.pathname.startsWith(studioUrl)) return
 
 				startTransition(() => {
