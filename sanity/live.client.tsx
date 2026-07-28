@@ -130,6 +130,7 @@ export function SanityRuntimeRefresh({
 				notifyDeploymentUpdate({ liveDeployment: event.deployment })
 				return
 			} else if (event.type === "refresh") {
+				console.log("PRELOADER_DEBUG_REFRESH_TRIGGERED", { time: performance.now() })
 				if (window.location.pathname.startsWith(studioUrl)) return
 
 				startTransition(() => {
