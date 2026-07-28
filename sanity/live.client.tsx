@@ -127,15 +127,9 @@ export function SanityRuntimeRefresh({
 			if (!event) return
 
 			if (event.type === "connected") {
-				console.log("[DEBUG SanityRuntimeRefresh] liveProxy connected event", {
-					time: performance.now(),
-				})
 				notifyDeploymentUpdate({ liveDeployment: event.deployment })
 				return
 			} else if (event.type === "refresh") {
-				console.log("[DEBUG SanityRuntimeRefresh] liveProxy refresh event -> router.refresh()", {
-					time: performance.now(),
-				})
 				if (window.location.pathname.startsWith(studioUrl)) return
 
 				startTransition(() => {
@@ -171,9 +165,6 @@ export function SanityRuntimeRefresh({
 
 	useEffect(() => {
 		const handleSanityLiveRefresh = () => {
-			console.log("[DEBUG SanityRuntimeRefresh] internal live refresh event -> router.refresh()", {
-				time: performance.now(),
-			})
 			startTransition(() => {
 				setSanityLiveRefreshSignal((signal) => signal + 1)
 				router.refresh()

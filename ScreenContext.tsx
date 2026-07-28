@@ -85,11 +85,6 @@ export function ScreenProvider({ children }: Props) {
 	}, [])
 
 	useEffect(() => {
-		console.log("[DEBUG ScreenContext] phase effect", {
-			phase,
-			isTransitioning,
-			time: performance.now(),
-		})
 		if (isTransitioning) return
 		if (phase === "hydrating-react") {
 			/**
