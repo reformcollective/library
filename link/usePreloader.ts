@@ -38,6 +38,10 @@ const globalCompletePromises: Promise<unknown>[] = []
 let globalComplete = false
 const lock = createScrollLock("lock")
 const setGlobalComplete = () => {
+	console.log("[DEBUG usePreloader] setGlobalComplete", {
+		wasAlreadyComplete: globalComplete,
+		time: performance.now(),
+	})
 	if (!globalComplete) ScrollTrigger.refresh()
 	lock.release()
 	globalComplete = true
@@ -174,6 +178,12 @@ export const usePreloader = ({
 	}, [animationReadyPromise, animationCompletePromise])
 
 	useAsyncEffect(async () => {
+		console.log("[DEBUG usePreloader] effect fired", {
+			initComplete,
+			outputReady: output.ready,
+			globalComplete,
+			time: performance.now(),
+		})
 		if (!initComplete) return
 		if (output.ready) return
 		if (FORCE_PRELOADER_STATE === "loading") return
