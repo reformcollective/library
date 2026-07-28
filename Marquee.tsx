@@ -162,6 +162,17 @@ export function Marquee({
 						paddingRight: gap,
 					})
 
+			const debugInstanceId = Math.random().toString(36).slice(2, 8)
+			;(loop as unknown as { __debugInstanceId?: string }).__debugInstanceId =
+				debugInstanceId
+			console.log("MARQUEE_DEBUG loop created", {
+				debugInstanceId,
+				numberNeeded,
+				childrenCount: rowRef.current.children.length,
+				isVertical,
+				time: performance.now(),
+			})
+
 			internalLoopRef(loop)
 
 			// pause the auto-scroll while off screen, so it doesn't keep animating
@@ -290,9 +301,16 @@ export function Marquee({
 					const sizePerRepeat = totalChildrenSize / oldNumber
 					const screenSize = isVertical ? window.innerHeight : window.innerWidth
 					const newNumber = Math.ceil(screenSize / sizePerRepeat) + 1
-					return Number.isFinite(newNumber) && newNumber > 0
-						? newNumber
-						: oldNumber
+					const result =
+						Number.isFinite(newNumber) && newNumber > 0 ? newNumber : oldNumber
+					console.log("MARQUEE_DEBUG numberNeeded recalculated", {
+						oldNumber,
+						newNumber: result,
+						changed: result !== oldNumber,
+						isVertical,
+						time: performance.now(),
+					})
+					return result
 				})
 			}
 		}
