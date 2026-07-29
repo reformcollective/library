@@ -129,7 +129,8 @@ const muxVideoProjection = `{
 	}
 ` as const
 
-const videoProjection = `{ ..., muxVideo ${muxVideoProjection}, posterImage ${imageProjection} }` as const
+const videoProjection =
+	`{ ..., muxVideo ${muxVideoProjection}, posterImage ${imageProjection} }` as const
 
 export const assetMetadataFunctions = `
 	fn reform::link($link) = $link ${linkProjection};
