@@ -259,6 +259,24 @@ export function definePageSection<const TName extends string>(
 				icon,
 				iconBackground ?? libraryConfig.sectionPreviewBackground,
 			),
+			fields: [
+				...(options.fields ?? []),
+				defineField({
+					type: "string",
+					name: "headerMode",
+					title: "Header Mode",
+					description:
+						"Controls the header's color scheme while this section is scrolled behind it.",
+					options: {
+						list: [
+							{ title: "Light", value: "light" },
+							{ title: "Dark", value: "dark" },
+						],
+						layout: "radio",
+					},
+					initialValue: "light",
+				}),
+			],
 		},
 		secondary,
 	)

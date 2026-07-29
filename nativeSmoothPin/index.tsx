@@ -5,7 +5,7 @@ const css = String.raw
 export default function nativeSmoothPin({
 	goopLevel = 200,
 	goopType = "both",
-	top: topInput = "0",
+	top: topInput,
 	containerAware = false,
 }: {
 	goopLevel?: number

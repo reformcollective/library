@@ -3,6 +3,7 @@ import { browserData } from "library/deviceDetection"
 import { library } from "library/layers.css"
 import { ScreenContext } from "library/ScreenContext"
 import { css, f, styled } from "library/styled"
+import { useCombinedRefs } from "library/useCombinedRefs"
 import { use, useEffect, useRef, useState } from "react"
 
 export function CarouselBackgroundVideo({
@@ -17,9 +18,11 @@ export function CarouselBackgroundVideo({
 	className,
 	loop,
 	ref: containerRef,
+	videoRef: externalVideoRef,
 	onEnded,
 	onTimeUpdate,
 	onLoadedMetadata,
+	onPlaying,
 	safariOptimized = false,
 	eager = false,
 }: {
@@ -56,6 +59,10 @@ export function CarouselBackgroundVideo({
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
 	/**
+	 * exposes the underlying `<video>` element, e.g. to seek `currentTime` from a custom scrubber
+	 */
+	videoRef?: React.Ref<HTMLVideoElement>
+	/**
 	 * use safari-optimized loading strategy (immediate load with metadata preload)
 	 * @default false
 	 * recommended for carousel/preview videos
@@ -72,8 +79,15 @@ export function CarouselBackgroundVideo({
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
 	onLoadedMetadata?: (duration: number) => void
+	/**
+	 * fires when playback actually begins producing frames (not just when `play()`
+	 * is requested) — the right anchor point for starting a timer/animation that
+	 * needs to stay in sync with the video's real start
+	 */
+	onPlaying?: () => void
 }) {
 	const video = useRef<HTMLVideoElement>(null)
+	const combinedVideoRef = useCombinedRefs(externalVideoRef, video)
 	const placeholderRef = useRef<HTMLDivElement>(null)
 	const [playbackFailure, setPlaybackFailure] = useState<{
 		videoId: string
@@ -113,21 +127,51 @@ export function CarouselBackgroundVideo({
 
 	// This effect ONLY handles playing and pausing the video.
 	useEffect(() => {
-		if (!shouldRenderVideo || !video.current || playbackFailure) {
+		const videoEl = video.current
+		if (!shouldRenderVideo || !videoEl || playbackFailure) {
 			return
 		}
 
-		if (play) {
-			video.current.play().catch(() => {
-				if (playbackId) {
-					setPlaybackFailure({ videoId: playbackId })
-				}
-				onEnded?.()
-			})
-		} else {
-			video.current.pause()
+		if (!play) {
+			videoEl.pause()
+			return
 		}
-	}, [play, shouldRenderVideo, playbackId, playbackFailure, onEnded])
+
+		let retryTimeout: ReturnType<typeof setTimeout>
+		let cancelled = false
+
+		const fail = () => {
+			cancelled = true
+			clearTimeout(retryTimeout)
+			if (playbackId) setPlaybackFailure({ videoId: playbackId })
+			onEnded?.()
+		}
+
+		// a rejected play() can be a real failure, or just a timing artifact from
+		// calling play() before the element has buffered enough. we can't tell
+		// which without trying, so keep retrying on a short interval until it
+		// succeeds or this effect is cleaned up (play/prop change, unmount) —
+		// mirrors the retry loop TestimonialCard drives directly on its <video>
+		// element, which never gets stuck the way a one-shot `canplay` listener does.
+		// a genuine failure (bad src, network error) surfaces via the element's
+		// `error` event below rather than via play() rejection.
+		const attemptPlay = () => {
+			if (cancelled) return
+			videoEl.play().catch(() => {
+				if (cancelled) return
+				retryTimeout = setTimeout(attemptPlay, 250)
+			})
+		}
+
+		videoEl.addEventListener("error", fail)
+		attemptPlay()
+
+		return () => {
+			cancelled = true
+			clearTimeout(retryTimeout)
+			videoEl.removeEventListener("error", fail)
+		}
+	}, [play, shouldRenderVideo, playbackFailure, playbackId, onEnded])
 
 	/**
 	 * This effect handles rendering the video component,
@@ -196,7 +240,7 @@ export function CarouselBackgroundVideo({
 			/>
 			{shouldRenderVideo && (
 				<MainVideo
-					ref={video}
+					ref={combinedVideoRef}
 					src={
 						playbackFailure || !playbackId
 							? undefined
@@ -219,6 +263,7 @@ export function CarouselBackgroundVideo({
 					onEnded={onEnded}
 					onTimeUpdate={handleTimeUpdate}
 					onLoadedMetadata={handleLoadedMetadata}
+					onPlaying={onPlaying}
 				/>
 			)}
 		</Container>

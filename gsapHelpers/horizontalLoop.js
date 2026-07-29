@@ -223,7 +223,6 @@ export function horizontalLoop(items, config) {
 				ratio,
 				startProgress,
 				draggable,
-				dragSnap,
 				lastSnap,
 				initChangeX,
 				wasPlaying,
