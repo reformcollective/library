@@ -30,6 +30,17 @@ Do NOT run `pnpm format`, `pnpm lint`, or `pnpm build` after every edit, after e
 - `WIREIT_LOGGER=metrics pnpm lint`
 - `WIREIT_LOGGER=metrics pnpm build` (slow, resource intensive — only when explicitly requested by the user, never on your own initiative)
 
+### Testing domain-gated behavior locally
+
+Some behavior (GTM triggers, cookie scoping, CORS) is gated on hostname and won't activate on `localhost`. To test it locally:
+
+1. Add a line to `/etc/hosts` mapping the real hostname to `127.0.0.1` (requires `sudo`, e.g. `echo "127.0.0.1   example.com" | sudo tee -a /etc/hosts`, then `sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder`).
+2. Run a **production build** (`pnpm build && pnpm exec next start -p <port>`), not the dev server — the dev server's HMR WebSocket client breaks under a spoofed hostname and hangs the page load.
+3. Browse to `http://<hostname>:<port>` instead of `localhost`.
+4. Remove the `/etc/hosts` line afterward (same `sudo`, via `sed` or manual edit) to avoid a stale override.
+
+Note: some browsers (e.g. Safari's "Prevent cross-site tracking") block known tracker domains like `googletagmanager.com` outright — this is unrelated to the hostname trick and needs to be disabled separately for testing.
+
 ## Working Style
 
 Do exactly what is asked. No extra refactors, comments, or features.
