@@ -364,6 +364,14 @@ export const video = defineType({
 			title: "Mux Video",
 			hidden: ({ parent }) => parent?.sourceType !== "mux",
 		}),
+		universalImage({
+			name: "posterImage",
+			title: "Poster Image",
+			description:
+				"Optional. If set, this image is shown in place of the video's default thumbnail.",
+			withAlt: false,
+			hidden: ({ parent }) => parent?.sourceType !== "mux",
+		}),
 	],
 })
 
