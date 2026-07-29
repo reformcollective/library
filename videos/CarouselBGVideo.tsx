@@ -240,7 +240,8 @@ export function CarouselBackgroundVideo({
 				aspectRatio: videoAspectRatio,
 				// we'll ideally only see this on really slow networks
 				// it's small and will have weird colors, but it's better than nothing
-				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
+				backgroundImage:
+					!poster && videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
 			}}
 		>
 			{/* Poster stays mounted underneath the video for the element's whole life, so we never
@@ -327,8 +328,9 @@ const PosterImage = styled(UniversalImage, [
 			[library]: f.responsive(css`
 				position: absolute;
 				inset: 0;
-				width: 100%;
-				height: 100%;
+				width: 100% !important;
+				height: 100% !important;
+				aspect-ratio: unset !important;
 				object-fit: cover;
 				object-position: center;
 			`),
