@@ -3,6 +3,7 @@ import { browserData } from "library/deviceDetection"
 import { library } from "library/layers.css"
 import type { SanityImageData } from "library/sanity/SanityImage"
 import { ScreenContext } from "library/ScreenContext"
+import { EagerImages } from "library/StaticImage"
 import { css, f, styled } from "library/styled"
 import { useCombinedRefs } from "library/useCombinedRefs"
 import UniversalImage from "library/UniversalImage"
@@ -230,6 +231,9 @@ export function CarouselBackgroundVideo({
 		posterElement = <PosterImage src={poster} alt="" />
 	} else if (poster) {
 		posterElement = <PosterImage src={poster} alt="" />
+	}
+	if (posterElement) {
+		posterElement = <EagerImages>{posterElement}</EagerImages>
 	}
 
 	return (
