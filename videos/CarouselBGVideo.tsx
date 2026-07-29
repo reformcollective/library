@@ -2,8 +2,12 @@ import MuxVideo from "@mux/mux-video-react"
 import { browserData } from "library/deviceDetection"
 import { library } from "library/layers.css"
 import { ScreenContext } from "library/ScreenContext"
+import { EagerImages } from "library/StaticImage"
+import type { SanityImageData } from "library/sanity/SanityImage"
 import { css, f, styled } from "library/styled"
+import UniversalImage from "library/UniversalImage"
 import { useCombinedRefs } from "library/useCombinedRefs"
+import type { StaticImageData } from "next/image"
 import { use, useEffect, useRef, useState } from "react"
 
 export function CarouselBackgroundVideo({
@@ -11,6 +15,7 @@ export function CarouselBackgroundVideo({
 	videoBlurUrl,
 	videoAspectRatio,
 	videoDuration,
+	poster,
 	play = true,
 	muted = true,
 	minResolution = "480p",
@@ -33,6 +38,12 @@ export function CarouselBackgroundVideo({
 	videoBlurUrl?: string
 	videoAspectRatio?: string
 	videoDuration?: number
+	/**
+	 * optional poster image (local or from Sanity) shown in place of the
+	 * default Mux thumbnail, both as the persistent placeholder and while
+	 * the video itself is loading
+	 */
+	poster?: SanityImageData<"false"> | StaticImageData
 	/**
 	 * should the video start playing immediately?
 	 * similar to autoplay, but can also be toggled to pause/play
@@ -215,6 +226,16 @@ export function CarouselBackgroundVideo({
 		}
 	}
 
+	let posterElement: React.ReactNode = null
+	if (poster && "src" in poster) {
+		posterElement = <PosterImage src={poster} alt="" />
+	} else if (poster) {
+		posterElement = <PosterImage src={poster} alt="" />
+	}
+	if (posterElement) {
+		posterElement = <EagerImages>{posterElement}</EagerImages>
+	}
+
 	return (
 		<Container
 			ref={containerRef}
@@ -223,7 +244,8 @@ export function CarouselBackgroundVideo({
 				aspectRatio: videoAspectRatio,
 				// we'll ideally only see this on really slow networks
 				// it's small and will have weird colors, but it's better than nothing
-				backgroundImage: videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
+				backgroundImage:
+					!poster && videoBlurUrl ? `url('${videoBlurUrl}')` : undefined,
 			}}
 		>
 			{/* Poster stays mounted underneath the video for the element's whole life, so we never
@@ -233,11 +255,14 @@ export function CarouselBackgroundVideo({
 			<PlaceholderDiv
 				ref={placeholderRef}
 				style={{
-					backgroundImage: playbackId
-						? `url(https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize})`
-						: undefined,
+					backgroundImage:
+						!poster && playbackId
+							? `url(https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize})`
+							: undefined,
 				}}
-			/>
+			>
+				{posterElement}
+			</PlaceholderDiv>
 			{shouldRenderVideo && (
 				<MainVideo
 					ref={combinedVideoRef}
@@ -253,9 +278,11 @@ export function CarouselBackgroundVideo({
 					playsInline
 					loop={loop}
 					poster={
-						playbackFailure
-							? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${posterSize}`
-							: `https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize}`
+						poster
+							? undefined
+							: playbackFailure
+								? `https://image.mux.com/${playbackId}/thumbnail.webp?time=${videoDuration}&width=${posterSize}`
+								: `https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize}`
 					}
 					streamType="on-demand"
 					style={{ opacity: videoReady ? 1 : 0 }}
@@ -294,6 +321,22 @@ const MainVideo = styled(MuxVideo, [
 				object-fit: cover;
 				object-position: center;
 				transition: opacity 0.2s ease-in-out;
+			`),
+		},
+	},
+])
+
+const PosterImage = styled(UniversalImage, [
+	{
+		"@layer": {
+			[library]: f.responsive(css`
+				position: absolute;
+				inset: 0;
+				width: 100% !important;
+				height: 100% !important;
+				aspect-ratio: unset !important;
+				object-fit: cover;
+				object-position: center;
 			`),
 		},
 	},
