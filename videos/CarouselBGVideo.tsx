@@ -115,9 +115,12 @@ export function CarouselBackgroundVideo({
 	const useSafariOptimization = safariOptimized && isSafari
 
 	// This state now ONLY controls if the <MainVideo> component is rendered.
-	const [shouldRenderVideo, setShouldRenderVideo] = useState(
-		useSafariOptimization || eager,
-	)
+	// starts false regardless of `eager`/safari-optimization so the server-rendered
+	// HTML never contains the <mux-video> custom element — it upgrades itself on parse,
+	// before React's hydration diff runs on that node, causing a hydration mismatch if
+	// it's present from the first render. the effect below flips this to true immediately
+	// after mount when eager/safari-optimized, so the visual delay is imperceptible.
+	const [shouldRenderVideo, setShouldRenderVideo] = useState(false)
 
 	// drives the video's fade-in over the persistent poster (set on `canplay`)
 	const [videoReady, setVideoReady] = useState(false)

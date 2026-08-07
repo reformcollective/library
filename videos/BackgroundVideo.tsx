@@ -82,7 +82,7 @@ export function BackgroundVideo({
 		1920,
 		Math.max(300, Math.round(innerWidth / 100) * 100),
 	)
-	const [loadVideo, setLoadVideo] = useState(eager ?? false)
+	const [loadVideo, setLoadVideo] = useState(false)
 	const [videoCanPlay, setVideoCanPlay] = useState(true)
 
 	useEffect(() => {
