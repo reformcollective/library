@@ -1,3 +1,4 @@
+import { logPreloaderDebug } from "app/components/Preloader/debugLog"
 import libraryConfig from "app/libraryConfig"
 import { ScrollTrigger } from "gsap/all"
 import { pathnameMatches, sleep } from "library/functions"
@@ -181,8 +182,22 @@ export const useTransitioner = () => {
 				const animationsBeforeAfter = document.body.getAnimations({
 					subtree: true,
 				})
-				flushSync(() => {
-					setIsAnimating("after")
+				logPreloaderDebug("transitioner:before-flushSync-after", {
+					pathname: window.location.pathname,
+				})
+				try {
+					flushSync(() => {
+						setIsAnimating("after")
+					})
+				} catch (flushError) {
+					logPreloaderDebug("transitioner:flushSync-after-threw", {
+						pathname: window.location.pathname,
+						error: flushError instanceof Error ? flushError.stack || flushError.message : String(flushError),
+					})
+					throw flushError
+				}
+				logPreloaderDebug("transitioner:after-flushSync-after", {
+					pathname: window.location.pathname,
 				})
 				const animationsAfterAfter = document.body.getAnimations({
 					subtree: true,
@@ -194,10 +209,18 @@ export const useTransitioner = () => {
 				const afterAnimations = allAnimations.map(({ animateAfter }) =>
 					animateAfter?.(),
 				)
+				logPreloaderDebug("transitioner:before-await-afterAnimations", {
+					pathname: window.location.pathname,
+					afterAnimationsCount: afterAnimations.length,
+					newAfterAnimationsCount: newAfterAnimations.length,
+				})
 				await Promise.all([
 					...afterAnimations,
 					...newAfterAnimations.map((a) => a.finished),
 				])
+				logPreloaderDebug("transitioner:after-await-afterAnimations", {
+					pathname: window.location.pathname,
+				})
 
 				flushSync(() => {
 					setIsAnimating(false)
@@ -208,6 +231,15 @@ export const useTransitioner = () => {
 				loader.dispatchEvent("end", eventPayload)
 
 				return
+			} catch (transitionError) {
+				logPreloaderDebug("transitioner:caught-error", {
+					pathname: window.location.pathname,
+					error:
+						transitionError instanceof Error
+							? transitionError.stack || transitionError.message
+							: String(transitionError),
+				})
+				throw transitionError
 			} finally {
 				scrollLock.release()
 				canPin = false
