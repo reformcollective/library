@@ -206,18 +206,81 @@ export const useTransitioner = () => {
 					(a) => !animationsBeforeAfter.includes(a),
 				)
 
-				const afterAnimations = allAnimations.map(({ animateAfter }) =>
-					animateAfter?.(),
-				)
+				logPreloaderDebug("transitioner:newAfterAnimations-detail", {
+					pathname: window.location.pathname,
+					animations: newAfterAnimations.map((a, i) => ({
+						index: i,
+						playState: a.playState,
+						id: a.id,
+						// biome-ignore lint/suspicious/noExplicitAny: debug-only, effect/target aren't typed the same across Animation subclasses
+						targetTag: ((a as any).effect?.target as Element | undefined)?.tagName,
+						// biome-ignore lint/suspicious/noExplicitAny: debug-only
+						targetClass: ((a as any).effect?.target as Element | undefined)?.className,
+						// biome-ignore lint/suspicious/noExplicitAny: debug-only
+						timing: (a as any).effect?.getTiming?.(),
+					})),
+				})
+
+				const afterAnimations = allAnimations.map(({ animateAfter }, i) => {
+					const label = `allAnimations[${i}]`
+					const result = animateAfter?.()
+					if (!result) {
+						logPreloaderDebug("transitioner:afterAnimation-sync", { pathname: window.location.pathname, label })
+						return result
+					}
+					return result
+						.then((value) => {
+							logPreloaderDebug("transitioner:afterAnimation-settled", {
+								pathname: window.location.pathname,
+								label,
+							})
+							return value
+						})
+						.catch((error) => {
+							logPreloaderDebug("transitioner:afterAnimation-rejected", {
+								pathname: window.location.pathname,
+								label,
+								error: error instanceof Error ? error.stack || error.message : String(error),
+							})
+							throw error
+						})
+				})
+
+				const newAfterAnimationFinishes = newAfterAnimations.map((a, i) => {
+					const label = `newAfterAnimations[${i}]`
+					return a.finished
+						.then((value) => {
+							logPreloaderDebug("transitioner:newAfterAnimation-settled", {
+								pathname: window.location.pathname,
+								label,
+							})
+							return value
+						})
+						.catch((error) => {
+							logPreloaderDebug("transitioner:newAfterAnimation-rejected", {
+								pathname: window.location.pathname,
+								label,
+								error: error instanceof Error ? error.stack || error.message : String(error),
+							})
+							throw error
+						})
+				})
+
 				logPreloaderDebug("transitioner:before-await-afterAnimations", {
 					pathname: window.location.pathname,
 					afterAnimationsCount: afterAnimations.length,
 					newAfterAnimationsCount: newAfterAnimations.length,
 				})
-				await Promise.all([
-					...afterAnimations,
-					...newAfterAnimations.map((a) => a.finished),
-				])
+
+				const watchdog = setTimeout(() => {
+					logPreloaderDebug("transitioner:afterAnimations-watchdog-fired", {
+						pathname: window.location.pathname,
+						message: "await Promise.all(afterAnimations) has not resolved after 3s",
+					})
+				}, 3000)
+
+				await Promise.all([...afterAnimations, ...newAfterAnimationFinishes])
+				clearTimeout(watchdog)
 				logPreloaderDebug("transitioner:after-await-afterAnimations", {
 					pathname: window.location.pathname,
 				})
