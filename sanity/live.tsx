@@ -71,42 +71,19 @@ function warnIfQueryTooLarge(query: string, resolvedParams: QueryParams) {
 }
 
 /**
- * Used to fetch published content in Server Components. Cached via `"use cache"` and revalidated
- * on-demand via Sanity's live event tags — since cache boundaries can't read `draftMode()`/`cookies()`
- * themselves, this always fetches with the "published" perspective. For drafts/preview, use
- * `libraryFetchDynamic` instead, resolving the perspective in an uncached caller first
- * (e.g. via `draftMode()` or `resolvePerspectiveFromCookies` from `next-sanity/live`).
+ * Used to fetch data in Server Components, it has built in support for handling Draft Mode and perspectives.
+ * When using the "published" perspective then time-based revalidation is used, set to match the time-to-live on Sanity's API CDN (60 seconds)
+ * and will also fetch from the CDN.
+ * When using the "drafts" perspective then the data is fetched from the live API and isn't cached, it will also fetch draft content that isn't published yet.
  */
 export async function libraryFetch<const QueryString extends string>({
-	query,
-	params = {},
-	disableStega,
-}: LibraryFetchArgs<QueryString>): Promise<LibraryFetchResult<QueryString>> {
-	"use cache"
-	const resolvedParams = await params
-	warnIfQueryTooLarge(query, resolvedParams)
-	return await internalFetch({
-		query,
-		params: resolvedParams,
-		stega: disableStega ? false : undefined,
-		perspective: "published",
-	})
-}
-
-/**
- * TEMP TEST (option A): wrapped in "use cache" per next-sanity's documented Cache Components
- * pattern. Call this from an uncached component (not marked `"use cache"`) after resolving
- * `perspective` yourself, typically only when `draftMode()` is enabled.
- */
-export async function libraryFetchDynamic<const QueryString extends string>({
 	query,
 	params = {},
 	perspective,
 	disableStega,
 }: LibraryFetchArgs<QueryString> & {
-	perspective: Exclude<ClientPerspective, "raw">
+	perspective?: Exclude<ClientPerspective, "raw">
 }): Promise<LibraryFetchResult<QueryString>> {
-	"use cache"
 	const resolvedParams = await params
 	warnIfQueryTooLarge(query, resolvedParams)
 	return await internalFetch({
