@@ -191,9 +191,13 @@ export const useTransitioner = () => {
 					(a) => !animationsBeforeAfter.includes(a),
 				)
 
-				const afterAnimations = allAnimations.map(({ animateAfter }) => animateAfter?.())
+				const afterAnimations = allAnimations.map(({ animateAfter }) =>
+					animateAfter?.(),
+				)
 
-				const newAfterAnimationFinishes = newAfterAnimations.map((a) => a.finished)
+				const newAfterAnimationFinishes = newAfterAnimations.map(
+					(a) => a.finished,
+				)
 
 				await Promise.all([...afterAnimations, ...newAfterAnimationFinishes])
 
