@@ -1,4 +1,3 @@
-import { logPreloaderDebug } from "app/components/Preloader/debugLog"
 import libraryConfig from "app/libraryConfig"
 import { ScrollTrigger } from "gsap/all"
 import { pathnameMatches, sleep } from "library/functions"
@@ -182,22 +181,8 @@ export const useTransitioner = () => {
 				const animationsBeforeAfter = document.body.getAnimations({
 					subtree: true,
 				})
-				logPreloaderDebug("transitioner:before-flushSync-after", {
-					pathname: window.location.pathname,
-				})
-				try {
-					flushSync(() => {
-						setIsAnimating("after")
-					})
-				} catch (flushError) {
-					logPreloaderDebug("transitioner:flushSync-after-threw", {
-						pathname: window.location.pathname,
-						error: flushError instanceof Error ? flushError.stack || flushError.message : String(flushError),
-					})
-					throw flushError
-				}
-				logPreloaderDebug("transitioner:after-flushSync-after", {
-					pathname: window.location.pathname,
+				flushSync(() => {
+					setIsAnimating("after")
 				})
 				const animationsAfterAfter = document.body.getAnimations({
 					subtree: true,
@@ -206,84 +191,11 @@ export const useTransitioner = () => {
 					(a) => !animationsBeforeAfter.includes(a),
 				)
 
-				logPreloaderDebug("transitioner:newAfterAnimations-detail", {
-					pathname: window.location.pathname,
-					animations: newAfterAnimations.map((a, i) => ({
-						index: i,
-						playState: a.playState,
-						id: a.id,
-						// biome-ignore lint/suspicious/noExplicitAny: debug-only, effect/target aren't typed the same across Animation subclasses
-						targetTag: ((a as any).effect?.target as Element | undefined)?.tagName,
-						// biome-ignore lint/suspicious/noExplicitAny: debug-only
-						targetClass: ((a as any).effect?.target as Element | undefined)?.className,
-						// biome-ignore lint/suspicious/noExplicitAny: debug-only
-						timing: (a as any).effect?.getTiming?.(),
-					})),
-				})
+				const afterAnimations = allAnimations.map(({ animateAfter }) => animateAfter?.())
 
-				const afterAnimations = allAnimations.map(({ animateAfter }, i) => {
-					const label = `allAnimations[${i}]`
-					const result = animateAfter?.()
-					if (!result) {
-						logPreloaderDebug("transitioner:afterAnimation-sync", { pathname: window.location.pathname, label })
-						return result
-					}
-					return result
-						.then((value) => {
-							logPreloaderDebug("transitioner:afterAnimation-settled", {
-								pathname: window.location.pathname,
-								label,
-							})
-							return value
-						})
-						.catch((error) => {
-							logPreloaderDebug("transitioner:afterAnimation-rejected", {
-								pathname: window.location.pathname,
-								label,
-								error: error instanceof Error ? error.stack || error.message : String(error),
-							})
-							throw error
-						})
-				})
-
-				const newAfterAnimationFinishes = newAfterAnimations.map((a, i) => {
-					const label = `newAfterAnimations[${i}]`
-					return a.finished
-						.then((value) => {
-							logPreloaderDebug("transitioner:newAfterAnimation-settled", {
-								pathname: window.location.pathname,
-								label,
-							})
-							return value
-						})
-						.catch((error) => {
-							logPreloaderDebug("transitioner:newAfterAnimation-rejected", {
-								pathname: window.location.pathname,
-								label,
-								error: error instanceof Error ? error.stack || error.message : String(error),
-							})
-							throw error
-						})
-				})
-
-				logPreloaderDebug("transitioner:before-await-afterAnimations", {
-					pathname: window.location.pathname,
-					afterAnimationsCount: afterAnimations.length,
-					newAfterAnimationsCount: newAfterAnimations.length,
-				})
-
-				const watchdog = setTimeout(() => {
-					logPreloaderDebug("transitioner:afterAnimations-watchdog-fired", {
-						pathname: window.location.pathname,
-						message: "await Promise.all(afterAnimations) has not resolved after 3s",
-					})
-				}, 3000)
+				const newAfterAnimationFinishes = newAfterAnimations.map((a) => a.finished)
 
 				await Promise.all([...afterAnimations, ...newAfterAnimationFinishes])
-				clearTimeout(watchdog)
-				logPreloaderDebug("transitioner:after-await-afterAnimations", {
-					pathname: window.location.pathname,
-				})
 
 				flushSync(() => {
 					setIsAnimating(false)
@@ -294,15 +206,6 @@ export const useTransitioner = () => {
 				loader.dispatchEvent("end", eventPayload)
 
 				return
-			} catch (transitionError) {
-				logPreloaderDebug("transitioner:caught-error", {
-					pathname: window.location.pathname,
-					error:
-						transitionError instanceof Error
-							? transitionError.stack || transitionError.message
-							: String(transitionError),
-				})
-				throw transitionError
 			} finally {
 				scrollLock.release()
 				canPin = false
