@@ -353,7 +353,10 @@ export async function POST(request: Request) {
 
 	if (payload.type === "tags") {
 		for (const tag of payload.tags) {
-			revalidateTag(`sanity:${tag}`, { expire: 0 })
+			// live events deliver tags prefixed with "s1:" (validated above), but next-sanity's
+			// sanityFetch registers cache entries under `sanity:${syncTag}` using the raw syncTag
+			// (no "s1:") — so revalidating "sanity:s1:..." never matches the cached entry
+			revalidateTag(`sanity:${tag.slice("s1:".length)}`, { expire: 0 })
 		}
 		await updateProcessedWatermark("tags")
 	} else {
