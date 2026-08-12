@@ -275,7 +275,7 @@ function analyzeStyledCalls(
 
 	for (const name of tainted) {
 		const node = graph.nodes.get(name)
-		if (!node || node.kind !== "variable" || !node.name) continue
+		if (node?.kind !== "variable" || !node.name) continue
 
 		// Check if this is a styled() call
 		const styledLocal = Array.from(registry.trackedNames).find((local) => {
