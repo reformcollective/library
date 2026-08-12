@@ -194,10 +194,12 @@ export const useTransitioner = () => {
 				const afterAnimations = allAnimations.map(({ animateAfter }) =>
 					animateAfter?.(),
 				)
-				await Promise.all([
-					...afterAnimations,
-					...newAfterAnimations.map((a) => a.finished),
-				])
+
+				const newAfterAnimationFinishes = newAfterAnimations.map(
+					(a) => a.finished,
+				)
+
+				await Promise.all([...afterAnimations, ...newAfterAnimationFinishes])
 
 				flushSync(() => {
 					setIsAnimating(false)
