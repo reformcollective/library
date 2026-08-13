@@ -30,6 +30,9 @@ export function CarouselBackgroundVideo({
 	onPlaying,
 	safariOptimized = false,
 	eager = false,
+	initialBandwidthEstimateKbps,
+	initialEstimateSegments,
+	minPreloadSegments,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -86,6 +89,24 @@ export function CarouselBackgroundVideo({
 	 * @default false
 	 */
 	eager?: boolean
+	/**
+	 * bandwidth (in kbps) hls.js should assume before it has measured anything.
+	 * only affects browsers on the MSE path (chrome/firefox), not safari's native HLS.
+	 * hls.js defaults to 500kbps, which makes it open on the lowest rendition — visibly
+	 * blurry for the first few seconds on a large video. raise this to start sharp.
+	 */
+	initialBandwidthEstimateKbps?: number
+	/**
+	 * hold the initial bandwidth estimate for this many segments before trusting measured
+	 * bandwidth, so one fast small segment doesn't immediately drag the estimate around
+	 */
+	initialEstimateSegments?: number
+	/**
+	 * wait until this many segments are buffered before playback advances.
+	 * note this works by zeroing `playbackRate`, so avoid it where `onPlaying` drives
+	 * a timer or animation that has to stay in sync with real playback.
+	 */
+	minPreloadSegments?: number
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
@@ -288,6 +309,9 @@ export function CarouselBackgroundVideo({
 								: `https://image.mux.com/${playbackId}/thumbnail.webp?time=0&width=${posterSize}`
 					}
 					streamType="on-demand"
+					initialBandwidthEstimateKbps={initialBandwidthEstimateKbps}
+					initialEstimateSegments={initialEstimateSegments}
+					minPreloadSegments={minPreloadSegments}
 					style={{ opacity: videoReady ? 1 : 0 }}
 					onCanPlay={() => setVideoReady(true)}
 					onEnded={onEnded}
