@@ -20,6 +20,7 @@ export function CarouselBackgroundVideo({
 	muted = true,
 	minResolution = "480p",
 	maxResolution,
+	renditionOrder,
 	className,
 	loop,
 	ref: containerRef,
@@ -66,6 +67,13 @@ export function CarouselBackgroundVideo({
 	 * especially on Safari)
 	 */
 	maxResolution?: "480p" | "540p" | "720p" | "1080p" | "1440p" | "2160p"
+	/**
+	 * requests renditions starting from the highest quality instead of the lowest.
+	 * useful for short looping videos, where a low-quality chunk buffered at
+	 * startup would otherwise be replayed every loop (the browser doesn't
+	 * re-fetch already-buffered segments in better quality)
+	 */
+	renditionOrder?: "desc"
 	loop?: boolean
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
@@ -215,19 +223,6 @@ export function CarouselBackgroundVideo({
 		return () => observer.disconnect()
 	}, [useSafariOptimization, eager])
 
-	// Chromium's native `loop` attribute appears to reset its ABR rendition selection on
-	// every loop restart (back to a low-quality rung, even after buffering high quality) —
-	// Safari doesn't show this. Looping manually via `ended` + seek + play keeps the
-	// existing MSE session alive instead of whatever native `loop` does internally.
-	const handleEnded = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-		onEnded?.(e)
-		if (loop) {
-			const videoElement = e.currentTarget
-			videoElement.currentTime = 0
-			videoElement.play().catch(() => {})
-		}
-	}
-
 	const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
 		const videoElement = e.currentTarget
 		if (onTimeUpdate && videoElement.duration) {
@@ -287,11 +282,12 @@ export function CarouselBackgroundVideo({
 							? undefined
 							: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}${
 									maxResolution ? `&max_resolution=${maxResolution}` : ""
-								}`
+								}${renditionOrder ? `&rendition_order=${renditionOrder}` : ""}`
 					}
 					preload="auto"
 					muted={muted}
 					playsInline
+					loop={loop}
 					poster={
 						poster
 							? undefined
@@ -302,7 +298,7 @@ export function CarouselBackgroundVideo({
 					streamType="on-demand"
 					style={{ opacity: videoReady ? 1 : 0 }}
 					onCanPlay={() => setVideoReady(true)}
-					onEnded={handleEnded}
+					onEnded={onEnded}
 					onTimeUpdate={handleTimeUpdate}
 					onLoadedMetadata={handleLoadedMetadata}
 					onPlaying={onPlaying}
