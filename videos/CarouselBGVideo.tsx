@@ -215,6 +215,19 @@ export function CarouselBackgroundVideo({
 		return () => observer.disconnect()
 	}, [useSafariOptimization, eager])
 
+	// Chromium's native `loop` attribute appears to reset its ABR rendition selection on
+	// every loop restart (back to a low-quality rung, even after buffering high quality) —
+	// Safari doesn't show this. Looping manually via `ended` + seek + play keeps the
+	// existing MSE session alive instead of whatever native `loop` does internally.
+	const handleEnded = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+		onEnded?.(e)
+		if (loop) {
+			const videoElement = e.currentTarget
+			videoElement.currentTime = 0
+			videoElement.play().catch(() => {})
+		}
+	}
+
 	const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
 		const videoElement = e.currentTarget
 		if (onTimeUpdate && videoElement.duration) {
@@ -279,7 +292,6 @@ export function CarouselBackgroundVideo({
 					preload="auto"
 					muted={muted}
 					playsInline
-					loop={loop}
 					poster={
 						poster
 							? undefined
@@ -290,7 +302,7 @@ export function CarouselBackgroundVideo({
 					streamType="on-demand"
 					style={{ opacity: videoReady ? 1 : 0 }}
 					onCanPlay={() => setVideoReady(true)}
-					onEnded={onEnded}
+					onEnded={handleEnded}
 					onTimeUpdate={handleTimeUpdate}
 					onLoadedMetadata={handleLoadedMetadata}
 					onPlaying={onPlaying}
