@@ -86,12 +86,29 @@ export async function libraryFetch<const QueryString extends string>({
 }): Promise<LibraryFetchResult<QueryString>> {
 	const resolvedParams = await params
 	warnIfQueryTooLarge(query, resolvedParams)
-	return await internalFetch({
-		query,
-		params: resolvedParams,
-		stega: disableStega ? false : undefined,
-		perspective,
-	})
+	// TEMP DEBUG: tracing whether cacheTag()/cacheLife() inside next-sanity's
+	// defineLive throw or misbehave without cacheComponents/useCache enabled
+	try {
+		const result = await internalFetch({
+			query,
+			params: resolvedParams,
+			stega: disableStega ? false : undefined,
+			perspective,
+		})
+		console.log("[libraryFetch debug] success", {
+			perspective,
+			tags: result.tags,
+			hasData: !!result.data,
+		})
+		return result
+	} catch (error) {
+		console.error("[libraryFetch debug] THREW", {
+			perspective,
+			error: error instanceof Error ? error.message : error,
+			stack: error instanceof Error ? error.stack : undefined,
+		})
+		throw error
+	}
 }
 
 export const LibraryRuntime = async () => {
