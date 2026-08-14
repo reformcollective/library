@@ -100,6 +100,9 @@ export async function libraryFetch<const QueryString extends string>({
 			tags: result.tags,
 			hasData: !!result.data,
 		})
+		// TEMP DEBUG: short, sorted, joined line — safe from log-viewer truncation —
+		// for directly comparing tag sets across consecutive requests to the same page
+		console.log("[TAGS-ONLY]", (result.tags ?? []).length, [...(result.tags ?? [])].sort().join(","))
 		return result
 	} catch (error) {
 		console.error("[libraryFetch debug] THREW", {
