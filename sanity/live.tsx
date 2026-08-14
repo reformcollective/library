@@ -86,53 +86,12 @@ export async function libraryFetch<const QueryString extends string>({
 }): Promise<LibraryFetchResult<QueryString>> {
 	const resolvedParams = await params
 	warnIfQueryTooLarge(query, resolvedParams)
-	// TEMP DEBUG: tracing whether cacheTag()/cacheLife() inside next-sanity's
-	// defineLive throw or misbehave without cacheComponents/useCache enabled
-	try {
-		const result = await internalFetch({
-			query,
-			params: resolvedParams,
-			stega: disableStega ? false : undefined,
-			perspective,
-		})
-		console.log("[libraryFetch debug] success", {
-			perspective,
-			tags: result.tags,
-			hasData: !!result.data,
-		})
-		// TEMP DEBUG: short, sorted, joined line — safe from log-viewer truncation —
-		// for directly comparing tag sets across consecutive requests to the same page
-		console.log("[TAGS-ONLY]", (result.tags ?? []).length, [...(result.tags ?? [])].sort().join(","))
-
-		// TEMP DEBUG: independent, uncached fetch of the SAME query/params issued at the
-		// SAME moment, bypassing defineLive's internal sync-tags-discovery fetch entirely.
-		// If this returns different syncTags than what defineLive used to build `result.tags`
-		// above, that proves defineLive's internal discovery fetch is itself stale.
-		try {
-			const directResult = await libraryClient.fetch(query, resolvedParams, {
-				perspective,
-				cacheMode: "noStale",
-				filterResponse: false,
-			})
-			console.log("[DIRECT-COMPARE]", {
-				directSyncTags: (directResult as { syncTags?: string[] }).syncTags,
-				defineLiveTags: result.tags,
-			})
-		} catch (directError) {
-			console.error("[DIRECT-COMPARE] failed", {
-				error: directError instanceof Error ? directError.message : directError,
-			})
-		}
-
-		return result
-	} catch (error) {
-		console.error("[libraryFetch debug] THREW", {
-			perspective,
-			error: error instanceof Error ? error.message : error,
-			stack: error instanceof Error ? error.stack : undefined,
-		})
-		throw error
-	}
+	return internalFetch({
+		query,
+		params: resolvedParams,
+		stega: disableStega ? false : undefined,
+		perspective,
+	})
 }
 
 export const LibraryRuntime = async () => {

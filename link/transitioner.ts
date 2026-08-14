@@ -175,12 +175,6 @@ export const useTransitioner = () => {
 				loader.dispatchEvent("routeChange", eventPayload)
 				document.body.inert = true // prevent navigation before we're done animating in
 
-				// TEMP DEBUG: tracing content-flash timing vs. page reveal — remove after diagnosis
-				console.log("[transition debug] page committed, about to reveal", {
-					to,
-					timestamp: performance.now(),
-				})
-
 				if (!isInstant) await sleep(10)
 
 				// capture animations before state change so we can detect new ones
@@ -214,12 +208,6 @@ export const useTransitioner = () => {
 				await waitForViewTransition()
 				document.body.inert = false
 				loader.dispatchEvent("end", eventPayload)
-
-				// TEMP DEBUG: tracing content-flash timing vs. page reveal — remove after diagnosis
-				console.log("[transition debug] reveal complete", {
-					to,
-					timestamp: performance.now(),
-				})
 
 				return
 			} finally {
