@@ -126,16 +126,6 @@ export const usePreloader = ({
 	}
 } = {}) => {
 	const { initComplete } = use(ScreenContext)
-
-	// TEMP DEBUG: tracing double-preloader-replay bug — remove after diagnosis
-	if (isBrowser) {
-		console.log("[preloader debug] usePreloader init", {
-			globalComplete,
-			pathname: window.location.pathname,
-			timestamp: performance.now(),
-		})
-	}
-
 	const [output, setOutput] = useState<{
 		/**
 		 * page has loaded and rendered, ready to animate away our preloader
