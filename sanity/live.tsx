@@ -86,7 +86,7 @@ export async function libraryFetch<const QueryString extends string>({
 }): Promise<LibraryFetchResult<QueryString>> {
 	const resolvedParams = await params
 	warnIfQueryTooLarge(query, resolvedParams)
-	return await internalFetch({
+	return internalFetch({
 		query,
 		params: resolvedParams,
 		stega: disableStega ? false : undefined,

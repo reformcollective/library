@@ -20,6 +20,7 @@ export function CarouselBackgroundVideo({
 	muted = true,
 	minResolution = "480p",
 	maxResolution,
+	renditionOrder,
 	className,
 	loop,
 	ref: containerRef,
@@ -66,6 +67,13 @@ export function CarouselBackgroundVideo({
 	 * especially on Safari)
 	 */
 	maxResolution?: "480p" | "540p" | "720p" | "1080p" | "1440p" | "2160p"
+	/**
+	 * requests renditions starting from the highest quality instead of the lowest.
+	 * useful for short looping videos, where a low-quality chunk buffered at
+	 * startup would otherwise be replayed every loop (the browser doesn't
+	 * re-fetch already-buffered segments in better quality)
+	 */
+	renditionOrder?: "desc"
 	loop?: boolean
 	className?: string
 	ref?: React.Ref<HTMLDivElement>
@@ -274,7 +282,7 @@ export function CarouselBackgroundVideo({
 							? undefined
 							: `https://stream.mux.com/${playbackId}.m3u8?min_resolution=${minResolution}${
 									maxResolution ? `&max_resolution=${maxResolution}` : ""
-								}`
+								}${renditionOrder ? `&rendition_order=${renditionOrder}` : ""}`
 					}
 					preload="auto"
 					muted={muted}
