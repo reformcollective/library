@@ -34,7 +34,6 @@ const RECONNECT_LEAD_TIME_MS = 5_000
 
 let messageQueue = Promise.resolve()
 let sanitySubscription: LiveSubscription | null = null
-let liveRequestOrigin: string | null = null
 
 type LiveSubscription = { unsubscribe: () => void }
 type LiveStateEntry = {
@@ -94,8 +93,7 @@ function getLiveStateKey() {
 }
 
 async function revalidate(payload: { broad: true } | { tags: string[] }) {
-	const revalidationURL = new URL("/api/live", liveRequestOrigin ?? siteURL)
-	const response = await fetch(revalidationURL, {
+	const response = await fetch(`${siteURL}/api/live`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -106,7 +104,6 @@ async function revalidate(payload: { broad: true } | { tags: string[] }) {
 
 	if (!response.ok) {
 		console.error("Sanity live revalidation failed", {
-			url: revalidationURL.toString(),
 			status: response.status,
 			body: await response.text(),
 		})
@@ -367,8 +364,6 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-	liveRequestOrigin = new URL(request.url).origin
-
 	const { allowProxy, canUseLiveProxy } = getLiveProxySupport({
 		allowProxy: libraryConfig.allowProxy,
 		currentSiteURL: siteURL,
