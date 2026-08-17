@@ -1,7 +1,7 @@
+import { usePathname } from "next/navigation"
 import { type RefObject, useEffect, useState } from "react"
 import { createDebouncedEventListener } from "./ScreenContext"
 import TypedEventEmitter from "./TypedEventEmitter"
-import useSafePathname from "./useSafePathname"
 
 export type SectionTheme = "dark" | "light"
 
@@ -23,7 +23,7 @@ let currentTheme: SectionTheme = "light"
 export default function useSectionTheme(
 	headerRef: RefObject<HTMLElement | null>,
 ) {
-	const pathname = useSafePathname()
+	const pathname = usePathname()
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname is only a re-run trigger on route change, not read in the effect
 	useEffect(() => {
@@ -50,6 +50,14 @@ export default function useSectionTheme(
 			return mode === "dark" || mode === "light" ? mode : null
 		}
 
+		const dispatchTheme = () => {
+			const theme = getActiveTheme()
+			if (theme && theme !== currentTheme) {
+				currentTheme = theme
+				sectionThemeEvents.dispatchEvent("change", theme)
+			}
+		}
+
 		const createObserver = () => {
 			observer?.disconnect()
 			activeElements = []
@@ -67,11 +75,7 @@ export default function useSectionTheme(
 						if (entry.isIntersecting) activeElements.push(entry.target)
 					}
 
-					const theme = getActiveTheme()
-					if (theme && theme !== currentTheme) {
-						currentTheme = theme
-						sectionThemeEvents.dispatchEvent("change", theme)
-					}
+					dispatchTheme()
 				},
 				{ threshold: 0, rootMargin },
 			)
@@ -81,12 +85,29 @@ export default function useSectionTheme(
 
 		const scan = () => {
 			const elements = document.querySelectorAll("[data-header-mode]")
+			const newlyObserved: Element[] = []
 			for (const element of elements) {
 				if (!observed.has(element)) {
 					observed.add(element)
 					observer?.observe(element)
+					newlyObserved.push(element)
 				}
 			}
+			if (newlyObserved.length === 0) return
+
+			// don't wait for the observer's async callback to catch up on newly
+			// observed elements (e.g. right after a route change) — check
+			// synchronously so the header doesn't hold onto a stale theme from
+			// before those elements existed
+			const headerHeight =
+				headerRef.current?.getBoundingClientRect().height ?? 0
+			for (const element of newlyObserved) {
+				const rect = element.getBoundingClientRect()
+				const isInStrip =
+					rect.top < window.innerHeight && rect.bottom > headerHeight
+				if (isInStrip) activeElements.push(element)
+			}
+			dispatchTheme()
 		}
 
 		createObserver()

@@ -1,5 +1,5 @@
+import { usePathname } from "next/navigation"
 import { createContext, use, useEffect, useState } from "react"
-import useSafePathname from "../useSafePathname"
 import { loader } from "./loader"
 
 type PageTransition = {
@@ -23,9 +23,8 @@ export const PageTransitionProvider = ({
 	)
 	const [animations] = useState(() => new Set<PageTransition>())
 
-	const pathname = useSafePathname()
+	const pathname = usePathname()
 	useEffect(() => {
-		if (pathname === null) return
 		loader.dispatchEvent("pageCommit", pathname)
 	}, [pathname])
 
