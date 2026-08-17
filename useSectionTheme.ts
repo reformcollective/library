@@ -1,7 +1,7 @@
+import { usePathname } from "next/navigation"
 import { type RefObject, useEffect, useState } from "react"
 import { createDebouncedEventListener } from "./ScreenContext"
 import TypedEventEmitter from "./TypedEventEmitter"
-import useSafePathname from "./useSafePathname"
 
 export type SectionTheme = "dark" | "light"
 
@@ -23,7 +23,7 @@ let currentTheme: SectionTheme = "light"
 export default function useSectionTheme(
 	headerRef: RefObject<HTMLElement | null>,
 ) {
-	const pathname = useSafePathname()
+	const pathname = usePathname()
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname is only a re-run trigger on route change, not read in the effect
 	useEffect(() => {

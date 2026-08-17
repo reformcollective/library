@@ -1,10 +1,10 @@
 import { useLatest } from "ahooks"
 import { gsap, ScrollTrigger } from "gsap/all"
+import { usePathname } from "next/navigation"
 import { type RefObject, useEffect, useRef, useState } from "react"
 import { useIsSmooth } from "./Scroll"
 import TypedEventEmitter from "./TypedEventEmitter"
 import { useAnimation } from "./useAnimation"
-import useSafePathname from "./useSafePathname"
 
 const HEADER_HEIGHT_VAR = "--site-header-height"
 const HEADER_VISIBLE_OFFSET_VAR = "--site-header-visible-offset"
@@ -37,7 +37,7 @@ export default function useAutoHideHeader(
 	const isSmooth = useIsSmooth()
 	const style = isSmooth ? styleIn : "snap"
 
-	const pathname = useSafePathname()
+	const pathname = usePathname()
 
 	const dataHideAreOnScreen = useRef(false)
 	const dataStickAreOnScreen = useRef(false)
