@@ -99,10 +99,12 @@ export default function useSectionTheme(
 			// observed elements (e.g. right after a route change) — check
 			// synchronously so the header doesn't hold onto a stale theme from
 			// before those elements existed
-			const headerHeight = headerRef.current?.getBoundingClientRect().height ?? 0
+			const headerHeight =
+				headerRef.current?.getBoundingClientRect().height ?? 0
 			for (const element of newlyObserved) {
 				const rect = element.getBoundingClientRect()
-				const isInStrip = rect.top < window.innerHeight && rect.bottom > headerHeight
+				const isInStrip =
+					rect.top < window.innerHeight && rect.bottom > headerHeight
 				if (isInStrip) activeElements.push(element)
 			}
 			dispatchTheme()
