@@ -2,10 +2,8 @@ import { usePathname } from "next/navigation"
 import {
 	createContext,
 	type RefObject,
-	useCallback,
 	useContext,
 	useEffect,
-	useMemo,
 	useState,
 } from "react"
 import { createDebouncedEventListener } from "./ScreenContext"
@@ -17,11 +15,7 @@ const DEFAULT_THEME: SectionTheme = "light"
 const SectionThemeContext = createContext<{
 	theme: SectionTheme
 	setTheme: (theme: SectionTheme) => void
-	/**
-	 * seeds the theme for a newly-navigated-to page, using its known first
-	 * section's `headerMode` instead of falling back to `DEFAULT_THEME` and
-	 * waiting for scroll-based detection to correct it
-	 */
+	/** seeds the theme for a newly-navigated-to page from its known first section */
 	setInitialTheme: (theme: SectionTheme | undefined) => void
 } | null>(null)
 
@@ -30,17 +24,18 @@ const SectionThemeContext = createContext<{
  * Render this once, near the root of the app (e.g. alongside other global providers) —
  * everything that needs the header's current theme must be nested inside.
  */
-export function SectionThemeProvider({ children }: { children: React.ReactNode }) {
+export function SectionThemeProvider({
+	children,
+}: {
+	children: React.ReactNode
+}) {
 	const [theme, setTheme] = useState<SectionTheme>(DEFAULT_THEME)
 
-	const setInitialTheme = useCallback((nextTheme: SectionTheme | undefined) => {
+	const setInitialTheme = (nextTheme: SectionTheme | undefined) => {
 		setTheme(nextTheme ?? DEFAULT_THEME)
-	}, [])
+	}
 
-	const value = useMemo(
-		() => ({ theme, setTheme, setInitialTheme }),
-		[theme, setInitialTheme],
-	)
+	const value = { theme, setTheme, setInitialTheme }
 
 	return (
 		<SectionThemeContext.Provider value={value}>
@@ -52,7 +47,9 @@ export function SectionThemeProvider({ children }: { children: React.ReactNode }
 function useSectionThemeContext() {
 	const context = useContext(SectionThemeContext)
 	if (!context) {
-		throw new Error("useSectionTheme must be used within a SectionThemeProvider")
+		throw new Error(
+			"useSectionTheme must be used within a SectionThemeProvider",
+		)
 	}
 	return context
 }
@@ -180,12 +177,8 @@ export function useHeaderMode(): SectionTheme {
 }
 
 /**
- * Seeds the header theme for the current page using its known first section's
- * `headerMode`, so the header shows the correct theme immediately after a page
- * transition instead of a default that scroll-based detection later corrects.
- *
- * Call once per page, passing the first section's `headerMode` (or `undefined`
- * if the page has no sections / the first section has none).
+ * Seeds the header theme for the current page from its first section's `headerMode`,
+ * so the header is correct immediately after navigation instead of a placeholder default.
  */
 export function useInitialHeaderMode(headerMode: SectionTheme | undefined) {
 	const pathname = usePathname()

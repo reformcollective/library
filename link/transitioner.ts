@@ -207,10 +207,7 @@ export const useTransitioner = () => {
 
 				await waitForViewTransition()
 
-				// the new page's ScrollTriggers (header, sections, etc.) were created
-				// mid-transition against a DOM that was still animating/settling —
-				// refresh once everything's in its final state so GSAP recalculates
-				// trigger positions against the real, settled layout
+				// re-measure triggers now that the new page's layout has settled
 				ScrollTrigger.refresh()
 
 				document.body.inert = false

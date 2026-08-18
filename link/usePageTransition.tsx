@@ -34,18 +34,10 @@ export const PageTransitionProvider = ({
 	)
 }
 
-/**
- * Signals that the current page's real content (not just a Suspense fallback
- * mid-route-swap) has committed to the DOM. Render this once inside a page's
- * resolved content — e.g. as the last thing returned by an async Server
- * Component — so `waitForPageCommit()` only resolves once there's actually
- * something to show, instead of firing on every pathname change regardless
- * of whether the new page's data has loaded yet.
- */
+/** Fires `pageCommit` once real page content has rendered. Render inside the page's resolved content. */
 export const PageCommitSignal = () => {
 	const pathname = usePathname()
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname is only a re-run trigger, not read in the effect
 	useEffect(() => {
 		loader.dispatchEvent("pageCommit", pathname)
 	}, [pathname])
