@@ -27,6 +27,10 @@ export default function useSectionTheme(
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname is only a re-run trigger on route change, not read in the effect
 	useEffect(() => {
+		// temp debug: identify this specific effect instance for correlating with useAutoHideHeader
+		const instanceId = Math.random().toString(36).slice(2, 8)
+		console.log("[debug-header] useSectionTheme instance created", { instanceId, pathname })
+
 		let observer: IntersectionObserver | null = null
 		const observed = new Set<Element>()
 		// sections currently intersecting the thin strip behind the header,
@@ -50,9 +54,19 @@ export default function useSectionTheme(
 			return mode === "dark" || mode === "light" ? mode : null
 		}
 
-		const dispatchTheme = () => {
+		const dispatchTheme = (source: string) => {
 			const theme = getActiveTheme()
-			if (theme && theme !== currentTheme) {
+			const willFire = !!theme && theme !== currentTheme
+			// temp debug: trace every dispatch decision, including silent no-ops
+			console.log("[debug-header] dispatchTheme", {
+				pathname,
+				source,
+				computedTheme: theme,
+				currentTheme,
+				willFire,
+				activeElementCount: activeElements.length,
+			})
+			if (willFire) {
 				currentTheme = theme
 				sectionThemeEvents.dispatchEvent("change", theme)
 			}
@@ -75,7 +89,7 @@ export default function useSectionTheme(
 						if (entry.isIntersecting) activeElements.push(entry.target)
 					}
 
-					dispatchTheme()
+					dispatchTheme("observer")
 				},
 				{ threshold: 0, rootMargin },
 			)
@@ -107,7 +121,7 @@ export default function useSectionTheme(
 					rect.top < window.innerHeight && rect.bottom > headerHeight
 				if (isInStrip) activeElements.push(element)
 			}
-			dispatchTheme()
+			dispatchTheme("scan")
 		}
 
 		createObserver()
@@ -120,6 +134,7 @@ export default function useSectionTheme(
 		)
 
 		return () => {
+			console.log("[debug-header] useSectionTheme instance cleanup", { instanceId, pathname })
 			observer?.disconnect()
 			clearInterval(interval)
 			resizeListener.cleanup()
