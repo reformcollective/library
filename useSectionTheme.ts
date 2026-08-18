@@ -93,6 +93,13 @@ export default function useSectionTheme(
 					newlyObserved.push(element)
 				}
 			}
+			// temp debug: trace section-theme scans to catch a stuck header-mode race
+			console.log("[debug-header] scan", {
+				pathname,
+				totalTagged: elements.length,
+				newlyObserved: newlyObserved.length,
+				currentTheme,
+			})
 			if (newlyObserved.length === 0) return
 
 			// don't wait for the observer's async callback to catch up on newly
@@ -107,6 +114,13 @@ export default function useSectionTheme(
 					rect.top < window.innerHeight && rect.bottom > headerHeight
 				if (isInStrip) activeElements.push(element)
 			}
+			// temp debug: trace what dispatchTheme decides right after a scan
+			console.log("[debug-header] post-scan dispatch", {
+				pathname,
+				activeElements: activeElements.length,
+				computedTheme: getActiveTheme(),
+				currentTheme,
+			})
 			dispatchTheme()
 		}
 
@@ -119,10 +133,14 @@ export default function useSectionTheme(
 			createObserver,
 		)
 
+		// temp debug: confirm this effect actually re-runs on route change
+		console.log("[debug-header] effect (re)initialized", { pathname })
+
 		return () => {
 			observer?.disconnect()
 			clearInterval(interval)
 			resizeListener.cleanup()
+			console.log("[debug-header] effect cleanup", { pathname })
 		}
 	}, [headerRef, pathname])
 }

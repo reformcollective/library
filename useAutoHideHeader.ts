@@ -97,6 +97,13 @@ export default function useAutoHideHeader(
 		() => {
 			let lastScroll = window.lenisInstance?.scroll ?? window.scrollY
 			let isHovered = false
+			// temp debug: trace whether this GSAP context (re)creates on route change,
+			// and whether the wrapper/lenis instance are actually present when it does
+			console.log("[debug-header] useAutoHideHeader (re)initialized", {
+				pathname,
+				hasWrapper: !!wrapper?.current,
+				hasLenis: !!window.lenisInstance,
+			})
 			if (!wrapper?.current) return
 
 			const publishHeaderVars = (target: HTMLDivElement) => {
@@ -139,12 +146,25 @@ export default function useAutoHideHeader(
 			})
 			resizeObserver.observe(wrapper.current)
 
+			// temp debug: throttled proof-of-life log for the per-frame scroll tracker
+			let lastDebugLogAt = 0
 			const onUpdate = () => {
 				const scroll = window.lenisInstance?.scroll ?? window.scrollY
 				const rawDelta = scroll - lastScroll
 				const delta = Math.abs(rawDelta) < 100 ? rawDelta : 0
 				lastScroll = scroll
 				const height = (wrapper.current?.offsetHeight ?? 0) + extraOffset
+
+				const now = performance.now()
+				if (now - lastDebugLogAt > 1_000) {
+					lastDebugLogAt = now
+					console.log("[debug-header] onUpdate tick", {
+						pathname,
+						scroll,
+						hasLenis: !!window.lenisInstance,
+						hasWrapper: !!wrapper.current,
+					})
+				}
 
 				const forceHideHeader = dataHideAreOnScreen.current
 				const forceShowHeader =
