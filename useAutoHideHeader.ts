@@ -97,13 +97,6 @@ export default function useAutoHideHeader(
 		() => {
 			let lastScroll = window.lenisInstance?.scroll ?? window.scrollY
 			let isHovered = false
-			// temp debug: trace whether this GSAP context (re)creates on route change,
-			// and whether the wrapper/lenis instance are actually present when it does
-			console.log("[debug-header] useAutoHideHeader (re)initialized", {
-				pathname,
-				hasWrapper: !!wrapper?.current,
-				hasLenis: !!window.lenisInstance,
-			})
 			if (!wrapper?.current) return
 
 			const publishHeaderVars = (target: HTMLDivElement) => {
@@ -146,7 +139,9 @@ export default function useAutoHideHeader(
 			})
 			resizeObserver.observe(wrapper.current)
 
-			// temp debug: throttled proof-of-life log for the per-frame scroll tracker
+			// temp debug: identify this specific closure instance + throttled proof-of-life
+			const instanceId = Math.random().toString(36).slice(2, 8)
+			console.log("[debug-header] instance created", { instanceId, pathname })
 			let lastDebugLogAt = 0
 			const onUpdate = () => {
 				const scroll = window.lenisInstance?.scroll ?? window.scrollY
@@ -156,14 +151,9 @@ export default function useAutoHideHeader(
 				const height = (wrapper.current?.offsetHeight ?? 0) + extraOffset
 
 				const now = performance.now()
-				if (now - lastDebugLogAt > 1_000) {
+				if (now - lastDebugLogAt > 500) {
 					lastDebugLogAt = now
-					console.log("[debug-header] onUpdate tick", {
-						pathname,
-						scroll,
-						hasLenis: !!window.lenisInstance,
-						hasWrapper: !!wrapper.current,
-					})
+					console.log("[debug-header] tick", { instanceId, pathname, scroll })
 				}
 
 				const forceHideHeader = dataHideAreOnScreen.current
@@ -233,13 +223,15 @@ export default function useAutoHideHeader(
 			window.addEventListener("popstate", onPopState)
 			externalForceEvents.addEventListener("change", onUpdate)
 
-			ScrollTrigger.create({ onUpdate })
+			const scrollTrigger = ScrollTrigger.create({ onUpdate })
 			return () => {
+				console.log("[debug-header] instance cleanup", { instanceId, pathname })
 				wrapper.current?.removeEventListener("pointerenter", onHover)
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
 				window.removeEventListener("popstate", onPopState)
 				externalForceEvents.removeEventListener("change", onUpdate)
 				resizeObserver.disconnect()
+				scrollTrigger.kill()
 			}
 		},
 		[
