@@ -128,6 +128,10 @@ export const useTransitioner = () => {
 				} as const
 				loader.dispatchEvent("start", eventPayload)
 
+				// temp debug: trace overall transition timing
+				const transitionStart = performance.now()
+				console.log("[debug-transition] navigation start", { to, isInstant })
+
 				// capture animations before state change so we can detect new ones
 				const animationsBeforeBefore = document.body.getAnimations({
 					subtree: true,
@@ -149,6 +153,9 @@ export const useTransitioner = () => {
 					...beforeAnimations,
 					...newBeforeAnimations.map((a) => a.finished),
 				])
+				console.log("[debug-transition] animateBefore phase done", {
+					elapsedMs: performance.now() - transitionStart,
+				})
 				if (signal?.aborted) return
 
 				const pageCommit = waitForPageCommit()
@@ -160,7 +167,12 @@ export const useTransitioner = () => {
 						if (!signal?.aborted) reject(new Error("Navigation timeout"))
 					}, 30_000),
 				)
+				const commitStart = performance.now()
 				await Promise.race([timeout, pageCommit])
+				console.log("[debug-transition] page commit done", {
+					commitElapsedMs: performance.now() - commitStart,
+					totalElapsedMs: performance.now() - transitionStart,
+				})
 
 				if (destination.hash) {
 					await instantScrollToAnchor(destination.hash)
@@ -174,6 +186,9 @@ export const useTransitioner = () => {
 
 				loader.dispatchEvent("routeChange", eventPayload)
 				document.body.inert = true // prevent navigation before we're done animating in
+				console.log("[debug-transition] body.inert = true", {
+					totalElapsedMs: performance.now() - transitionStart,
+				})
 
 				if (!isInstant) await sleep(10)
 
@@ -200,14 +215,24 @@ export const useTransitioner = () => {
 				)
 
 				await Promise.all([...afterAnimations, ...newAfterAnimationFinishes])
+				console.log("[debug-transition] animateAfter phase done", {
+					totalElapsedMs: performance.now() - transitionStart,
+				})
 
 				flushSync(() => {
 					setIsAnimating(false)
 				})
 
+				const viewTransitionStart = performance.now()
 				await waitForViewTransition()
+				console.log("[debug-transition] waitForViewTransition done", {
+					viewTransitionElapsedMs: performance.now() - viewTransitionStart,
+				})
 				document.body.inert = false
 				loader.dispatchEvent("end", eventPayload)
+				console.log("[debug-transition] navigation end, body.inert = false", {
+					totalElapsedMs: performance.now() - transitionStart,
+				})
 
 				return
 			} finally {

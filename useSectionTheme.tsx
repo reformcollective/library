@@ -1,15 +1,52 @@
 import { usePathname } from "next/navigation"
-import { type RefObject, useEffect, useState } from "react"
+import {
+	createContext,
+	type RefObject,
+	useContext,
+	useEffect,
+	useState,
+} from "react"
 import { createDebouncedEventListener } from "./ScreenContext"
-import TypedEventEmitter from "./TypedEventEmitter"
 
 export type SectionTheme = "dark" | "light"
 
-const sectionThemeEvents = new TypedEventEmitter<{ change: [SectionTheme] }>({
-	triggerHappyEvents: ["change"],
-})
+const DEFAULT_THEME: SectionTheme = "light"
 
-let currentTheme: SectionTheme = "light"
+const SectionThemeContext = createContext<{
+	theme: SectionTheme
+	setTheme: (theme: SectionTheme) => void
+} | null>(null)
+
+/**
+ * Provides the shared section-theme state used by `useSectionTheme`/`useHeaderMode`.
+ * Render this once, near the root of the app (e.g. alongside other global providers) —
+ * everything that needs the header's current theme must be nested inside.
+ */
+export function SectionThemeProvider({ children }: { children: React.ReactNode }) {
+	const pathname = usePathname()
+	const [theme, setTheme] = useState<SectionTheme>(DEFAULT_THEME)
+
+	// a theme carried over from the previous page could be stale — e.g. the new page's
+	// first section happens to share the previous page's last-active theme, so no update
+	// would otherwise fire even though the new page's real DOM hasn't been measured yet
+	useEffect(() => {
+		setTheme(DEFAULT_THEME)
+	}, [pathname])
+
+	return (
+		<SectionThemeContext.Provider value={{ theme, setTheme }}>
+			{children}
+		</SectionThemeContext.Provider>
+	)
+}
+
+function useSectionThemeContext() {
+	const context = useContext(SectionThemeContext)
+	if (!context) {
+		throw new Error("useSectionTheme must be used within a SectionThemeProvider")
+	}
+	return context
+}
 
 /**
  * Watches all elements tagged with `data-header-mode="dark" | "light"` and reports
@@ -24,13 +61,10 @@ export default function useSectionTheme(
 	headerRef: RefObject<HTMLElement | null>,
 ) {
 	const pathname = usePathname()
+	const { theme, setTheme } = useSectionThemeContext()
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname is only a re-run trigger on route change, not read in the effect
 	useEffect(() => {
-		// temp debug: identify this specific effect instance for correlating with useAutoHideHeader
-		const instanceId = Math.random().toString(36).slice(2, 8)
-		console.log("[debug-header] useSectionTheme instance created", { instanceId, pathname })
-
 		let observer: IntersectionObserver | null = null
 		const observed = new Set<Element>()
 		// sections currently intersecting the thin strip behind the header,
@@ -54,22 +88,9 @@ export default function useSectionTheme(
 			return mode === "dark" || mode === "light" ? mode : null
 		}
 
-		const dispatchTheme = (source: string) => {
-			const theme = getActiveTheme()
-			const willFire = !!theme && theme !== currentTheme
-			// temp debug: trace every dispatch decision, including silent no-ops
-			console.log("[debug-header] dispatchTheme", {
-				pathname,
-				source,
-				computedTheme: theme,
-				currentTheme,
-				willFire,
-				activeElementCount: activeElements.length,
-			})
-			if (willFire) {
-				currentTheme = theme
-				sectionThemeEvents.dispatchEvent("change", theme)
-			}
+		const dispatchTheme = () => {
+			const nextTheme = getActiveTheme()
+			if (nextTheme) setTheme(nextTheme)
 		}
 
 		const createObserver = () => {
@@ -89,7 +110,7 @@ export default function useSectionTheme(
 						if (entry.isIntersecting) activeElements.push(entry.target)
 					}
 
-					dispatchTheme("observer")
+					dispatchTheme()
 				},
 				{ threshold: 0, rootMargin },
 			)
@@ -121,7 +142,7 @@ export default function useSectionTheme(
 					rect.top < window.innerHeight && rect.bottom > headerHeight
 				if (isInStrip) activeElements.push(element)
 			}
-			dispatchTheme("scan")
+			dispatchTheme()
 		}
 
 		createObserver()
@@ -134,12 +155,13 @@ export default function useSectionTheme(
 		)
 
 		return () => {
-			console.log("[debug-header] useSectionTheme instance cleanup", { instanceId, pathname })
 			observer?.disconnect()
 			clearInterval(interval)
 			resizeListener.cleanup()
 		}
 	}, [headerRef, pathname])
+
+	return theme
 }
 
 /**
@@ -147,7 +169,5 @@ export default function useSectionTheme(
  * Use inside the header (or any component that needs to react to the active section's theme).
  */
 export function useHeaderMode(): SectionTheme {
-	const [theme, setTheme] = useState(currentTheme)
-	sectionThemeEvents.useEventListener("change", setTheme)
-	return theme
+	return useSectionThemeContext().theme
 }
