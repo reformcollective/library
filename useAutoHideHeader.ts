@@ -139,22 +139,12 @@ export default function useAutoHideHeader(
 			})
 			resizeObserver.observe(wrapper.current)
 
-			// temp debug: identify this specific closure instance + throttled proof-of-life
-			const instanceId = Math.random().toString(36).slice(2, 8)
-			console.log("[debug-header] instance created", { instanceId, pathname })
-			let lastDebugLogAt = 0
 			const onUpdate = () => {
 				const scroll = window.lenisInstance?.scroll ?? window.scrollY
 				const rawDelta = scroll - lastScroll
 				const delta = Math.abs(rawDelta) < 100 ? rawDelta : 0
 				lastScroll = scroll
 				const height = (wrapper.current?.offsetHeight ?? 0) + extraOffset
-
-				const now = performance.now()
-				if (now - lastDebugLogAt > 500) {
-					lastDebugLogAt = now
-					console.log("[debug-header] tick", { instanceId, pathname, scroll })
-				}
 
 				const forceHideHeader = dataHideAreOnScreen.current
 				const forceShowHeader =
@@ -223,15 +213,13 @@ export default function useAutoHideHeader(
 			window.addEventListener("popstate", onPopState)
 			externalForceEvents.addEventListener("change", onUpdate)
 
-			const scrollTrigger = ScrollTrigger.create({ onUpdate })
+			ScrollTrigger.create({ onUpdate })
 			return () => {
-				console.log("[debug-header] instance cleanup", { instanceId, pathname })
 				wrapper.current?.removeEventListener("pointerenter", onHover)
 				wrapper.current?.removeEventListener("pointerleave", onLeave)
 				window.removeEventListener("popstate", onPopState)
 				externalForceEvents.removeEventListener("change", onUpdate)
 				resizeObserver.disconnect()
-				scrollTrigger.kill()
 			}
 		},
 		[

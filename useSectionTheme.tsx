@@ -2,8 +2,10 @@ import { usePathname } from "next/navigation"
 import {
 	createContext,
 	type RefObject,
+	useCallback,
 	useContext,
 	useEffect,
+	useMemo,
 	useState,
 } from "react"
 import { createDebouncedEventListener } from "./ScreenContext"
@@ -15,6 +17,12 @@ const DEFAULT_THEME: SectionTheme = "light"
 const SectionThemeContext = createContext<{
 	theme: SectionTheme
 	setTheme: (theme: SectionTheme) => void
+	/**
+	 * seeds the theme for a newly-navigated-to page, using its known first
+	 * section's `headerMode` instead of falling back to `DEFAULT_THEME` and
+	 * waiting for scroll-based detection to correct it
+	 */
+	setInitialTheme: (theme: SectionTheme | undefined) => void
 } | null>(null)
 
 /**
@@ -23,18 +31,19 @@ const SectionThemeContext = createContext<{
  * everything that needs the header's current theme must be nested inside.
  */
 export function SectionThemeProvider({ children }: { children: React.ReactNode }) {
-	const pathname = usePathname()
 	const [theme, setTheme] = useState<SectionTheme>(DEFAULT_THEME)
 
-	// a theme carried over from the previous page could be stale — e.g. the new page's
-	// first section happens to share the previous page's last-active theme, so no update
-	// would otherwise fire even though the new page's real DOM hasn't been measured yet
-	useEffect(() => {
-		setTheme(DEFAULT_THEME)
-	}, [pathname])
+	const setInitialTheme = useCallback((nextTheme: SectionTheme | undefined) => {
+		setTheme(nextTheme ?? DEFAULT_THEME)
+	}, [])
+
+	const value = useMemo(
+		() => ({ theme, setTheme, setInitialTheme }),
+		[theme, setInitialTheme],
+	)
 
 	return (
-		<SectionThemeContext.Provider value={{ theme, setTheme }}>
+		<SectionThemeContext.Provider value={value}>
 			{children}
 		</SectionThemeContext.Provider>
 	)
@@ -148,7 +157,6 @@ export default function useSectionTheme(
 		createObserver()
 		scan()
 
-		const interval = setInterval(scan, 1_000)
 		const resizeListener = createDebouncedEventListener(
 			"resize",
 			createObserver,
@@ -156,7 +164,6 @@ export default function useSectionTheme(
 
 		return () => {
 			observer?.disconnect()
-			clearInterval(interval)
 			resizeListener.cleanup()
 		}
 	}, [headerRef, pathname])
@@ -170,4 +177,22 @@ export default function useSectionTheme(
  */
 export function useHeaderMode(): SectionTheme {
 	return useSectionThemeContext().theme
+}
+
+/**
+ * Seeds the header theme for the current page using its known first section's
+ * `headerMode`, so the header shows the correct theme immediately after a page
+ * transition instead of a default that scroll-based detection later corrects.
+ *
+ * Call once per page, passing the first section's `headerMode` (or `undefined`
+ * if the page has no sections / the first section has none).
+ */
+export function useInitialHeaderMode(headerMode: SectionTheme | undefined) {
+	const pathname = usePathname()
+	const { setInitialTheme } = useSectionThemeContext()
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname is only a re-run trigger on route change
+	useEffect(() => {
+		setInitialTheme(headerMode)
+	}, [pathname, headerMode, setInitialTheme])
 }
