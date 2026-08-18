@@ -206,6 +206,10 @@ export const useTransitioner = () => {
 				})
 
 				await waitForViewTransition()
+
+				// re-measure triggers now that the new page's layout has settled
+				ScrollTrigger.refresh()
+
 				document.body.inert = false
 				loader.dispatchEvent("end", eventPayload)
 
