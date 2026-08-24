@@ -159,9 +159,16 @@ export default function useSectionTheme(
 			createObserver,
 		)
 
+		// on a route change, the new page's `[data-header-mode]` sections can still be
+		// streaming/mounting after this effect's initial scan runs and finds none yet —
+		// keep watching the DOM so we scan again once they actually appear
+		const mutationObserver = new MutationObserver(scan)
+		mutationObserver.observe(document.body, { childList: true, subtree: true })
+
 		return () => {
 			observer?.disconnect()
 			resizeListener.cleanup()
+			mutationObserver.disconnect()
 		}
 	}, [headerRef, pathname])
 
