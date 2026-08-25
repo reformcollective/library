@@ -550,6 +550,10 @@ export const faqItem = ({
  * error on an unknown type otherwise. What editors can write inside each entry is
  * configured there, not here; see {@link faqItem}.
  *
+ * The field is required and must hold at least one entry — a section that renders an
+ * FAQ with nothing in it is a mistake in every design. This is not currently
+ * overridable; if a project needs an optional FAQ list, widen the options here.
+ *
  * @example
  * // the common case
  * fields: [kicker, title, faqItems()]
@@ -592,6 +596,7 @@ export const faqItems = ({
 		title,
 		type: "array",
 		of: of ?? [defineArrayMember({ type: "faqItem" })],
+		validation: (rule) => rule.required().min(1),
 	})
 
 /**
