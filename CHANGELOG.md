@@ -1,3 +1,49 @@
+# 2026-08-13
+
+## Shared FAQ schema primitives
+
+`library/sanity/reusables` now exports `faqItem` and `faqItems()`, so projects no longer hand-roll a question/answer array in every section that needs an FAQ.
+
+`faqItem` is a factory returning a registered object type, which matters twice over. Sanity typegen emits a named export for every registered type, so registering it gives you a stable `FaqItem` in `sanity.types.ts` — components should type their props against that instead of reaching into a specific section's query result, which welds them to one project's section name and typegen output. And because registration happens in each project's own `sanity.config.ts`, the factory arguments are where a project decides what its editors can produce. **Changing the available marks never requires editing the library.**
+
+`faqItems()` is a field factory returning the array field. It defaults to `name: "items"` and `of: [{ type: "faqItem" }]`, and accepts `name`, `title`, `description`, and `of` so a schema can rename the field, hold two FAQ fields at once, or supply a richer answer member type.
+
+Called bare, `faqItem()` gives you the common set already switched on: bold and italic decorators, bulleted and numbered lists, and a link annotation, with block styles at `normal` only. All of these already have renderers in `library/sanity/PortableText`, so they display correctly with no component code — and because those defaults live in the `library` cascade layer, an unlayered project rule restyles them without needing a `components` override.
+
+Pass `styles`, `lists`, `decorators`, or `annotations` to change that surface for your project:
+
+```ts
+faqItem({ lists: [] })                       // no list treatment in the design
+faqItem({ decorators: [], lists: [] })       // plain paragraphs and links only
+faqItem({ annotations: [] })                 // no links in answers
+faqItem({ decorators: [{ title: "Italic", value: "em" }] }) // italic, no bold
+faqItem({ annotations: [faqLink, myTooltip] }) // keep the default link, add your own
+```
+
+Each option **replaces** its default list rather than merging with it, and there is no per-mark removal. So an empty array removes a whole category, but dropping a single mark means passing the ones you are keeping — as in the italic-only line above. The exception is `styles`, where Sanity re-inserts `normal` whenever it is missing, so `styles: []` still leaves you with `normal`.
+
+`faqLink` is exported so you can keep the default link annotation while replacing the rest.
+
+Note the asymmetry when trimming: schema richness is additive-safe and subtractive-painful. Adding a decorator later is backward compatible. Removing one after content exists does not rewrite that content — the mark stays in the stored portable text and still renders, since the renderers in `library/sanity/PortableText` are unconditional. What you lose is the Studio control, leaving spans carrying a mark editors can no longer apply or clear. So trim at scaffold time, **before** editors start authoring — not after.
+
+Nothing visual ships here. The accordion component itself stays in the project, where it can be restyled per design; `@base-ui/react` remains a project dependency and is intentionally not added to `library/package.json`.
+
+**Migration Advice**
+
+This is additive — existing schemas are unaffected. To use it, register `faqItem` in your project's Sanity config alongside `video` and `youtube`:
+
+```ts
+// sanity.config.ts
+import { faqItem, video, youtube } from "library/sanity/reusables"
+
+schema: { types: [youtube, video, faqItem() /* ... */] }
+```
+
+Note `faqItem()` is called — it is a factory, and this call site is where you tune what editors can write.
+
+`faqItem` **must** be registered before you use `faqItems()`, or the Studio will error on an unknown type.
+
+
 # 2026-06-10
 
 ## Site URL moved to the compile-time API
