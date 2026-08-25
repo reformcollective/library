@@ -1,5 +1,7 @@
+"use client"
+
+import { usePathname } from "next/navigation"
 import { createContext, use, useEffect, useState } from "react"
-import useSafePathname from "../useSafePathname"
 import { loader } from "./loader"
 
 type PageTransition = {
@@ -23,12 +25,6 @@ export const PageTransitionProvider = ({
 	)
 	const [animations] = useState(() => new Set<PageTransition>())
 
-	const pathname = useSafePathname()
-	useEffect(() => {
-		if (pathname === null) return
-		loader.dispatchEvent("pageCommit", pathname)
-	}, [pathname])
-
 	return (
 		<TransitionsContext.Provider
 			value={{ animations, isAnimating, setIsAnimating }}
@@ -36,6 +32,17 @@ export const PageTransitionProvider = ({
 			{children}
 		</TransitionsContext.Provider>
 	)
+}
+
+/** Fires `pageCommit` once real page content has rendered. Render inside the page's resolved content. */
+export const PageCommitSignal = () => {
+	const pathname = usePathname()
+
+	useEffect(() => {
+		loader.dispatchEvent("pageCommit", pathname)
+	}, [pathname])
+
+	return null
 }
 
 export const usePageTransition = (transition: PageTransition = {}) => {

@@ -12,7 +12,9 @@ Never commit, push, or amend unless the user says "yolo". Even if the user speci
 
 Prefer existing utilities and patterns in `library/` over one-off implementations. Search `library/` and real call sites before creating new abstractions or helper code. Read the utility JSDoc and inspect existing usages to see usage conventions.
 
-For styling, use `library/styled/README.md` and existing styled components as the source of truth. Use project tokens from `app/styles/colors` and `app/styles/text`. Do not use inline styles.
+For styling, use `library/styled/README.md` and existing styled components as the source of truth. Use project tokens from `app/styles/colors` and `app/styles/text`.
+
+Never use inline styles (`style={{...}}` in JSX, or imperative `element.style.foo = ...`/`element.style.setProperty(...)`), including for values that change at runtime or per frame. When a value must be computed at runtime (an animated position, a drag offset, a value read from an API/CMS that can't be known at build time), use the `styled` system's `tokens` feature (see `library/styled/README.md` — "tokens (dynamic values)") to back it with a CSS variable, and set that variable through the component's token prop or, for per-frame/imperative updates outside React's render cycle, via `element.style.setProperty(cssVarName, value)` targeting that same token's underlying CSS variable — never introduce a new ad-hoc inline style as a shortcut. If you genuinely cannot find a way to express something through `styled`/tokens, stop and ask the user before reaching for an inline style.
 
 Project text styles may use Capsize-generated pseudo-elements. Apply them to the element that directly contains text, not to layout wrappers such as flex or grid containers where `::before`/`::after` would become layout items.
 
@@ -22,16 +24,22 @@ For images, use `StaticImage` for raster assets and `SanityImage` for CMS images
 
 ## Validation
 
-After making changes, run the project validation scripts and fix any warnings or errors they report:
-
-Very fast, run these all the time:
+Do NOT run `pnpm format`, `pnpm lint`, or `pnpm build` after every edit, after every file, or as a routine habit during a task. These are not to be run by default. Run them at most once per task, only after a substantial chunk of work is complete, and only after explicitly asking the user for permission first — do not just announce you're about to run them, actually wait for their answer. If the user tells you to stop running them, stop immediately and do not resume without being asked again.
 
 - `WIREIT_LOGGER=metrics pnpm format`
 - `WIREIT_LOGGER=metrics pnpm lint`
+- `WIREIT_LOGGER=metrics pnpm build` (slow, resource intensive — only when explicitly requested by the user, never on your own initiative)
 
-Slow and very resource intensive, avoid when not needed:
+### Testing domain-gated behavior locally
 
-- `WIREIT_LOGGER=metrics pnpm build`
+Some behavior (GTM triggers, cookie scoping, CORS) is gated on hostname and won't activate on `localhost`. To test it locally:
+
+1. Add a line to `/etc/hosts` mapping the real hostname to `127.0.0.1` (requires `sudo`, e.g. `echo "127.0.0.1   example.com" | sudo tee -a /etc/hosts`, then `sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder`).
+2. Run a **production build** (`pnpm build && pnpm exec next start -p <port>`), not the dev server — the dev server's HMR WebSocket client breaks under a spoofed hostname and hangs the page load.
+3. Browse to `http://<hostname>:<port>` instead of `localhost`.
+4. Remove the `/etc/hosts` line afterward (same `sudo`, via `sed` or manual edit) to avoid a stale override.
+
+Note: some browsers (e.g. Safari's "Prevent cross-site tracking") block known tracker domains like `googletagmanager.com` outright — this is unrelated to the hostname trick and needs to be disabled separately for testing.
 
 ## Working Style
 

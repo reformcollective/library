@@ -238,8 +238,11 @@ export const useAnimation = <InputFn extends Creation>(
 	}, finalDeps)
 
 	useHMR("afterRefresh", (hash) => {
-		setHmrHash(hash)
 		context.revert()
+		// give gsap's internal ScrollTrigger teardown a tick to fully settle before
+		// recreating animations — recreating in the same tick as revert() can race
+		// GSAP's internal trigger bookkeeping and throw (curTrigger.end undefined)
+		queueMicrotask(() => setHmrHash(hash))
 	})
 
 	return {

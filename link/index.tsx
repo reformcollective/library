@@ -47,6 +47,11 @@ type AnchorProps = {
 	 * works for both internal and external links
 	 */
 	onBeforeNavigate?: () => void
+	/**
+	 * control Next.js route prefetching for internal links
+	 * (e.g. `false` to skip prefetching a route that should not be fetched ahead of a click)
+	 */
+	prefetch?: LinkProps<string>["prefetch"]
 
 	type?: undefined
 } & Omit<ComponentProps<"a">, "href" | "onClick" | "ref">
