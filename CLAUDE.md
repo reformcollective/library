@@ -6,7 +6,7 @@ Use `pnpm`.
 
 `library/` is a git submodule shared across projects. Changes there affect multiple websites and should stay generic. After pulling in a newer `library/` revision, read `library/CHANGELOG.md` for migration notes and project-impacting changes.
 
-Never commit, push, or amend unless the user says "yolo". Even if the user specifically asks, they must say the magic word before you commit or amend.
+Never commit, push, start a merge/rebase, or amend unless the user says "yolo". Even if the user specifically asks, they must say the magic word before you commit or amend.
 
 ## Agency Patterns
 
@@ -22,8 +22,39 @@ For animation, prefer the shared GSAP pattern built around `library/useAnimation
 
 For images, use `StaticImage` for raster assets and `SanityImage` for CMS images. Reserve `app/images/` for shared global assets and co-locate component-specific assets with the component that uses them. Follow the SVG import patterns from `next.config.ts`: use `*.inline.svg` for React component imports and plain `.svg` for image asset imports.
 
+## Figma Design Matching
+
+Treat Figma as the source of truth unless stated otherwise. Don't guess from screenshots. Pixel values are always scaled (using `f.responsive` or `f.small`) unless stated otherwise.
+
+Before implementing from Figma:
+- Inspect whether key visuals are components, instances, variants, vectors, or exportable assets.
+- Reuse existing Figma components, styles, variables, and design-system assets before recreating anything.
+
+For icons:
+- Export or inspect exact SVG/vector data from Figma; don't approximate.
+- Preserve real bounds, strokes, fills, and state variants.
+- If exact export is not possible, ask for assets or permission to approximate.
+
+For states and animation:
+- Inspect variants, component properties, prototype reactions, and documented state frames.
+- If states or animation timing are unclear, ask before coding.
+
+For background graphics and complex visuals:
+- Export the exact Figma node/layer; don't recreate it by eye.
+- Export PNG assets at 4x scale so `next/image` has quality to optimize from.
+- If a high-quality export is not possible, ask for one.
+
+## Common Mistakes
+
+- violating capsize rules around pseudo elements
+- using the `css` helper without using a utility like `f.responsive` or `f.unresponsive`
+- adding SVGs as react components instead of standalone `*.svg` or `*.inline.svg` files
+
 ## Validation
 
+After making changes, check for common mistakes and run the project validation scripts and fix any warnings or errors they report:
+
+Very fast, run these all the time:
 Do NOT run `pnpm format`, `pnpm lint`, or `pnpm build` after every edit, after every file, or as a routine habit during a task. These are not to be run by default. Run them at most once per task, only after a substantial chunk of work is complete, and only after explicitly asking the user for permission first — do not just announce you're about to run them, actually wait for their answer. If the user tells you to stop running them, stop immediately and do not resume without being asked again.
 
 - `WIREIT_LOGGER=metrics pnpm format`
@@ -44,6 +75,7 @@ More generally: prefer verification that does not run the app. `pnpm exec tsc --
 
 Some behavior (GTM triggers, cookie scoping, CORS) is gated on hostname and won't activate on `localhost`. To test it locally:
 
+Slow and very resource intensive, run only when needed:
 1. Add a line to `/etc/hosts` mapping the real hostname to `127.0.0.1` (requires `sudo`, e.g. `echo "127.0.0.1   example.com" | sudo tee -a /etc/hosts`, then `sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder`).
 2. Run a **production build** (`pnpm build && pnpm exec next start -p <port>`), not the dev server — the dev server's HMR WebSocket client breaks under a spoofed hostname and hangs the page load.
 3. Browse to `http://<hostname>:<port>` instead of `localhost`.
