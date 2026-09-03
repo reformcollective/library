@@ -51,6 +51,7 @@ export type VideoField = {
 			videoDuration: number | null
 		}
 	} | null
+	posterImage: ImageField | null
 }
 
 export type LinkField = {
@@ -72,7 +73,7 @@ export type LinkField = {
 	blank?: boolean
 	parameters?: string
 	anchor?: string
-	internalSlug: null | string | "/"
+	internalSlug: null | string
 }
 
 const internalSlugField = `"internalSlug": select(
@@ -128,7 +129,8 @@ const muxVideoProjection = `{
 	}
 ` as const
 
-const videoProjection = `{ ..., muxVideo ${muxVideoProjection} }` as const
+const videoProjection =
+	`{ ..., muxVideo ${muxVideoProjection}, posterImage ${imageProjection} }` as const
 
 export const assetMetadataFunctions = `
 	fn reform::link($link) = $link ${linkProjection};

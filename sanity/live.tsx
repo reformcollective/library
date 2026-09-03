@@ -20,7 +20,7 @@ import {
 	isNextProductionBuild,
 } from "./liveEnvironment"
 
-const libraryClient = client.withConfig({ useCdn: false })
+const libraryClient = client.withConfig({ useCdn: true })
 
 /**
  * Use defineLive to keep Sanity fetches tagged with Content Lake sync tags.
@@ -42,21 +42,9 @@ type LibraryFetchResult<QueryString extends string> = {
 
 const sanityFetchQuerySizeWarningThresholdBytes = 200 * 1024
 
-/**
- * Used to fetch data in Server Components, it has built in support for handling Draft Mode and perspectives.
- * When using the "published" perspective then time-based revalidation is used, set to match the time-to-live on Sanity's API CDN (60 seconds)
- * and will also fetch from the CDN.
- * When using the "drafts" perspective then the data is fetched from the live API and isn't cached, it will also fetch draft content that isn't published yet.
- */
-export async function libraryFetch<const QueryString extends string>({
-	query,
-	params = {},
-	perspective,
-	disableStega,
-}: {
+type LibraryFetchArgs<QueryString extends string> = {
 	query: QueryString
 	params?: QueryParams | Promise<QueryParams>
-	perspective?: Exclude<ClientPerspective, "raw">
 	/**
 	 * Good to know: Always disable stega when calling sanityFetch within these:
 	 *
@@ -68,8 +56,27 @@ export async function libraryFetch<const QueryString extends string>({
 	 * otherwise, stega should be undefined
 	 */
 	disableStega?: boolean
-}): Promise<LibraryFetchResult<QueryString>> {
-	const resolvedParams = await params
+}
+
+/**
+ * Queries are authored indented for readability, but every tab and newline costs
+ * three characters once URI-encoded. `@sanity/client` sends a query as a GET only
+ * while the encoded query string stays under its size limit and silently falls
+ * back to POST above it — and Next caches neither POST responses nor their cache
+ * tags, so an oversized query loses on-demand revalidation entirely.
+ *
+ * Stripping per-line indentation is whitespace-only and doesn't change GROQ
+ * semantics, but it buys back well over a thousand encoded characters.
+ */
+function compactQuery(query: string) {
+	return query
+		.split("\n")
+		.map((line) => line.trim())
+		.filter(Boolean)
+		.join("\n")
+}
+
+function warnIfQueryTooLarge(query: string, resolvedParams: QueryParams) {
 	const queryBytes = Buffer.byteLength(query)
 	const paramsBytes = Buffer.byteLength(JSON.stringify(resolvedParams))
 	if (queryBytes > sanityFetchQuerySizeWarningThresholdBytes) {
@@ -79,8 +86,27 @@ export async function libraryFetch<const QueryString extends string>({
 			thresholdBytes: sanityFetchQuerySizeWarningThresholdBytes,
 		})
 	}
-	return await internalFetch({
-		query,
+}
+
+/**
+ * Used to fetch data in Server Components, it has built in support for handling Draft Mode and perspectives.
+ * When using the "published" perspective then time-based revalidation is used, set to match the time-to-live on Sanity's API CDN (60 seconds)
+ * and will also fetch from the CDN.
+ * When using the "drafts" perspective then the data is fetched from the live API and isn't cached, it will also fetch draft content that isn't published yet.
+ */
+export async function libraryFetch<const QueryString extends string>({
+	query,
+	params = {},
+	perspective,
+	disableStega,
+}: LibraryFetchArgs<QueryString> & {
+	perspective?: Exclude<ClientPerspective, "raw">
+}): Promise<LibraryFetchResult<QueryString>> {
+	const resolvedParams = await params
+	const compactedQuery = compactQuery(query) as QueryString
+	warnIfQueryTooLarge(compactedQuery, resolvedParams)
+	return internalFetch({
+		query: compactedQuery,
 		params: resolvedParams,
 		stega: disableStega ? false : undefined,
 		perspective,
@@ -106,6 +132,7 @@ export const LibraryRuntime = async () => {
 		>
 			{(isDraftMode || !allowProxy) && (
 				<InternalLive
+					includeDrafts={isDraftMode}
 					action={isDraftMode ? notifySanityLiveRefreshAction : undefined}
 				/>
 			)}

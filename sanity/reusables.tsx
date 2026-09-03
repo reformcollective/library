@@ -12,6 +12,10 @@ import {
 import type { PreviewValue, StrictDefinition } from "sanity"
 import {
 	type ArrayOfEntry,
+	type ArrayOfType,
+	type BlockDecoratorDefinition,
+	type BlockListDefinition,
+	type BlockStyleDefinition,
 	defineArrayMember,
 	defineField,
 	defineType,
@@ -259,6 +263,24 @@ export function definePageSection<const TName extends string>(
 				icon,
 				iconBackground ?? libraryConfig.sectionPreviewBackground,
 			),
+			fields: [
+				...(options.fields ?? []),
+				defineField({
+					type: "string",
+					name: "headerMode",
+					title: "Header Mode",
+					description:
+						"Controls the header's color scheme while this section is scrolled behind it.",
+					options: {
+						list: [
+							{ title: "Light", value: "light" },
+							{ title: "Dark", value: "dark" },
+						],
+						layout: "radio",
+					},
+					initialValue: "light",
+				}),
+			],
 		},
 		secondary,
 	)
@@ -346,8 +368,236 @@ export const video = defineType({
 			title: "Mux Video",
 			hidden: ({ parent }) => parent?.sourceType !== "mux",
 		}),
+		universalImage({
+			name: "posterImage",
+			title: "Poster Image",
+			description:
+				"Optional. If set, this image is shown in place of the video's default thumbnail.",
+			withAlt: false,
+			hidden: ({ parent }) => parent?.sourceType !== "mux",
+		}),
 	],
 })
+
+/**
+ * The link annotation `faqItem` enables by default. Accepts http, https, mailto,
+ * and tel URLs, and renders through `UniversalLink`.
+ *
+ * Exported so a project can keep the default link while replacing everything else.
+ *
+ * @example
+ * faqItem({ annotations: [faqLink, myTooltipAnnotation] })
+ */
+export const faqLink: ArrayOfType<"object" | "reference"> = {
+	title: "Link",
+	name: "link",
+	type: "object",
+	fields: [
+		{
+			title: "URL",
+			name: "href",
+			type: "url",
+			validation: (rule) =>
+				rule.uri({
+					scheme: ["http", "https", "mailto", "tel"],
+				}),
+		},
+	],
+}
+
+/**
+ * A single FAQ entry: a question and a rich-text answer.
+ *
+ * Call this at your registration site in `sanity.config.ts`. The arguments are how
+ * **this project** decides what its editors can put in an answer — changing the
+ * available marks should never mean editing the library.
+ *
+ * Registering it also makes typegen emit a named `FaqItem` in `sanity.types.ts`.
+ * Type components against that, rather than reaching into a section's query result
+ * (`GetSectionType<"faq">["items"][number]`), which welds the component to one
+ * project's section name and stops it compiling anywhere else.
+ *
+ * Called bare you get: `normal` blocks, bold + italic, bulleted + numbered lists,
+ * and {@link faqLink}.
+ *
+ * Anything you enable already has a renderer in `library/sanity/PortableText`, so it
+ * displays correctly with no component code. Those renderers live in the `library`
+ * cascade layer, so unlayered project CSS restyles them without a `components`
+ * override — reach for `components` only to take a renderer over entirely.
+ *
+ * Decorator values must match the marks PortableText knows: `strong`, `em`, `code`,
+ * `underline`, `strike-through`, `super`, `sub`. Block styles may be `normal`,
+ * `h1`–`h6`, or `blockquote`.
+ *
+ * **Each option replaces its default list.** The lists are not merged, and there is no
+ * per-mark removal — to drop one mark, pass the ones you are keeping. An empty array is
+ * therefore how you remove a whole category: `annotations: []` disallows links outright.
+ *
+ * `styles` is the one exception. `styles: []` does not give you an empty style list —
+ * Sanity re-inserts `normal` whenever it is missing, so `normal` is always available.
+ *
+ * Trim at scaffold time. Adding a mark later is backward compatible. Removing one after
+ * content exists does not rewrite that content: the mark stays in the stored portable
+ * text and still renders on the front end, because the renderers in
+ * `library/sanity/PortableText` are unconditional. What changes is the Studio, which no
+ * longer offers the control — leaving spans carrying a mark editors can't apply or clear.
+ *
+ * @example
+ * // sanity.config.ts — the defaults
+ * schema: { types: [youtube, video, faqItem()] }
+ *
+ * @example
+ * // the design has no list treatment
+ * faqItem({ lists: [] })
+ *
+ * @example
+ * // plain paragraphs and links, nothing else
+ * faqItem({ lists: [], decorators: [] })
+ *
+ * @example
+ * // the design has no bold — list the decorator you are keeping, not the one you are dropping
+ * faqItem({ decorators: [{ title: "Italic", value: "em" }] })
+ *
+ * @example
+ * // bold only, no italic
+ * faqItem({ decorators: [{ title: "Bold", value: "strong" }] })
+ *
+ * @example
+ * // bulleted lists only — numbered steps are not in the design
+ * faqItem({ lists: [{ title: "Bulleted", value: "bullet" }] })
+ *
+ * @example
+ * // more emphasis options than the default bold + italic
+ * faqItem({
+ * 	decorators: [
+ * 		{ title: "Bold", value: "strong" },
+ * 		{ title: "Italic", value: "em" },
+ * 		{ title: "Underline", value: "underline" },
+ * 		{ title: "Strikethrough", value: "strike-through" },
+ * 	],
+ * })
+ *
+ * @example
+ * // long answers need sub-headings
+ * faqItem({
+ * 	styles: [
+ * 		{ title: "Normal", value: "normal" },
+ * 		{ title: "Heading", value: "h3" },
+ * 	],
+ * })
+ * // renders via the library default; override with components={{ block: { h3: ... } }}
+ *
+ * @example
+ * // answers must not contain links
+ * faqItem({ annotations: [] })
+ *
+ * @example
+ * // keep the default link, add a project-specific annotation
+ * faqItem({ annotations: [faqLink, myTooltipAnnotation] })
+ */
+export const faqItem = ({
+	styles = [{ title: "Normal", value: "normal" }],
+	lists = [
+		{ title: "Bulleted", value: "bullet" },
+		{ title: "Numbered", value: "number" },
+	],
+	decorators = [
+		{ title: "Bold", value: "strong" },
+		{ title: "Italic", value: "em" },
+	],
+	annotations = [faqLink],
+}: {
+	styles?: BlockStyleDefinition[]
+	lists?: BlockListDefinition[]
+	decorators?: BlockDecoratorDefinition[]
+	annotations?: ArrayOfType<"object" | "reference">[]
+} = {}) =>
+	defineType({
+		name: "faqItem",
+		type: "object",
+		title: "FAQ Item",
+		fields: [
+			defineField({
+				type: "string",
+				name: "question",
+				title: "Question",
+				validation: (rule) => rule.required(),
+			}),
+			defineField({
+				type: "array",
+				name: "answer",
+				title: "Answer",
+				validation: (rule) => rule.required(),
+				of: [
+					defineArrayMember({
+						type: "block",
+						styles,
+						lists,
+						marks: { decorators, annotations },
+					}),
+				],
+			}),
+		],
+		preview: {
+			select: { title: "question" },
+		},
+	})
+
+/**
+ * An array of FAQ entries, for use in any section that needs one.
+ *
+ * Requires `faqItem()` to be registered in `sanity.config.ts` — the Studio will
+ * error on an unknown type otherwise. What editors can write inside each entry is
+ * configured there, not here; see {@link faqItem}.
+ *
+ * The field is required and must hold at least one entry — a section that renders an
+ * FAQ with nothing in it is a mistake in every design. This is not currently
+ * overridable; if a project needs an optional FAQ list, widen the options here.
+ *
+ * @example
+ * // the common case
+ * fields: [kicker, title, faqItems()]
+ *
+ * @example
+ * // rename the field, and describe it for editors
+ * fields: [
+ * 	faqItems({
+ * 		name: "questions",
+ * 		title: "Common Questions",
+ * 		description: "Shown in the order listed here.",
+ * 	}),
+ * ]
+ *
+ * @example
+ * // two independent FAQ fields in one section
+ * fields: [
+ * 	faqItems({ name: "generalFaqs", title: "General" }),
+ * 	faqItems({ name: "billingFaqs", title: "Billing" }),
+ * ]
+ *
+ * @example
+ * // a project type of your own instead of the shared one
+ * fields: [faqItems({ of: [{ type: "myFaqItem" }] })]
+ */
+export const faqItems = ({
+	name = "items",
+	title = "FAQ Items",
+	of,
+	...schemaField
+}: {
+	name?: string
+	title?: string
+	of?: ArrayOfType[]
+	description?: string
+} = {}) =>
+	defineField({
+		...schemaField,
+		name,
+		title,
+		type: "array",
+		of: of ?? [defineArrayMember({ type: "faqItem" })],
+		validation: (rule) => rule.required().min(1),
+	})
 
 /**
  * Renders a non-editable info callout in the Studio form.

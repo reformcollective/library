@@ -82,7 +82,7 @@ export function BackgroundVideo({
 		1920,
 		Math.max(300, Math.round(innerWidth / 100) * 100),
 	)
-	const [loadVideo, setLoadVideo] = useState(eager ?? false)
+	const [loadVideo, setLoadVideo] = useState(false)
 	const [videoCanPlay, setVideoCanPlay] = useState(true)
 
 	useEffect(() => {
@@ -109,7 +109,7 @@ export function BackgroundVideo({
 		if (playbackId && !videoHasFinished)
 			// we never want to interrupt a play call with another play call
 			// so wait for any previous play call to finish before starting a new one
-			videoPlayPromise.current.then(() => {
+			void videoPlayPromise.current.then(() => {
 				if (video.current)
 					videoPlayPromise.current = video.current
 						?.play()
@@ -287,6 +287,9 @@ const Container = styled("div", [
 	{
 		"@layer": {
 			[library]: f.responsive(css`
+				position: relative;
+				width: 100%;
+				height: 100%;
 				isolation: isolate;
 				overflow: clip;
 			`),
