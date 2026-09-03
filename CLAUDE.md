@@ -30,6 +30,16 @@ Do NOT run `pnpm format`, `pnpm lint`, or `pnpm build` after every edit, after e
 - `WIREIT_LOGGER=metrics pnpm lint`
 - `WIREIT_LOGGER=metrics pnpm build` (slow, resource intensive — only when explicitly requested by the user, never on your own initiative)
 
+### Do not use browser automation
+
+Never use Claude in Chrome or any `mcp__claude-in-chrome__*` tool to check your work — no opening tabs, driving pages, clicking through UI, running JS in the page, or taking screenshots. It is slow and intrusive, and it is not how work gets verified here. This holds even when a change can only be seen in a browser: say what you could not confirm and let the user look. Use it only if the user explicitly asks you to.
+
+### Do not start dev servers
+
+Do not run `pnpm dev` (or `next dev`) on your own initiative. The user usually already has one running, and a second one silently takes whatever port is free, so theirs fails to bind or they end up reading a stale server on another port. If you need a running app to check something, ask, and let the user start it and tell you the port.
+
+More generally: prefer verification that does not run the app. `pnpm exec tsc --noEmit`, `sanity schema validate`, and typegen are cheap, non-invasive, and catch most things. Reach for a running app last, not first.
+
 ### Testing domain-gated behavior locally
 
 Some behavior (GTM triggers, cookie scoping, CORS) is gated on hostname and won't activate on `localhost`. To test it locally:

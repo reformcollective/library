@@ -99,8 +99,13 @@ export default function useAutoHideHeader(
 			let isHovered = false
 			if (!wrapper?.current) return
 
+			// cached to avoid a forced-synchronous-layout read (offsetHeight) on
+			// every animation frame; kept in sync by the ResizeObserver below,
+			// which fires exactly when the header's actual size changes
+			let cachedHeaderHeight = wrapper.current.offsetHeight
+
 			const publishHeaderVars = (target: HTMLDivElement) => {
-				const height = target.offsetHeight + extraOffset
+				const height = cachedHeaderHeight + extraOffset
 				const y = Number(gsap.getProperty(target, "y")) || 0
 				const visibleOffset = reverse ? height - y : height + y
 				const root = document.documentElement
@@ -135,7 +140,10 @@ export default function useAutoHideHeader(
 
 			const yTo = gsap.quickTo(wrapper.current, "y", props)
 			const resizeObserver = new ResizeObserver(() => {
-				if (wrapper.current) publishHeaderVars(wrapper.current)
+				if (wrapper.current) {
+					cachedHeaderHeight = wrapper.current.offsetHeight
+					publishHeaderVars(wrapper.current)
+				}
 			})
 			resizeObserver.observe(wrapper.current)
 
@@ -144,7 +152,7 @@ export default function useAutoHideHeader(
 				const rawDelta = scroll - lastScroll
 				const delta = Math.abs(rawDelta) < 100 ? rawDelta : 0
 				lastScroll = scroll
-				const height = (wrapper.current?.offsetHeight ?? 0) + extraOffset
+				const height = cachedHeaderHeight + extraOffset
 
 				const forceHideHeader = dataHideAreOnScreen.current
 				const forceShowHeader =

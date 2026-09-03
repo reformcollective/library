@@ -58,6 +58,24 @@ type LibraryFetchArgs<QueryString extends string> = {
 	disableStega?: boolean
 }
 
+/**
+ * Queries are authored indented for readability, but every tab and newline costs
+ * three characters once URI-encoded. `@sanity/client` sends a query as a GET only
+ * while the encoded query string stays under its size limit and silently falls
+ * back to POST above it — and Next caches neither POST responses nor their cache
+ * tags, so an oversized query loses on-demand revalidation entirely.
+ *
+ * Stripping per-line indentation is whitespace-only and doesn't change GROQ
+ * semantics, but it buys back well over a thousand encoded characters.
+ */
+function compactQuery(query: string) {
+	return query
+		.split("\n")
+		.map((line) => line.trim())
+		.filter(Boolean)
+		.join("\n")
+}
+
 function warnIfQueryTooLarge(query: string, resolvedParams: QueryParams) {
 	const queryBytes = Buffer.byteLength(query)
 	const paramsBytes = Buffer.byteLength(JSON.stringify(resolvedParams))
@@ -85,9 +103,10 @@ export async function libraryFetch<const QueryString extends string>({
 	perspective?: Exclude<ClientPerspective, "raw">
 }): Promise<LibraryFetchResult<QueryString>> {
 	const resolvedParams = await params
-	warnIfQueryTooLarge(query, resolvedParams)
+	const compactedQuery = compactQuery(query) as QueryString
+	warnIfQueryTooLarge(compactedQuery, resolvedParams)
 	return internalFetch({
-		query,
+		query: compactedQuery,
 		params: resolvedParams,
 		stega: disableStega ? false : undefined,
 		perspective,
