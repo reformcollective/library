@@ -7,14 +7,9 @@ import TypedEventEmitter from "./TypedEventEmitter"
 import { useAnimation } from "./useAnimation"
 
 const HEADER_HEIGHT_VAR = "--site-header-height"
-const HEADER_VISIBLE_OFFSET_VAR = "--site-header-visible-offset"
 const SCROLLED_THRESHOLD = 100
 // extra px beyond the measured height so no sliver of the header remains visible when hidden
 const HIDE_BUFFER = 8
-
-function clamp(value: number, min: number, max: number) {
-	return Math.min(max, Math.max(min, value))
-}
 
 // TODO: package this as a component as AutoHidingHeader instead of a hook
 /**
@@ -104,16 +99,14 @@ export default function useAutoHideHeader(
 			// which fires exactly when the header's actual size changes
 			let cachedHeaderHeight = wrapper.current.offsetHeight
 
-			const publishHeaderVars = (target: HTMLDivElement) => {
-				const height = cachedHeaderHeight + extraOffset
-				const y = Number(gsap.getProperty(target, "y")) || 0
-				const visibleOffset = reverse ? height - y : height + y
-				const root = document.documentElement
-
-				root.style.setProperty(HEADER_HEIGHT_VAR, `${height}px`)
-				root.style.setProperty(
-					HEADER_VISIBLE_OFFSET_VAR,
-					`${clamp(visibleOffset, 0, height)}px`,
+			// the height only changes when the header is resized, so it is
+			// published from the ResizeObserver rather than on every scroll frame.
+			// a custom property written to :root invalidates style for the whole
+			// document, which is far too expensive to do per frame
+			const publishHeaderHeight = () => {
+				document.documentElement.style.setProperty(
+					HEADER_HEIGHT_VAR,
+					`${cachedHeaderHeight + extraOffset}px`,
 				)
 			}
 
@@ -125,7 +118,7 @@ export default function useAutoHideHeader(
 					const scroll = window.lenisInstance?.scroll ?? window.scrollY
 					target.dataset.headerScrolled =
 						scroll <= SCROLLED_THRESHOLD ? "false" : "true"
-					publishHeaderVars(target)
+					publishHeaderHeight()
 				}
 			}
 			resetHeader(wrapper.current)
@@ -133,16 +126,13 @@ export default function useAutoHideHeader(
 			const props = {
 				ease: "power1.out",
 				duration: 0.4,
-				onUpdate: () => {
-					if (wrapper.current) publishHeaderVars(wrapper.current)
-				},
 			}
 
 			const yTo = gsap.quickTo(wrapper.current, "y", props)
 			const resizeObserver = new ResizeObserver(() => {
 				if (wrapper.current) {
 					cachedHeaderHeight = wrapper.current.offsetHeight
-					publishHeaderVars(wrapper.current)
+					publishHeaderHeight()
 				}
 			})
 			resizeObserver.observe(wrapper.current)
