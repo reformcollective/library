@@ -181,7 +181,10 @@ export function Marquee({
 
 					const visibilityObserver = new IntersectionObserver(
 						([entry]) => {
-							if (entry?.isIntersecting) loop.play()
+							// resume, not play: play() always runs forward and clears the timeline's
+							// reversed flag, so a reversed marquee would flip direction the first
+							// time it came on screen
+							if (entry?.isIntersecting) loop.resume()
 							else loop.pause()
 						},
 						{ threshold: 0 },
