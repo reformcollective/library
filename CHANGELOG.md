@@ -1,3 +1,17 @@
+# 2026-09-21
+
+## Reversed marquees no longer flip forward on screen
+
+`Marquee` pauses its loop while off screen and resumes it when it scrolls back in. That resume called `loop.play()`, and in GSAP `play()` always runs a timeline *forward*, clearing its reversed flag. `horizontalLoop`/`verticalLoop` implement `reversed` as `tl.reverse()`, and an `IntersectionObserver` fires as soon as it starts observing — so a marquee passed `reversed` reversed for a frame and then ran forward like every other row, for the whole life of the page.
+
+It now calls `loop.resume()`, which resumes without touching direction. For a forward marquee the two are identical, so nothing changes unless you were passing `reversed`.
+
+This only ever affected the automatic visibility resume. The wheel-stop handler already branched on `reversed` and picked `play()` or `reverse()` correctly, which is why a reversed marquee would snap back to its intended direction after you scrolled it by hand.
+
+**Migration Advice**
+
+None — this is a fix. If a project worked around it by re-calling `reverse()` from `onLoopChange`, that workaround is now redundant and will fight the observer; drop it.
+
 # 2026-08-13
 
 ## Shared FAQ schema primitives
