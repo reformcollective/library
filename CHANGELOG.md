@@ -1,3 +1,24 @@
+# 2026-09-23
+
+## `useSectionTheme` tracks any fixed element, at any height
+
+`useSectionTheme(ref)` used to read the section behind a 1px strip placed `ref`'s height down from the top of the viewport — the bottom edge of a header, assuming the header sits at the very top. It couldn't track anything else, and there was only ever one result: the shared theme read by `useHeaderMode`.
+
+It now takes options:
+
+```ts
+useSectionTheme(ref, { offset?: number, shared?: boolean })
+```
+
+- `offset` places the strip as a percentage of the element's height from its top edge, measured from where the element actually is on screen. Defaults to `50`, the center.
+- `shared` (default `true`) publishes to the shared theme, as before. Pass `false` and the hook returns its own theme without touching the shared one, so a second fixed element — a bar pinned to the bottom of the screen, say — can track the section behind it independently of the header.
+
+The initial scan after a route change now checks the same strip, rather than "any part of the section is below the header".
+
+**Migration Advice**
+
+The default strip moved from the header's bottom edge to its center, so a header switches slightly earlier as a boundary scrolls up behind it. To keep the old behavior exactly, pass `{ offset: 100 }`. A better choice is usually the height of the header's text, so the switch lands where the text is.
+
 # 2026-09-21
 
 ## Reversed marquees no longer flip forward on screen
