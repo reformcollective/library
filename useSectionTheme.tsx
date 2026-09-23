@@ -56,18 +56,28 @@ function useSectionThemeContext() {
 
 /**
  * Watches all elements tagged with `data-header-mode="dark" | "light"` and reports
- * which one is currently behind the header, via a single shared IntersectionObserver.
+ * which one is currently behind the given element, via a single IntersectionObserver.
  *
- * Add `data-header-mode` to a section's root element to have it drive the header's theme
- * while it's scrolled behind it.
+ * Add `data-header-mode` to a section's root element to have it drive the theme of
+ * anything tracking it while it's scrolled behind.
  *
- * @param headerRef ref pointing to the sticky header element, used to measure its height
+ * The section is read from a thin horizontal strip across the element, placed
+ * `offset` percent down from the element's top edge — so it works for an element
+ * fixed anywhere on screen, e.g. a header at the top or a bar at the bottom.
+ *
+ * @param elementRef ref pointing to the fixed element, used to measure where it sits
+ * @param options.offset where the strip sits, as a percentage of the element's height from its top. defaults to 50 (the center)
+ * @param options.shared publish to the shared theme read by `useHeaderMode` (default). pass false to keep the result local to this element, so several elements can each track what's behind them
  */
 export default function useSectionTheme(
-	headerRef: RefObject<HTMLElement | null>,
+	elementRef: RefObject<HTMLElement | null>,
+	{ offset = 50, shared = true }: { offset?: number; shared?: boolean } = {},
 ) {
 	const pathname = usePathname()
-	const { theme, setTheme } = useSectionThemeContext()
+	const context = useSectionThemeContext()
+	const [localTheme, setLocalTheme] = useState<SectionTheme>(DEFAULT_THEME)
+	const theme = shared ? context.theme : localTheme
+	const setTheme = shared ? context.setTheme : setLocalTheme
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: pathname is only a re-run trigger on route change, not read in the effect
 	useEffect(() => {
@@ -99,15 +109,22 @@ export default function useSectionTheme(
 			if (nextTheme) setTheme(nextTheme)
 		}
 
+		// the viewport y of the strip: `offset` percent down the element, measured
+		// from where it actually sits on screen rather than assuming the top
+		const getStripY = () => {
+			const rect = elementRef.current?.getBoundingClientRect()
+			if (!rect) return 0
+			return Math.round(rect.top + rect.height * (offset / 100))
+		}
+
 		const createObserver = () => {
 			observer?.disconnect()
 			activeElements = []
 
-			const headerHeight =
-				headerRef.current?.getBoundingClientRect().height ?? 0
-			// a thin strip right at the header's bottom edge — whichever section
-			// crosses it (in either scroll direction) is the one behind the header
-			const rootMargin = `-${headerHeight}px 0px -${Math.max(window.innerHeight - headerHeight - 1, 0)}px 0px`
+			const stripY = getStripY()
+			// a thin strip across the element — whichever section crosses it (in
+			// either scroll direction) is the one behind the element
+			const rootMargin = `-${stripY}px 0px -${Math.max(window.innerHeight - stripY - 1, 0)}px 0px`
 
 			observer = new IntersectionObserver(
 				(entries) => {
@@ -140,12 +157,10 @@ export default function useSectionTheme(
 			// observed elements (e.g. right after a route change) — check
 			// synchronously so the header doesn't hold onto a stale theme from
 			// before those elements existed
-			const headerHeight =
-				headerRef.current?.getBoundingClientRect().height ?? 0
+			const stripY = getStripY()
 			for (const element of newlyObserved) {
 				const rect = element.getBoundingClientRect()
-				const isInStrip =
-					rect.top < window.innerHeight && rect.bottom > headerHeight
+				const isInStrip = rect.top <= stripY && rect.bottom > stripY
 				if (isInStrip) activeElements.push(element)
 			}
 			dispatchTheme()
@@ -170,7 +185,7 @@ export default function useSectionTheme(
 			resizeListener.cleanup()
 			mutationObserver.disconnect()
 		}
-	}, [headerRef, pathname])
+	}, [elementRef, pathname, offset, setTheme])
 
 	return theme
 }
