@@ -85,5 +85,13 @@ const Embed = styled(
 		height: 100%;
 		--media-object-fit: cover;
 		--media-object-position: center;
+
+		/* wistia renders into the light DOM, where the reset's all: unset beats the player's ::slotted sizing */
+		/* stylelint-disable-next-line selector-class-pattern */
+		.wistia_embed {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+		}
 	`),
 )
