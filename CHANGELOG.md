@@ -1,5 +1,13 @@
 # 2026-09-25
 
+## `as` works on styled components that wrap a component
+
+The `as` prop was ignored on a `styled(Component, ...)` once the vanilla-split loader compiled it. The loader turns those into `withComponent(Component, raw)`, which set `as` after spreading props, so the wrapped component always rendered. For example, `styled(UniversalLink)` given `as="span"` still rendered `UniversalLink`, which returns nothing without an `href`. An `as` you pass now wins, matching `styled("tag")` components and the styled README.
+
+**Migration Advice**
+
+None, this is a fix. If a project passes `as` to a styled component that wraps another component, that `as` now takes effect where it used to be silently dropped.
+
 ## Wistia videos fill their container
 
 `VideoEmbed` played Wistia videos too tall and pushed down inside their frame. The Wistia player element renders its `.wistia_embed` div into the light DOM and sizes it with a `::slotted` rule from its shadow root. The reset's `:where(div) { all: unset }` comes from the outer document, and outer-context declarations win over `::slotted` ones before layers or specificity are compared, so the div lost its absolute positioning and grew to its content height. `VideoEmbed` now sizes `.wistia_embed` itself.

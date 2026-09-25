@@ -5,7 +5,7 @@ export function withComponent<BaseProps extends Record<string, unknown>>(
 	Base: ComponentType<BaseProps>,
 ) {
 	const Component = (props: BaseProps) =>
-		createElement(Base, { ...props, as: Target })
+		createElement(Base, { ...props, as: props.as ?? Target })
 
 	Component.toString = () => Base.toString()
 
