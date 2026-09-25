@@ -1,3 +1,65 @@
+# 2026-09-25
+
+## Wistia videos fill their container
+
+`VideoEmbed` played Wistia videos too tall and pushed down inside their frame. The Wistia player element renders its `.wistia_embed` div into the light DOM and sizes it with a `::slotted` rule from its shadow root. The reset's `:where(div) { all: unset }` comes from the outer document, and outer-context declarations win over `::slotted` ones before layers or specificity are compared, so the div lost its absolute positioning and grew to its content height. `VideoEmbed` now sizes `.wistia_embed` itself.
+
+Other providers render inside their shadow root and were never affected.
+
+**Migration Advice**
+
+None, this is a fix.
+
+## Projects can limit video sources
+
+`library/sanity/reusables` now exports `videoType()`, a factory for the `video` object type. Like `faqItem()`, you call it at your registration site in `sanity.config.ts`, and its arguments decide what editors can pick, so no library edit is needed:
+
+```ts
+schema: { types: [videoType({ sources: ["youtube", "mux"] })] }
+```
+
+The sources appear in the order you pass them, and the first one is the default. Typegen narrows `sourceType` to the sources you allow. Content that already uses a removed source keeps rendering; the Studio just stops offering it.
+
+`video` is still exported as `videoType()` with every source, so existing registrations are unchanged.
+
+The Mux source is now labeled "Mux Upload" instead of "Upload or Select a File". Only the label changed; the stored value is still `mux`.
+
+**Migration Advice**
+
+None, this is additive. To limit sources, swap `video` for `videoType({ sources })` in `sanity.config.ts`.
+
+## Link fields can trigger actions
+
+A CMS link can now do something other than navigate, such as open a video modal or a popup form, without any section code knowing about it.
+
+`library/link/actionLinkType` registers a custom link type named `action:<name>`. Its options are whatever the editor picks from: a static list, or an async function that queries documents. The chosen option is stored in the link's `value`.
+
+```ts
+// sanity.config.ts
+linkField({
+	customLinkTypes: [
+		staticLinkType(),
+		actionLinkType({ name: "video", title: "Video Popup", options: async () => videoOptions }),
+	],
+})
+```
+
+`isRouteDefined` treats an action link as defined, and `UniversalLink` renders it as a `<button type="button">`. On click it calls `onBeforeNavigate` (so menus still close), then dispatches the value to listeners registered with `useLinkAction`:
+
+```ts
+import { useLinkAction } from "library/link/actions"
+
+useLinkAction("video", (videoId) => setOpenVideo(videoId))
+```
+
+The button carries `data-link-action="<name>"`, so app code can find action links on the page or react to hovering one (e.g. `[data-link-action="video"]` to warm up a player).
+
+Every existing call site that gates a CTA on `isRouteDefined` and renders it through a `UniversalLink` wrapper picks this up with no changes. `getLinkAction(link)` from `library/link/resolve` is exported for code that needs to tell an action apart from a destination.
+
+**Migration Advice**
+
+None, this is additive. An action link renders a `<button>`, so avoid offering action types on fields rendered inside another link or button (e.g. `render` props that expect an anchor). The plugin's field-level `customLinkTypes` option can limit which fields offer them.
+
 # 2026-09-21
 
 ## Reversed marquees no longer flip forward on screen

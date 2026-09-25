@@ -314,7 +314,7 @@ const videoSourceValidation: Record<string, RegExp> = {
 }
 
 const videoSourceTypes = [
-	{ title: "Upload or Select a File", value: "mux" },
+	{ title: "Mux Upload", value: "mux" },
 	{ title: "YouTube", value: "youtube" },
 	{ title: "Vimeo", value: "vimeo" },
 	{ title: "Wistia", value: "wistia" },
@@ -322,62 +322,86 @@ const videoSourceTypes = [
 	{ title: "Twitch", value: "twitch" },
 	{ title: "TikTok", value: "tiktok" },
 	{ title: "Video URL", value: "url" },
-]
+] as const
 
-export const video = defineType({
-	name: "video",
-	type: "object",
-	title: "Video",
-	icon: PlayIcon,
-	fields: [
-		defineField({
-			name: "sourceType",
-			type: "string",
-			title: "Source",
-			options: {
-				list: videoSourceTypes,
-			},
-			initialValue: "mux",
-		}),
-		defineField({
-			name: "url",
-			type: "url",
-			title: "Video URL",
-			hidden: ({ parent }) =>
-				!parent?.sourceType || parent.sourceType === "mux",
-			validation: (rule) =>
-				rule.custom((value, context) => {
-					const sourceType = (context.parent as { sourceType?: string })
-						?.sourceType
-					if (!sourceType || sourceType === "mux" || sourceType === "url")
+export type VideoSource = (typeof videoSourceTypes)[number]["value"]
+
+/**
+ * The `video` object type, limited to the sources this project allows. Call it at your
+ * registration site in `sanity.config.ts` in place of `video`. The first source is the default.
+ *
+ * Existing content keeps rendering if its source is later removed; the Studio just stops
+ * offering that source.
+ *
+ * @example
+ * // sanity.config.ts
+ * schema: { types: [videoType({ sources: ["youtube", "mux"] })] }
+ */
+export const videoType = ({ sources }: { sources?: VideoSource[] } = {}) => {
+	const list = sources
+		? sources.flatMap((value) =>
+				videoSourceTypes.filter((source) => source.value === value),
+			)
+		: [...videoSourceTypes]
+
+	return defineType({
+		name: "video",
+		type: "object",
+		title: "Video",
+		icon: PlayIcon,
+		fields: [
+			defineField({
+				name: "sourceType",
+				type: "string",
+				title: "Source",
+				options: {
+					list,
+				},
+				initialValue: list[0]?.value,
+			}),
+			defineField({
+				name: "url",
+				type: "url",
+				title: "Video URL",
+				hidden: ({ parent }) =>
+					!parent?.sourceType || parent.sourceType === "mux",
+				validation: (rule) =>
+					rule.custom((value, context) => {
+						const sourceType = (context.parent as { sourceType?: string })
+							?.sourceType
+						if (!sourceType || sourceType === "mux" || sourceType === "url")
+							return true
+						if (!value) return "URL is required"
+						const pattern = videoSourceValidation[sourceType]
+						if (pattern && !pattern.test(value)) {
+							const label = videoSourceTypes.find(
+								(s) => s.value === sourceType,
+							)?.title
+							return `This doesn't look like a valid ${label} URL`
+						}
 						return true
-					if (!value) return "URL is required"
-					const pattern = videoSourceValidation[sourceType]
-					if (pattern && !pattern.test(value)) {
-						const label = videoSourceTypes.find(
-							(s) => s.value === sourceType,
-						)?.title
-						return `This doesn't look like a valid ${label} URL`
-					}
-					return true
-				}),
-		}),
-		defineField({
-			name: "muxVideo",
-			type: "mux.video",
-			title: "Mux Video",
-			hidden: ({ parent }) => parent?.sourceType !== "mux",
-		}),
-		universalImage({
-			name: "posterImage",
-			title: "Poster Image",
-			description:
-				"Optional. If set, this image is shown in place of the video's default thumbnail.",
-			withAlt: false,
-			hidden: ({ parent }) => parent?.sourceType !== "mux",
-		}),
-	],
-})
+					}),
+			}),
+			defineField({
+				name: "muxVideo",
+				type: "mux.video",
+				title: "Mux Video",
+				hidden: ({ parent }) => parent?.sourceType !== "mux",
+			}),
+			universalImage({
+				name: "posterImage",
+				title: "Poster Image",
+				description:
+					"Optional. If set, this image is shown in place of the video's default thumbnail.",
+				withAlt: false,
+				hidden: ({ parent }) => parent?.sourceType !== "mux",
+			}),
+		],
+	})
+}
+
+/** the `video` object type with every source available */
+export const video = videoType()
 
 /**
  * The link annotation `faqItem` enables by default. Accepts http, https, mailto,

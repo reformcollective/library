@@ -5,6 +5,8 @@ import { linkIsInternal } from "../functions"
 export const staticPageLinkType = "static-page"
 export const smsLinkType = "sms"
 export const documentLinkType = "document"
+/** custom link types named `action:<name>` trigger an action instead of navigating */
+export const actionLinkPrefix = "action:"
 
 export type CMSLink = LinkField
 
@@ -93,7 +95,21 @@ export const resolveRoute = (
 }
 
 /**
- * Returns true if the link resolves to an actual destination URL.
+ * Returns the action an action link triggers, or null for any other link.
+ * @see actionLinkType
+ */
+export const getLinkAction = (
+	link: LinkHref,
+): { name: string; value: string } | null => {
+	if (!link || typeof link === "string") return null
+	const type = stegaClean(link.type)
+	const value = stegaClean(link.value)
+	if (!type?.startsWith(actionLinkPrefix) || !value) return null
+	return { name: type.slice(actionLinkPrefix.length), value }
+}
+
+/**
+ * Returns true if the link resolves to an actual destination URL or action.
  *
  * Prefer this over `!!link` — the link field stores a partial object
  * (e.g. `{ _type: "link", type: "internal" }`) via initialValue even when no
@@ -102,4 +118,5 @@ export const resolveRoute = (
  */
 export const isRouteDefined = (
 	link: LinkHref,
-): link is Exclude<LinkHref, null | undefined> => !!resolveRoute(link).url
+): link is Exclude<LinkHref, null | undefined> =>
+	!!resolveRoute(link).url || !!getLinkAction(link)
