@@ -11,7 +11,5 @@ export const linkActions = new TypedEventEmitter<
 /**
  * run a handler whenever an action link with this name is clicked
  */
-export const useLinkAction = (
-	name: string,
-	handler: (value: string) => void,
-) => linkActions.useEventListener(name, handler)
+export const useLinkAction = (name: string, handler: (value: string) => void) =>
+	linkActions.useEventListener(name, handler)
