@@ -238,6 +238,11 @@ display:revert; revert to element instead of attribute */
 
 	/* reform specific stuff */
 
+	/* keeps the document tall while the browser restores scroll, see link/scrollRestoration */
+	html[data-restoring-scroll] {
+		min-height: 9999vh;
+	}
+
 	/* hide scrollbars */
 	html {
 		font-family: sans-serif;
