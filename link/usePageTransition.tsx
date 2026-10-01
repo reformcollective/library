@@ -2,11 +2,16 @@
 
 import { usePathname } from "next/navigation"
 import { createContext, use, useEffect, useState } from "react"
-import { loader } from "./loader"
+import { loader, type TransitionEventPayload } from "./loader"
 
+/**
+ * both callbacks receive the same payload as the loader events, so a
+ * transition can branch on `transition.name` (the `transitionName` passed to
+ * the transitioner) to pick an animation for this navigation
+ */
 type PageTransition = {
-	animateBefore?: () => Promise<void> | void
-	animateAfter?: () => Promise<void> | void
+	animateBefore?: (transition: TransitionEventPayload) => Promise<void> | void
+	animateAfter?: (transition: TransitionEventPayload) => Promise<void> | void
 }
 
 export const TransitionsContext = createContext({

@@ -53,7 +53,7 @@ export const useTransitioner = () => {
 			/**
 			 * if applicable, the name of the transition you want to use
 			 * this will be passed back to you in the loader events
-			 * TODO pass this to usePageTransition
+			 * and to the animateBefore/animateAfter callbacks of usePageTransition
 			 */
 			transitionName?: (typeof libraryConfig.transitionNames)[number]
 		}) => {
@@ -143,7 +143,7 @@ export const useTransitioner = () => {
 				)
 
 				const beforeAnimations = allAnimations.map(({ animateBefore }) =>
-					animateBefore?.(),
+					animateBefore?.(eventPayload),
 				)
 				await Promise.all([
 					...beforeAnimations,
@@ -192,7 +192,7 @@ export const useTransitioner = () => {
 				)
 
 				const afterAnimations = allAnimations.map(({ animateAfter }) =>
-					animateAfter?.(),
+					animateAfter?.(eventPayload),
 				)
 
 				const newAfterAnimationFinishes = newAfterAnimations.map(
