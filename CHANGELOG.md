@@ -1,3 +1,22 @@
+# 2026-10-01
+
+## Page transitions receive the transition name
+
+`useTransitioner` has always accepted a `transitionName` and forwarded it to the loader `start`, `routeChange`, and `end` events, but the `animateBefore`/`animateAfter` callbacks registered through `usePageTransition` were called with no arguments, so a transition component had to subscribe to the loader separately to know which animation to run. Both callbacks now receive the same `{ type, name }` payload as the loader events:
+
+```tsx
+usePageTransition({
+	async animateBefore({ name }) {
+		if (name === "slide") await slideIn()
+		else await fadeIn()
+	},
+})
+```
+
+**Migration Advice**
+
+None — the argument is additive, and existing callbacks that take no arguments behave exactly as before.
+
 # 2026-09-21
 
 ## Reversed marquees no longer flip forward on screen
