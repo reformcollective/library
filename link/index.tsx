@@ -3,8 +3,10 @@
 import Link, { type LinkProps } from "next/link"
 import type { ComponentProps, Ref } from "react"
 import { linkIsInternal } from "../functions"
+import { linkActions } from "./actions"
 import {
 	type CMSLink,
+	getLinkAction,
 	isRouteDefined,
 	type LinkHref,
 	resolveRoute,
@@ -87,6 +89,33 @@ export default function UniversalLink({
 				{...props}
 				className={className}
 				ref={ref as Ref<HTMLButtonElement>}
+			>
+				{children}
+			</button>
+		)
+	}
+
+	const action = getLinkAction(props.href)
+	if (action) {
+		const {
+			href: _href,
+			prefetch: _prefetch,
+			target: _target,
+			download: _download,
+			className,
+			...buttonProps
+		} = props
+		return (
+			<button
+				{...(buttonProps as ComponentProps<"button">)}
+				type="button"
+				data-link-action={action.name}
+				className={className ? `${buttonClass} ${className}` : buttonClass}
+				ref={ref as Ref<HTMLButtonElement>}
+				onClick={() => {
+					onBeforeNavigate?.()
+					linkActions.dispatchEvent(action.name, action.value)
+				}}
 			>
 				{children}
 			</button>
