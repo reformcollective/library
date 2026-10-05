@@ -1,3 +1,15 @@
+# 2026-09-29
+
+## Back/forward restores the scroll position
+
+Pressing back or forward landed at the wrong spot, usually a section boundary near the top of the page. Next applies a history restore asynchronously (`ACTION_RESTORE` runs through an `async` action queue), so the browser restores scroll while the page being left is still in the DOM. When that page is shorter, the restore clamps to its height and nothing corrects it once the right page commits.
+
+The link system now keeps the document tall while the browser restores, then re-applies the restored position after the right page fires `pageCommit`. `libraryConfig.scrollRestoration` is honored again: `false` sends back/forward to the top.
+
+**Migration Advice**
+
+Every page must render `PageCommitSignal` (it already needs to for page transitions). If a page doesn't, the restore falls back after one second, so add the signal rather than relying on that.
+
 # 2026-09-25
 
 ## `as` works on styled components that wrap a component
