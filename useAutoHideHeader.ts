@@ -24,13 +24,6 @@ function clamp(value: number, min: number, max: number) {
  *
  * @param wrapper ref pointing to the element to the header
  * @param style the style to use for the header, either "scrub" which will sync with the scroller or "snap" which animates in either direction
- * @param reverse slide the header off the bottom instead of the top
- * @param extraOffset extra height added to the published header height
- * @param externallyForceVisible keeps the header fully visible (and unshrunk) while true
- * @param behavior "hide" slides the header away, "shrink" keeps it in place and animates the `--header-shrink`
- * custom property on the wrapper from 0 to 1 while scrolling down (and sets `data-header-shrunk`), "fixed" leaves it alone.
- * In "shrink" mode the wrapper must keep a constant height and contain a `data-header-bar` element whose height
- * follows `--header-shrink`; the visible offset is then published from that element.
  */
 export default function useAutoHideHeader(
 	wrapper: RefObject<HTMLDivElement | null> | null | undefined,
