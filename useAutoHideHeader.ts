@@ -8,6 +8,8 @@ import { useAnimation } from "./useAnimation"
 
 const HEADER_HEIGHT_VAR = "--site-header-height"
 const HEADER_VISIBLE_OFFSET_VAR = "--site-header-visible-offset"
+const HEADER_SHRINK_VAR = "--header-shrink"
+const SHRINK_DURATION = 0.4
 
 function clamp(value: number, min: number, max: number) {
 	return Math.min(max, Math.max(min, value))
@@ -22,6 +24,13 @@ function clamp(value: number, min: number, max: number) {
  *
  * @param wrapper ref pointing to the element to the header
  * @param style the style to use for the header, either "scrub" which will sync with the scroller or "snap" which animates in either direction
+ * @param reverse slide the header off the bottom instead of the top
+ * @param extraOffset extra height added to the published header height
+ * @param externallyForceVisible keeps the header fully visible (and unshrunk) while true
+ * @param behavior "hide" slides the header away, "shrink" keeps it in place and animates the `--header-shrink`
+ * custom property on the wrapper from 0 to 1 while scrolling down (and sets `data-header-shrunk`), "fixed" leaves it alone.
+ * In "shrink" mode the wrapper must keep a constant height and contain a `data-header-bar` element whose height
+ * follows `--header-shrink`; the visible offset is then published from that element.
  */
 export default function useAutoHideHeader(
 	wrapper: RefObject<HTMLDivElement | null> | null | undefined,
@@ -29,6 +38,7 @@ export default function useAutoHideHeader(
 	reverse = false,
 	extraOffset = 0,
 	externallyForceVisible = false,
+	behavior: "hide" | "shrink" | "fixed" = "hide",
 ) {
 	// scrub style only really works if we're using a smoother
 	const isSmooth = useIsSmooth()
@@ -94,12 +104,15 @@ export default function useAutoHideHeader(
 		() => {
 			let lastScroll = window.lenisInstance?.scroll ?? window.scrollY
 			let isHovered = false
+			let scrollingDown = false
 			if (!wrapper?.current) return
 
 			const publishHeaderVars = (target: HTMLDivElement) => {
 				const height = target.offsetHeight + extraOffset
 				const y = Number(gsap.getProperty(target, "y")) || 0
-				const visibleOffset = reverse ? height - y : height + y
+				const bar =
+					behavior === "shrink" ? document.querySelector<HTMLElement>("[data-header-bar]") : null
+				const visibleOffset = bar ? bar.offsetHeight : reverse ? height - y : height + y
 				const root = document.documentElement
 
 				root.style.setProperty(HEADER_HEIGHT_VAR, `${height}px`)
@@ -113,6 +126,8 @@ export default function useAutoHideHeader(
 			const resetHeader = (target: typeof wrapper.current) => {
 				gsap.set(target, { y: 0 })
 				if (target) {
+					gsap.set(target, { [HEADER_SHRINK_VAR]: 0, overwrite: "auto" })
+					target.dataset.headerShrunk = "false"
 					target.dataset.headerHiding = "false"
 					target.dataset.headerScrolled = "false"
 					publishHeaderVars(target)
@@ -134,6 +149,19 @@ export default function useAutoHideHeader(
 			})
 			resizeObserver.observe(wrapper.current)
 
+			const setShrinkTarget = (next: number) => {
+				const el = wrapper.current
+				if (!el || (el.dataset.headerShrunk === "true") === (next === 1)) return
+				el.dataset.headerShrunk = String(next === 1)
+				gsap.to(el, {
+					[HEADER_SHRINK_VAR]: next,
+					duration: SHRINK_DURATION,
+					ease: "power1.out",
+					overwrite: "auto",
+					onUpdate: () => publishHeaderVars(el),
+				})
+			}
+
 			const onUpdate = () => {
 				const scroll = window.lenisInstance?.scroll ?? window.scrollY
 				const rawDelta = scroll - lastScroll
@@ -153,6 +181,15 @@ export default function useAutoHideHeader(
 				const el = wrapper.current
 				if (el) {
 					el.dataset.headerScrolled = scroll <= 5 ? "false" : "true"
+				}
+
+				if (behavior === "fixed") return
+
+				if (behavior === "shrink") {
+					if (delta > 0) scrollingDown = true
+					else if (delta < 0) scrollingDown = false
+					setShrinkTarget(forceShowHeader || isHovered || !scrollingDown ? 0 : 1)
+					return
 				}
 
 				// if forced sticky
@@ -219,6 +256,7 @@ export default function useAutoHideHeader(
 			style,
 			reverse,
 			extraOffset,
+			behavior,
 			latestExternalForceVisible,
 			externalForceEvents,
 		],

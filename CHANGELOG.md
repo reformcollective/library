@@ -1,3 +1,16 @@
+# 2026-10-06
+
+## `useAutoHideHeader` gained a `behavior` option
+
+`useAutoHideHeader` takes a new last parameter, `behavior`: `"hide"` (default, unchanged), `"shrink"` or `"fixed"`.
+
+In `"shrink"` mode the header is not translated. Instead the hook animates a `--header-shrink` custom property (0 to 1) on the wrapper while scrolling down, sets `data-header-shrunk`, and publishes `--site-header-visible-offset` from the height of a `data-header-bar` element inside the wrapper. `"fixed"` never moves or shrinks the header.
+
+**Migration Advice**
+
+None required, existing callers keep the old behavior.
+
+
 # 2026-06-10
 
 ## Site URL moved to the compile-time API
