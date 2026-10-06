@@ -104,8 +104,14 @@ export default function useAutoHideHeader(
 				const height = target.offsetHeight + extraOffset
 				const y = Number(gsap.getProperty(target, "y")) || 0
 				const bar =
-					behavior === "shrink" ? document.querySelector<HTMLElement>("[data-header-bar]") : null
-				const visibleOffset = bar ? bar.offsetHeight : reverse ? height - y : height + y
+					behavior === "shrink"
+						? document.querySelector<HTMLElement>("[data-header-bar]")
+						: null
+				const visibleOffset = bar
+					? bar.offsetHeight
+					: reverse
+						? height - y
+						: height + y
 				const root = document.documentElement
 
 				root.style.setProperty(HEADER_HEIGHT_VAR, `${height}px`)
@@ -181,7 +187,9 @@ export default function useAutoHideHeader(
 				if (behavior === "shrink") {
 					if (delta > 0) scrollingDown = true
 					else if (delta < 0) scrollingDown = false
-					setShrinkTarget(forceShowHeader || isHovered || !scrollingDown ? 0 : 1)
+					setShrinkTarget(
+						forceShowHeader || isHovered || !scrollingDown ? 0 : 1,
+					)
 					return
 				}
 
