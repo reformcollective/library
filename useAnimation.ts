@@ -195,7 +195,7 @@ export const useAnimation = <InputFn extends Creation>(
 				updateBehavior === "revert" &&
 				// there's not already a microtask waiting
 				!microtaskWaiting &&
-				// this is a genuine recreation, not the first mount 
+				// this is a genuine recreation, not the first mount
 				!isInitialMount
 			) {
 				microtaskWaiting = true
