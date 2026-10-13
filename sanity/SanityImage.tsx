@@ -57,6 +57,11 @@ export type SanityImageProps = SanityProps & {
 	quality?: number
 	width?: number
 	height?: number
+	/**
+	 * force a specific output format instead of the CDN's `auto=format` pick.
+	 * e.g. "webp" where auto's AVIF is too slow to decode (Safari on machines without AV1 hardware)
+	 */
+	format?: "webp" | "jpg" | "png"
 } & Omit<DefaultImageProps, "srcSet">
 
 const urlBuilder = createImageUrlBuilder({ projectId, dataset })
@@ -114,7 +119,7 @@ export default function SanityUniversalImage(
 }
 
 function SanityImageCore(props: SanityImageProps) {
-	const { src, ref, quality = 90, ...rest } = props
+	const { src, ref, quality = 90, format, ...rest } = props
 	const defaultEager = use(EagerContext)
 	const prioritizedLoading = prioritizeLoading(props.loading, defaultEager)
 	const srcKey = [
@@ -124,6 +129,7 @@ function SanityImageCore(props: SanityImageProps) {
 		src?.crop?.top,
 		src?.crop?.bottom,
 		quality,
+		format,
 	].join(":")
 	const [loadedKey, setLoadedKey] = useState<string | null>(null)
 	const loaded = loadedKey === srcKey
@@ -241,10 +247,10 @@ function SanityImageCore(props: SanityImageProps) {
 
 	if (!src?.asset) return null
 
-	const base = urlBuilder
+	const sized = urlBuilder
 		.image({ _type: "image" as const, asset: src.asset, crop: src.crop })
 		.quality(quality)
-		.auto("format")
+	const base = format ? sized.format(format) : sized.auto("format")
 	const imgSrc = base.width(1600).url()
 	const srcSet = SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`).join(
 		", ",
