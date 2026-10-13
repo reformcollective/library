@@ -195,8 +195,7 @@ export const useAnimation = <InputFn extends Creation>(
 				updateBehavior === "revert" &&
 				// there's not already a microtask waiting
 				!microtaskWaiting &&
-				// this is a genuine recreation, not the first mount - the scroll position is
-				// already correct on mount, so there's nothing to restore after a refresh
+				// this is a genuine recreation, not the first mount 
 				!isInitialMount
 			) {
 				microtaskWaiting = true
