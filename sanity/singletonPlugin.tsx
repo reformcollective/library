@@ -41,6 +41,8 @@ export const singletonPlugin = definePlugin((types: string[]) => {
 type GroupItem = {
 	item: (S: StructureBuilder) => ListItemBuilder
 	hiddenTypes: string[]
+	/** place this item above the singletons, instead of after them */
+	leading?: boolean
 }
 
 type StructureListChild =
@@ -199,11 +201,15 @@ export function pageStructure(
 			(item) => !middleItems.includes(item) && !hiddenItems.includes(item),
 		)
 
-		const groupItems = groups?.map((g) => g.item(S)) ?? []
+		const leadingItems =
+			groups?.filter((g) => g.leading).map((g) => g.item(S)) ?? []
+		const groupItems =
+			groups?.filter((g) => !g.leading).map((g) => g.item(S)) ?? []
 
 		return S.list()
 			.title("Content Types")
 			.items([
+				...leadingItems,
 				...singletonItems,
 				...groupItems,
 				S.divider(),
