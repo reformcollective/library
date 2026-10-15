@@ -62,6 +62,7 @@ export type SanityImageProps = SanityProps & {
 const urlBuilder = createImageUrlBuilder({ projectId, dataset })
 
 const SRCSET_WIDTHS = [400, 800, 1200, 1600, 2400]
+const LARGE_SRCSET_WIDTHS = [3200, 4000, 5120]
 
 function checkLqipTransparency(
 	lqip: string,
@@ -246,9 +247,10 @@ function SanityImageCore(props: SanityImageProps) {
 		.quality(quality)
 		.auto("format")
 	const imgSrc = base.width(1600).url()
-	const srcSet = SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`).join(
-		", ",
-	)
+	const srcSet = [
+		...SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`),
+		...LARGE_SRCSET_WIDTHS.map((w) => `${base.width(w).fit("max").url()} ${w}w`),
+	].join(", ")
 
 	const lqip = !loaded && src.data?.lqip
 	const lqipProps = lqip
