@@ -72,6 +72,7 @@ export default function StaticImage({
 	const props = {
 		alt,
 		loading: prioritizedLoading,
+		fetchPriority: defaultEager ? ("high" as const) : undefined,
 		...otherProps,
 	}
 

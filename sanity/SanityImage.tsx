@@ -263,6 +263,7 @@ function SanityImageCore(props: SanityImageProps) {
 
 	return (
 		<DefaultImg
+			fetchPriority={defaultEager ? "high" : undefined}
 			{...rest}
 			ref={combinedRef}
 			alt={stegaClean(rest.alt ?? src.alt ?? "")}
