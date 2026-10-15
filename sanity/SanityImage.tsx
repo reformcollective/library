@@ -245,10 +245,19 @@ function SanityImageCore(props: SanityImageProps) {
 		.image({ _type: "image" as const, asset: src.asset, crop: src.crop })
 		.quality(quality)
 		.auto("format")
-	const imgSrc = base.width(1600).url()
-	const srcSet = SRCSET_WIDTHS.map((w) => `${base.width(w).url()} ${w}w`).join(
-		", ",
-	)
+	const sourceWidth = Number(src.asset._ref.match(/-(\d+)x\d+-/)?.[1])
+	const croppedWidth =
+		sourceWidth * (1 - (src.crop?.left ?? 0) - (src.crop?.right ?? 0))
+	const maxWidth =
+		Number.isFinite(croppedWidth) && croppedWidth > 0
+			? Math.floor(croppedWidth)
+			: Number.POSITIVE_INFINITY
+	const widths = SRCSET_WIDTHS.filter((w) => w <= maxWidth)
+	if (maxWidth < Math.max(...SRCSET_WIDTHS) && !widths.includes(maxWidth)) {
+		widths.push(maxWidth)
+	}
+	const imgSrc = base.width(Math.min(1600, maxWidth)).url()
+	const srcSet = widths.map((w) => `${base.width(w).url()} ${w}w`).join(", ")
 
 	const lqip = !loaded && src.data?.lqip
 	const lqipProps = lqip
