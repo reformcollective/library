@@ -2,10 +2,10 @@
 
 Scroll-scrubbed clips drawn to a canvas. Scrubbing a `<video>`'s `currentTime` stops repainting on Safari once the tab has been in the background, so neither component uses a `<video>`.
 
-| | source | extra dependency |
-|---|---|---|
-| `ScrubbedVideo` | one `.fsv` file | `@plutotcool/fsv` (optional peer) |
-| `ScrubbedImageSequence` | numbered image frames | none |
+|                         | source                | extra dependency                  |
+| ----------------------- | --------------------- | --------------------------------- |
+| `ScrubbedVideo`         | one `.fsv` file       | `@plutotcool/fsv` (optional peer) |
+| `ScrubbedImageSequence` | numbered image frames | none                              |
 
 Both take the same scroll props, so a section can swap between them. Import by file (there is no barrel):
 
@@ -30,20 +30,20 @@ The top of the trigger (`start`, default `"top top"`) shows the first frame, the
 
 ## Props shared by both
 
-| prop | |
-|---|---|
-| `trigger` | ref to the element whose scroll drives the frames. required |
-| `enabled` | `false` loads nothing, for a layout hidden at this size. default `true` |
-| `start`, `end` | ScrollTrigger positions |
-| `scrub` | seconds of lerp between scroll and frame (ScrollTrigger's `scrub`). default `1` |
-| `scrubFrom` | frame number scroll starts from; the frames before it are for something else to play (see Control) |
-| `progressCurve` | remaps scroll progress 0-1 to the share of the clip shown 0-1, for holds and speed ramps. may be inline |
-| `controlRef` | see Control |
-| `fit` | `cover` (default), `contain`, `fill`, as object-fit |
-| `alt` | makes the canvas `role="img"`; without it the canvas is `aria-hidden` |
-| `onReady` | the first frame is on screen |
-| `className` | on the wrapper |
-| `settle`, `settleThreshold`, `springStiffness`, `springDamping` | advanced, below |
+| prop                                                            |                                                                                                         |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `trigger`                                                       | ref to the element whose scroll drives the frames. required                                             |
+| `enabled`                                                       | `false` loads nothing, for a layout hidden at this size. default `true`                                 |
+| `start`, `end`                                                  | ScrollTrigger positions                                                                                 |
+| `scrub`                                                         | seconds of lerp between scroll and frame (ScrollTrigger's `scrub`). default `1`                         |
+| `scrubFrom`                                                     | frame number scroll starts from; the frames before it are for something else to play (see Control)      |
+| `progressCurve`                                                 | remaps scroll progress 0-1 to the share of the clip shown 0-1, for holds and speed ramps. may be inline |
+| `controlRef`                                                    | see Control                                                                                             |
+| `fit`                                                           | `cover` (default), `contain`, `fill`, as object-fit                                                     |
+| `alt`                                                           | makes the canvas `role="img"`; without it the canvas is `aria-hidden`                                   |
+| `onReady`                                                       | the first frame is on screen                                                                            |
+| `className`                                                     | on the wrapper                                                                                          |
+| `settle`, `settleThreshold`, `springStiffness`, `springDamping` | advanced, below                                                                                         |
 
 Callbacks and `progressCurve` can be inline functions; changing them never rebuilds the animation or reloads frames.
 

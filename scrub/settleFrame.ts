@@ -14,7 +14,8 @@ export const settleFrame = (
 	target: number,
 	shown: number,
 ) => {
-	if (mode === "snap" && Math.abs(eased - target) <= threshold) return Math.round(target)
+	if (mode === "snap" && Math.abs(eased - target) <= threshold)
+		return Math.round(target)
 	if (mode === "quantise" && Math.abs(eased - shown) < threshold) return shown
 	return Math.round(eased)
 }

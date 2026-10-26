@@ -136,12 +136,16 @@ export function ScrubbedImageSequence({
 		controlRef,
 	})
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: callbacks are read through latest refs so changing them must not restart the effect
 	useAnimation(
 		() => {
 			const el = canvas.current
 			if (!el || !enabled) return
 
-			const frames: (HTMLImageElement | null)[] = Array.from({ length: frameCount }, () => null)
+			const frames: (HTMLImageElement | null)[] = Array.from(
+				{ length: frameCount },
+				() => null,
+			)
 			const ctx = el.getContext("2d", { alpha: false })
 			let sized = false
 			let loaded = 0
@@ -154,7 +158,8 @@ export function ScrubbedImageSequence({
 				for (let offset = 1; offset < frameCount; offset++) {
 					const before = index - offset >= 0 ? frames[index - offset] : null
 					if (before) return before
-					const after = index + offset < frameCount ? frames[index + offset] : null
+					const after =
+						index + offset < frameCount ? frames[index + offset] : null
 					if (after) return after
 				}
 				return null
@@ -176,7 +181,10 @@ export function ScrubbedImageSequence({
 			const order: number[] = []
 			const priorityIndexes = new Set<number>()
 			if (priorityTo !== undefined && priorityStep !== undefined) {
-				const last = Math.min(Math.max(priorityTo - firstFrame, 0), frameCount - 1)
+				const last = Math.min(
+					Math.max(priorityTo - firstFrame, 0),
+					frameCount - 1,
+				)
 				const step = Math.max(Math.floor(priorityStep), 1)
 				for (let i = 0; i < last; i += step) priorityIndexes.add(i)
 				priorityIndexes.add(last)
@@ -192,7 +200,8 @@ export function ScrubbedImageSequence({
 				priorityWaiting -= 1
 				if (priorityWaiting === 0) onPriorityLoadedLatest.current?.()
 			}
-			if (priorityWaiting === 0 && priorityTo !== undefined) onPriorityLoadedLatest.current?.()
+			if (priorityWaiting === 0 && priorityTo !== undefined)
+				onPriorityLoadedLatest.current?.()
 
 			const images: HTMLImageElement[] = []
 			for (const i of order) {
@@ -235,9 +244,21 @@ export function ScrubbedImageSequence({
 				painted = null
 			}
 		},
-		[basePath, digits, firstFrame, frameCount, ext, priorityTo, priorityStep, enabled, driver],
+		[
+			basePath,
+			digits,
+			firstFrame,
+			frameCount,
+			ext,
+			priorityTo,
+			priorityStep,
+			enabled,
+			driver,
+		],
 		{ scope: canvas },
 	)
 
-	return <ScrubCanvas canvasRef={canvas} fit={fit} alt={alt} className={className} />
+	return (
+		<ScrubCanvas canvasRef={canvas} fit={fit} alt={alt} className={className} />
+	)
 }

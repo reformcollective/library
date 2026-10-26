@@ -42,7 +42,8 @@ export type ScrubDriver = {
 	redraw: () => void
 }
 
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+const clamp = (value: number, min: number, max: number) =>
+	Math.min(Math.max(value, min), max)
 
 /** The driver rebuilds on resize and option changes, but the attached target survives, so frames never reload. */
 export const useScrubDriver = ({
@@ -73,6 +74,7 @@ export const useScrubDriver = ({
 		setTriggerEl(trigger.current)
 	}, [trigger])
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: curveRef is a latest ref so changing the curve must not restart the effect
 	useAnimation(
 		() => {
 			if (!enabled || !triggerEl) return
@@ -102,7 +104,10 @@ export const useScrubDriver = ({
 
 			const sync = (force: boolean) => {
 				const control = controlRef?.current
-				draw(control?.held ? control.index : Math.round(indexAt(progress)), force)
+				draw(
+					control?.held ? control.index : Math.round(indexAt(progress)),
+					force,
+				)
 			}
 			syncRef.current = sync
 
@@ -141,7 +146,8 @@ export const useScrubDriver = ({
 							scrolled = curve(self.progress)
 							lastScroll = performance.now()
 							const tween = self.getTween()
-							scrubTween = typeof tween?.timeScale === "function" ? tween : undefined
+							scrubTween =
+								typeof tween?.timeScale === "function" ? tween : undefined
 							scrubTween?.timeScale(1)
 						},
 						onRefresh: (self) => {
@@ -150,11 +156,22 @@ export const useScrubDriver = ({
 					},
 					onUpdate: () => {
 						progress = state.frame
-						if (settle === "finish" && performance.now() - lastScroll > IDLE_MS) {
+						if (
+							settle === "finish" &&
+							performance.now() - lastScroll > IDLE_MS
+						) {
 							scrubTween?.timeScale(settleThreshold)
 						}
 						if (controlRef?.current.held) return
-						draw(settleFrame(settle, settleThreshold, indexAt(progress), indexAt(scrolled), shown))
+						draw(
+							settleFrame(
+								settle,
+								settleThreshold,
+								indexAt(progress),
+								indexAt(scrolled),
+								shown,
+							),
+						)
 					},
 				})
 				scrubScrollTrigger = rootTween.scrollTrigger

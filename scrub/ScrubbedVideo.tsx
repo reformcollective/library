@@ -93,6 +93,7 @@ export function ScrubbedVideo({
 		controlRef,
 	})
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: callbacks are read through latest refs so changing them must not restart the effect
 	useAnimation(
 		() => {
 			const el = canvas.current
@@ -101,7 +102,9 @@ export function ScrubbedVideo({
 			let closed = false
 			let renderer: Renderer | undefined
 			let detach: (() => void) | undefined
-			let reader: ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>> | undefined
+			let reader:
+				| ReadableStreamDefaultReader<Uint8Array<ArrayBuffer>>
+				| undefined
 			let ready = false
 			const abort = new AbortController()
 
@@ -122,7 +125,9 @@ export function ScrubbedVideo({
 				} else {
 					const response = await fetch(src, { signal: abort.signal })
 					if (!response.ok || !response.body) {
-						throw new Error(`ScrubbedVideo: failed to fetch ${src} (${response.status})`)
+						throw new Error(
+							`ScrubbedVideo: failed to fetch ${src} (${response.status})`,
+						)
 					}
 					const source = response.body.getReader()
 					/** fsv does not handle stream errors, so a failed read is reported here and ends the stream. */
@@ -177,5 +182,13 @@ export function ScrubbedVideo({
 		{ scope: canvas },
 	)
 
-	return <ScrubCanvas key={String(alpha)} canvasRef={canvas} fit={fit} alt={alt} className={className} />
+	return (
+		<ScrubCanvas
+			key={String(alpha)}
+			canvasRef={canvas}
+			fit={fit}
+			alt={alt}
+			className={className}
+		/>
+	)
 }

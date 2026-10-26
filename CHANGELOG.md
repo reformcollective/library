@@ -97,7 +97,7 @@ The default strip moved from the header's bottom edge to its center, so a header
 
 ## Reversed marquees no longer flip forward on screen
 
-`Marquee` pauses its loop while off screen and resumes it when it scrolls back in. That resume called `loop.play()`, and in GSAP `play()` always runs a timeline *forward*, clearing its reversed flag. `horizontalLoop`/`verticalLoop` implement `reversed` as `tl.reverse()`, and an `IntersectionObserver` fires as soon as it starts observing — so a marquee passed `reversed` reversed for a frame and then ran forward like every other row, for the whole life of the page.
+`Marquee` pauses its loop while off screen and resumes it when it scrolls back in. That resume called `loop.play()`, and in GSAP `play()` always runs a timeline _forward_, clearing its reversed flag. `horizontalLoop`/`verticalLoop` implement `reversed` as `tl.reverse()`, and an `IntersectionObserver` fires as soon as it starts observing — so a marquee passed `reversed` reversed for a frame and then ran forward like every other row, for the whole life of the page.
 
 It now calls `loop.resume()`, which resumes without touching direction. For a forward marquee the two are identical, so nothing changes unless you were passing `reversed`.
 
@@ -122,9 +122,9 @@ Called bare, `faqItem()` gives you the common set already switched on: bold and 
 Pass `styles`, `lists`, `decorators`, or `annotations` to change that surface for your project:
 
 ```ts
-faqItem({ lists: [] })                       // no list treatment in the design
-faqItem({ decorators: [], lists: [] })       // plain paragraphs and links only
-faqItem({ annotations: [] })                 // no links in answers
+faqItem({ lists: [] }) // no list treatment in the design
+faqItem({ decorators: [], lists: [] }) // plain paragraphs and links only
+faqItem({ annotations: [] }) // no links in answers
 faqItem({ decorators: [{ title: "Italic", value: "em" }] }) // italic, no bold
 faqItem({ annotations: [faqLink, myTooltip] }) // keep the default link, add your own
 ```
@@ -145,7 +145,9 @@ This is additive — existing schemas are unaffected. To use it, register `faqIt
 // sanity.config.ts
 import { faqItem, video, youtube } from "library/sanity/reusables"
 
-schema: { types: [youtube, video, faqItem() /* ... */] }
+schema: {
+	types: [youtube, video, faqItem() /* ... */]
+}
 ```
 
 Note `faqItem()` is called — it is a factory, and this call site is where you tune what editors can write.
@@ -212,7 +214,7 @@ Copy the wireit scripts from the starter. Reference commit: https://github.com/r
 
 ## `useHMR` refactor
 
-- `useHMR` now requires `HMRProvider`. 
+- `useHMR` now requires `HMRProvider`.
 - `"beforeReload"` and `"afterReload"` event types are removed — use `"beforeRefresh"` and `"afterRefresh"` for both cases.
 - `useHMR` may fire multiple `afterRefresh` events for each `beforeRefresh`.
 - `SteadyHotScroll` moved to `library/SteadyHotScroll`.
@@ -234,7 +236,7 @@ Prepend `assetMetadataFunctions` to any query that uses asset functions and upda
 Before:
 
 ```ts
-import { imageField, linkField, videoField } from "library/sanity/assetMetadata";
+import { imageField, linkField, videoField } from "library/sanity/assetMetadata"
 
 const pageQuery = defineQuery(`
 	*[_type == "page"][0] {
@@ -250,13 +252,13 @@ const pageQuery = defineQuery(`
 			}
 		}
 	}
-`);
+`)
 ```
 
 After:
 
 ```ts
-import { assetMetadataFunctions } from "library/sanity/assetMetadata";
+import { assetMetadataFunctions } from "library/sanity/assetMetadata"
 
 const pageQuery = defineQuery(`
 	${assetMetadataFunctions}
@@ -275,7 +277,7 @@ const pageQuery = defineQuery(`
 			_type == "inlineImage" => reform::image(@)
 		}
 	}
-`);
+`)
 ```
 
 # 2026-05-20
@@ -314,12 +316,15 @@ The old helper-specific imports have been removed:
 ```ts
 // before
 import {
-  LibraryLive as SanityLive,
-  libraryFetch as sanityFetch,
-} from "library/sanity/reusableFetch";
+	LibraryLive as SanityLive,
+	libraryFetch as sanityFetch,
+} from "library/sanity/reusableFetch"
 
 // after
-import { LibraryLive as SanityLive, libraryFetch as sanityFetch } from "library/sanity/live";
+import {
+	LibraryLive as SanityLive,
+	libraryFetch as sanityFetch,
+} from "library/sanity/live"
 ```
 
 Remove any direct imports of `FirefoxFix`, `SanityLiveProxy`, `SanityPreviewStatusToast`, or `SanityVisualEditingOverlay`; those are now internal to `LibraryLive`.
@@ -338,15 +343,15 @@ Remove any direct imports of `FirefoxFix`, `SanityLiveProxy`, `SanityPreviewStat
 
 ```tsx
 // before
-<UniversalImage src={image} objectFit="contain" objectPosition="top center" />;
+;<UniversalImage src={image} objectFit="contain" objectPosition="top center" />
 
 // after
 const Image = styled(UniversalImage, [
-  f.responsive(css`
+	f.responsive(css`
     object-fit: contain;
     object-position: top center;
   `),
-]);
+])
 ```
 
 # 2026-05-05
@@ -361,26 +366,26 @@ Use the `f` utility object instead.
 
 ```ts
 // before
-import { css, fresponsive, styled, unresponsive } from "library/styled";
+import { css, fresponsive, styled, unresponsive } from "library/styled"
 
 fresponsive(css`
   padding: 20px;
-`);
+`)
 
 unresponsive(css`
   position: fixed;
-`);
+`)
 
 // after
-import { css, f, styled } from "library/styled";
+import { css, f, styled } from "library/styled"
 
 f.responsive(css`
   padding: 20px;
-`);
+`)
 
 f.unresponsive(css`
   position: fixed;
-`);
+`)
 ```
 
 # 2026-05-04
@@ -392,12 +397,12 @@ f.unresponsive(css`
 The vanilla splitter now requires every `compileTime(...)` call to be awaited. This keeps sync and async build-time values using the same call shape, and prevents async values from being emitted into the bundle before they resolve.
 
 ```ts
-import { compileTime } from "library/compile-time";
+import { compileTime } from "library/compile-time"
 
-export const syncValue = await compileTime(() => "serialized at build time");
+export const syncValue = await compileTime(() => "serialized at build time")
 export const asyncValue = await compileTime(async () => {
-  return await fetchBuildTimeValue();
-});
+	return await fetchBuildTimeValue()
+})
 ```
 
 `compileTime` still returns the callback result directly. The required `await` is intentional because awaiting a non-Promise value is a no-op, while awaiting a Promise ensures it resolves before bundling continues.
@@ -406,15 +411,15 @@ export const asyncValue = await compileTime(async () => {
 
 ```ts
 // before
-import { compileTime, css } from "library/styled";
+import { compileTime, css } from "library/styled"
 
-const value = compileTime(() => "build-time value");
+const value = compileTime(() => "build-time value")
 
 // after
-import { compileTime } from "library/compile-time";
-import { css } from "library/styled";
+import { compileTime } from "library/compile-time"
+import { css } from "library/styled"
 
-const value = await compileTime(() => "build-time value");
+const value = await compileTime(() => "build-time value")
 ```
 
 ## Sanity data attribute helper now uses serializable context
@@ -427,20 +432,20 @@ Attribute context includes document id, type, and a path to the relevant section
 
 ```tsx
 const sectionContext = {
-  sanityDataAttribute: {
-    documentId: relevantPage._id,
-    documentType: relevantPage._type,
-    pathPrefix: `sections[${index}]`,
-  },
-};
+	sanityDataAttribute: {
+		documentId: relevantPage._id,
+		documentType: relevantPage._type,
+		pathPrefix: `sections[${index}]`,
+	},
+}
 ```
 
 Then update section call sites:
 
 ```tsx
-import { getSanityDataAttribute } from "library/sanity/getSanityDataAttribute";
+import { getSanityDataAttribute } from "library/sanity/getSanityDataAttribute"
 
-<div data-sanity={getSanityDataAttribute(sanityDataAttribute, "title")} />;
+;<div data-sanity={getSanityDataAttribute(sanityDataAttribute, "title")} />
 ```
 
 # 2026-05-01
@@ -459,17 +464,18 @@ Shared document helper plumbing now lives in `library/sanity/document-helpers`. 
 Update `sanity/lib/slug-resolver.ts` to this shape:
 
 ```ts
-import { defineDocumentPaths } from "library/sanity/define-document-paths";
+import { defineDocumentPaths } from "library/sanity/define-document-paths"
 
 export const documentPaths = defineDocumentPaths({
-  page: (document) => ({
-    path: document.slug?.current === "home" ? "/" : `/${document.slug?.current}`,
-    title: document.title ?? "Untitled Page",
-  }),
-});
+	page: (document) => ({
+		path:
+			document.slug?.current === "home" ? "/" : `/${document.slug?.current}`,
+		title: document.title ?? "Untitled Page",
+	}),
+})
 
 export const documentPathProjection = <T>(document: T) =>
-  `
+	`
 	select(
 	  !defined(${document}) => null,
 		${document}._type == "page" => select(
@@ -477,7 +483,7 @@ export const documentPathProjection = <T>(document: T) =>
 			"/" + ${document}.slug.current
 		)
 	)
-` as const;
+` as const
 ```
 
 Update sanity config to import utilities from `library/sanity/document-helpers`
@@ -533,14 +539,14 @@ If your `app/(sanity)/api/live/route.ts` explicitly forwards only `GET`:
 
 ```ts
 // before
-export { GET } from "library/sanity/liveProxy";
+export { GET } from "library/sanity/liveProxy"
 ```
 
 Change it to re-export everything:
 
 ```ts
 // after
-export * from "library/sanity/liveProxy";
+export * from "library/sanity/liveProxy"
 ```
 
 # 2026-04-17
@@ -567,66 +573,66 @@ If you want additional utilities, add them in `app/libraryConfig.ts` under `util
 If you were using the removed built-ins, paste this into `app/libraryConfig.ts` to restore the previous behavior:
 
 ```ts
-import { defineLibraryConfig } from "library/defaultConfig";
+import { defineLibraryConfig } from "library/defaultConfig"
 
-const tabletBreakpoint = "largeMobile" as const;
+const tabletBreakpoint = "largeMobile" as const
 
 const tabletRule =
-  tabletBreakpoint === "tablet"
-    ? { breakpoint: "tablet", designSize: "tablet", output: "fluid" }
-    : { breakpoint: "tablet", designSize: "mobile", output: "pixel" };
+	tabletBreakpoint === "tablet"
+		? { breakpoint: "tablet", designSize: "tablet", output: "fluid" }
+		: { breakpoint: "tablet", designSize: "mobile", output: "pixel" }
 
 export default defineLibraryConfig({
-  tabletBreakpoint,
-  utilities: {
-    scaledResponsive: [
-      { breakpoint: "mobile", designSize: "mobile", output: "fluid" },
-      tabletRule,
-      { breakpoint: "desktop", designSize: "desktop", output: "fluid" },
-      { breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
-    ],
-    allFullWidth: [
-      {
-        breakpoint: "mobile",
-        designSize: "desktop",
-        output: "scaleFullyConfig",
-      },
-      {
-        breakpoint: "tablet",
-        designSize: "desktop",
-        output: "scaleFullyConfig",
-      },
-      {
-        breakpoint: "desktop",
-        designSize: "desktop",
-        output: "scaleFullyConfig",
-      },
-      {
-        breakpoint: "fullWidth",
-        designSize: "desktop",
-        output: "scaleFullyConfig",
-      },
-    ],
-    allDesktop: [
-      { breakpoint: "mobile", designSize: "desktop", output: "fluid" },
-      { breakpoint: "tablet", designSize: "desktop", output: "fluid" },
-      { breakpoint: "desktop", designSize: "desktop", output: "fluid" },
-      { breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
-    ],
-    allTablet: [
-      { ...tabletRule, breakpoint: "mobile" },
-      { ...tabletRule, breakpoint: "tablet" },
-      { ...tabletRule, breakpoint: "desktop" },
-      { ...tabletRule, breakpoint: "fullWidth" },
-    ],
-    allMobile: [
-      { breakpoint: "mobile", designSize: "mobile", output: "fluid" },
-      { breakpoint: "tablet", designSize: "mobile", output: "fluid" },
-      { breakpoint: "desktop", designSize: "mobile", output: "fluid" },
-      { breakpoint: "fullWidth", designSize: "mobile", output: "fluid" },
-    ],
-  },
-});
+	tabletBreakpoint,
+	utilities: {
+		scaledResponsive: [
+			{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
+			tabletRule,
+			{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
+		],
+		allFullWidth: [
+			{
+				breakpoint: "mobile",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+			{
+				breakpoint: "tablet",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+			{
+				breakpoint: "desktop",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+			{
+				breakpoint: "fullWidth",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+		],
+		allDesktop: [
+			{ breakpoint: "mobile", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "tablet", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
+		],
+		allTablet: [
+			{ ...tabletRule, breakpoint: "mobile" },
+			{ ...tabletRule, breakpoint: "tablet" },
+			{ ...tabletRule, breakpoint: "desktop" },
+			{ ...tabletRule, breakpoint: "fullWidth" },
+		],
+		allMobile: [
+			{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
+			{ breakpoint: "tablet", designSize: "mobile", output: "fluid" },
+			{ breakpoint: "desktop", designSize: "mobile", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "mobile", output: "fluid" },
+		],
+	},
+})
 ```
 
 # 2026-04-16
@@ -721,13 +727,13 @@ As a result, `!!link` is always `true` for these fields and is an unreliable gua
 `isRouteDefined` fixes this by running the value through `resolveRoute` and checking whether a URL was produced:
 
 ```ts
-import { isRouteDefined } from "library/link";
+import { isRouteDefined } from "library/link"
 
 // ✓
-const hasLink = isRouteDefined(link);
+const hasLink = isRouteDefined(link)
 
 // ✗ — always true; the link object exists even with no destination selected
-const hasLink = !!link;
+const hasLink = !!link
 ```
 
 # 2026-04-07
@@ -856,7 +862,7 @@ The library now requires a link resolver at `sanity/lib/slug-resolver.ts` to han
 For older projects, you can use a simple pass-through:
 
 ```typescript
-export const resolveLink = (item: any) => item?.slug?.current || "/";
+export const resolveLink = (item: any) => item?.slug?.current || "/"
 ```
 
 # 2025-12-11
@@ -905,9 +911,9 @@ Update any imports in your project:
 
 ```typescript
 // Old
-import { BackgroundVideo } from "library/sanity/BackgroundVideo";
+import { BackgroundVideo } from "library/sanity/BackgroundVideo"
 // New
-import { BackgroundVideo } from "library/videos/BackgroundVideo";
+import { BackgroundVideo } from "library/videos/BackgroundVideo"
 ```
 
 # 2025-10-10
@@ -920,8 +926,8 @@ Introduced the `withVanillaSplit` Next.js plugin to support the newer styling sy
 Upgrade to Next.js 16 and wrap your `next.config.ts`:
 
 ```typescript
-import { withVanillaSplit } from "library/vanilla/withVanillaSplit";
-export default withVanillaSplit(nextConfig);
+import { withVanillaSplit } from "library/vanilla/withVanillaSplit"
+export default withVanillaSplit(nextConfig)
 ```
 
 # 2025-08-20
@@ -938,9 +944,9 @@ The simplest path is to update your `sanity/lib/live.ts` to act as a bridge so y
 
 ```typescript
 export {
-  libraryFetch as sanityFetch,
-  LibraryLive as SanityLive,
-} from "library/sanity/reusableFetch";
+	libraryFetch as sanityFetch,
+	LibraryLive as SanityLive,
+} from "library/sanity/reusableFetch"
 ```
 
 ## Grid API Change

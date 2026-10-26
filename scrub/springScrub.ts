@@ -43,7 +43,10 @@ export const springScrub = ({
 		}
 
 		const frame = 1 / Math.max(1, length())
-		if (Math.abs(target - position) < frame * 0.25 && Math.abs(velocity) < frame * 2) {
+		if (
+			Math.abs(target - position) < frame * 0.25 &&
+			Math.abs(velocity) < frame * 2
+		) {
 			position = target
 			velocity = 0
 			moving = false
