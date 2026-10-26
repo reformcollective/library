@@ -1,5 +1,13 @@
 # 2026-10-26
 
+## Lighthouse workflow waits for the server, fails on 0 routes or a failed deploy, and masks secrets
+
+`.github/workflows/lighthouse.yml` now starts the server in the background and polls it until it answers (up to 5 minutes) instead of sleeping 5 seconds, so `unlighthouse-ci` no longer scans 0 routes against a server that is still building. It fails the job when `ci-result.json` has 0 routes, and the check then reads "Lighthouse Failed". "Deploy preview" no longer has `continue-on-error`, so a failed deploy turns the job red (including PRs where `LIGHTHOUSE_PAT` is not available, such as Dependabot). A new first step masks every `SECRETS_JSON` value so secrets no longer show in step env logs.
+
+**Migration Advice**
+
+Bump the workflow SHA in the site's `call-lighthouse.yml` to pick this up.
+
 ## oxlint 1.89 needs oxlint-tsgolint 7.x, and oxfmt 0.74 reformats slightly
 
 The shared `library/config/oxlint.ts` uses `defineConfig` and `jsPlugins` from `oxlint`. `oxlint` 1.89 declares a peer dependency on `oxlint-tsgolint` `>=7.0.2003`, so a site on the old 0.x `oxlint-tsgolint` gets a peer error. `oxfmt` 0.74 also formats a few constructs differently from 0.56, for example a lone `css` template passed to `f.responsive` is now hugged, and `package.json` key order can change.
