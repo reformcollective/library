@@ -2,7 +2,7 @@
 
 ## Lighthouse workflow waits for the server, fails on 0 routes or a failed deploy, and masks secrets
 
-`.github/workflows/lighthouse.yml` now starts the server in the background and polls it until it answers (up to 5 minutes) instead of sleeping 5 seconds, so `unlighthouse-ci` no longer scans 0 routes against a server that is still building. It fails the job when `ci-result.json` has 0 routes, and the check then reads "Lighthouse Failed". "Deploy preview" no longer has `continue-on-error`, so a failed deploy turns the job red (including PRs where `LIGHTHOUSE_PAT` is not available, such as Dependabot). A new first step masks every `SECRETS_JSON` value so secrets no longer show in step env logs.
+`.github/workflows/lighthouse.yml` now starts the server in the background and polls it until it answers (up to 5 minutes) instead of sleeping 5 seconds, so `unlighthouse-ci` no longer scans 0 routes against a server that is still building. It fails the job when `ci-result.json` has 0 routes, and the check then reads "Lighthouse Failed". "Deploy preview" no longer has `continue-on-error`, so a failed deploy turns the job red (including PRs where `LIGHTHOUSE_PAT` is not available, such as Dependabot). A new first step masks every `SECRETS_JSON` value so secrets no longer show in step env logs. The checkout now uses `persist-credentials: false`, because the persisted `GITHUB_TOKEN` made the deploy action fail with "Repository not found" on `reformcollective/lighthouse` even with a valid `LIGHTHOUSE_PAT`.
 
 **Migration Advice**
 

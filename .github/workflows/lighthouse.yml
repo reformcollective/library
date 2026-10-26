@@ -45,6 +45,7 @@ jobs:
         with:
           submodules: recursive
           lfs: true
+          persist-credentials: false
       - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
