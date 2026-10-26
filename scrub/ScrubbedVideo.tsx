@@ -9,15 +9,8 @@ import type { SequenceControl } from "./sequenceControl"
 import type { SettleMode } from "./settleFrame"
 import { useScrubDriver } from "./useScrubDriver"
 
-// loaded on demand so the decoder and renderer are code-split and never run on the server
 const loadFsv = () => import("@plutotcool/fsv")
 
-/**
- * A video scrubbed by scroll, drawn to a canvas. Needs the optional `@plutotcool/fsv` package, see README.md.
- *
- * Scrubbing a `<video>`'s `currentTime` stops repainting on Safari once the tab has been in the background,
- * so the clip is an .fsv file (every frame decodable on its own, streamed in one request) rendered with WebGL.
- */
 export function ScrubbedVideo({
 	src,
 	trigger,
@@ -41,47 +34,41 @@ export function ScrubbedVideo({
 	onError,
 	className,
 }: {
-	/** url of the .fsv file */
 	src: string
-	/** element whose scroll drives the video */
 	trigger: RefObject<HTMLElement | null>
-	/** false keeps the file from loading, for a layout that is hidden at this size */
+	/** false keeps the file from loading */
 	enabled?: boolean
-	/** seconds of lerp between scroll position and frame, as ScrollTrigger's scrub. default 1 */
+	/** seconds of lerp, as ScrollTrigger's scrub. default 1 */
 	scrub?: number | boolean
-	/** advanced: how the frame lands at the end of an eased scrub, see README. default "off" */
+	/** how the frame lands at the end of an eased scrub, see README. default "off" */
 	settle?: SettleMode
-	/** advanced: frames, for the settle mode. default 2 */
+	/** frames, for `settle`. default 2 */
 	settleThreshold?: number
-	/** advanced: with both set, a damped spring replaces the scrub tween and `scrub` and `settle` are ignored */
+	/** with both set, a spring replaces the scrub tween and `scrub` and `settle` are ignored */
 	springStiffness?: number
 	springDamping?: number
-	/**
-	 * the frame number (1 is the first) scroll starts from: the top of the trigger shows this frame and the bottom shows the last.
-	 * the frames before it are for something else to play, by `controlRef`, so the video can open on a clock and hand over to scroll where it left off
-	 */
+	/** 1-based frame shown at the top of the trigger. earlier frames are for `controlRef` to play */
 	scrubFrom?: number
-	/** remaps scroll progress (0-1) to the share of the video shown (0-1), for a video that holds, speeds up or slows down along the track. defaults to linear */
+	/** remaps scroll progress (0-1) to the share of the video shown (0-1). default linear */
 	progressCurve?: (progress: number) => number
-	/** see `SequenceControl` */
 	controlRef?: RefObject<SequenceControl>
 	/** default "top top" */
 	start?: string
 	/** default "bottom bottom" */
 	end?: string
-	/** how the frame fills the element, as object-fit */
+	/** object-fit */
 	fit?: "cover" | "contain" | "fill"
-	/** describes the animation for assistive tech; the canvas is aria-hidden when empty */
+	/** the canvas is aria-hidden when empty */
 	alt?: string
-	/** true for a video with an alpha track, so the canvas keeps its transparency. an alpha video is loaded whole, not streamed, so `priorityFrames` does not apply. changing it remounts the canvas, as a canvas keeps its first WebGL context */
+	/** keeps the alpha track's transparency. loads the whole file, so `priorityFrames` does not apply. changing it remounts the canvas */
 	alpha?: boolean
-	/** frames, from the start, that must have loaded before the first frame is drawn and `onReady` fires. the rest keep loading in the background, and scrubbing past them holds the last frame until they arrive */
+	/** frames that must load before the first draw and `onReady`. the rest load in the background */
 	priorityFrames?: number
-	/** fires once the priority frames are in and the first frame is on screen */
+	/** fires when the first frame is on screen */
 	onReady?: () => void
 	/** fires once every frame has loaded */
 	onLoaded?: () => void
-	/** fires if the file fails to load or the browser cannot decode it. without it the error is logged and the canvas stays blank */
+	/** fires on load or decode failure. without it the error is logged */
 	onError?: (error: unknown) => void
 	className?: string
 }) {
@@ -138,8 +125,7 @@ export function ScrubbedVideo({
 						throw new Error(`ScrubbedVideo: failed to fetch ${src} (${response.status})`)
 					}
 					const source = response.body.getReader()
-					// fsv reads the stream without handling its errors, so a failed read is reported here and ends the stream
-					// instead of leaving an unhandled rejection and a `loaded()` that never settles
+					/** fsv does not handle stream errors, so a failed read is reported here and ends the stream. */
 					const guarded = new ReadableStream<Uint8Array<ArrayBuffer>>({
 						pull: async (controller) => {
 							try {
@@ -158,13 +144,11 @@ export function ScrubbedVideo({
 					await stream.loaded(Math.min(priorityFrames, instance.length))
 					void stream.loaded().then(() => {
 						if (closed) return
-						// frames that arrived after the first draw: show the one scroll calls for
 						driver.redraw()
 						onLoadedLatest.current?.()
 					})
 				}
 				if (closed) return
-				// onReady fires from the first draw, once a frame is on screen
 				detach = driver.attach({
 					length: instance.length,
 					show: (index) => {
@@ -175,7 +159,6 @@ export function ScrubbedVideo({
 						}
 					},
 				})
-				// an alpha video is loaded whole, so every frame is in by now
 				if (alpha && !closed) onLoadedLatest.current?.()
 			}
 
@@ -184,7 +167,7 @@ export function ScrubbedVideo({
 			return () => {
 				closed = true
 				detach?.()
-				// cancelling the reader ends fsv's read loop quietly, aborting the fetch would make it throw
+				/** Cancelling the reader ends fsv's read loop quietly, aborting the fetch would make it throw. */
 				if (reader) void reader.cancel().catch(() => {})
 				else abort.abort()
 				renderer?.close()

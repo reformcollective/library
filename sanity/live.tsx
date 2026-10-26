@@ -111,9 +111,7 @@ export async function libraryFetch<const QueryString extends string>({
 		stega: disableStega ? false : undefined,
 		perspective,
 	})
-	// next-sanity 13.4 types `data` as StegaBranded unless `stega` is the literal
-	// `false`. Runtime data is unchanged, so keep the clean TypeGen types this
-	// wrapper has always returned rather than forcing stegaClean on every caller.
+	// next-sanity 13.4 types `data` as StegaBranded unless `stega` is the literal `false`.
 	return result as unknown as LibraryFetchResult<QueryString>
 }
 

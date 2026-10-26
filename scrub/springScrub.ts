@@ -3,10 +3,6 @@ import { gsap, ScrollTrigger } from "gsap/all"
 const SUBSTEP = 1 / 240
 const MAX_DT = 1 / 20
 
-/**
- * A damped spring that follows a ScrollTrigger's progress, integrated on `gsap.ticker`.
- * Returns a cleanup function.
- */
 export const springScrub = ({
 	trigger,
 	start,
@@ -21,9 +17,9 @@ export const springScrub = ({
 	end: string
 	stiffness: number
 	damping: number
-	/** the number of steps the progress is spread across, read each tick */
+	/** steps the progress spans, read each tick */
 	length: () => number
-	/** called every tick with the spring's position, 0-1 */
+	/** called each tick with the position, 0-1 */
 	onValue: (position: number) => void
 }) => {
 	let target = 0
@@ -46,7 +42,6 @@ export const springScrub = ({
 			position += velocity * h
 		}
 
-		// settled once within a quarter of a frame and barely moving
 		const frame = 1 / Math.max(1, length())
 		if (Math.abs(target - position) < frame * 0.25 && Math.abs(velocity) < frame * 2) {
 			position = target

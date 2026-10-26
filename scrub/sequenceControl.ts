@@ -1,17 +1,12 @@
-/**
- * Imperative handoff between scroll and something else (a clock, an intro timeline) that drives the frames.
- * Pass the same object as `controlRef` to a scrubbed component, set `held = true` while you drive it with `draw`,
- * then call `release()` to hand the frame back to the scroll position.
- * Create one with `createSequenceControl` and keep it stable (a module constant or a ref).
- */
+/** Hands the frame between scroll and something else driving it. Pass as `controlRef` and keep it stable. */
 export type SequenceControl = {
-	/** while true, scroll does not draw frames */
+	/** while true, scroll does not draw */
 	held: boolean
-	/** the frame index to show when scroll takes over, kept up to date by `draw` */
+	/** frame scroll takes over from, kept up to date by `draw` */
 	index: number
-	/** draws a frame index (clamped to the clip) and remembers it as `index` */
+	/** draws a frame, clamped to the clip */
 	draw: (index: number) => void
-	/** clears `held` and draws the frame the scroll position calls for */
+	/** clears `held` and redraws from scroll */
 	release: () => void
 }
 

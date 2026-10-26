@@ -1,7 +1,6 @@
 import { css, f, styled } from "library/styled"
 import type { Ref } from "react"
 
-/** the canvas both scrubbed components draw into: fills its parent and takes an object-fit */
 export function ScrubCanvas({
 	canvasRef,
 	fit,

@@ -6,55 +6,45 @@ import type { SequenceControl } from "./sequenceControl"
 import { type SettleMode, settleFrame } from "./settleFrame"
 import { springScrub } from "./springScrub"
 
-/** what a scrubbed component gives the driver once it has frames to show */
+/** what a scrubbed component gives the driver once it has frames */
 export type ScrubTarget = {
-	/** number of frames */
 	length: number
-	/** draws the frame at this index (0-based) */
+	/** draws the frame at a 0-based index */
 	show: (index: number) => void
 }
 
 export type ScrubDriverOptions = {
-	/** element whose scroll drives the frames */
 	trigger: RefObject<HTMLElement | null>
-	/** the element the animation is scoped to (the canvas) */
 	scope: RefObject<Element | null>
 	/** false builds nothing */
 	enabled?: boolean
 	start?: string
 	end?: string
-	/** seconds of lerp between scroll position and frame, as ScrollTrigger's scrub */
+	/** seconds of lerp, as ScrollTrigger's scrub */
 	scrub?: number | boolean
 	settle?: SettleMode
-	/** frames, for the settle mode */
+	/** frames, for `settle` */
 	settleThreshold?: number
-	/** with both set, a damped spring replaces the scrub tween and `scrub` and `settle` are ignored */
+	/** with both set, a spring replaces the scrub tween and `scrub` and `settle` are ignored */
 	springStiffness?: number
 	springDamping?: number
-	/** 0-based index scroll starts from: the top of the trigger shows this frame and the bottom the last */
+	/** 0-based frame shown at the top of the trigger */
 	scrubFromIndex?: number
-	/** remaps scroll progress (0-1) to the share of the frames shown (0-1). may be an inline function */
+	/** remaps scroll progress (0-1) to the share of frames shown (0-1) */
 	progressCurve?: (progress: number) => number
 	controlRef?: RefObject<SequenceControl>
 }
 
 export type ScrubDriver = {
-	/**
-	 * hands the driver the frames to show. draws the frame scroll calls for straight away.
-	 * returns a function that detaches it again
-	 */
+	/** hands over the frames and draws immediately. returns a detach function */
 	attach: (target: ScrubTarget) => () => void
-	/** draws the current frame again, for a target whose frames arrive over time */
+	/** draws the current frame again, for frames that arrive over time */
 	redraw: () => void
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
 
-/**
- * Maps scroll to a frame index and tells a `ScrubTarget` to draw it. Shared by `ScrubbedVideo` and `ScrubbedImageSequence`.
- * The driver is rebuilt on resize and when its options change, but the attached target survives that, so
- * loading frames is never repeated because of it.
- */
+/** The driver rebuilds on resize and option changes, but the attached target survives, so frames never reload. */
 export const useScrubDriver = ({
 	trigger,
 	scope,
@@ -74,9 +64,10 @@ export const useScrubDriver = ({
 	const syncRef = useRef<(force: boolean) => void>(() => {})
 	const curveRef = useLatest(progressCurve)
 
-	// the trigger is usually an ancestor of the scoped element, and React attaches an ancestor's ref after this
-	// component's layout effects, so on a client-side mount `trigger.current` is still null when useAnimation first
-	// runs. reading it in a passive effect (which runs after refs are attached) and rebuilding once it is set covers that
+	/**
+	 * An ancestor's ref is attached after this component's layout effects, so `trigger.current` is still null
+	 * when useAnimation first runs. Reading it in a passive effect and rebuilding once set covers that.
+	 */
 	const [triggerEl, setTriggerEl] = useState<HTMLElement | null>(null)
 	useEffect(() => {
 		setTriggerEl(trigger.current)
@@ -169,7 +160,6 @@ export const useScrubDriver = ({
 				scrubScrollTrigger = rootTween.scrollTrigger
 			}
 
-			// a rebuild (resize, option change) starts with nothing drawn: seed from the scroll position and draw it
 			if (scrubScrollTrigger) {
 				scrolled = curve(scrubScrollTrigger.progress)
 				progress = scrolled
