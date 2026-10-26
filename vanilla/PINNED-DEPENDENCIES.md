@@ -9,20 +9,22 @@ loader: path.resolve(__dirname, "vanilla-split-loader.ts")
 
 Because it is consumed as *source* rather than as a built artifact, it needs the
 surrounding build tooling to both parse TS on its behalf and expose the TS compiler
-API. Three upstream majors have each removed one of those. Nothing is pinned to work
-around this today — the update was attempted on `reform-hyphenate` and reverted, so
-versions are simply what the committed lockfile resolves.
+API. Three upstream majors have each removed one of those. Only Vite is pinned today,
+through the `"@vanilla-extract/compiler>vite": 7.3.2` override in `pnpm-workspace.yaml`
+(see `KNOWN-ISSUES.md`). The others are simply what the committed lockfile resolves;
+the update was attempted on `reform-hyphenate` and reverted.
 
 | Dependency | How it breaks | Known-good |
 |---|---|---|
 | **TypeScript 7** | Removed the emitter (`createPrinter`, `EmitHint`, `printFile`). Most of the compiler API moved to `typescript/unstable/ast`, but there is no printer replacement, so the loader cannot emit source text at all. | 6.x |
-| **Vite 8** | No longer loads `.ts` files passed by path, so Turbopack handing it this loader fails with "content contains invalid JS syntax". Reached via `@vanilla-extract/turbopack-plugin` → `@vanilla-extract/compiler`, whose peer range `^5 \|\| ^6 \|\| ^7 \|\| ^8` lets pnpm select 8. | 7.x |
+| **Vite 8** | Fails with "content contains invalid JS syntax" from this loader. `KNOWN-ISSUES.md` traces it to oxc leaving JSX unparsed under `jsx: preserve`; an earlier theory that it no longer loads `.ts` files passed by path is unconfirmed. Reached via `@vanilla-extract/turbopack-plugin` → `@vanilla-extract/compiler`, whose peer range `^5 \|\| ^6 \|\| ^7 \|\| ^8` lets pnpm select 8. | 7.x |
 | **@swc/core 1.16** | Panics parsing the loader: `NoFileFor(BytePos(..))` in `swc_common/src/source_map.rs`. Reached via the same turbopack-plugin dependency. | 1.15.x |
 
 ## Gotchas
 
 - The Vite 8 failure surfaces as a **build error blaming `jsx: "preserve"`** in
-  `tsconfig.json`. That is a red herring — `preserve` is correct and required for Next.
+  `tsconfig.json`. `preserve` is required for Next, so do not change it; see
+  `KNOWN-ISSUES.md` for the cause and the workaround.
 - `pnpm outdated` does **not** surface any of these; it only reports within-range
   updates. They appear only under `pnpm update --latest`.
 - All three are reached through build tooling, not app code, so they do not affect what

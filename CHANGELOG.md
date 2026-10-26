@@ -1,3 +1,77 @@
+# 2026-10-26
+
+## oxlint 1.89 needs oxlint-tsgolint 7.x, and oxfmt 0.74 reformats slightly
+
+The shared `library/config/oxlint.ts` uses `defineConfig` and `jsPlugins` from `oxlint`. `oxlint` 1.89 declares a peer dependency on `oxlint-tsgolint` `>=7.0.2003`, so a site on the old 0.x `oxlint-tsgolint` gets a peer error. `oxfmt` 0.74 also formats a few constructs differently from 0.56, for example a lone `css` template passed to `f.responsive` is now hugged, and `package.json` key order can change.
+
+**Migration Advice**
+
+Sites that take `oxlint` ^1.89.0 must also take `oxlint-tsgolint` ^7.0.2005. Sites that take `oxfmt` ^0.74.0 should run the formatter once and commit the result separately, so the reformat is isolated from other changes.
+
+## next-sanity 13.4 types `libraryFetch` data as stega-branded
+
+`next-sanity` 13.4 types the `data` returned by `sanityFetch` as `StegaBranded` unless `stega` is the literal `false`. `libraryFetch` in `library/sanity/live.tsx` passes `stega` as a runtime value, so every caller's data became branded and failed to type-check. The runtime data is unchanged. `libraryFetch` now returns its result through a documented cast to `LibraryFetchResult<QueryString>`, so callers keep the clean TypeGen types they had before.
+
+**Migration Advice**
+
+Sites that take `next-sanity` ^13.4.0 need this library revision, otherwise `libraryFetch` callers get TS2322 errors. No call-site changes are needed. Callers that read strings for logic still need `stegaClean`, as before, since the data can contain stega characters when stega is on.
+
+## sanity 6.20 needs `--force` on the dev schema watcher
+
+`sanity schema extract --watch` in `sanity` 6.20 refuses to start when `schema.json` already exists, which it does after any earlier lint or typegen run ("Schema file already exists ... Pass `--force` to overwrite it"). `pnpm dev` then exits because the `sanity-schema:dev` service fails. The script lives in each site's own `package.json`, so the library cannot fix it for them.
+
+**Migration Advice**
+
+Sites that take `sanity` 6.20 or later should change the `sanity-schema:dev` wireit command to `sanity schema extract --watch --force`. The `sanity-typegen:check` command does not need the flag, because wireit clears its output first.
+
+Separately, and not caused by this upgrade: `sanity schema extract --watch` only watches `sanity.config.*` and `schema*/**` by default. Sites whose schemas live under `sanity/schemas/` can optionally add `schemaExtraction: { watchPatterns: ["sanity/**/*.{ts,tsx}"] }` to `defineCliConfig` in `sanity.cli.ts` so schema edits are picked up (the starter does this).
+
+## Next 16.4 no longer recognizes `experimental.viewTransition`
+
+Next 16.4 dropped the `experimental.viewTransition` config key, so it was removed from the starter's `next.config.ts`. `library/ViewTransition.tsx` uses React's own `ViewTransition`, which ships in React 19.3.
+
+**Migration Advice**
+
+Sites on Next 16.4 must remove `experimental: { viewTransition: true }` from `next.config.ts` and need React 19.3 or later.
+
+## @sanity/icons 5 has no named icon exports at its root
+
+`@sanity/icons` 5 no longer exports named icons such as `CogIcon` from `"@sanity/icons"`. The root export is now a lazy icon-name map, and each icon lives at its own subpath, for example `@sanity/icons/Cog`. `library/sanity/reusables.tsx` and `library/link/staticLinkType.ts` now import from subpaths, which only exist in `@sanity/icons` 5. Version 4 was not checked.
+
+A root named import still type-checks in most cases but fails when the code runs, so lint does not reliably catch it.
+
+**Migration Advice**
+
+Sites that take this library revision need `@sanity/icons` ^5.2.3 (`sanity` 6.20 already depends on it). Change your own root icon imports to subpaths, for example `import { CogIcon } from "@sanity/icons/Cog"`.
+
+## vanilla-extract turbopack-plugin 0.1.4 breaks the vanilla split loader without a vite override
+
+`@vanilla-extract/turbopack-plugin` 0.1.4 pulls `@vanilla-extract/compiler` onto vite 8.1.0, which cannot parse the library's JSX under tsconfig `jsx: preserve` ("Failed to parse source for import analysis") and breaks `vanilla-split-loader.ts`. The library floor stays at `^0.1.3`, but that range already admits 0.1.4, so any site whose lockfile resolves 0.1.4 or later hits this.
+
+**Migration Advice**
+
+Any site whose lockfile resolves `@vanilla-extract/turbopack-plugin` 0.1.4 or later must add `overrides: "@vanilla-extract/compiler>vite": 7.3.2` to their `pnpm-workspace.yaml` until the loader is made compatible.
+
+Open issue and re-check notes: [KNOWN-ISSUES.md](KNOWN-ISSUES.md).
+
+## Scrubbed video and scrubbed image sequence components
+
+Adds `library/scrub` with two scroll-scrubbed components that draw to a canvas: `ScrubbedVideo` (an `.fsv` clip, decoded with WebCodecs and rendered with WebGL) and `ScrubbedImageSequence` (a numbered set of image frames, no extra dependency). Both are driven by a GSAP ScrollTrigger inside `useAnimation` and share one prop surface, so a section can swap between them. `createSequenceControl` (for handing frames between a timeline and scroll), `SettleMode` and the `springScrub` driver live alongside them. See `library/scrub/README.md`.
+
+They exist because scrubbing a `<video>`'s `currentTime` stops repainting on Safari once the tab has been in the background.
+
+`ScrubbedVideo` needs `@plutotcool/fsv`, declared as an **optional peer dependency** pinned to `0.5.1` (the package is v0 and its API is not stable). Projects that only use `ScrubbedImageSequence` need not install it. Note that it depends on `node-av` (ffmpeg bindings, installed through a lifecycle script) for its Node converter, which the browser renderer does not use. In a pnpm 11 project you will be asked to set `node-av` in `allowBuilds`; `false` is enough for `ScrubbedVideo`.
+
+Compared with the copies that lived in `reform-go-ai`: callbacks (`onReady`, `onLoaded`, `onProgress`, `onPriorityLoaded`) and `progressCurve` may now be inline functions and no longer rebuild the animation or reload the clip, a resize no longer reloads frames, changing `scrubFrom`, `priority` or `controlRef` now takes effect, and `ScrubbedVideo` gains `onError`. `extend`, `readable` and `after` were not ported.
+
+**Migration Advice**
+
+Sites that take this library revision must either install the peer (`pnpm add --save-exact @plutotcool/fsv@0.5.1`) or exclude `library/scrub/ScrubbedVideo.tsx` from their `tsconfig.json`. Without one of these, lint fails with TS2307 (cannot find module `@plutotcool/fsv`), because `tsconfig.json` includes every `.tsx` file and `ScrubbedVideo.tsx` has a type import from the package. `@plutotcool/fsv` peers on `@types/node` ^25, so sites on `@types/node` 26 may see a peer warning. A site with its own copy of `FsvSequence` / `ScrubbableSequence` and `app/lib/{springScrub,settleFrame,sequenceControl}` can switch to `ScrubbedVideo` / `ScrubbedImageSequence` from `library/scrub/*` (named exports, imported by file; there is no barrel) and delete the local copies, unless it uses `extend`, `readable` or `after`, which have no equivalent yet.
+
+To use `ScrubbedVideo`, install the peer: `pnpm add --save-exact @plutotcool/fsv@0.5.1`.
+
+In the starter, `@plutotcool/fsv` is also a root devDependency only so `tsc` can typecheck `ScrubbedVideo`; for library consumers it stays an optional peer.
+
 # 2026-09-21
 
 ## Reversed marquees no longer flip forward on screen
