@@ -1,3 +1,59 @@
+# 2026-10-27
+
+## UniversalVideo replaces the seven video components
+
+`library/videos/UniversalVideo.tsx` is one component for Mux, plain file and HLS URLs, YouTube, Vimeo, Wistia, Twitch, TikTok, Spotify and Cloudflare Stream. It renders a poster on the server and creates the player on the client, through the media-element packages pinned in `library/package.json` (`@mux/mux-video`, `hls-video-element` and the per-provider elements). It takes a Sanity `video` object, a `src`, or a Mux `playbackId`, and exposes compound parts, `useVideo()` and a ref handle. There are no blur placeholders anywhere: nothing shows while a poster loads. Read `docs/universal-video/SPEC.md` in the starter for the full API.
+
+The old components stay as thin deprecated wrappers in `library/videos/compat/`, and the old files re-export from there, so existing imports keep working: `BackgroundVideo`, `CarouselBackgroundVideo`, `MuxVideo` (and `isPseudoEnded`), `BatterySaverVideo`, `LazyVideo` and `VideoEmbed`. `BackgroundVideoOriginal` is deleted (it had no importers). Behavior changes in the wrappers:
+
+- `BackgroundVideo` and `CarouselBackgroundVideo`: `videoBlurUrl` and `videoDuration` are ignored. `ref` is still the container and `videoRef` the media element, set once the player has mounted. The 250 ms infinite play retry is gone (the video falls back to the poster), `onEnded` no longer fires on playback failure, the video pauses offscreen, and reduced motion and data saver are honored. The "video-as-poster" second `<mux-video>` is replaced by the poster rules in the spec. `safariOptimized` is an alias of `eager` on Safari. Background mode forces `muted`. Passing `play` counts as manual control, so the built-in in-view trigger steps aside; omit it to get play and pause by visibility.
+- `MuxVideo`: callbacks receive a minimal `{ type, target, currentTarget }` object instead of a React synthetic event. `style`, `preload`, `playsInline` and `preloadTrackable` are ignored (a dev warning names them), and the `backBufferLength` hls config is not set. `autoPlayFallbackTime` still seeks and dispatches `ended` when autoplay is blocked, only inside the wrapper. The element has no intrinsic size any more, so size it with `className` or set an aspect ratio.
+- `BatterySaverVideo`: the monkey-patched `play` is gone. A blocked autoplay shows the library play overlay with the label "Site paused by low power mode", which can be overridden through `labels.playOverlay`.
+- `LazyVideo`: `<source>` children become `src`. Loading waits for `usePreloader().completed` and then follows `loadMargin` instead of a GSAP ScrollTrigger. `style` is ignored.
+- `VideoEmbed`: no longer client-only (the poster and wrapper render on the server), `posterImage` and `thumbTime` now work, and Mux plays through `<mux-video>`. Only `video`, `controls`, `resetOnPlay`, `className`, `ref`, `playing`, `muted`, `loop`, `onReady`, `onPlay`, `onPause`, `onEnded`, `onError`, `onTimeUpdate` and `onProgress` are forwarded. Other react-player props are ignored with a dev warning.
+
+**Migration Advice**
+
+New code should use `UniversalVideo` directly. Sites that import the old components need no changes, but should check the behavior notes above, especially callers of `MuxVideo` that read React event fields, and callers of `BackgroundVideo` that pass `play` only to start playback. `@mux/mux-video-react` is no longer a library dependency; remove any direct imports of it in your own code. `react-player` is no longer used by the library, so a site that has no other use for it can drop it.
+
+## `useVideoScrollTrigger` and handle trigger methods
+
+`library/videos/trigger/useVideoScrollTrigger.ts` drives a `UniversalVideo` (with `trigger={false}`) from a GSAP ScrollTrigger, for videos the built-in IntersectionObserver cannot judge, such as a video behind a sticky or pinned cover. Options: `handle`, `trigger` (element), `start`, `end`, `endTrigger`, `pauseWhenOut` (default true), `once` and `markers`. It is built on `useAnimation`. `UniversalVideoHandle` gains `playFromTrigger()` and `pauseFromTrigger()`, which write the trigger origin, so a manual play or pause still steps the trigger aside until `releaseManualControl()`. It pauses the video on creation when it starts out of range (`trigger={false}` leaves autoplay and background videos playing from mount). It does not use the `maxConcurrent` limiter.
+
+**Migration Advice**
+
+Existing GSAP code that calls `handle.play()` and `handle.pause()` keeps working (those are manual control). Switch to the hook if you want the trigger to yield to the user's own play and pause.
+
+## Sanity `video` type: new fields, `VideoField` and projection changes
+
+The shared `video` type in `library/sanity/reusables.tsx` gains `cloudflare` as a `sourceType`, and the fields `thumbnail`, `mode`, `loop`, `muted`, `controls`, `startTime`, `endTime`, `chapters`, `title`, `mainContent`, `jsonLd` and `privacy`. `posterImage` now shows for every source, not only Mux. Field builders live in `library/sanity/video/videoFields.ts`, and the type uses a custom input (`VideoInput`) with a poster panel and a "Generate from source" button. URL validation now uses `parseVideoUrl()` from `library/videos/providers/parse.ts` instead of the `react-player` regexes. DASH (`.mpd`) URLs are rejected. The hand-written `VideoField` type in `library/sanity/assetMetadata.ts` now includes `VideoFieldAdditions`, and the `reform::video` projection adds `thumbTime`, `createdAt`, `staticRenditions` and `playbackPolicy` on `muxVideo.data`.
+
+A video field can be marked as the hero (LCP) video with schema `options: { lcp: true }`. This only changes the Studio input; the section component must pass the same value as the `priority` prop. The option is typed by `library/sanity/video/lcpOption.ts`, which augments `ObjectOptions` in `@sanity/types`.
+
+**Migration Advice**
+
+Re-run `sanity schema extract` and typegen after taking this revision so `sanity.types.ts` picks up the new fields. Add `@sanity/types` to the site's `package.json` at the version `sanity` resolves (the starter uses `^6.20.0`); the `lcp` augmentation needs it to be resolvable from the site root. Add `options: { lcp: true }` to the video field of hero sections and pass `priority` to `UniversalVideo` there.
+
+## Video lookup route and `VideoConfigProvider`
+
+"Generate from source" and the poster panel call a same-origin route that the site provides. Create `app/(sanity)/api/video-lookup/route.ts` (see the starter) as a thin wrapper around `library/videos/server/lookup.ts`: a `GET` handler with `dynamic = "force-dynamic"` that rejects requests whose `sec-fetch-site` is not `same-origin`, parses the query with `parseLookupTarget`, and calls `runLookup` or `lookupCopy`. `library/videos/server/muxTokens.ts` signs Mux playback JWTs for signed playback IDs, using keys from the site's own environment.
+
+`VideoConfigProvider` (`library/videos/config.tsx`) holds site-wide defaults: `analytics`, `maxConcurrent`, `lookupEndpoint` and `canTrack`. It is optional, since `UniversalVideo` falls back to defaults, but the starter renders it inside `app/components/Providers/index.tsx`.
+
+**Migration Advice**
+
+Add the route file and wrap the app in `VideoConfigProvider` (inside the existing client providers). Video analytics are off by default and only push to a `dataLayer` that already exists.
+
+## SanityImage `noLqip` prop and `*.inline.svg` icons
+
+`SanityImage` has a new `noLqip` prop that skips the low-quality blur placeholder entirely. `UniversalVideo` posters use it so a blur never shows.
+
+The video controls import their icons as `*.inline.svg` React components. Every consuming site's Turbopack config must handle that suffix, as the starter's `next.config.ts` does with `turbopack.rules["*.inline.svg"]` and `@svgr/webpack` (`ssr: true`). Sites without that rule fail to build as soon as they import `UniversalVideo`.
+
+**Migration Advice**
+
+Add the `*.inline.svg` rule to `next.config.ts` if the site does not have it. Pass `noLqip` anywhere a blur placeholder must never appear.
+
 # 2026-10-26
 
 ## Lighthouse workflow waits for the server, fails on 0 routes or a failed deploy, and masks secrets

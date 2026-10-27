@@ -57,6 +57,8 @@ export type SanityImageProps = SanityProps & {
 	quality?: number
 	width?: number
 	height?: number
+	/** Skip the low-quality blur placeholder entirely. Use where a blur must never show. */
+	noLqip?: boolean
 } & Omit<DefaultImageProps, "srcSet">
 
 const urlBuilder = createImageUrlBuilder({ projectId, dataset })
@@ -114,7 +116,8 @@ export default function SanityUniversalImage(
 }
 
 function SanityImageCore(props: SanityImageProps) {
-	const { src, ref, quality = 90, ...rest } = props
+	const { src, ref, quality = 90, noLqip, ...rest } = props
+	const lqipSource = noLqip ? undefined : src?.data?.lqip
 	const defaultEager = use(EagerContext)
 	const prioritizedLoading = prioritizeLoading(props.loading, defaultEager)
 	const srcKey = [
@@ -145,7 +148,7 @@ function SanityImageCore(props: SanityImageProps) {
 	}, [loaded, srcKey])
 
 	useEffect(() => {
-		const lqip = src?.data?.lqip
+		const lqip = lqipSource
 		setHasTransparency(false)
 		if (!lqip) return
 		let active = true
@@ -155,7 +158,7 @@ function SanityImageCore(props: SanityImageProps) {
 		return () => {
 			active = false
 		}
-	}, [src?.data?.lqip])
+	}, [lqipSource])
 
 	const hotspotX = src?.hotspot?.x
 	const hotspotY = src?.hotspot?.y
@@ -164,7 +167,7 @@ function SanityImageCore(props: SanityImageProps) {
 	const cropTop = src?.crop?.top
 	const cropBottom = src?.crop?.bottom
 	const hasHotspot = hotspotX != null && hotspotY != null
-	const shouldTrackRenderedFit = hasHotspot || (!loaded && !!src?.data?.lqip)
+	const shouldTrackRenderedFit = hasHotspot || (!loaded && !!lqipSource)
 	useLayoutEffect(() => {
 		if (!shouldTrackRenderedFit) return
 		const el = imgRef.current
@@ -250,7 +253,7 @@ function SanityImageCore(props: SanityImageProps) {
 		", ",
 	)
 
-	const lqip = !loaded && src.data?.lqip
+	const lqip = !loaded && lqipSource
 	const lqipProps = lqip
 		? {
 				lqip: `url(${lqip})`,
