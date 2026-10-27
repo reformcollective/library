@@ -1,4 +1,5 @@
-import { InfoOutlineIcon, PlayIcon } from "@sanity/icons"
+import { InfoOutlineIcon } from "@sanity/icons/InfoOutline"
+import { PlayIcon } from "@sanity/icons/Play"
 import libraryConfig from "app/libraryConfig"
 import type { StaticImageData } from "next/image"
 import {

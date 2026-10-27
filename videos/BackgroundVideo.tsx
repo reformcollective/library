@@ -292,6 +292,11 @@ const Container = styled("div", [
 				height: 100%;
 				isolation: isolate;
 				overflow: clip;
+
+				/* the blur placeholder is a 32px image set as the background: without these it tiles */
+				background-position: center;
+				background-size: cover;
+				background-repeat: no-repeat;
 			`),
 		},
 	},

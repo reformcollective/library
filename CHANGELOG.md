@@ -1,8 +1,111 @@
+# 2026-10-26
+
+## Lighthouse workflow waits for the server, fails on 0 routes or a failed deploy, and masks secrets
+
+`.github/workflows/lighthouse.yml` now starts the server in the background and polls it until it answers (up to 5 minutes) instead of sleeping 5 seconds, so `unlighthouse-ci` no longer scans 0 routes against a server that is still building. It fails the job when `ci-result.json` has 0 routes, and the check then reads "Lighthouse Failed". "Deploy preview" no longer has `continue-on-error`, so a failed deploy turns the job red (including PRs where `LIGHTHOUSE_PAT` is not available, such as Dependabot). A new first step masks every `SECRETS_JSON` value so secrets no longer show in step env logs. The checkout now uses `persist-credentials: false`, because the persisted `GITHUB_TOKEN` made the deploy action fail with "Repository not found" on `reformcollective/lighthouse` even with a valid `LIGHTHOUSE_PAT`.
+
+**Migration Advice**
+
+Bump the workflow SHA in the site's `call-lighthouse.yml` to pick this up.
+
+## oxlint 1.89 needs oxlint-tsgolint 7.x, and oxfmt 0.74 reformats slightly
+
+The shared `library/config/oxlint.ts` uses `defineConfig` and `jsPlugins` from `oxlint`. `oxlint` 1.89 declares a peer dependency on `oxlint-tsgolint` `>=7.0.2003`, so a site on the old 0.x `oxlint-tsgolint` gets a peer error. `oxfmt` 0.74 also formats a few constructs differently from 0.56, for example a lone `css` template passed to `f.responsive` is now hugged, and `package.json` key order can change.
+
+**Migration Advice**
+
+Sites that take `oxlint` ^1.89.0 must also take `oxlint-tsgolint` ^7.0.2005. Sites that take `oxfmt` ^0.74.0 should run the formatter once and commit the result separately, so the reformat is isolated from other changes.
+
+## next-sanity 13.4 types `libraryFetch` data as stega-branded
+
+`next-sanity` 13.4 types the `data` returned by `sanityFetch` as `StegaBranded` unless `stega` is the literal `false`. `libraryFetch` in `library/sanity/live.tsx` passes `stega` as a runtime value, so every caller's data became branded and failed to type-check. The runtime data is unchanged. `libraryFetch` now returns its result through a documented cast to `LibraryFetchResult<QueryString>`, so callers keep the clean TypeGen types they had before.
+
+**Migration Advice**
+
+Sites that take `next-sanity` ^13.4.0 need this library revision, otherwise `libraryFetch` callers get TS2322 errors. No call-site changes are needed. Callers that read strings for logic still need `stegaClean`, as before, since the data can contain stega characters when stega is on.
+
+## sanity 6.20 needs `--force` on the dev schema watcher
+
+`sanity schema extract --watch` in `sanity` 6.20 refuses to start when `schema.json` already exists, which it does after any earlier lint or typegen run ("Schema file already exists ... Pass `--force` to overwrite it"). `pnpm dev` then exits because the `sanity-schema:dev` service fails. The script lives in each site's own `package.json`, so the library cannot fix it for them.
+
+**Migration Advice**
+
+Sites that take `sanity` 6.20 or later should change the `sanity-schema:dev` wireit command to `sanity schema extract --watch --force`. The `sanity-typegen:check` command does not need the flag, because wireit clears its output first.
+
+Separately, and not caused by this upgrade: `sanity schema extract --watch` only watches `sanity.config.*` and `schema*/**` by default. Sites whose schemas live under `sanity/schemas/` can optionally add `schemaExtraction: { watchPatterns: ["sanity/**/*.{ts,tsx}"] }` to `defineCliConfig` in `sanity.cli.ts` so schema edits are picked up (the starter does this).
+
+## Next 16.4 no longer recognizes `experimental.viewTransition`
+
+Next 16.4 dropped the `experimental.viewTransition` config key, so it was removed from the starter's `next.config.ts`. `library/ViewTransition.tsx` uses React's own `ViewTransition`, which ships in React 19.3.
+
+**Migration Advice**
+
+Sites on Next 16.4 must remove `experimental: { viewTransition: true }` from `next.config.ts` and need React 19.3 or later.
+
+## @sanity/icons 5 has no named icon exports at its root
+
+`@sanity/icons` 5 no longer exports named icons such as `CogIcon` from `"@sanity/icons"`. The root export is now a lazy icon-name map, and each icon lives at its own subpath, for example `@sanity/icons/Cog`. `library/sanity/reusables.tsx` and `library/link/staticLinkType.ts` now import from subpaths, which only exist in `@sanity/icons` 5. Version 4 was not checked.
+
+A root named import still type-checks in most cases but fails when the code runs, so lint does not reliably catch it.
+
+**Migration Advice**
+
+Sites that take this library revision need `@sanity/icons` ^5.2.3 (`sanity` 6.20 already depends on it). Change your own root icon imports to subpaths, for example `import { CogIcon } from "@sanity/icons/Cog"`.
+
+## vanilla-extract turbopack-plugin 0.1.4 breaks the vanilla split loader without a vite override
+
+`@vanilla-extract/turbopack-plugin` 0.1.4 pulls `@vanilla-extract/compiler` onto vite 8.1.0, which cannot parse the library's JSX under tsconfig `jsx: preserve` ("Failed to parse source for import analysis") and breaks `vanilla-split-loader.ts`. The library floor stays at `^0.1.3`, but that range already admits 0.1.4, so any site whose lockfile resolves 0.1.4 or later hits this.
+
+**Migration Advice**
+
+Any site whose lockfile resolves `@vanilla-extract/turbopack-plugin` 0.1.4 or later must add `overrides: "@vanilla-extract/compiler>vite": 7.3.2` to their `pnpm-workspace.yaml` until the loader is made compatible.
+
+Open issue and re-check notes: [KNOWN-ISSUES.md](KNOWN-ISSUES.md).
+
+## Scrubbed video and scrubbed image sequence components
+
+Adds `library/scrub` with two scroll-scrubbed components that draw to a canvas: `ScrubbedVideo` (an `.fsv` clip, decoded with WebCodecs and rendered with WebGL) and `ScrubbedImageSequence` (a numbered set of image frames, no extra dependency). Both are driven by a GSAP ScrollTrigger inside `useAnimation` and share one prop surface, so a section can swap between them. `createSequenceControl` (for handing frames between a timeline and scroll), `SettleMode` and the `springScrub` driver live alongside them. See `library/scrub/README.md`.
+
+They exist because scrubbing a `<video>`'s `currentTime` stops repainting on Safari once the tab has been in the background.
+
+`ScrubbedVideo` needs `@plutotcool/fsv`, declared as an **optional peer dependency** pinned to `0.5.1` (the package is v0 and its API is not stable). Projects that only use `ScrubbedImageSequence` need not install it. Note that it depends on `node-av` (ffmpeg bindings, installed through a lifecycle script) for its Node converter, which the browser renderer does not use. In a pnpm 11 project you will be asked to set `node-av` in `allowBuilds`; `false` is enough for `ScrubbedVideo`.
+
+Compared with the copies that lived in `reform-go-ai`: callbacks (`onReady`, `onLoaded`, `onProgress`, `onPriorityLoaded`) and `progressCurve` may now be inline functions and no longer rebuild the animation or reload the clip, a resize no longer reloads frames, changing `scrubFrom`, `priority` or `controlRef` now takes effect, and `ScrubbedVideo` gains `onError`. `extend`, `readable` and `after` were not ported.
+
+**Migration Advice**
+
+Sites that take this library revision must either install the peer (`pnpm add --save-exact @plutotcool/fsv@0.5.1`) or exclude `library/scrub/ScrubbedVideo.tsx` from their `tsconfig.json`. Without one of these, lint fails with TS2307 (cannot find module `@plutotcool/fsv`), because `tsconfig.json` includes every `.tsx` file and `ScrubbedVideo.tsx` has a type import from the package. `@plutotcool/fsv` peers on `@types/node` ^25, so sites on `@types/node` 26 may see a peer warning. A site with its own copy of `FsvSequence` / `ScrubbableSequence` and `app/lib/{springScrub,settleFrame,sequenceControl}` can switch to `ScrubbedVideo` / `ScrubbedImageSequence` from `library/scrub/*` (named exports, imported by file; there is no barrel) and delete the local copies, unless it uses `extend`, `readable` or `after`, which have no equivalent yet.
+
+To use `ScrubbedVideo`, install the peer: `pnpm add --save-exact @plutotcool/fsv@0.5.1`.
+
+In the starter, `@plutotcool/fsv` is also a root devDependency only so `tsc` can typecheck `ScrubbedVideo`; for library consumers it stays an optional peer.
+
+# 2026-09-23
+
+## `useSectionTheme` tracks any fixed element, at any height
+
+`useSectionTheme(ref)` used to read the section behind a 1px strip placed `ref`'s height down from the top of the viewport — the bottom edge of a header, assuming the header sits at the very top. It couldn't track anything else, and there was only ever one result: the shared theme read by `useHeaderMode`.
+
+It now takes options:
+
+```ts
+useSectionTheme(ref, { offset?: number, shared?: boolean })
+```
+
+- `offset` places the strip as a percentage of the element's height from its top edge, measured from where the element actually is on screen. Defaults to `50`, the center.
+- `shared` (default `true`) publishes to the shared theme, as before. Pass `false` and the hook returns its own theme without touching the shared one, so a second fixed element — a bar pinned to the bottom of the screen, say — can track the section behind it independently of the header.
+
+The initial scan after a route change now checks the same strip, rather than "any part of the section is below the header".
+
+**Migration Advice**
+
+The default strip moved from the header's bottom edge to its center, so a header switches slightly earlier as a boundary scrolls up behind it. To keep the old behavior exactly, pass `{ offset: 100 }`. A better choice is usually the height of the header's text, so the switch lands where the text is.
+
 # 2026-09-21
 
 ## Reversed marquees no longer flip forward on screen
 
-`Marquee` pauses its loop while off screen and resumes it when it scrolls back in. That resume called `loop.play()`, and in GSAP `play()` always runs a timeline *forward*, clearing its reversed flag. `horizontalLoop`/`verticalLoop` implement `reversed` as `tl.reverse()`, and an `IntersectionObserver` fires as soon as it starts observing — so a marquee passed `reversed` reversed for a frame and then ran forward like every other row, for the whole life of the page.
+`Marquee` pauses its loop while off screen and resumes it when it scrolls back in. That resume called `loop.play()`, and in GSAP `play()` always runs a timeline _forward_, clearing its reversed flag. `horizontalLoop`/`verticalLoop` implement `reversed` as `tl.reverse()`, and an `IntersectionObserver` fires as soon as it starts observing — so a marquee passed `reversed` reversed for a frame and then ran forward like every other row, for the whole life of the page.
 
 It now calls `loop.resume()`, which resumes without touching direction. For a forward marquee the two are identical, so nothing changes unless you were passing `reversed`.
 
@@ -27,9 +130,9 @@ Called bare, `faqItem()` gives you the common set already switched on: bold and 
 Pass `styles`, `lists`, `decorators`, or `annotations` to change that surface for your project:
 
 ```ts
-faqItem({ lists: [] })                       // no list treatment in the design
-faqItem({ decorators: [], lists: [] })       // plain paragraphs and links only
-faqItem({ annotations: [] })                 // no links in answers
+faqItem({ lists: [] }) // no list treatment in the design
+faqItem({ decorators: [], lists: [] }) // plain paragraphs and links only
+faqItem({ annotations: [] }) // no links in answers
 faqItem({ decorators: [{ title: "Italic", value: "em" }] }) // italic, no bold
 faqItem({ annotations: [faqLink, myTooltip] }) // keep the default link, add your own
 ```
@@ -50,7 +153,9 @@ This is additive — existing schemas are unaffected. To use it, register `faqIt
 // sanity.config.ts
 import { faqItem, video, youtube } from "library/sanity/reusables"
 
-schema: { types: [youtube, video, faqItem() /* ... */] }
+schema: {
+	types: [youtube, video, faqItem() /* ... */]
+}
 ```
 
 Note `faqItem()` is called — it is a factory, and this call site is where you tune what editors can write.
@@ -117,7 +222,7 @@ Copy the wireit scripts from the starter. Reference commit: https://github.com/r
 
 ## `useHMR` refactor
 
-- `useHMR` now requires `HMRProvider`. 
+- `useHMR` now requires `HMRProvider`.
 - `"beforeReload"` and `"afterReload"` event types are removed — use `"beforeRefresh"` and `"afterRefresh"` for both cases.
 - `useHMR` may fire multiple `afterRefresh` events for each `beforeRefresh`.
 - `SteadyHotScroll` moved to `library/SteadyHotScroll`.
@@ -139,7 +244,7 @@ Prepend `assetMetadataFunctions` to any query that uses asset functions and upda
 Before:
 
 ```ts
-import { imageField, linkField, videoField } from "library/sanity/assetMetadata";
+import { imageField, linkField, videoField } from "library/sanity/assetMetadata"
 
 const pageQuery = defineQuery(`
 	*[_type == "page"][0] {
@@ -155,13 +260,13 @@ const pageQuery = defineQuery(`
 			}
 		}
 	}
-`);
+`)
 ```
 
 After:
 
 ```ts
-import { assetMetadataFunctions } from "library/sanity/assetMetadata";
+import { assetMetadataFunctions } from "library/sanity/assetMetadata"
 
 const pageQuery = defineQuery(`
 	${assetMetadataFunctions}
@@ -180,7 +285,7 @@ const pageQuery = defineQuery(`
 			_type == "inlineImage" => reform::image(@)
 		}
 	}
-`);
+`)
 ```
 
 # 2026-05-20
@@ -219,12 +324,15 @@ The old helper-specific imports have been removed:
 ```ts
 // before
 import {
-  LibraryLive as SanityLive,
-  libraryFetch as sanityFetch,
-} from "library/sanity/reusableFetch";
+	LibraryLive as SanityLive,
+	libraryFetch as sanityFetch,
+} from "library/sanity/reusableFetch"
 
 // after
-import { LibraryLive as SanityLive, libraryFetch as sanityFetch } from "library/sanity/live";
+import {
+	LibraryLive as SanityLive,
+	libraryFetch as sanityFetch,
+} from "library/sanity/live"
 ```
 
 Remove any direct imports of `FirefoxFix`, `SanityLiveProxy`, `SanityPreviewStatusToast`, or `SanityVisualEditingOverlay`; those are now internal to `LibraryLive`.
@@ -243,15 +351,15 @@ Remove any direct imports of `FirefoxFix`, `SanityLiveProxy`, `SanityPreviewStat
 
 ```tsx
 // before
-<UniversalImage src={image} objectFit="contain" objectPosition="top center" />;
+;<UniversalImage src={image} objectFit="contain" objectPosition="top center" />
 
 // after
 const Image = styled(UniversalImage, [
-  f.responsive(css`
+	f.responsive(css`
     object-fit: contain;
     object-position: top center;
   `),
-]);
+])
 ```
 
 # 2026-05-05
@@ -266,26 +374,26 @@ Use the `f` utility object instead.
 
 ```ts
 // before
-import { css, fresponsive, styled, unresponsive } from "library/styled";
+import { css, fresponsive, styled, unresponsive } from "library/styled"
 
 fresponsive(css`
   padding: 20px;
-`);
+`)
 
 unresponsive(css`
   position: fixed;
-`);
+`)
 
 // after
-import { css, f, styled } from "library/styled";
+import { css, f, styled } from "library/styled"
 
 f.responsive(css`
   padding: 20px;
-`);
+`)
 
 f.unresponsive(css`
   position: fixed;
-`);
+`)
 ```
 
 # 2026-05-04
@@ -297,12 +405,12 @@ f.unresponsive(css`
 The vanilla splitter now requires every `compileTime(...)` call to be awaited. This keeps sync and async build-time values using the same call shape, and prevents async values from being emitted into the bundle before they resolve.
 
 ```ts
-import { compileTime } from "library/compile-time";
+import { compileTime } from "library/compile-time"
 
-export const syncValue = await compileTime(() => "serialized at build time");
+export const syncValue = await compileTime(() => "serialized at build time")
 export const asyncValue = await compileTime(async () => {
-  return await fetchBuildTimeValue();
-});
+	return await fetchBuildTimeValue()
+})
 ```
 
 `compileTime` still returns the callback result directly. The required `await` is intentional because awaiting a non-Promise value is a no-op, while awaiting a Promise ensures it resolves before bundling continues.
@@ -311,15 +419,15 @@ export const asyncValue = await compileTime(async () => {
 
 ```ts
 // before
-import { compileTime, css } from "library/styled";
+import { compileTime, css } from "library/styled"
 
-const value = compileTime(() => "build-time value");
+const value = compileTime(() => "build-time value")
 
 // after
-import { compileTime } from "library/compile-time";
-import { css } from "library/styled";
+import { compileTime } from "library/compile-time"
+import { css } from "library/styled"
 
-const value = await compileTime(() => "build-time value");
+const value = await compileTime(() => "build-time value")
 ```
 
 ## Sanity data attribute helper now uses serializable context
@@ -332,20 +440,20 @@ Attribute context includes document id, type, and a path to the relevant section
 
 ```tsx
 const sectionContext = {
-  sanityDataAttribute: {
-    documentId: relevantPage._id,
-    documentType: relevantPage._type,
-    pathPrefix: `sections[${index}]`,
-  },
-};
+	sanityDataAttribute: {
+		documentId: relevantPage._id,
+		documentType: relevantPage._type,
+		pathPrefix: `sections[${index}]`,
+	},
+}
 ```
 
 Then update section call sites:
 
 ```tsx
-import { getSanityDataAttribute } from "library/sanity/getSanityDataAttribute";
+import { getSanityDataAttribute } from "library/sanity/getSanityDataAttribute"
 
-<div data-sanity={getSanityDataAttribute(sanityDataAttribute, "title")} />;
+;<div data-sanity={getSanityDataAttribute(sanityDataAttribute, "title")} />
 ```
 
 # 2026-05-01
@@ -364,17 +472,18 @@ Shared document helper plumbing now lives in `library/sanity/document-helpers`. 
 Update `sanity/lib/slug-resolver.ts` to this shape:
 
 ```ts
-import { defineDocumentPaths } from "library/sanity/define-document-paths";
+import { defineDocumentPaths } from "library/sanity/define-document-paths"
 
 export const documentPaths = defineDocumentPaths({
-  page: (document) => ({
-    path: document.slug?.current === "home" ? "/" : `/${document.slug?.current}`,
-    title: document.title ?? "Untitled Page",
-  }),
-});
+	page: (document) => ({
+		path:
+			document.slug?.current === "home" ? "/" : `/${document.slug?.current}`,
+		title: document.title ?? "Untitled Page",
+	}),
+})
 
 export const documentPathProjection = <T>(document: T) =>
-  `
+	`
 	select(
 	  !defined(${document}) => null,
 		${document}._type == "page" => select(
@@ -382,7 +491,7 @@ export const documentPathProjection = <T>(document: T) =>
 			"/" + ${document}.slug.current
 		)
 	)
-` as const;
+` as const
 ```
 
 Update sanity config to import utilities from `library/sanity/document-helpers`
@@ -438,14 +547,14 @@ If your `app/(sanity)/api/live/route.ts` explicitly forwards only `GET`:
 
 ```ts
 // before
-export { GET } from "library/sanity/liveProxy";
+export { GET } from "library/sanity/liveProxy"
 ```
 
 Change it to re-export everything:
 
 ```ts
 // after
-export * from "library/sanity/liveProxy";
+export * from "library/sanity/liveProxy"
 ```
 
 # 2026-04-17
@@ -472,66 +581,66 @@ If you want additional utilities, add them in `app/libraryConfig.ts` under `util
 If you were using the removed built-ins, paste this into `app/libraryConfig.ts` to restore the previous behavior:
 
 ```ts
-import { defineLibraryConfig } from "library/defaultConfig";
+import { defineLibraryConfig } from "library/defaultConfig"
 
-const tabletBreakpoint = "largeMobile" as const;
+const tabletBreakpoint = "largeMobile" as const
 
 const tabletRule =
-  tabletBreakpoint === "tablet"
-    ? { breakpoint: "tablet", designSize: "tablet", output: "fluid" }
-    : { breakpoint: "tablet", designSize: "mobile", output: "pixel" };
+	tabletBreakpoint === "tablet"
+		? { breakpoint: "tablet", designSize: "tablet", output: "fluid" }
+		: { breakpoint: "tablet", designSize: "mobile", output: "pixel" }
 
 export default defineLibraryConfig({
-  tabletBreakpoint,
-  utilities: {
-    scaledResponsive: [
-      { breakpoint: "mobile", designSize: "mobile", output: "fluid" },
-      tabletRule,
-      { breakpoint: "desktop", designSize: "desktop", output: "fluid" },
-      { breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
-    ],
-    allFullWidth: [
-      {
-        breakpoint: "mobile",
-        designSize: "desktop",
-        output: "scaleFullyConfig",
-      },
-      {
-        breakpoint: "tablet",
-        designSize: "desktop",
-        output: "scaleFullyConfig",
-      },
-      {
-        breakpoint: "desktop",
-        designSize: "desktop",
-        output: "scaleFullyConfig",
-      },
-      {
-        breakpoint: "fullWidth",
-        designSize: "desktop",
-        output: "scaleFullyConfig",
-      },
-    ],
-    allDesktop: [
-      { breakpoint: "mobile", designSize: "desktop", output: "fluid" },
-      { breakpoint: "tablet", designSize: "desktop", output: "fluid" },
-      { breakpoint: "desktop", designSize: "desktop", output: "fluid" },
-      { breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
-    ],
-    allTablet: [
-      { ...tabletRule, breakpoint: "mobile" },
-      { ...tabletRule, breakpoint: "tablet" },
-      { ...tabletRule, breakpoint: "desktop" },
-      { ...tabletRule, breakpoint: "fullWidth" },
-    ],
-    allMobile: [
-      { breakpoint: "mobile", designSize: "mobile", output: "fluid" },
-      { breakpoint: "tablet", designSize: "mobile", output: "fluid" },
-      { breakpoint: "desktop", designSize: "mobile", output: "fluid" },
-      { breakpoint: "fullWidth", designSize: "mobile", output: "fluid" },
-    ],
-  },
-});
+	tabletBreakpoint,
+	utilities: {
+		scaledResponsive: [
+			{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
+			tabletRule,
+			{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
+		],
+		allFullWidth: [
+			{
+				breakpoint: "mobile",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+			{
+				breakpoint: "tablet",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+			{
+				breakpoint: "desktop",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+			{
+				breakpoint: "fullWidth",
+				designSize: "desktop",
+				output: "scaleFullyConfig",
+			},
+		],
+		allDesktop: [
+			{ breakpoint: "mobile", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "tablet", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "desktop", designSize: "desktop", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "desktop", output: "fluid" },
+		],
+		allTablet: [
+			{ ...tabletRule, breakpoint: "mobile" },
+			{ ...tabletRule, breakpoint: "tablet" },
+			{ ...tabletRule, breakpoint: "desktop" },
+			{ ...tabletRule, breakpoint: "fullWidth" },
+		],
+		allMobile: [
+			{ breakpoint: "mobile", designSize: "mobile", output: "fluid" },
+			{ breakpoint: "tablet", designSize: "mobile", output: "fluid" },
+			{ breakpoint: "desktop", designSize: "mobile", output: "fluid" },
+			{ breakpoint: "fullWidth", designSize: "mobile", output: "fluid" },
+		],
+	},
+})
 ```
 
 # 2026-04-16
@@ -626,13 +735,13 @@ As a result, `!!link` is always `true` for these fields and is an unreliable gua
 `isRouteDefined` fixes this by running the value through `resolveRoute` and checking whether a URL was produced:
 
 ```ts
-import { isRouteDefined } from "library/link";
+import { isRouteDefined } from "library/link"
 
 // ✓
-const hasLink = isRouteDefined(link);
+const hasLink = isRouteDefined(link)
 
 // ✗ — always true; the link object exists even with no destination selected
-const hasLink = !!link;
+const hasLink = !!link
 ```
 
 # 2026-04-07
@@ -761,7 +870,7 @@ The library now requires a link resolver at `sanity/lib/slug-resolver.ts` to han
 For older projects, you can use a simple pass-through:
 
 ```typescript
-export const resolveLink = (item: any) => item?.slug?.current || "/";
+export const resolveLink = (item: any) => item?.slug?.current || "/"
 ```
 
 # 2025-12-11
@@ -810,9 +919,9 @@ Update any imports in your project:
 
 ```typescript
 // Old
-import { BackgroundVideo } from "library/sanity/BackgroundVideo";
+import { BackgroundVideo } from "library/sanity/BackgroundVideo"
 // New
-import { BackgroundVideo } from "library/videos/BackgroundVideo";
+import { BackgroundVideo } from "library/videos/BackgroundVideo"
 ```
 
 # 2025-10-10
@@ -825,8 +934,8 @@ Introduced the `withVanillaSplit` Next.js plugin to support the newer styling sy
 Upgrade to Next.js 16 and wrap your `next.config.ts`:
 
 ```typescript
-import { withVanillaSplit } from "library/vanilla/withVanillaSplit";
-export default withVanillaSplit(nextConfig);
+import { withVanillaSplit } from "library/vanilla/withVanillaSplit"
+export default withVanillaSplit(nextConfig)
 ```
 
 # 2025-08-20
@@ -843,9 +952,9 @@ The simplest path is to update your `sanity/lib/live.ts` to act as a bridge so y
 
 ```typescript
 export {
-  libraryFetch as sanityFetch,
-  LibraryLive as SanityLive,
-} from "library/sanity/reusableFetch";
+	libraryFetch as sanityFetch,
+	LibraryLive as SanityLive,
+} from "library/sanity/reusableFetch"
 ```
 
 ## Grid API Change
