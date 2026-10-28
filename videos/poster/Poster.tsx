@@ -5,7 +5,6 @@ import SanityImage, { type SanityImageData } from "library/sanity/SanityImage"
 import StaticImage from "library/StaticImage"
 import { css, f, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
-import { useState } from "react"
 import type { PosterSource } from "./posterUrls"
 
 export interface PosterProps {
@@ -19,7 +18,7 @@ export interface PosterProps {
 	eager?: boolean
 	/** Lets pointer events through to the player underneath, for provider-owned controls inside an iframe. */
 	passive?: boolean
-	/** False crossfades the poster out and unmounts it after the transition. */
+	/** False crossfades the poster out. It stays mounted, so its size never changes under a parent that observes layout (a carousel would rebuild). */
 	visible: boolean
 }
 
@@ -37,10 +36,6 @@ export function Poster({
 	visible,
 	passive = false,
 }: PosterProps) {
-	const [gone, setGone] = useState(false)
-	if (visible && gone) setGone(false)
-	if (!visible && gone) return null
-
 	const loading = priority || eager ? "eager" : "lazy"
 	const fetchPriority = priority ? "high" : undefined
 	let image: React.ReactNode = null
@@ -78,14 +73,11 @@ export function Poster({
 	}
 	if (!image) return null
 
-	const handleTransitionEnd = visible ? undefined : () => setGone(true)
-
 	return (
 		<PosterLayer
 			aria-hidden
 			state={visible ? "shown" : "hidden"}
 			interaction={passive ? "passive" : "blocking"}
-			onTransitionEnd={handleTransitionEnd}
 		>
 			{image}
 		</PosterLayer>
@@ -100,7 +92,6 @@ const PosterLayer = styled("div", {
 					position: absolute;
 					inset: 0;
 					overflow: clip;
-					transition: opacity 0.2s ease-in-out;
 
 					& img {
 						position: absolute;
@@ -121,12 +112,18 @@ const PosterLayer = styled("div", {
 			shown: [
 				f.unresponsive(css`
 					opacity: 1;
+					visibility: visible;
+					transition: opacity 0.2s ease-in-out;
 				`),
 			],
 			hidden: [
 				f.unresponsive(css`
 					opacity: 0;
+					visibility: hidden;
 					pointer-events: none;
+					transition:
+						opacity 0.2s ease-in-out,
+						visibility 0s linear 0.2s;
 				`),
 			],
 		},

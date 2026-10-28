@@ -1,3 +1,15 @@
+# 2026-10-28
+
+## UniversalVideo: `trigger="custom"`, steadier `useVideoScrollTrigger`, poster stays mounted
+
+- `trigger="custom"` on `UniversalVideo` never creates the built-in in-view trigger and never autoplays. Only your own code plays it, through `playFromTrigger()` and `pauseFromTrigger()`. Use it with `useVideoScrollTrigger` and with carousels that pick the playing slide themselves. `trigger={false}` is not a substitute: in autoplay and background modes it also switches on the player's own autoplay, so every video starts playing at mount.
+- `useVideoScrollTrigger` keeps its claim when the video's handle object changes (it changes when the player mounts), so the built-in trigger no longer replays a covered video in between. `start` and `end` also accept functions, as ScrollTrigger does, and are read again on every refresh. For example, a `start` function returning `bottom 600px` (the video's bottom edge) plays a sticky video as soon as any part of it is uncovered.
+- The poster no longer unmounts after it fades out: it stays in the DOM with `visibility: hidden`. Removing the `<img>` made a parent that observes descendant sizes, such as `InfiniteSideScroll`, see a size change and rebuild its loop every time a video first played. Code that expected the poster `<img>` to disappear should check its computed `visibility` instead.
+
+**Migration Advice**
+
+If you use `useVideoScrollTrigger`, add `trigger="custom"` to the video so nothing can start it before the hook attaches. The previous advice to leave `trigger` at its default still works, but the video can briefly start before the hook claims it. Put `trigger="custom"` on videos driven by your own `playFromTrigger` calls instead of `trigger={false}`.
+
 # 2026-10-27
 
 ## UniversalVideo replaces the seven video components

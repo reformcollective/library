@@ -293,8 +293,11 @@ export interface UniversalVideoProps {
 	debugLabel?: string
 	/** IntersectionObserver rootMargin for loading. Default "400px". */
 	loadMargin?: string
-	/** Built-in playback trigger. false disables. true uses defaults. Default true for background and autoplay, false for click. */
-	trigger?: boolean | VideoInViewTrigger
+	/**
+	 * Built-in playback trigger. false disables it and, in autoplay and background modes, lets the player autoplay. true uses defaults. Default true for background and autoplay, false for click.
+	 * "custom" never creates the built-in trigger and never autoplays: only your own code plays it, through `playFromTrigger` and `pauseFromTrigger` (`useVideoScrollTrigger` does this). Use it so the video cannot start before that code attaches.
+	 */
+	trigger?: boolean | "custom" | VideoInViewTrigger
 	/** Declarative play state. Counts as manual control. */
 	play?: boolean
 	muted?: boolean

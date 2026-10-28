@@ -2,6 +2,7 @@
 
 import { ScrollTrigger } from "gsap/all"
 import { useAnimation } from "library/useAnimation"
+import { useEffect } from "react"
 import type { UniversalVideoHandle } from "library/videos/types"
 
 export interface VideoScrollTriggerOptions {
@@ -9,10 +10,10 @@ export interface VideoScrollTriggerOptions {
 	handle: UniversalVideoHandle | null
 	/** Element whose scroll position starts the playback. Nothing is created while null. */
 	trigger: Element | null
-	/** ScrollTrigger `start`. Default "top bottom". */
-	start?: string | number
+	/** ScrollTrigger `start`. Default "top bottom". A function is re-read on every refresh. */
+	start?: ScrollTrigger.Vars["start"]
 	/** ScrollTrigger `end`. Default "bottom top". */
-	end?: string | number
+	end?: ScrollTrigger.Vars["end"]
 	/** Element whose position defines `end`, instead of `trigger`. */
 	endTrigger?: Element | null
 	/** Pause when the range is left. Default true. */
@@ -24,7 +25,7 @@ export interface VideoScrollTriggerOptions {
 
 /**
  * Plays and pauses a `UniversalVideo` by scroll position, for videos an IntersectionObserver cannot judge (sticky or pinned sections that cover the video).
- * While attached it owns the trigger: the video's built-in in-view trigger stays idle (no play, pause or `maxConcurrent` slot), so leave `trigger` at its default. It resumes when the hook is removed.
+ * Pass `trigger="custom"` to the video so nothing but this hook ever plays it. Without that, the built-in in-view trigger can start the video before the hook attaches; once attached, the hook claims the trigger and the built-in one stays idle (no play, pause or `maxConcurrent` slot) until the hook is removed.
  * Calls the same path as the built-in trigger, so a manual play or pause steps it aside until `releaseManualControl()`.
  * Pauses the video on creation when it starts out of range.
  * Does not use the `maxConcurrent` limiter.
@@ -45,9 +46,15 @@ export function useVideoScrollTrigger({
 	once = false,
 	markers = false,
 }: VideoScrollTriggerOptions) {
+	const claimTrigger = handle && trigger ? handle.claimTrigger : null
+	// Held apart from the ScrollTrigger so a new handle object never frees the claim, which would let the in-view trigger play a covered video.
+	useEffect(() => {
+		if (!claimTrigger) return
+		return claimTrigger()
+	}, [claimTrigger])
+
 	useAnimation(() => {
 		if (!handle || !trigger) return
-		const release = handle.claimTrigger()
 		const instance = ScrollTrigger.create({
 			trigger,
 			start,
@@ -69,7 +76,6 @@ export function useVideoScrollTrigger({
 		if (!instance.isActive && pauseWhenOut) handle.pauseFromTrigger()
 		return () => {
 			instance.kill()
-			release()
 		}
 	}, [handle, trigger, start, end, endTrigger, pauseWhenOut, once, markers])
 }

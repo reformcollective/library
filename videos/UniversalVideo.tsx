@@ -346,7 +346,9 @@ function UniversalVideoInner({
 		log(`state status ${state.status}`, state.error ?? undefined, state.status === "error" ? "warn" : "log")
 	}, [log, state.status, state.error])
 
-	const triggerEnabled = trigger === undefined ? mode !== "click" : trigger !== false
+	const customTrigger = trigger === "custom"
+	const triggerEnabled =
+		trigger === undefined ? mode !== "click" : trigger !== false && !customTrigger
 	let triggerOptions = null
 	if (triggerEnabled) triggerOptions = typeof trigger === "object" ? trigger : {}
 	useInViewTrigger({
@@ -371,7 +373,7 @@ function UniversalVideoInner({
 		loop,
 		autoplay:
 			(mode !== "click" &&
-				(source.provider === "tiktok" || !triggerEnabled) &&
+				(source.provider === "tiktok" || (!triggerEnabled && !customTrigger)) &&
 				play !== false) ||
 			(isIframe && userActivated),
 		background,
