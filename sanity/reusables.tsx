@@ -2,14 +2,6 @@ import { InfoOutlineIcon } from "@sanity/icons/InfoOutline"
 import { PlayIcon } from "@sanity/icons/Play"
 import libraryConfig from "app/libraryConfig"
 import type { StaticImageData } from "next/image"
-import {
-	MATCH_URL_SPOTIFY,
-	MATCH_URL_TIKTOK,
-	MATCH_URL_TWITCH,
-	MATCH_URL_VIMEO,
-	MATCH_URL_WISTIA,
-	MATCH_URL_YOUTUBE,
-} from "react-player/patterns"
 import type { PreviewValue, StrictDefinition } from "sanity"
 import {
 	type ArrayOfEntry,
@@ -27,6 +19,9 @@ import {
 	type SanityDocument,
 } from "sanity"
 import { requiredLinkField } from "sanity-plugin-link-field"
+
+import { VideoInput } from "./video/VideoInput"
+import { videoOptionFields, videoSourceFields } from "./video/videoFields"
 
 type HiddenValidationContext = {
 	currentUser?: unknown
@@ -301,82 +296,22 @@ export const youtube = defineType({
 	],
 })
 
-/**
- * URL validation patterns sourced from react-player.
- * @see https://github.com/cookpete/react-player/blob/master/src/patterns.ts
- */
-const videoSourceValidation: Record<string, RegExp> = {
-	youtube: MATCH_URL_YOUTUBE,
-	vimeo: MATCH_URL_VIMEO,
-	wistia: MATCH_URL_WISTIA,
-	spotify: MATCH_URL_SPOTIFY,
-	twitch: MATCH_URL_TWITCH,
-	tiktok: MATCH_URL_TIKTOK,
-}
-
-const videoSourceTypes = [
-	{ title: "Upload or Select a File", value: "mux" },
-	{ title: "YouTube", value: "youtube" },
-	{ title: "Vimeo", value: "vimeo" },
-	{ title: "Wistia", value: "wistia" },
-	{ title: "Spotify", value: "spotify" },
-	{ title: "Twitch", value: "twitch" },
-	{ title: "TikTok", value: "tiktok" },
-	{ title: "Video URL", value: "url" },
-]
-
 export const video = defineType({
 	name: "video",
 	type: "object",
 	title: "Video",
 	icon: PlayIcon,
+	components: { input: VideoInput },
 	fields: [
-		defineField({
-			name: "sourceType",
-			type: "string",
-			title: "Source",
-			options: {
-				list: videoSourceTypes,
-			},
-			initialValue: "mux",
-		}),
-		defineField({
-			name: "url",
-			type: "url",
-			title: "Video URL",
-			hidden: ({ parent }) =>
-				!parent?.sourceType || parent.sourceType === "mux",
-			validation: (rule) =>
-				rule.custom((value, context) => {
-					const sourceType = (context.parent as { sourceType?: string })
-						?.sourceType
-					if (!sourceType || sourceType === "mux" || sourceType === "url")
-						return true
-					if (!value) return "URL is required"
-					const pattern = videoSourceValidation[sourceType]
-					if (pattern && !pattern.test(value)) {
-						const label = videoSourceTypes.find(
-							(s) => s.value === sourceType,
-						)?.title
-						return `This doesn't look like a valid ${label} URL`
-					}
-					return true
-				}),
-		}),
-		defineField({
-			name: "muxVideo",
-			type: "mux.video",
-			title: "Mux Video",
-			hidden: ({ parent }) => parent?.sourceType !== "mux",
-		}),
+		...videoSourceFields,
 		universalImage({
 			name: "posterImage",
 			title: "Poster Image",
 			description:
-				"Optional. If set, this image is shown in place of the video's default thumbnail.",
+				"Optional. An uploaded poster wins over the automatic one for every source. Recommended for hero videos from Mux.",
 			withAlt: false,
-			hidden: ({ parent }) => parent?.sourceType !== "mux",
 		}),
+		...videoOptionFields,
 	],
 })
 
