@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState, useSyncExternalStore } from "react"
+import type { VideoLogger } from "library/videos/debug"
 import type {
 	ControllerInternals,
 	VideoInViewTrigger,
 	VideoProvider,
 } from "library/videos/types"
-import type { VideoLogger } from "library/videos/debug"
+import { useEffect, useState, useSyncExternalStore } from "react"
 import { createVideoSlot, type VideoSlot } from "./concurrency"
 import { observeShared } from "./sharedObserver"
 
@@ -178,7 +178,11 @@ export function useInViewTrigger({
 			lastOrigin = origin
 			const recovered = lastStatus === "error" && state.status !== "error"
 			lastStatus = state.status
-			if (state.status === "ended" || state.status === "error" || origin === "manual")
+			if (
+				state.status === "ended" ||
+				state.status === "error" ||
+				origin === "manual"
+			)
 				slot.release()
 			else if (released || recovered) evaluate()
 		})

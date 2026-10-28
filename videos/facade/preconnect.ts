@@ -28,7 +28,8 @@ const done = new Set<string>()
 /** Adds preconnect hints for the provider's player origins. Safe to call repeatedly; each origin is added once. */
 export function preconnectProvider(provider: VideoProvider, privacy = false) {
 	if (typeof document === "undefined") return
-	const origins = provider === "youtube" && privacy ? NOCOOKIE : ORIGINS[provider]
+	const origins =
+		provider === "youtube" && privacy ? NOCOOKIE : ORIGINS[provider]
 	if (!origins) return
 	for (const origin of origins) {
 		if (done.has(origin)) continue

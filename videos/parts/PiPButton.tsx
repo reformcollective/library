@@ -13,7 +13,10 @@ export function PiPButton({
 	onClick,
 	...rest
 }: PartProps<"button">) {
-	const { state, controller, support, visible, text } = usePart(["pip"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["pip"],
+		alwaysShow,
+	)
 	if (!visible) return null
 
 	return (

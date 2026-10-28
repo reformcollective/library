@@ -5,7 +5,12 @@ import { formatTime } from "./format"
 import type { PartProps } from "./types"
 import { resolveChildren, usePart } from "./usePart"
 
-export function TimeDisplay({ label, alwaysShow, children, ...rest }: PartProps<"span">) {
+export function TimeDisplay({
+	label,
+	alwaysShow,
+	children,
+	...rest
+}: PartProps<"span">) {
 	const { state, support, visible, text } = usePart(["timeRead"], alwaysShow)
 	if (!visible) return null
 

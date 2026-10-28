@@ -20,11 +20,16 @@ export function PlaybackRateButton({
 	onClick,
 	...rest
 }: PlaybackRateButtonProps) {
-	const { state, controller, support, visible, text } = usePart(["playbackRate"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["playbackRate"],
+		alwaysShow,
+	)
 	if (!visible) return null
 
 	const sourceRates = controller.extras.youtube?.getAvailablePlaybackRates()
-	const list = rates ?? (sourceRates && sourceRates.length > 0 ? sourceRates : DEFAULT_RATES)
+	const list =
+		rates ??
+		(sourceRates && sourceRates.length > 0 ? sourceRates : DEFAULT_RATES)
 
 	return (
 		<Button

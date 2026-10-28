@@ -15,12 +15,21 @@ export function PlayButton({
 	onClick,
 	...rest
 }: PartProps<"button">) {
-	const { state, controller, support, visible, text } = usePart(["play"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["play"],
+		alwaysShow,
+	)
 	if (!visible) return null
 
 	const playing = state.status === "playing"
 	const name = label ?? (playing ? text("pause") : text("play"))
-	const icon = state.ended ? <ReplayIcon /> : playing ? <PauseIcon /> : <PlayIcon />
+	const icon = state.ended ? (
+		<ReplayIcon />
+	) : playing ? (
+		<PauseIcon />
+	) : (
+		<PlayIcon />
+	)
 
 	return (
 		<Button

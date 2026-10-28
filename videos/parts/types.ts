@@ -12,5 +12,6 @@ export interface PartOwnProps {
 	children?: PartChildren
 }
 
-export type PartProps<Tag extends "button" | "div" | "input" | "select" | "span" | "time"> =
-	Omit<ComponentPropsWithRef<Tag>, "children"> & PartOwnProps
+export type PartProps<
+	Tag extends "button" | "div" | "input" | "select" | "span" | "time",
+> = Omit<ComponentPropsWithRef<Tag>, "children"> & PartOwnProps

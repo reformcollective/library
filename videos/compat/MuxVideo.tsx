@@ -1,7 +1,7 @@
 "use client"
 
-import { UniversalVideo } from "library/videos/UniversalVideo"
 import type { VideoLabels } from "library/videos/types"
+import { UniversalVideo } from "library/videos/UniversalVideo"
 import { type Ref, useEffect, useRef } from "react"
 import { type LegacyMediaEvent, useLegacyBridge, warnIgnored } from "./legacy"
 

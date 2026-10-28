@@ -72,7 +72,9 @@ function parseVimeo(url: URL, input: string) {
 	if (numeric === -1) return null
 	const id = parts[numeric] as string
 	const next = parts[numeric + 1]
-	const hash = url.searchParams.get("h") ?? (next && /^[a-f0-9]+$/i.test(next) ? next : undefined)
+	const hash =
+		url.searchParams.get("h") ??
+		(next && /^[a-f0-9]+$/i.test(next) ? next : undefined)
 	return embed("vimeo", input, id, hash ? { hash } : undefined)
 }
 
@@ -103,7 +105,8 @@ function parseTwitch(url: URL, input: string) {
 		const video = url.searchParams.get("video")
 		const channel = url.searchParams.get("channel")
 		const collection = url.searchParams.get("collection")
-		if (video) return embed("twitch", input, video.replace(/^v/, ""), { kind: "video" })
+		if (video)
+			return embed("twitch", input, video.replace(/^v/, ""), { kind: "video" })
 		if (channel) return embed("twitch", input, channel, { kind: "channel" })
 		if (collection)
 			return embed("twitch", input, collection, { kind: "collection" })
@@ -123,13 +126,18 @@ function parseTwitch(url: URL, input: string) {
 
 function parseTikTok(url: URL, input: string) {
 	const host = url.hostname.toLowerCase()
-	if (!hostMatches(host, "tiktok.com") || host.startsWith("vm.") || host.startsWith("vt."))
+	if (
+		!hostMatches(host, "tiktok.com") ||
+		host.startsWith("vm.") ||
+		host.startsWith("vt.")
+	)
 		return null
 	const parts = segments(url)
 	let id: string | undefined
 	const videoIndex = parts.indexOf("video")
 	if (videoIndex !== -1) id = parts[videoIndex + 1]
-	else if (parts[0] === "player" || parts[0] === "embed") id = parts[parts.length - 1]
+	else if (parts[0] === "player" || parts[0] === "embed")
+		id = parts[parts.length - 1]
 	return id && ID_TIKTOK.test(id) ? embed("tiktok", input, id) : null
 }
 
@@ -158,10 +166,18 @@ function parseCloudflare(url: URL, input: string) {
 	const id = segments(url)[0]
 	if (!id || !ID_CLOUDFLARE.test(id)) return null
 	const customerCode = customer?.[1]
-	return embed("cloudflare", input, id, customerCode ? { customerCode } : undefined)
+	return embed(
+		"cloudflare",
+		input,
+		id,
+		customerCode ? { customerCode } : undefined,
+	)
 }
 
-const PARSERS: Record<EmbedProvider, (url: URL, input: string) => EmbedSource | null> = {
+const PARSERS: Record<
+	EmbedProvider,
+	(url: URL, input: string) => EmbedSource | null
+> = {
 	youtube: parseYouTube,
 	vimeo: parseVimeo,
 	wistia: parseWistia,

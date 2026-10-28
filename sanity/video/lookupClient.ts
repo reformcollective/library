@@ -41,7 +41,9 @@ export interface StoredThumbnail {
 	fetchedAt: string
 }
 
-export function toLookupTarget(source: ResolvedSource | null): LookupTarget | null {
+export function toLookupTarget(
+	source: ResolvedSource | null,
+): LookupTarget | null {
 	if (!source || source.provider === "mux" || source.provider === "file")
 		return null
 	return {

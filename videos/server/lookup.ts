@@ -190,7 +190,9 @@ function metaTag(html: string, property: string) {
 		"i",
 	)
 	const value = pattern.exec(html)?.[1]
-	return value ? value.replace(/&amp;/g, "&").replace(/&quot;/g, '"') : undefined
+	return value
+		? value.replace(/&amp;/g, "&").replace(/&quot;/g, '"')
+		: undefined
 }
 
 class Meta {
@@ -263,7 +265,10 @@ async function lookupYouTube(target: LookupTarget, options: LookupOptions) {
 	if (oembed) {
 		meta.set("title", str(oembed.title), "reliable")
 		meta.set("creatorName", str(oembed.author_name), "best-effort")
-	} else warnings.push("YouTube oEmbed did not respond; the video may be private or removed.")
+	} else
+		warnings.push(
+			"YouTube oEmbed did not respond; the video may be private or removed.",
+		)
 
 	const apiKey = process.env.YOUTUBE_API_KEY
 	const api = apiKey
@@ -322,7 +327,11 @@ async function lookupVimeo(target: LookupTarget, options: LookupOptions) {
 	meta.set("title", str(oembed.title), "reliable")
 	meta.set("description", str(oembed.description), "reliable")
 	const duration = num(oembed.duration)
-	meta.set("duration", duration ? secondsToIsoDuration(duration) : undefined, "reliable")
+	meta.set(
+		"duration",
+		duration ? secondsToIsoDuration(duration) : undefined,
+		"reliable",
+	)
 	meta.set("creatorName", str(oembed.author_name), "best-effort")
 	const uploaded = str(oembed.upload_date)?.slice(0, 10)
 	meta.set(
@@ -337,7 +346,9 @@ async function lookupVimeo(target: LookupTarget, options: LookupOptions) {
 			"reliable",
 		)
 	else
-		warnings.push("Unlisted Vimeo video: no embed URL proposed for structured data.")
+		warnings.push(
+			"Unlisted Vimeo video: no embed URL proposed for structured data.",
+		)
 	return done({ meta: meta.value }, warnings)
 }
 
@@ -372,12 +383,19 @@ async function lookupWistia(target: LookupTarget, options: LookupOptions) {
 			return done({}, warnings)
 		}
 		if (!width || !height) return done({}, warnings)
-		return done({ poster: { url, width, height, provider: "wistia" } }, warnings)
+		return done(
+			{ poster: { url, width, height, provider: "wistia" } },
+			warnings,
+		)
 	}
 	const meta = new Meta()
 	meta.set("title", str(oembed.title), "reliable")
 	const duration = num(oembed.duration)
-	meta.set("duration", duration ? secondsToIsoDuration(duration) : undefined, "reliable")
+	meta.set(
+		"duration",
+		duration ? secondsToIsoDuration(duration) : undefined,
+		"reliable",
+	)
 	meta.set(
 		"embedUrl",
 		`https://fast.wistia.net/embed/iframe/${target.id}`,
@@ -474,7 +492,8 @@ async function lookupCloudflare(target: LookupTarget, options: LookupOptions) {
 			Number(seconds[1] ?? 0) * 3600 +
 			Number(seconds[2] ?? 0) * 60 +
 			Number(seconds[3] ?? 0)
-		if (total > 0) meta.set("duration", secondsToIsoDuration(total), "best-effort")
+		if (total > 0)
+			meta.set("duration", secondsToIsoDuration(total), "best-effort")
 	}
 	warnings.push("Cloudflare Stream has no public title or upload date lookup.")
 	return done({ meta: meta.value }, warnings)

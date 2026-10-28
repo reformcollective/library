@@ -1,4 +1,3 @@
-import WistiaVideoElement from "wistia-video-element"
 import type {
 	AdapterEvent,
 	AdapterMountOptions,
@@ -6,6 +5,7 @@ import type {
 	ProviderAdapterFactory,
 	VideoError,
 } from "library/videos/types"
+import WistiaVideoElement from "wistia-video-element"
 
 const TIME_INTERVAL = 250
 const READY_TIMEOUT = 15000
@@ -44,7 +44,8 @@ function toError(element: HTMLVideoElement): VideoError {
 			? String(raw.message)
 			: "Wistia player error"
 	return {
-		code: typeof code === "number" || typeof code === "string" ? code : "unknown",
+		code:
+			typeof code === "number" || typeof code === "string" ? code : "unknown",
 		message,
 		retryable: code === 2,
 		provider: "wistia",
@@ -172,7 +173,7 @@ function mount(
 		const { currentTime } = readTime()
 		if (options.endTime !== undefined && currentTime >= options.endTime) {
 			if (loop) element.currentTime = options.startTime ?? 0
-			else  element.pause()
+			else element.pause()
 		}
 		if (Date.now() - lastTime >= TIME_INTERVAL) emitTime()
 	})
@@ -268,7 +269,7 @@ function mount(
 				void element.play()
 			}),
 		pause: () => {
-			 element.pause()
+			element.pause()
 		},
 		seek: (seconds) => {
 			element.currentTime = seconds

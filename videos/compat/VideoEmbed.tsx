@@ -3,8 +3,8 @@
 import { library } from "library/layers.css"
 import type { VideoField } from "library/sanity/assetMetadata"
 import { css, f, styled } from "library/styled"
-import { UniversalVideo } from "library/videos/UniversalVideo"
 import type { VideoError } from "library/videos/types"
+import { UniversalVideo } from "library/videos/UniversalVideo"
 import { type Ref, useEffect } from "react"
 import { type LegacyMediaEvent, useLegacyBridge, warnIgnored } from "./legacy"
 
@@ -74,7 +74,10 @@ export function VideoEmbed({
 	const ignoredKeys = Object.keys(rest).filter((key) => !HANDLED_PROPS.has(key))
 	const ignoredSignature = ignoredKeys.join(",")
 	useEffect(() => {
-		warnIgnored("VideoEmbed", ignoredSignature ? ignoredSignature.split(",") : [])
+		warnIgnored(
+			"VideoEmbed",
+			ignoredSignature ? ignoredSignature.split(",") : [],
+		)
 	}, [ignoredSignature])
 
 	return (

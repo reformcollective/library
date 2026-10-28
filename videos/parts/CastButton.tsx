@@ -13,7 +13,10 @@ export function CastButton({
 	onClick,
 	...rest
 }: PartProps<"button">) {
-	const { state, controller, support, visible, text } = usePart(["remotePlayback"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["remotePlayback"],
+		alwaysShow,
+	)
 	if (!visible) return null
 
 	return (

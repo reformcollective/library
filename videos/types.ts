@@ -1,8 +1,8 @@
-import type { StaticImageData } from "next/image"
-import type { ReactNode, Ref } from "react"
-import type { VideoFeature } from "library/videos/capabilities"
 import type { VideoField } from "library/sanity/assetMetadata"
 import type { SanityImageData } from "library/sanity/SanityImage"
+import type { VideoFeature } from "library/videos/capabilities"
+import type { StaticImageData } from "next/image"
+import type { ReactNode, Ref } from "react"
 
 export type { VideoFeature }
 

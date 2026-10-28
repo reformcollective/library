@@ -1,4 +1,13 @@
-import { Box, Button, Card, Checkbox, Dialog, Flex, Stack, Text } from "@sanity/ui"
+import {
+	Box,
+	Button,
+	Card,
+	Checkbox,
+	Dialog,
+	Flex,
+	Stack,
+	Text,
+} from "@sanity/ui"
 import type { VideoField } from "library/sanity/assetMetadata"
 import type { VideoProvider } from "library/videos/types"
 import { useState } from "react"
@@ -34,7 +43,11 @@ const META_ROWS: { key: LookupMetaKey; label: string; path: string[] }[] = [
 	{ key: "description", label: "Description", path: ["jsonLd", "description"] },
 	{ key: "uploadDate", label: "Upload date", path: ["jsonLd", "uploadDate"] },
 	{ key: "duration", label: "Duration", path: ["jsonLd", "duration"] },
-	{ key: "creatorName", label: "Creator name", path: ["jsonLd", "creatorName"] },
+	{
+		key: "creatorName",
+		label: "Creator name",
+		path: ["jsonLd", "creatorName"],
+	},
 ]
 
 function currentValue(value: Partial<VideoField>, path: string[]) {
@@ -152,10 +165,18 @@ interface ProposalDialogProps {
 	onClose: () => void
 }
 
-function ProposalDialog({ rows, warnings, onApply, onClose }: ProposalDialogProps) {
+function ProposalDialog({
+	rows,
+	warnings,
+	onApply,
+	onClose,
+}: ProposalDialogProps) {
 	const [checked, setChecked] = useState<Record<string, boolean>>(() =>
 		Object.fromEntries(
-			rows.map((row) => [row.key, !row.current && row.reliability === "reliable"]),
+			rows.map((row) => [
+				row.key,
+				!row.current && row.reliability === "reliable",
+			]),
 		),
 	)
 
@@ -194,7 +215,11 @@ function ProposalDialog({ rows, warnings, onApply, onClose }: ProposalDialogProp
 								/>
 								<Stack space={2}>
 									<Text size={1} weight="semibold">
-										{row.label} ({row.reliability === "reliable" ? "reliable" : "best effort"})
+										{row.label} (
+										{row.reliability === "reliable"
+											? "reliable"
+											: "best effort"}
+										)
 									</Text>
 									{row.current ? (
 										<Text size={1} muted>

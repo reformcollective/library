@@ -14,7 +14,10 @@ export function MuteButton({
 	onClick,
 	...rest
 }: PartProps<"button">) {
-	const { state, controller, support, visible, text } = usePart(["muted"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["muted"],
+		alwaysShow,
+	)
 	if (!visible) return null
 
 	const muted = state.muted || state.volume === 0
@@ -33,7 +36,11 @@ export function MuteButton({
 				controller.setMuted(!muted)
 			}}
 		>
-			{resolveChildren(children, state, muted ? <VolumeMutedIcon /> : <VolumeHighIcon />)}
+			{resolveChildren(
+				children,
+				state,
+				muted ? <VolumeMutedIcon /> : <VolumeHighIcon />,
+			)}
 		</Button>
 	)
 }

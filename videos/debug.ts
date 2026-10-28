@@ -11,7 +11,11 @@ export interface VideoDebugEntry {
 
 export type VideoDebugLevel = VideoDebugEntry["level"]
 
-export type VideoLogger = ((event: string, detail?: unknown, level?: VideoDebugLevel) => void) & {
+export type VideoLogger = ((
+	event: string,
+	detail?: unknown,
+	level?: VideoDebugLevel,
+) => void) & {
 	enabled: () => boolean
 }
 
@@ -24,7 +28,8 @@ let nextId = 0
 
 /** True when `window.__UV_DEBUG` is set. Always false in production builds. */
 export function isVideoDebug() {
-	if (process.env.NODE_ENV === "production" || typeof window === "undefined") return false
+	if (process.env.NODE_ENV === "production" || typeof window === "undefined")
+		return false
 	return Reflect.get(window, "__UV_DEBUG") === true
 }
 
@@ -53,7 +58,8 @@ function stringify(detail: unknown) {
 	if (typeof detail === "string") return detail
 	const seen = new WeakSet<object>()
 	return JSON.stringify(detail, (_key, value: unknown) => {
-		if (value instanceof Error) return { name: value.name, message: value.message }
+		if (value instanceof Error)
+			return { name: value.name, message: value.message }
 		if (typeof value === "object" && value !== null) {
 			if (seen.has(value)) return "[circular]"
 			seen.add(value)
@@ -62,12 +68,26 @@ function stringify(detail: unknown) {
 	})
 }
 
-function record(label: string, level: VideoDebugLevel, event: string, detail: unknown) {
+function record(
+	label: string,
+	level: VideoDebugLevel,
+	event: string,
+	detail: unknown,
+) {
 	const detailText = stringify(detail)
 	const text = detailText ? `${event} ${detailText}` : event
 	nextId += 1
-	const entry: VideoDebugEntry = { id: nextId, time: Math.round(performance.now()), level, label, text }
-	buffers.set(label, [...(buffers.get(label) ?? EMPTY).slice(-(MAX_ENTRIES - 1)), entry])
+	const entry: VideoDebugEntry = {
+		id: nextId,
+		time: Math.round(performance.now()),
+		level,
+		label,
+		text,
+	}
+	buffers.set(label, [
+		...(buffers.get(label) ?? EMPTY).slice(-(MAX_ENTRIES - 1)),
+		entry,
+	])
 	const line = `[UV ${label}] ${level === "warn" ? "WARN " : ""}${text}`
 	if (level === "warn") console.warn(line)
 	else console.log(line)
@@ -78,7 +98,11 @@ function record(label: string, level: VideoDebugLevel, event: string, detail: un
  * One logger per player instance. Does nothing unless `force` or `window.__UV_DEBUG` is true.
  * With no `name` the label is `<provider>#<n>`.
  */
-export function createVideoLogger(provider: string, name: string | undefined, force: boolean): VideoLogger {
+export function createVideoLogger(
+	provider: string,
+	name: string | undefined,
+	force: boolean,
+): VideoLogger {
 	let label = name
 	if (!label) {
 		const count = (counters.get(provider) ?? 0) + 1
@@ -87,7 +111,11 @@ export function createVideoLogger(provider: string, name: string | undefined, fo
 	}
 	const finalLabel = label
 	const enabled = () => force || isVideoDebug()
-	const log = (event: string, detail?: unknown, level: VideoDebugLevel = "log") => {
+	const log = (
+		event: string,
+		detail?: unknown,
+		level: VideoDebugLevel = "log",
+	) => {
 		if (!enabled()) return
 		record(finalLabel, level, event, detail)
 	}

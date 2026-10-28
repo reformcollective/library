@@ -27,7 +27,10 @@ export type ControllerCommand =
 export interface ControllerEventMap {
 	adapter: AdapterEvent
 	state: VideoState
-	command: { command: ControllerCommand; origin: "user" | "external" | "trigger" }
+	command: {
+		command: ControllerCommand
+		origin: "user" | "external" | "trigger"
+	}
 	extra: { name: string; detail: unknown }
 	error: VideoError
 	videoEvent: VideoEvent

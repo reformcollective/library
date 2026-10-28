@@ -11,7 +11,10 @@ export function AudioTrackMenu({
 	onChange,
 	...rest
 }: Omit<PartProps<"select">, "children">) {
-	const { state, controller, support, visible, text } = usePart(["audioTracks"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["audioTracks"],
+		alwaysShow,
+	)
 	if (!visible || (state.audioTracks.length < 2 && !alwaysShow)) return null
 
 	return (

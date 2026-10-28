@@ -2,8 +2,8 @@
 
 import { ScrollTrigger } from "gsap/all"
 import { useAnimation } from "library/useAnimation"
-import { useEffect } from "react"
 import type { UniversalVideoHandle } from "library/videos/types"
+import { useEffect } from "react"
 
 export interface VideoScrollTriggerOptions {
 	/** The video handle, from the `ref` of a `UniversalVideo`. Nothing is created while null. */

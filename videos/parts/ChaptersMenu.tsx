@@ -12,14 +12,19 @@ export function ChaptersMenu({
 	onChange,
 	...rest
 }: Omit<PartProps<"select">, "children">) {
-	const { state, controller, support, visible, text } = usePart(["chapters"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["chapters"],
+		alwaysShow,
+	)
 	if (!visible || (state.chapters.length === 0 && !alwaysShow)) return null
 
 	return (
 		<Select
 			aria-label={label ?? text("chapters")}
 			value={state.activeChapter === null ? "" : String(state.activeChapter)}
-			data-state={state.activeChapter === null ? "none" : String(state.activeChapter)}
+			data-state={
+				state.activeChapter === null ? "none" : String(state.activeChapter)
+			}
 			data-support={support}
 			{...rest}
 			onChange={(event) => {
@@ -30,7 +35,10 @@ export function ChaptersMenu({
 		>
 			{state.activeChapter === null && <option value="" />}
 			{state.chapters.map((chapter, index) => (
-				<option key={`${chapter.startTime}-${chapter.title}`} value={String(index)}>
+				<option
+					key={`${chapter.startTime}-${chapter.title}`}
+					value={String(index)}
+				>
 					{`${chapter.title} (${formatTime(chapter.startTime)})`}
 				</option>
 			))}

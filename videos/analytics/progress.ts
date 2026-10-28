@@ -8,9 +8,13 @@ export interface ProgressTracker {
 	reset: () => void
 }
 
-export function normalizeThresholds(thresholds: number[] | undefined): number[] {
+export function normalizeThresholds(
+	thresholds: number[] | undefined,
+): number[] {
 	const source = thresholds ?? DEFAULT_PROGRESS_THRESHOLDS
-	const valid = source.filter((value) => Number.isFinite(value) && value > 0 && value < 100)
+	const valid = source.filter(
+		(value) => Number.isFinite(value) && value > 0 && value < 100,
+	)
 	return [...new Set(valid)].sort((a, b) => a - b)
 }
 
@@ -30,9 +34,13 @@ export function createProgressTracker(thresholds?: number[]): ProgressTracker {
 			if (!Number.isFinite(duration) || duration <= 0) return []
 			const previous = lastTime
 			lastTime = currentTime
-			const seeked = previous !== null && Math.abs(currentTime - previous) > SEEK_JUMP_SECONDS
+			const seeked =
+				previous !== null &&
+				Math.abs(currentTime - previous) > SEEK_JUMP_SECONDS
 			const percent = (currentTime / duration) * 100
-			const crossed = list.filter((value) => !done.has(value) && percent >= value)
+			const crossed = list.filter(
+				(value) => !done.has(value) && percent >= value,
+			)
 			for (const value of crossed) done.add(value)
 			return seeked ? [] : crossed
 		},

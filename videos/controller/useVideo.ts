@@ -1,16 +1,21 @@
 "use client"
 
-import { use } from "react"
 import type {
 	ProviderCapabilities,
 	VideoController,
 	VideoState,
 } from "library/videos/types"
-import { VideoContext, type VideoContextValue, VideoStateContext } from "./VideoContext"
+import { use } from "react"
+import {
+	VideoContext,
+	type VideoContextValue,
+	VideoStateContext,
+} from "./VideoContext"
 
 export function useVideoContext(): VideoContextValue {
 	const context = use(VideoContext)
-	if (!context) throw new Error("useVideo must be called under <UniversalVideo>")
+	if (!context)
+		throw new Error("useVideo must be called under <UniversalVideo>")
 	return context
 }
 

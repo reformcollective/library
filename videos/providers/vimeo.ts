@@ -1,4 +1,3 @@
-import VimeoVideoElement from "vimeo-video-element"
 import type {
 	AdapterEvent,
 	AdapterMountOptions,
@@ -8,6 +7,7 @@ import type {
 	VideoError,
 	VideoTrack,
 } from "library/videos/types"
+import VimeoVideoElement from "vimeo-video-element"
 
 const TIME_INTERVAL = 250
 
@@ -81,11 +81,7 @@ function mount(
 		if (!destroyed) options.emit(event)
 	}
 
-	const listen = (
-		target: EventTarget,
-		type: string,
-		handler: () => void,
-	) => {
+	const listen = (target: EventTarget, type: string, handler: () => void) => {
 		target.addEventListener(type, handler)
 		cleanups.push(() => target.removeEventListener(type, handler))
 	}
@@ -143,7 +139,9 @@ function mount(
 	}
 
 	const emitChapters = async () => {
-		const provider = await apiOf(element)?.getChapters().catch(() => [])
+		const provider = await apiOf(element)
+			?.getChapters()
+			.catch(() => [])
 		const chapters: VideoChapter[] =
 			provider && provider.length > 0
 				? provider.map((chapter) => ({
@@ -322,7 +320,7 @@ function mount(
 		},
 		pause: () => {
 			if (destroyed) return
-			 element.pause()
+			element.pause()
 		},
 		seek: (seconds) => {
 			element.currentTime = seconds

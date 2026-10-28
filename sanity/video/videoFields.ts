@@ -1,6 +1,10 @@
-import { SANITY_OPTION_FEATURES, LIMITATIONS, supports } from "library/videos/capabilities"
-import { parseVideoUrl } from "library/videos/providers/parse"
 import type { VideoFeature } from "library/videos/capabilities"
+import {
+	LIMITATIONS,
+	SANITY_OPTION_FEATURES,
+	supports,
+} from "library/videos/capabilities"
+import { parseVideoUrl } from "library/videos/providers/parse"
 import type { VideoProvider } from "library/videos/types"
 import { defineField } from "sanity"
 
@@ -29,7 +33,7 @@ const PROVIDER_LABELS: Record<VideoProvider, string> = {
 }
 
 export const MUX_POSTER_WORKAROUND =
-	"If the automatic poster looks lighter than the video, upload a poster image, or re-encode the file to limited-range bt709 before uploading: ffmpeg -i in.mp4 -vf \"scale=in_range=full:out_range=limited:out_color_matrix=bt709,format=yuv420p\" -c:v libx264 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv out.mp4"
+	'If the automatic poster looks lighter than the video, upload a poster image, or re-encode the file to limited-range bt709 before uploading: ffmpeg -i in.mp4 -vf "scale=in_range=full:out_range=limited:out_color_matrix=bt709,format=yuv420p" -c:v libx264 -colorspace bt709 -color_primaries bt709 -color_trc bt709 -color_range tv out.mp4'
 
 interface VideoSourceValue {
 	sourceType?: string
@@ -70,7 +74,10 @@ function optionHidden(option: string) {
 
 function limitsFor(providers: VideoProvider[]) {
 	return providers
-		.map((provider) => `${PROVIDER_LABELS[provider]}: ${LIMITATIONS[provider].join(" ")}`)
+		.map(
+			(provider) =>
+				`${PROVIDER_LABELS[provider]}: ${LIMITATIONS[provider].join(" ")}`,
+		)
 		.join(" ")
 }
 
@@ -170,9 +177,15 @@ export const videoOptionFields = [
 		initialValue: "click",
 		validation: (rule) =>
 			rule.custom((value, context) => {
-				if (value === "background" && featureSupport(context.parent, "background") === "no")
+				if (
+					value === "background" &&
+					featureSupport(context.parent, "background") === "no"
+				)
 					return "Background mode is not available for this source"
-				if (value === "autoplay" && featureSupport(context.parent, "autoplay") === "no")
+				if (
+					value === "autoplay" &&
+					featureSupport(context.parent, "autoplay") === "no"
+				)
 					return "Autoplay is not available for this source"
 				return true
 			}),
@@ -267,8 +280,7 @@ export const videoOptionFields = [
 		title: "Main content of the page",
 		description:
 			"Loads the video eagerly and emits video structured data for search engines. Use for the page's primary video.",
-		hidden: ({ parent }) =>
-			isRecord(parent) && parent.mode === "background",
+		hidden: ({ parent }) => isRecord(parent) && parent.mode === "background",
 	}),
 	defineField({
 		name: "jsonLd",
@@ -277,15 +289,20 @@ export const videoOptionFields = [
 		description:
 			"Used for search engines. Filled by Generate from source and editable. Name, thumbnail and upload date are required for it to be emitted.",
 		options: { collapsible: true, collapsed: true },
-		hidden: ({ parent }) =>
-			isRecord(parent) && parent.mode === "background",
+		hidden: ({ parent }) => isRecord(parent) && parent.mode === "background",
 		fields: [
-			defineField({ name: "description", type: "text", rows: 3, title: "Description" }),
+			defineField({
+				name: "description",
+				type: "text",
+				rows: 3,
+				title: "Description",
+			}),
 			defineField({
 				name: "uploadDate",
 				type: "string",
 				title: "Upload date",
-				description: "ISO 8601, for example 2026-03-14 or 2026-03-14T09:30:00Z.",
+				description:
+					"ISO 8601, for example 2026-03-14 or 2026-03-14T09:30:00Z.",
 			}),
 			defineField({
 				name: "duration",
@@ -293,12 +310,17 @@ export const videoOptionFields = [
 				title: "Duration",
 				description: "ISO 8601 duration, for example PT3M25S.",
 			}),
-			defineField({ name: "creatorName", type: "string", title: "Creator name" }),
+			defineField({
+				name: "creatorName",
+				type: "string",
+				title: "Creator name",
+			}),
 			defineField({
 				name: "expires",
 				type: "string",
 				title: "Expires",
-				description: "ISO 8601 date after which the video is no longer available.",
+				description:
+					"ISO 8601 date after which the video is no longer available.",
 			}),
 		],
 	}),

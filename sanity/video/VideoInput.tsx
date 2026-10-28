@@ -1,9 +1,8 @@
 import { Card, Stack, Text } from "@sanity/ui"
 import type { VideoField } from "library/sanity/assetMetadata"
+import { LIMITATIONS, supports } from "library/videos/capabilities"
 import { parseVideoUrl } from "library/videos/providers/parse"
-import { supports } from "library/videos/capabilities"
-import { LIMITATIONS } from "library/videos/capabilities"
-import { type ObjectInputProps } from "sanity"
+import type { ObjectInputProps } from "sanity"
 
 import { GenerateFromSource } from "./GenerateFromSource"
 import { toLookupTarget } from "./lookupClient"
@@ -16,9 +15,12 @@ export function VideoInput(props: ObjectInputProps) {
 	const url = value.url ?? ""
 	const target = toLookupTarget(url ? parseVideoUrl(url) : null)
 	const canLookup =
-		provider !== null && target !== null && supports(provider, "providerPoster") !== "no"
+		provider !== null &&
+		target !== null &&
+		supports(provider, "providerPoster") !== "no"
 	const isHero = props.schemaType.options?.lcp === true
-	const youtubeBackground = provider === "youtube" && value.mode === "background"
+	const youtubeBackground =
+		provider === "youtube" && value.mode === "background"
 
 	return (
 		<Stack space={4}>

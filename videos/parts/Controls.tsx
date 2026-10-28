@@ -1,8 +1,8 @@
 "use client"
 
-import type { VideoLabels } from "library/videos/types"
 import { css, f, styled } from "library/styled"
 import { useCombinedRefs } from "library/useCombinedRefs"
+import type { VideoLabels } from "library/videos/types"
 import { useContext, useEffect, useMemo, useRef, useState } from "react"
 import { PartsContext } from "./context"
 import type { PartProps } from "./types"
@@ -17,7 +17,13 @@ export interface ControlsProps extends PartProps<"div"> {
 	idleTimeout?: number
 }
 
-const ACTIVITY_EVENTS = ["pointermove", "pointerdown", "keydown", "focusin", "touchstart"] as const
+const ACTIVITY_EVENTS = [
+	"pointermove",
+	"pointerdown",
+	"keydown",
+	"focusin",
+	"touchstart",
+] as const
 
 export function Controls({
 	alwaysShow,
@@ -50,7 +56,8 @@ export function Controls({
 			window.clearTimeout(timer)
 			timer = window.setTimeout(() => setActive(false), idleTimeout)
 		}
-		for (const type of ACTIVITY_EVENTS) target.addEventListener(type, wake, { passive: true })
+		for (const type of ACTIVITY_EVENTS)
+			target.addEventListener(type, wake, { passive: true })
 		return () => {
 			window.clearTimeout(timer)
 			for (const type of ACTIVITY_EVENTS) target.removeEventListener(type, wake)

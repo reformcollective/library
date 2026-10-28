@@ -9,10 +9,14 @@ import { createMediaElementAdapter } from "./mediaElementAdapter"
 
 function applyOptions(element: MuxVideoElement, options: AdapterMountOptions) {
 	const { source, mux, muxData } = options
-	if (source.provider !== "mux") throw new Error("The Mux adapter needs a Mux source")
-	if (mux?.minResolution) element.setAttribute("min-resolution", mux.minResolution)
-	if (mux?.maxResolution) element.setAttribute("max-resolution", mux.maxResolution)
-	if (mux?.renditionOrder) element.setAttribute("rendition-order", mux.renditionOrder)
+	if (source.provider !== "mux")
+		throw new Error("The Mux adapter needs a Mux source")
+	if (mux?.minResolution)
+		element.setAttribute("min-resolution", mux.minResolution)
+	if (mux?.maxResolution)
+		element.setAttribute("max-resolution", mux.maxResolution)
+	if (mux?.renditionOrder)
+		element.setAttribute("rendition-order", mux.renditionOrder)
 	if (mux?.maxAutoResolution)
 		element.setAttribute("max-auto-resolution", mux.maxAutoResolution)
 	if (mux?.capRenditionToPlayerSize !== undefined)
@@ -20,7 +24,8 @@ function applyOptions(element: MuxVideoElement, options: AdapterMountOptions) {
 			"cap-rendition-to-player-size",
 			mux.capRenditionToPlayerSize ? "" : "false",
 		)
-	if (mux?.preferPlayback) element.setAttribute("prefer-playback", mux.preferPlayback)
+	if (mux?.preferPlayback)
+		element.setAttribute("prefer-playback", mux.preferPlayback)
 	if (mux?.preferCmcd) element.setAttribute("prefer-cmcd", mux.preferCmcd)
 	if (mux?.assetStartTime !== undefined)
 		element.setAttribute("asset-start-time", String(mux.assetStartTime))
@@ -54,7 +59,11 @@ function applyOptions(element: MuxVideoElement, options: AdapterMountOptions) {
 		element.startTime = options.startTime
 }
 
-function createExtras(element: MuxVideoElement, playbackId: string, customDomain?: string): MuxExtras {
+function createExtras(
+	element: MuxVideoElement,
+	playbackId: string,
+	customDomain?: string,
+): MuxExtras {
 	const host = customDomain ? `image.${customDomain}` : "image.mux.com"
 	return {
 		addCuePoints: (cues) => {

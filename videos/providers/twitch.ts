@@ -84,10 +84,7 @@ function toVideoQuality(entry: QualityEntry): VideoQuality {
 		: { id: entry.id, label }
 }
 
-function createTwitchUrl(
-	kind: "video" | "channel",
-	id: string,
-) {
+function createTwitchUrl(kind: "video" | "channel", id: string) {
 	if (kind === "video") return `https://www.twitch.tv/videos/${id}`
 	return `https://www.twitch.tv/${id}`
 }
@@ -168,7 +165,11 @@ function mountElement(
 	const config: Record<string, string | number | boolean> = {
 		muted: options.muted,
 	}
-	if (kind === "video" && options.startTime !== undefined && options.startTime > 0)
+	if (
+		kind === "video" &&
+		options.startTime !== undefined &&
+		options.startTime > 0
+	)
 		config.time = Math.floor(options.startTime)
 	element.config = config
 	element.setAttribute("parent", options.hostname)
@@ -283,7 +284,8 @@ function mountElement(
 			emit({ type: "extra", name: "captions", detail: params })
 		else if (name === "error") {
 			const code =
-				isRecord(params) && (typeof params.code === "number" || typeof params.code === "string")
+				isRecord(params) &&
+				(typeof params.code === "number" || typeof params.code === "string")
 					? params.code
 					: "twitch_error"
 			const message =

@@ -11,7 +11,10 @@ export function CaptionsButton({
 	onChange,
 	...rest
 }: Omit<PartProps<"select">, "children">) {
-	const { state, controller, support, visible, text } = usePart(["captions"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["captions"],
+		alwaysShow,
+	)
 	if (!visible || (state.textTracks.length === 0 && !alwaysShow)) return null
 
 	return (

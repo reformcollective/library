@@ -6,7 +6,8 @@ import { control } from "./styles.css"
 import type { PartProps } from "./types"
 import { usePart } from "./usePart"
 
-export interface VolumeSliderProps extends Omit<PartProps<"input">, "children"> {
+export interface VolumeSliderProps
+	extends Omit<PartProps<"input">, "children"> {
 	/** Volume change per arrow key press, 0 to 1. Default 0.05 */
 	keyStep?: number
 }
@@ -18,7 +19,10 @@ export function VolumeSlider({
 	onChange,
 	...rest
 }: VolumeSliderProps) {
-	const { state, controller, support, visible, text } = usePart(["volume"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["volume"],
+		alwaysShow,
+	)
 	if (!visible) return null
 
 	const value = state.muted ? 0 : state.volume

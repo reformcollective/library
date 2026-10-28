@@ -5,7 +5,12 @@ import { formatIsoDuration, formatTime } from "./format"
 import type { PartProps } from "./types"
 import { resolveChildren, usePart } from "./usePart"
 
-export function CurrentTime({ label, alwaysShow, children, ...rest }: PartProps<"time">) {
+export function CurrentTime({
+	label,
+	alwaysShow,
+	children,
+	...rest
+}: PartProps<"time">) {
 	const { state, support, visible, text } = usePart(["timeRead"], alwaysShow)
 	if (!visible) return null
 
@@ -17,7 +22,11 @@ export function CurrentTime({ label, alwaysShow, children, ...rest }: PartProps<
 			data-support={support}
 			{...rest}
 		>
-			{resolveChildren(children, state, state.isLive ? text("live") : formatTime(state.currentTime))}
+			{resolveChildren(
+				children,
+				state,
+				state.isLive ? text("live") : formatTime(state.currentTime),
+			)}
 		</Time>
 	)
 }

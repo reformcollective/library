@@ -1,8 +1,8 @@
 "use client"
 
 import { library } from "library/layers.css"
-import SanityImage, { type SanityImageData } from "library/sanity/SanityImage"
 import StaticImage from "library/StaticImage"
+import SanityImage, { type SanityImageData } from "library/sanity/SanityImage"
 import { css, f, styled } from "library/styled"
 import type { StaticImageData } from "next/image"
 import type { PosterSource } from "./posterUrls"

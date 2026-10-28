@@ -17,14 +17,22 @@ export function ErrorMessage({
 	showRetry = true,
 	...rest
 }: ErrorMessageProps) {
-	const { state, controller, placement, visible, text } = usePart([], alwaysShow)
+	const { state, controller, placement, visible, text } = usePart(
+		[],
+		alwaysShow,
+	)
 	if (!visible || (!state.error && !alwaysShow)) return null
 
 	const message = label ?? text("errorGeneric")
 	const canRetry = showRetry && state.error?.retryable === true
 
 	return (
-		<Box role="alert" data-placement={placement} data-state={state.status} {...rest}>
+		<Box
+			role="alert"
+			data-placement={placement}
+			data-state={state.status}
+			{...rest}
+		>
 			{resolveChildren(
 				children,
 				state,

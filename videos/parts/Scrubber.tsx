@@ -25,14 +25,18 @@ export function Scrubber({
 	onBlur,
 	...rest
 }: ScrubberProps) {
-	const { state, controller, support, visible, text } = usePart(["seek"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["seek"],
+		alwaysShow,
+	)
 	const [draft, setDraft] = useState<number | null>(null)
 	if (!visible) return null
 
 	const duration = Number.isFinite(state.duration) ? state.duration : 0
 	const value = Math.min(draft ?? state.currentTime, duration)
 	const progress = duration > 0 ? (value / duration) * 100 : 0
-	const buffered = duration > 0 ? Math.min(state.bufferedEnd / duration, 1) * 100 : 0
+	const buffered =
+		duration > 0 ? Math.min(state.bufferedEnd / duration, 1) * 100 : 0
 	const valueText = `${formatTime(value)} of ${formatTime(duration)}`
 
 	const commit = () => {

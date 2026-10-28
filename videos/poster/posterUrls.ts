@@ -52,7 +52,8 @@ export function muxThumbnailUrl(
 ): string {
 	const host = customDomain ? `image.${customDomain}` : "image.mux.com"
 	const base = `https://${host}/${playbackId}/thumbnail.webp`
-	if (tokens?.thumbnail) return `${base}?token=${encodeURIComponent(tokens.thumbnail)}`
+	if (tokens?.thumbnail)
+		return `${base}?token=${encodeURIComponent(tokens.thumbnail)}`
 	const params = new URLSearchParams()
 	if (time !== undefined && Number.isFinite(time) && time >= 0)
 		params.set("time", String(time))

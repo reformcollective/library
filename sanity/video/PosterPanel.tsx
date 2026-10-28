@@ -122,8 +122,8 @@ export function PosterPanel({
 	const terms = provider ? TERMS[provider] : undefined
 	const previewHeight =
 		thumbnail?.width && thumbnail.height
-		? Math.round((PREVIEW_WIDTH * thumbnail.height) / thumbnail.width)
-		: 0
+			? Math.round((PREVIEW_WIDTH * thumbnail.height) / thumbnail.width)
+			: 0
 
 	if (!provider) return null
 

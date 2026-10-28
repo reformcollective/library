@@ -5,7 +5,8 @@ import { selectBase } from "./styles.css"
 import type { PartProps } from "./types"
 import { usePart } from "./usePart"
 
-export interface QualityMenuProps extends Omit<PartProps<"select">, "children"> {
+export interface QualityMenuProps
+	extends Omit<PartProps<"select">, "children"> {
 	/** Text of the automatic option. Default "Auto" */
 	autoLabel?: string
 }

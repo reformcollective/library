@@ -10,15 +10,28 @@ import type {
 const TIME_INTERVAL_MS = 250
 const PLAYER_FLAG = "x-tiktok-player"
 
-const STATE = { init: -1, ended: 0, playing: 1, paused: 2, buffering: 3 } as const
+const STATE = {
+	init: -1,
+	ended: 0,
+	playing: 1,
+	paused: 2,
+	buffering: 3,
+} as const
 
-const ERROR_MESSAGES: Record<number, { message: string; retryable: boolean }> = {
-	1001: { message: "Invalid TikTok video", retryable: false },
-	1002: { message: "TikTok embedding is disabled for this video", retryable: false },
-	2001: { message: "TikTok server error", retryable: true },
-	2005: { message: "TikTok player is temporarily unavailable (too many requests)", retryable: true },
-	3001: { message: "TikTok playback error", retryable: true },
-}
+const ERROR_MESSAGES: Record<number, { message: string; retryable: boolean }> =
+	{
+		1001: { message: "Invalid TikTok video", retryable: false },
+		1002: {
+			message: "TikTok embedding is disabled for this video",
+			retryable: false,
+		},
+		2001: { message: "TikTok server error", retryable: true },
+		2005: {
+			message: "TikTok player is temporarily unavailable (too many requests)",
+			retryable: true,
+		},
+		3001: { message: "TikTok playback error", retryable: true },
+	}
 const AUTOPLAY_ERROR = 3002
 const READY_FALLBACK_MS = 2500
 const PLAYBACK_ERROR = 3001
@@ -140,7 +153,8 @@ export const factory: ProviderAdapterFactory = {
 
 		if (options.muted) element.setAttribute("muted", "")
 		if (options.loop) element.setAttribute("loop", "")
-		if (options.autoplay || options.background) element.setAttribute("autoplay", "")
+		if (options.autoplay || options.background)
+			element.setAttribute("autoplay", "")
 		if (options.controls === "provider") element.setAttribute("controls", "")
 		if (options.label) element.setAttribute("aria-label", options.label)
 		else if (options.background) element.setAttribute("aria-hidden", "true")

@@ -1,6 +1,5 @@
 "use client"
 
-import { createContext } from "react"
 import { DEFAULT_LABELS } from "library/videos/parts/defaultLabels"
 import type {
 	ProviderCapabilities,
@@ -10,6 +9,7 @@ import type {
 	VideoProvider,
 	VideoState,
 } from "library/videos/types"
+import { createContext } from "react"
 
 export const DEFAULT_VIDEO_LABELS: VideoLabels = DEFAULT_LABELS
 

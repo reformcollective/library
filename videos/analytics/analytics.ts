@@ -1,5 +1,8 @@
-import { createProgressTracker, getPercent } from "library/videos/analytics/progress"
 import { isTrackingAllowed } from "library/videos/analytics/privacy"
+import {
+	createProgressTracker,
+	getPercent,
+} from "library/videos/analytics/progress"
 import type {
 	VideoAnalyticsOptions,
 	VideoEvent,
@@ -57,8 +60,12 @@ interface DataLayerEvent {
 	video_error_message?: string
 }
 
-export function isAnalyticsEnabled(analytics: boolean | VideoAnalyticsOptions | undefined): boolean {
-	return analytics === true || (typeof analytics === "object" && analytics !== null)
+export function isAnalyticsEnabled(
+	analytics: boolean | VideoAnalyticsOptions | undefined,
+): boolean {
+	return (
+		analytics === true || (typeof analytics === "object" && analytics !== null)
+	)
 }
 
 export function getDataLayer(): unknown[] | null {
@@ -79,7 +86,8 @@ export function toDataLayerEvent(
 		video_url: event.url,
 		video_duration: event.duration,
 		video_current_time: event.currentTime,
-		video_percent: event.percent ?? getPercent(event.currentTime, event.duration),
+		video_percent:
+			event.percent ?? getPercent(event.currentTime, event.duration),
 		video_mode: extra.mode,
 		visible: extra.visible,
 		video_error_code: event.errorCode,
@@ -92,7 +100,8 @@ export function createAnalytics(
 	initialContext: AnalyticsContext,
 ): VideoAnalytics {
 	let context = initialContext
-	const options = typeof settings.analytics === "object" ? settings.analytics : undefined
+	const options =
+		typeof settings.analytics === "object" ? settings.analytics : undefined
 	const enabled = isAnalyticsEnabled(settings.analytics)
 	const tracker = createProgressTracker(options?.progress)
 	let started = false
@@ -123,7 +132,9 @@ export function createAnalytics(
 		const layer = getDataLayer()
 		if (!layer) return
 		const visible = settings.getVisible ? settings.getVisible() : undefined
-		layer.push(toDataLayerEvent(event, { mode: settings.mode, visible, errorMessage }))
+		layer.push(
+			toDataLayerEvent(event, { mode: settings.mode, visible, errorMessage }),
+		)
 	}
 
 	return {
@@ -163,7 +174,9 @@ export function createAnalytics(
 		},
 		time(currentTime, duration) {
 			const crossed = tracker.update(currentTime, duration)
-			const events = crossed.map((percent) => build("progress", currentTime, duration, percent))
+			const events = crossed.map((percent) =>
+				build("progress", currentTime, duration, percent),
+			)
 			for (const event of events) push(event)
 			return events
 		},

@@ -22,7 +22,9 @@ function warnYouTube() {
 	let count = 0
 	for (const slot of active) if (slot.provider === "youtube") count += 1
 	if (count > 1)
-		console.warn("UniversalVideo: more than one autoplaying YouTube player on the page")
+		console.warn(
+			"UniversalVideo: more than one autoplaying YouTube player on the page",
+		)
 }
 
 /** Grants waiting slots oldest first. Each slot is checked against its own cap, so mixed `maxConcurrent` values on one page cannot overrun each other. */

@@ -1,4 +1,3 @@
-import YoutubeVideoElement from "youtube-video-element"
 import type {
 	AdapterEvent,
 	AdapterMountOptions,
@@ -7,6 +6,7 @@ import type {
 	VideoError,
 	VideoTrack,
 } from "library/videos/types"
+import YoutubeVideoElement from "youtube-video-element"
 
 const TIME_INTERVAL = 250
 const STATE_ENDED = 0
@@ -49,7 +49,8 @@ function toError(element: HTMLVideoElement): VideoError {
 			? String(raw.message)
 			: "YouTube player error"
 	return {
-		code: typeof code === "number" || typeof code === "string" ? code : "unknown",
+		code:
+			typeof code === "number" || typeof code === "string" ? code : "unknown",
 		message,
 		retryable: code === 5,
 		provider: "youtube",
@@ -150,7 +151,7 @@ function mount(
 		emitTime()
 		if (options.endTime === undefined || currentTime < options.endTime) return
 		if (loop) element.currentTime = options.startTime ?? 0
-		else  element.pause()
+		else element.pause()
 	}
 
 	const startTimer = () => {
@@ -237,7 +238,9 @@ function mount(
 	element.config = {
 		origin: buildOrigin(options.hostname),
 		...(options.captionsDefault === "on" ? { cc_load_policy: 1 as const } : {}),
-		...(options.controls === "none" ? { disablekb: 1 as const, fs: 0 as const } : {}),
+		...(options.controls === "none"
+			? { disablekb: 1 as const, fs: 0 as const }
+			: {}),
 		...(options.startTime ? { start: Math.floor(options.startTime) } : {}),
 		...(options.endTime !== undefined && !loop
 			? { end: Math.ceil(options.endTime) }
@@ -291,7 +294,7 @@ function mount(
 				})
 			}),
 		pause: () => {
-			 element.pause()
+			element.pause()
 		},
 		seek: (seconds) => {
 			element.currentTime = seconds

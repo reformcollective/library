@@ -69,9 +69,13 @@ export function reduceAdapterEvent(
 ): Partial<VideoState> {
 	switch (event.type) {
 		case "ready": {
-			const timedOut = state.status === "error" && state.error?.code === "timeout"
+			const timedOut =
+				state.status === "error" && state.error?.code === "timeout"
 			if (timedOut) return { ready: true, status: "loading", error: null }
-			return { ready: true, status: state.status === "idle" ? "loading" : state.status }
+			return {
+				ready: true,
+				status: state.status === "idle" ? "loading" : state.status,
+			}
 		}
 		case "loading":
 			return PRESENTED.includes(state.status) ? {} : { status: "loading" }

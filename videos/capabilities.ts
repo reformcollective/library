@@ -105,7 +105,7 @@ export const LIMITATIONS: Record<VideoProvider, string[]> = {
 	youtube: [
 		"Not recommended inside looping carousels or sliders: iframe players cannot be loaded, paused or hidden reliably. Use MP4 or Mux there.",
 		"Playback rate is not guaranteed.",
-		"Controls overlay the video by default. YouTube's developer policy discourages overlaying its player, so use controlsPlacement=\"below\" where that matters.",
+		'Controls overlay the video by default. YouTube\'s developer policy discourages overlaying its player, so use controlsPlacement="below" where that matters.',
 		"Background mode works but is discouraged by YouTube's rules.",
 	],
 	vimeo: [
@@ -162,7 +162,10 @@ export const SANITY_OPTION_FEATURES: Record<string, VideoFeature[]> = {
 }
 
 /** Unverified cells count as "no" for UI decisions until a spike confirms them. */
-export function supports(provider: VideoProvider, feature: VideoFeature): Support {
+export function supports(
+	provider: VideoProvider,
+	feature: VideoFeature,
+): Support {
 	const value = CAPABILITIES[provider][feature]
 	return value === "unverified" ? "no" : value
 }

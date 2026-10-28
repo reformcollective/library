@@ -32,14 +32,17 @@ const MAX_RETRIES = 2
 const STALL_MS = 4000
 
 function warn(message: string) {
-	if (process.env.NODE_ENV !== "production") console.warn(`UniversalVideo: ${message}`)
+	if (process.env.NODE_ENV !== "production")
+		console.warn(`UniversalVideo: ${message}`)
 }
 
 function clamp(value: number, min: number, max: number) {
 	return Math.min(max, Math.max(min, value))
 }
 
-export function createController(options: ControllerOptions): LifecycleController {
+export function createController(
+	options: ControllerOptions,
+): LifecycleController {
 	const { provider, mode } = options
 	let caps: ProviderCapabilities = { ...options.capabilities }
 	let props: ControllerProps = { ...options.props }
@@ -162,7 +165,10 @@ export function createController(options: ControllerOptions): LifecycleControlle
 		if (state.wanted === "pause" && !state.paused) adapter.pause()
 	}
 
-	function setWanted(next: { wanted: VideoState["wanted"]; wantedOrigin: VideoState["wantedOrigin"] }) {
+	function setWanted(next: {
+		wanted: VideoState["wanted"]
+		wantedOrigin: VideoState["wantedOrigin"]
+	}) {
 		if (
 			next.wanted === state.wanted &&
 			next.wantedOrigin === state.wantedOrigin
@@ -266,7 +272,8 @@ export function createController(options: ControllerOptions): LifecycleControlle
 				retryCount = 0
 				playInFlight = false
 				if (previous.status !== "playing") callbacks.onPlay?.()
-				if (state.wanted === "pause" && state.wantedOrigin === "trigger") reconcile()
+				if (state.wanted === "pause" && state.wantedOrigin === "trigger")
+					reconcile()
 				break
 			case "paused":
 				clearStall()

@@ -1,8 +1,8 @@
 "use client"
 
+import type { UniversalVideoHandle } from "library/videos/types"
 import type { Ref, RefObject } from "react"
 import { useCallback, useEffect, useRef } from "react"
-import type { UniversalVideoHandle } from "library/videos/types"
 
 export interface LegacyMediaEvent {
 	type: string
@@ -19,7 +19,12 @@ export interface LegacyListeners {
 	seeked?: MediaListener
 }
 
-const LISTENED_EVENTS = ["loadedmetadata", "loadeddata", "playing", "seeked"] as const
+const LISTENED_EVENTS = [
+	"loadedmetadata",
+	"loadeddata",
+	"playing",
+	"seeked",
+] as const
 
 function assignRef<T>(ref: Ref<T> | undefined, value: T | null) {
 	if (typeof ref === "function") ref(value)
@@ -62,12 +67,14 @@ export function useLegacyBridge({
 			assignRef(containerRef, handle.container as HTMLDivElement | null)
 			let current: HTMLVideoElement | null = null
 			const forward = (event: Event) => {
-				const listener = listenersRef.current?.[event.type as keyof LegacyListeners]
+				const listener =
+					listenersRef.current?.[event.type as keyof LegacyListeners]
 				if (listener && current) listener(event, current)
 			}
 			const detach = () => {
 				if (!current) return
-				for (const name of LISTENED_EVENTS) current.removeEventListener(name, forward)
+				for (const name of LISTENED_EVENTS)
+					current.removeEventListener(name, forward)
 			}
 			const sync = () => {
 				const next = asVideoElement(handle.media?.firstElementChild ?? null)
@@ -76,7 +83,8 @@ export function useLegacyBridge({
 				current = next
 				assignRef(mediaRef, current)
 				if (!current) return
-				for (const name of LISTENED_EVENTS) current.addEventListener(name, forward)
+				for (const name of LISTENED_EVENTS)
+					current.addEventListener(name, forward)
 			}
 			sync()
 			const unsubscribe = handle.subscribe(sync)

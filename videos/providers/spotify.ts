@@ -10,15 +10,25 @@ const TIME_INTERVAL_MS = 250
 const ENTITY_TYPES = ["track", "album", "playlist", "episode", "show", "artist"]
 
 interface SpotifyController {
-	addListener: (name: string, listener: (event: { data: unknown }) => void) => void
-	removeListener?: (name: string, listener: (event: { data: unknown }) => void) => void
+	addListener: (
+		name: string,
+		listener: (event: { data: unknown }) => void,
+	) => void
+	removeListener?: (
+		name: string,
+		listener: (event: { data: unknown }) => void,
+	) => void
 	loadUri: (uri: string, preferVideo?: boolean, startAt?: number) => void
 	restart: () => void
 	destroy?: () => void
 }
 
 interface SpotifyElement extends HTMLElement {
-	config: { startAt?: number; theme?: "dark" | "light"; preferVideo?: boolean } | null
+	config: {
+		startAt?: number
+		theme?: "dark" | "light"
+		preferVideo?: boolean
+	} | null
 	currentTime: number
 	readonly duration: number
 	readonly loadComplete: Promise<void>
@@ -38,7 +48,10 @@ function entityType(url: string) {
 
 function toUri(input: string) {
 	if (input.startsWith("spotify:")) return input
-	const match = /open\.spotify\.com\/(?:embed\/)?(?:intl-[a-z-]+\/)?(\w+)\/(\w+)/i.exec(input)
+	const match =
+		/open\.spotify\.com\/(?:embed\/)?(?:intl-[a-z-]+\/)?(\w+)\/(\w+)/i.exec(
+			input,
+		)
 	return match ? `spotify:${match[1]}:${match[2]}` : input
 }
 
@@ -73,7 +86,9 @@ export const factory: ProviderAdapterFactory = {
 					? data.message
 					: "Spotify playback error"
 			const code =
-				isRecord(data) && typeof data.code === "string" ? data.code : "playback_error"
+				isRecord(data) && typeof data.code === "string"
+					? data.code
+					: "playback_error"
 			const recoverable = isRecord(data) && data.recoverable === true
 			emit({
 				type: "error",

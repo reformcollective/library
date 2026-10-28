@@ -2,27 +2,17 @@
 
 import { library } from "library/layers.css"
 import { css, f, styled } from "library/styled"
-import { stegaClean } from "next-sanity"
-import {
-	useEffect,
-	useImperativeHandle,
-	useRef,
-	useState,
-	useSyncExternalStore,
-} from "react"
-import { resolveSource } from "library/videos/providers/parse"
-import { resolveProvider } from "library/videos/providers/registry"
-import { createVideoLogger, logAdapterEvent } from "library/videos/debug"
 import { resolveMuxData } from "library/videos/analytics/privacy"
 import { useVideoConfig } from "library/videos/config"
 import { createController } from "library/videos/controller/createController"
 import { hasPresentedFrame } from "library/videos/controller/stateMachine"
-import { useVideoEvents } from "library/videos/controller/videoEvents"
 import {
 	DEFAULT_VIDEO_LABELS,
 	VideoContext,
 	VideoStateContext,
 } from "library/videos/controller/VideoContext"
+import { useVideoEvents } from "library/videos/controller/videoEvents"
+import { createVideoLogger, logAdapterEvent } from "library/videos/debug"
 import { Facade } from "library/videos/facade/Facade"
 import { PartsContext } from "library/videos/parts/context"
 import { DefaultControls } from "library/videos/parts/DefaultControls"
@@ -35,11 +25,16 @@ import {
 	aspectRatioToCss,
 	DEFAULT_MUX_POSTER_TIME,
 	muxPosterSource,
-	parseAspectRatio,
 	type PosterSource,
+	parseAspectRatio,
 } from "library/videos/poster/posterUrls"
+import { resolveSource } from "library/videos/providers/parse"
+import { resolveProvider } from "library/videos/providers/registry"
 import { VideoJsonLd } from "library/videos/seo/VideoJsonLd"
-import { debugCounters, getVideoDebugStats } from "library/videos/trigger/concurrency"
+import {
+	debugCounters,
+	getVideoDebugStats,
+} from "library/videos/trigger/concurrency"
 import {
 	useDataSaver,
 	useInViewTrigger,
@@ -48,20 +43,31 @@ import {
 } from "library/videos/trigger/useInViewTrigger"
 import type {
 	AdapterMountOptions,
+	ControllerInternals,
 	ProviderAdapter,
 	ProviderAdapterFactory,
 	ResolvedSource,
 	UniversalVideoHandle,
 	UniversalVideoProps,
 	VideoChapter,
-	ControllerInternals,
 	VideoError,
 } from "library/videos/types"
+import { stegaClean } from "next-sanity"
+import {
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+	useSyncExternalStore,
+} from "react"
 import { aspectRatioVar } from "./UniversalVideo.css"
 
 export { getVideoDebugStats }
 
-type StandaloneProps = Omit<UniversalVideoProps, "video" | "src" | "playbackId" | "ref">
+type StandaloneProps = Omit<
+	UniversalVideoProps,
+	"video" | "src" | "playbackId" | "ref"
+>
 
 interface InnerProps extends StandaloneProps {
 	source: ResolvedSource
@@ -85,7 +91,8 @@ const warnedMuxIds = new Set<string>()
 let mainContentCount = 0
 
 function devWarn(message: string) {
-	if (process.env.NODE_ENV !== "production") console.warn(`UniversalVideo: ${message}`)
+	if (process.env.NODE_ENV !== "production")
+		console.warn(`UniversalVideo: ${message}`)
 }
 
 function sourceId(source: ResolvedSource) {
@@ -95,13 +102,15 @@ function sourceId(source: ResolvedSource) {
 }
 
 function sourceUrl(source: ResolvedSource) {
-	if (source.provider === "mux") return `https://stream.mux.com/${source.playbackId}.m3u8`
+	if (source.provider === "mux")
+		return `https://stream.mux.com/${source.playbackId}.m3u8`
 	if (source.provider === "file") return source.sources[0]?.src
 	return source.url
 }
 
 function toLoadError(error: unknown, source: ResolvedSource): VideoError {
-	const message = error instanceof Error ? error.message : "The player failed to load"
+	const message =
+		error instanceof Error ? error.message : "The player failed to load"
 	return { code: "load", message, retryable: true, provider: source.provider }
 }
 
@@ -277,7 +286,9 @@ function UniversalVideoInner({
 			props: { play, muted, loop, startTime, endTime },
 		}),
 	)
-	const [log] = useState(() => createVideoLogger(source.provider, debugLabel ?? label, debug))
+	const [log] = useState(() =>
+		createVideoLogger(source.provider, debugLabel ?? label, debug),
+	)
 	const state = useSyncExternalStore(
 		controller.subscribe,
 		controller.getState,
@@ -291,7 +302,8 @@ function UniversalVideoInner({
 
 	const reducedMotion = usePrefersReducedMotion()
 	const dataSaver = useDataSaver()
-	const suppressed = (background && reducedMotion) || (mode !== "click" && dataSaver)
+	const suppressed =
+		(background && reducedMotion) || (mode !== "click" && dataSaver)
 
 	let useFacade = false
 	if (!mainContent) {
@@ -300,16 +312,26 @@ function UniversalVideoInner({
 	}
 	const facadeIgnored = facade === true && mode !== "click"
 	useEffect(() => {
-		if (facadeIgnored) devWarn("facade is ignored in autoplay and background modes")
+		if (facadeIgnored)
+			devWarn("facade is ignored in autoplay and background modes")
 	}, [facadeIgnored])
 
 	const loadsEarly = eager || priority || mainContent
-	const near = useNearViewport(rootEl, loadMargin, !loadsEarly && !useFacade && !suppressed)
+	const near = useNearViewport(
+		rootEl,
+		loadMargin,
+		!loadsEarly && !useFacade && !suppressed,
+	)
 	const baseLoad = !suppressed && !useFacade && (loadsEarly || near)
-	const shouldMount = (baseLoad || userActivated || (mainContent && !suppressed)) && !blockedEmbed
+	const shouldMount =
+		(baseLoad || userActivated || (mainContent && !suppressed)) && !blockedEmbed
 
 	useEffect(() => {
-		log("source resolved", { provider: source.provider, id: sourceId(source), mode })
+		log("source resolved", {
+			provider: source.provider,
+			id: sourceId(source),
+			mode,
+		})
 	}, [log, source, mode])
 	useEffect(() => {
 		if (!log.enabled()) return
@@ -322,15 +344,18 @@ function UniversalVideoInner({
 			useFacade,
 			blockedEmbed,
 		})
-		log(`load decision: ${shouldMount ? "mount" : "do not mount"} (${reason})`, {
-			mode,
-			near,
-			facade: useFacade,
-			userActivated,
-			suppressed,
-			loadsEarly,
-			blockedEmbed,
-		})
+		log(
+			`load decision: ${shouldMount ? "mount" : "do not mount"} (${reason})`,
+			{
+				mode,
+				near,
+				facade: useFacade,
+				userActivated,
+				suppressed,
+				loadsEarly,
+				blockedEmbed,
+			},
+		)
 	}, [
 		log,
 		mode,
@@ -343,14 +368,21 @@ function UniversalVideoInner({
 		shouldMount,
 	])
 	useEffect(() => {
-		log(`state status ${state.status}`, state.error ?? undefined, state.status === "error" ? "warn" : "log")
+		log(
+			`state status ${state.status}`,
+			state.error ?? undefined,
+			state.status === "error" ? "warn" : "log",
+		)
 	}, [log, state.status, state.error])
 
 	const customTrigger = trigger === "custom"
 	const triggerEnabled =
-		trigger === undefined ? mode !== "click" : trigger !== false && !customTrigger
+		trigger === undefined
+			? mode !== "click"
+			: trigger !== false && !customTrigger
 	let triggerOptions = null
-	if (triggerEnabled) triggerOptions = typeof trigger === "object" ? trigger : {}
+	if (triggerEnabled)
+		triggerOptions = typeof trigger === "object" ? trigger : {}
 	useInViewTrigger({
 		target: rootEl,
 		controller,
@@ -377,7 +409,8 @@ function UniversalVideoInner({
 				play !== false) ||
 			(isIframe && userActivated),
 		background,
-		controls: controls === "provider" ? ("provider" as const) : ("none" as const),
+		controls:
+			controls === "provider" ? ("provider" as const) : ("none" as const),
 		preload,
 		startTime,
 		endTime,
@@ -410,7 +443,9 @@ function UniversalVideoInner({
 
 		const onLoaded = (factory: ProviderAdapterFactory) => {
 			if (cancelled) return
-			log(`provider import finished in ${Math.round(performance.now() - importStarted)}ms`)
+			log(
+				`provider import finished in ${Math.round(performance.now() - importStarted)}ms`,
+			)
 			stage = "adapter mount"
 			const inputs = latest.current
 			const options: AdapterMountOptions = {
@@ -460,11 +495,20 @@ function UniversalVideoInner({
 				}, READY_WARN_MS)
 			}
 			const exempt =
-				inputs.source.provider === "tiktok" || inputs.source.provider === "spotify"
-			const timeoutMs = inputs.source.provider === "wistia" ? WISTIA_READY_TIMEOUT_MS : READY_TIMEOUT_MS
+				inputs.source.provider === "tiktok" ||
+				inputs.source.provider === "spotify"
+			const timeoutMs =
+				inputs.source.provider === "wistia"
+					? WISTIA_READY_TIMEOUT_MS
+					: READY_TIMEOUT_MS
 			const onTimeout = () => {
 				const now = controller.getState()
-				if (now.status === "error" || now.status === "blocked" || hasPresentedFrame(now.status)) return
+				if (
+					now.status === "error" ||
+					now.status === "blocked" ||
+					hasPresentedFrame(now.status)
+				)
+					return
 				if (now.wanted !== "play") return
 				if (controller.capabilities.play === "no") return
 				controller.handle({
@@ -494,7 +538,10 @@ function UniversalVideoInner({
 		const onFailed = (error: unknown) => {
 			if (cancelled) return
 			log(`${stage} FAILED`, error, "warn")
-			controller.handle({ type: "error", error: toLoadError(error, current.source) })
+			controller.handle({
+				type: "error",
+				error: toLoadError(error, current.source),
+			})
 		}
 		resolveProvider(current.source).load().then(onLoaded).catch(onFailed)
 
@@ -569,7 +616,8 @@ function UniversalVideoInner({
 		debugCountMounted(1)
 		if (mainContent) {
 			mainContentCount += 1
-			if (mainContentCount > 1) devWarn("only one video per page should set mainContent")
+			if (mainContentCount > 1)
+				devWarn("only one video per page should set mainContent")
 		}
 		return () => {
 			debugCountMounted(-1)
@@ -599,7 +647,9 @@ function UniversalVideoInner({
 	const playerMounted = shouldMount && !showFacade
 	// Autoplay and background media-element videos keep the poster until a frame has been painted while playing, so a preloaded paused first frame never replaces it.
 	const gateByPlay = mode !== "click" && !isIframe
-	const framePresented = gateByPlay ? state.framePainted : hasPresentedFrame(state.status)
+	const framePresented = gateByPlay
+		? state.framePainted
+		: hasPresentedFrame(state.status)
 	const failed = state.status === "error" || state.status === "blocked"
 
 	const uploadedImage = video?.posterImage
@@ -639,9 +689,13 @@ function UniversalVideoInner({
 	}
 	const missingPoster = mode !== "click" && !uploaded && !fallback
 	useEffect(() => {
-		if (missingPoster) devWarn("autoplay and background videos need a poster (an uploaded image, or a Mux or provider thumbnail); without one the slot is empty until the first frame and the video pops in")
+		if (missingPoster)
+			devWarn(
+				"autoplay and background videos need a poster (an uploaded image, or a Mux or provider thumbnail); without one the slot is empty until the first frame and the video pops in",
+			)
 	}, [missingPoster])
-	const muxFallbackId = fallback && source.provider === "mux" ? source.playbackId : null
+	const muxFallbackId =
+		fallback && source.provider === "mux" ? source.playbackId : null
 	useEffect(() => {
 		if (!muxFallbackId || warnedMuxIds.has(muxFallbackId)) return
 		warnedMuxIds.add(muxFallbackId)
@@ -655,14 +709,18 @@ function UniversalVideoInner({
 		state.wanted !== "play" &&
 		controller.capabilities.play !== "no"
 	const nativeChrome = controls === "provider" && !isIframe && playerMounted
-	const posterVisible = (!framePresented || awaitingPlay || failed) && !nativeChrome
+	const posterVisible =
+		(!framePresented || awaitingPlay || failed) && !nativeChrome
 	const aspectCss = aspectRatioToCss(aspect)
 
-	const showOverlay = !showFacade && (state.status === "blocked" || (suppressed && !userActivated))
+	const showOverlay =
+		!showFacade &&
+		(state.status === "blocked" || (suppressed && !userActivated))
 	const showLoading =
 		playerMounted &&
 		!background &&
-		((state.status === "loading" && state.wanted === "play") || state.waiting) &&
+		((state.status === "loading" && state.wanted === "play") ||
+			state.waiting) &&
 		!failed &&
 		!(posterVisible && (uploaded || fallback))
 	const showError = state.status === "error"
@@ -693,43 +751,47 @@ function UniversalVideoInner({
 		>
 			<VideoStateContext value={state}>
 				<PartsContext value={{ labels: labels ?? {}, placement }}>
-				<Root
-					ref={setRootEl}
-					className={className}
-					data-universal-video=""
-					data-provider={provider}
-					data-mode={mode}
-					data-status={state.status}
-					role={label ? "group" : undefined}
-					aria-label={label}
-					placement={placement}
-					aspectRatio={aspectCss}
-				>
-					<Stage placement={placement} aspectRatio={aspectCss}>
-						<MediaLayer ref={setMediaEl} hidden={showError} />
-						<Poster
-							uploaded={uploaded}
-							fallback={fallback}
-							priority={priority}
-							eager={eager}
-							visible={posterVisible}
-							passive={controls === "provider" && playerMounted}
-						/>
-						{showFacade ? (
-							<Facade provider={source.provider} privacy={privacy} label={label} />
-						) : null}
-						{showOverlay ? <PlayOverlay /> : null}
-						{statusParts}
-						{placement === "overlay" ? controlsContent : null}
-						{showBackgroundPause ? (
-							<BackgroundPause>
-								<PlayButton />
-							</BackgroundPause>
-						) : null}
-					</Stage>
-					{placement === "below" ? controlsContent : null}
-					{mainContent && video ? <VideoJsonLd video={video} /> : null}
-				</Root>
+					<Root
+						ref={setRootEl}
+						className={className}
+						data-universal-video=""
+						data-provider={provider}
+						data-mode={mode}
+						data-status={state.status}
+						role={label ? "group" : undefined}
+						aria-label={label}
+						placement={placement}
+						aspectRatio={aspectCss}
+					>
+						<Stage placement={placement} aspectRatio={aspectCss}>
+							<MediaLayer ref={setMediaEl} hidden={showError} />
+							<Poster
+								uploaded={uploaded}
+								fallback={fallback}
+								priority={priority}
+								eager={eager}
+								visible={posterVisible}
+								passive={controls === "provider" && playerMounted}
+							/>
+							{showFacade ? (
+								<Facade
+									provider={source.provider}
+									privacy={privacy}
+									label={label}
+								/>
+							) : null}
+							{showOverlay ? <PlayOverlay /> : null}
+							{statusParts}
+							{placement === "overlay" ? controlsContent : null}
+							{showBackgroundPause ? (
+								<BackgroundPause>
+									<PlayButton />
+								</BackgroundPause>
+							) : null}
+						</Stage>
+						{placement === "below" ? controlsContent : null}
+						{mainContent && video ? <VideoJsonLd video={video} /> : null}
+					</Root>
 				</PartsContext>
 			</VideoStateContext>
 		</VideoContext>

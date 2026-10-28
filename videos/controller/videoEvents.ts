@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useRef } from "react"
 import { createAnalytics } from "library/videos/analytics/analytics"
 import type {
 	VideoAnalyticsOptions,
@@ -10,6 +9,7 @@ import type {
 	VideoProvider,
 	VideoState,
 } from "library/videos/types"
+import { useEffect, useRef } from "react"
 
 export interface VideoEventSettings {
 	provider: VideoProvider
@@ -35,6 +35,7 @@ export function useVideoEvents(
 	const { provider, videoId, title, url, mode, loop, analytics } = settings
 	const analyticsKey = JSON.stringify(analytics ?? false)
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the tracker is rebuilt when any of these change
 	useEffect(() => {
 		const current = latest.current
 		const tracker = createAnalytics(
@@ -92,7 +93,11 @@ export function useVideoEvents(
 					}),
 				)
 			}
-			if (state.status === "error" && previous.status !== "error" && state.error) {
+			if (
+				state.status === "error" &&
+				previous.status !== "error" &&
+				state.error
+			) {
 				deliver(
 					tracker.handle({
 						type: "error",

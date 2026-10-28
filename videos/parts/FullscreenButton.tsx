@@ -1,8 +1,8 @@
 "use client"
 
 import { f, styled } from "library/styled"
-import FullscreenExitIcon from "./icons/fullscreen-exit.inline.svg"
 import FullscreenIcon from "./icons/fullscreen.inline.svg"
+import FullscreenExitIcon from "./icons/fullscreen-exit.inline.svg"
 import { buttonBase } from "./styles.css"
 import type { PartProps } from "./types"
 import { resolveChildren, usePart } from "./usePart"
@@ -14,10 +14,14 @@ export function FullscreenButton({
 	onClick,
 	...rest
 }: PartProps<"button">) {
-	const { state, controller, support, visible, text } = usePart(["fullscreen"], alwaysShow)
+	const { state, controller, support, visible, text } = usePart(
+		["fullscreen"],
+		alwaysShow,
+	)
 	if (!visible) return null
 
-	const name = label ?? (state.fullscreen ? text("exitFullscreen") : text("fullscreen"))
+	const name =
+		label ?? (state.fullscreen ? text("exitFullscreen") : text("fullscreen"))
 
 	return (
 		<Button

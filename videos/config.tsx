@@ -1,8 +1,8 @@
 "use client"
 
-import { createContext, useContext, useMemo } from "react"
-import type { ReactNode } from "react"
 import type { VideoConfig } from "library/videos/types"
+import type { ReactNode } from "react"
+import { createContext, useContext, useMemo } from "react"
 
 export const DEFAULT_VIDEO_CONFIG: VideoConfig = {
 	analytics: false,

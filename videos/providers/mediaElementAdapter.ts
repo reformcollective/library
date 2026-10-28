@@ -54,7 +54,10 @@ function trackId(track: TextTrack, index: number) {
 	return track.id || String(index)
 }
 
-function toVideoError(element: HTMLVideoElement, provider: VideoProvider): VideoError {
+function toVideoError(
+	element: HTMLVideoElement,
+	provider: VideoProvider,
+): VideoError {
 	const error = element.error
 	const code = error ? error.code : 0
 	const message = error && error.message ? error.message : "Media error"
@@ -206,8 +209,11 @@ export function createMediaElementAdapter(
 		emitFirstFrame()
 		// A second firstFrame once a frame is painted while playing lets the poster stay until the video is really visible.
 		if (frameElement.requestVideoFrameCallback) {
-			if (playFrameHandle !== undefined) frameElement.cancelVideoFrameCallback?.(playFrameHandle)
-			playFrameHandle = frameElement.requestVideoFrameCallback(() => emit({ type: "firstFrame" }))
+			if (playFrameHandle !== undefined)
+				frameElement.cancelVideoFrameCallback?.(playFrameHandle)
+			playFrameHandle = frameElement.requestVideoFrameCallback(() =>
+				emit({ type: "firstFrame" }),
+			)
 		} else emit({ type: "firstFrame" })
 	}
 	const onPause = () => {
@@ -288,7 +294,8 @@ export function createMediaElementAdapter(
 		if (chaptersList.length > 0) adapter.setChapters?.(chaptersList)
 		if (options.autoplay && !destroyed) {
 			element.play().catch((error: unknown) => {
-				if (error instanceof Error && error.name === "NotAllowedError") emit({ type: "blocked" })
+				if (error instanceof Error && error.name === "NotAllowedError")
+					emit({ type: "blocked" })
 			})
 		}
 	})
@@ -318,7 +325,8 @@ export function createMediaElementAdapter(
 				const track = element.textTracks[i]
 				if (!track) continue
 				if (track.kind !== "captions" && track.kind !== "subtitles") continue
-				track.mode = id !== null && trackId(track, i) === id ? "hidden" : "disabled"
+				track.mode =
+					id !== null && trackId(track, i) === id ? "hidden" : "disabled"
 			}
 			emitTracks()
 		},
@@ -352,13 +360,16 @@ export function createMediaElementAdapter(
 			textTracks.removeEventListener("addtrack", onTracksChanged)
 			textTracks.removeEventListener("removetrack", emitTracks)
 			audioList?.removeEventListener("addtrack", emitTracks)
-			if (frameHandle !== undefined) frameElement.cancelVideoFrameCallback?.(frameHandle)
-			if (playFrameHandle !== undefined) frameElement.cancelVideoFrameCallback?.(playFrameHandle)
+			if (frameHandle !== undefined)
+				frameElement.cancelVideoFrameCallback?.(frameHandle)
+			if (playFrameHandle !== undefined)
+				frameElement.cancelVideoFrameCallback?.(playFrameHandle)
 			chaptersPending = false
 			element.pause()
 			if (config.teardown) config.teardown(element)
 			else {
-				for (const node of Array.from(element.querySelectorAll("source"))) node.remove()
+				for (const node of Array.from(element.querySelectorAll("source")))
+					node.remove()
 				element.removeAttribute("src")
 				element.load()
 			}

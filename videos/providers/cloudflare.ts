@@ -29,7 +29,9 @@ export const factory: ProviderAdapterFactory = {
 		const { source } = options
 		if (source.provider !== "cloudflare")
 			throw new Error("The Cloudflare adapter needs a Cloudflare source")
-		const element = document.createElement("cloudflare-video") as CloudflareElement
+		const element = document.createElement(
+			"cloudflare-video",
+		) as CloudflareElement
 		let destroyed = false
 		let lastTime = 0
 		let firstFrameSent = false
@@ -88,7 +90,12 @@ export const factory: ProviderAdapterFactory = {
 			["ended", onEnded],
 			[
 				"volumechange",
-				() => emit({ type: "volume", volume: element.volume, muted: element.muted }),
+				() =>
+					emit({
+						type: "volume",
+						volume: element.volume,
+						muted: element.muted,
+					}),
 			],
 			[
 				"ratechange",

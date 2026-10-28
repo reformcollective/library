@@ -5,7 +5,10 @@ import { useSyncExternalStore } from "react"
 import type { PartProps } from "./types"
 import { resolveChildren, usePart } from "./usePart"
 
-function findTrack(media: HTMLElement | null, id: string | null): TextTrack | null {
+function findTrack(
+	media: HTMLElement | null,
+	id: string | null,
+): TextTrack | null {
 	const element = media?.firstElementChild
 	if (id === null || !element || !("textTracks" in element)) return null
 	const list = element.textTracks
@@ -31,7 +34,12 @@ function cueText(track: TextTrack | null): string {
 		.replaceAll("&amp;", "&")
 }
 
-export function Captions({ label, alwaysShow, children, ...rest }: PartProps<"div">) {
+export function Captions({
+	label,
+	alwaysShow,
+	children,
+	...rest
+}: PartProps<"div">) {
 	const { state, media, support, visible } = usePart(["captions"], alwaysShow)
 	const activeId = state.activeTextTrack
 	const trackCount = state.textTracks.length

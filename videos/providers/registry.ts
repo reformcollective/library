@@ -96,8 +96,10 @@ export function registerProvider(def: ProviderDefinition): void {
 
 /** Returns the definition for a resolved source. HLS file sources load hls-video-element, native files load nothing extra. */
 export function resolveProvider(source: ResolvedSource): ProviderDefinition {
-	if (source.provider === "file" && source.format === "hls") return HLS_DEFINITION
+	if (source.provider === "file" && source.format === "hls")
+		return HLS_DEFINITION
 	const definition = definitions.get(source.provider)
-	if (!definition) throw new Error(`No video provider registered for ${source.provider}`)
+	if (!definition)
+		throw new Error(`No video provider registered for ${source.provider}`)
 	return definition
 }

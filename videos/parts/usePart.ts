@@ -1,11 +1,16 @@
 "use client"
 
-import type { Support, VideoFeature, VideoLabels, VideoState } from "library/videos/types"
 import { useVideo } from "library/videos/controller/useVideo"
-import { useContext } from "react"
-import { DEFAULT_LABELS } from "./defaultLabels"
-import { PartsContext } from "./context"
+import type {
+	Support,
+	VideoFeature,
+	VideoLabels,
+	VideoState,
+} from "library/videos/types"
 import type { ReactNode } from "react"
+import { useContext } from "react"
+import { PartsContext } from "./context"
+import { DEFAULT_LABELS } from "./defaultLabels"
 import type { PartChildren } from "./types"
 
 const RANK: Record<Support, number> = {
@@ -26,7 +31,8 @@ export function usePart(features: readonly VideoFeature[], alwaysShow = false) {
 	}
 
 	const visible = alwaysShow || support === "yes" || support === "best-effort"
-	const text = (key: keyof VideoLabels): string => labels[key] ?? DEFAULT_LABELS[key]
+	const text = (key: keyof VideoLabels): string =>
+		labels[key] ?? DEFAULT_LABELS[key]
 
 	return { state, controller, media, placement, support, visible, text }
 }

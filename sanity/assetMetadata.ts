@@ -1,5 +1,5 @@
-import { documentPathProjection } from "sanity/lib/slug-resolver"
 import type { VideoFieldAdditions } from "library/videos/types"
+import { documentPathProjection } from "sanity/lib/slug-resolver"
 import type {
 	MuxVideoAssetReference,
 	SanityImageAssetReference,

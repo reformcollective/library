@@ -1,8 +1,8 @@
 "use client"
 
 import { usePreloader } from "library/link/usePreloader"
-import { UniversalVideo } from "library/videos/UniversalVideo"
 import type { VideoFileSource } from "library/videos/types"
+import { UniversalVideo } from "library/videos/UniversalVideo"
 import {
 	Children,
 	isValidElement,

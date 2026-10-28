@@ -19,7 +19,9 @@ function appendSources(element: HTMLVideoElement, sources: VideoFileSource[]) {
 	}
 }
 
-export function createFileFactory(tagName: "video" | "hls-video"): ProviderAdapterFactory {
+export function createFileFactory(
+	tagName: "video" | "hls-video",
+): ProviderAdapterFactory {
 	return {
 		mount: (container, options) => {
 			const { source } = options

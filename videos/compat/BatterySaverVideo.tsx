@@ -6,7 +6,10 @@ import { MuxVideo } from "./MuxVideo"
 /**
  * @deprecated Use `UniversalVideo` and set `labels.playOverlay`. A blocked autoplay shows the play overlay.
  */
-export function BatterySaverVideo({ labels, ...props }: ComponentProps<typeof MuxVideo>) {
+export function BatterySaverVideo({
+	labels,
+	...props
+}: ComponentProps<typeof MuxVideo>) {
 	return (
 		<MuxVideo
 			{...props}

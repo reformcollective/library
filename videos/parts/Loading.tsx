@@ -7,15 +7,26 @@ import { visuallyHidden } from "./styles.css"
 import type { PartProps } from "./types"
 import { resolveChildren, usePart } from "./usePart"
 
-export function Loading({ label, alwaysShow, children, ...rest }: PartProps<"div">) {
+export function Loading({
+	label,
+	alwaysShow,
+	children,
+	...rest
+}: PartProps<"div">) {
 	const { state, placement, visible, text } = usePart([], alwaysShow)
-	const loading = (state.status === "loading" && state.wanted === "play") || state.waiting
+	const loading =
+		(state.status === "loading" && state.wanted === "play") || state.waiting
 	if (!visible || (!loading && !alwaysShow)) return null
 
 	const name = label ?? text("loading")
 
 	return (
-		<Box role="status" data-placement={placement} data-state={state.status} {...rest}>
+		<Box
+			role="status"
+			data-placement={placement}
+			data-state={state.status}
+			{...rest}
+		>
 			{resolveChildren(
 				children,
 				state,
