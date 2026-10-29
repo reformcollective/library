@@ -17,6 +17,9 @@ const HIDE_BUFFER = 8
  *
  * Add the `data-header-hide` attribute to an element to hide the header when it is in view.
  * Add the `data-header-stick` attribute to an element to show the header when it is in view.
+ * Add the `data-header-lock` attribute to an element to force the header visible only while that
+ * element overlaps the header itself, so it can sit at the top of that element without showing
+ * early as it scrolls in from the bottom of the screen.
  *
  * @param wrapper ref pointing to the element to the header
  * @param style the style to use for the header, either "scrub" which will sync with the scroller or "snap" which animates in either direction
@@ -36,6 +39,7 @@ export default function useAutoHideHeader(
 
 	const dataHideAreOnScreen = useRef(false)
 	const dataStickAreOnScreen = useRef(false)
+	const dataLockOverlapsHeader = useRef(false)
 
 	const [externalForceEvents] = useState(
 		() =>
@@ -87,6 +91,54 @@ export default function useAutoHideHeader(
 			clearInterval(interval)
 		}
 	}, [])
+
+	/**
+	 * `data-header-lock` elements only count while they overlap the strip the header covers, which
+	 * is the viewport shrunk to the header's height
+	 */
+	useEffect(() => {
+		let observer: IntersectionObserver | undefined
+		let overlapping: Element[] = []
+		let lastHeight = -1
+		let lastViewport = -1
+
+		const build = () => {
+			const height = wrapper?.current?.offsetHeight ?? 0
+			if (height === lastHeight && window.innerHeight === lastViewport) {
+				for (const element of document.querySelectorAll("[data-header-lock]"))
+					observer?.observe(element)
+				return
+			}
+			lastHeight = height
+			lastViewport = window.innerHeight
+			observer?.disconnect()
+			overlapping = []
+			dataLockOverlapsHeader.current = false
+			observer = new IntersectionObserver(
+				(entries) => {
+					for (const entry of entries) {
+						const index = overlapping.indexOf(entry.target)
+						if (entry.isIntersecting && index < 0) overlapping.push(entry.target)
+						if (!entry.isIntersecting && index >= 0) overlapping.splice(index, 1)
+					}
+					dataLockOverlapsHeader.current = overlapping.length > 0
+				},
+				{ rootMargin: `0px 0px -${Math.max(0, window.innerHeight - height)}px 0px` },
+			)
+			for (const element of document.querySelectorAll("[data-header-lock]"))
+				observer.observe(element)
+		}
+
+		build()
+		const interval = setInterval(build, 1_000)
+		window.addEventListener("resize", build)
+		return () => {
+			clearInterval(interval)
+			window.removeEventListener("resize", build)
+			observer?.disconnect()
+			dataLockOverlapsHeader.current = false
+		}
+	}, [wrapper])
 
 	useAnimation(
 		() => {
@@ -148,6 +200,7 @@ export default function useAutoHideHeader(
 				const forceShowHeader =
 					latestExternalForceVisible.current ||
 					dataStickAreOnScreen.current ||
+					dataLockOverlapsHeader.current ||
 					scroll === 0 ||
 					window.scrollY <= 5
 				const showHeader = style === "snap" && delta < 0
