@@ -6,7 +6,7 @@ import { useClientOnly } from "./ClientOnly"
 import { useLoadState } from "./link/useLoadState"
 import { subscribeToMousePosition } from "./mouse-position"
 import { useIsSmooth } from "./Scroll"
-import { css, f, styled } from "./styled"
+import { css, f, styled } from "library/styled"
 import { useAnimation } from "./useAnimation"
 
 // Default animation values
