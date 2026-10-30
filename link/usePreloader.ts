@@ -7,7 +7,7 @@ import { ScreenContext } from "library/ScreenContext"
 import { createScrollLock } from "library/Scroll"
 import { type RefObject, use, useEffect, useState } from "react"
 import { flushSync } from "react-dom"
-import { instantScrollToAnchor } from "./util"
+import { instantScrollToAnchor, toIdSelector } from "./util"
 
 /**
  * if you're making a preloader, set this to a number of seconds to manually block the main thread for debugging
@@ -74,7 +74,7 @@ const processScroll = async () => {
 
 	// if there's an anchor in the URL, scroll to it instead of resetting scroll
 	const hash = window.location.hash
-	if (hash && document.querySelector(hash)) {
+	if (hash && document.querySelector(toIdSelector(hash))) {
 		await instantScrollToAnchor(hash)
 	} else if (window.scrollY < window.innerHeight) window.scrollTo(0, 0)
 
