@@ -18,7 +18,18 @@ import { stringifyLiveProxyEvent } from "./liveProxyEvents"
 
 export const dynamic = "force-dynamic"
 
-const stateClient = client.withConfig({ token, useCdn: false, stega: false })
+/**
+ * SANITY_AUTH_TOKEN is also passed as next-sanity's `browserToken` (see
+ * live.tsx), so it has to stay read-only. Writing the watermark needs
+ * create/update, so allow a separate server-only token for it. Without one the
+ * write fails, the watermark never persists, and startup catchup falls back to
+ * its time-based window.
+ */
+const stateClient = client.withConfig({
+	token: process.env.SANITY_WRITE_TOKEN || token,
+	useCdn: false,
+	stega: false,
+})
 const connectedClients = new Set<WritableStreamDefaultWriter<Uint8Array>>()
 const encoder = new TextEncoder()
 const internalSecret = env.SANITY_AUTH_TOKEN
@@ -34,6 +45,15 @@ const RECONNECT_LEAD_TIME_MS = 5_000
 
 let messageQueue = Promise.resolve()
 let sanitySubscription: LiveSubscription | null = null
+
+/**
+ * per-instance fallback for when the watermark can't be persisted to Sanity.
+ * Keeps a subscription restart on a warm instance from redoing startup catchup.
+ */
+let inMemoryWatermark: string | null = null
+
+/** the watermark write failing is worth saying once per instance, not per event */
+let hasWarnedAboutWatermarkWrite = false
 
 type LiveSubscription = { unsubscribe: () => void }
 type LiveStateEntry = {
@@ -239,12 +259,25 @@ async function updateProcessedWatermark(reason: string) {
 	const latestPublishedUpdatedAt = await getLatestPublishedUpdatedAt()
 	if (!latestPublishedUpdatedAt) return
 
+	// record locally even if the Sanity write fails, so this instance doesn't
+	// redo startup catchup if its subscription restarts
+	if (
+		isNewerTimestamp(latestPublishedUpdatedAt, inMemoryWatermark ?? undefined)
+	) {
+		inMemoryWatermark = latestPublishedUpdatedAt
+	}
+
 	await writeProcessedWatermark({
 		processedThroughUpdatedAt: latestPublishedUpdatedAt,
 		reason,
 		stateKey,
 	}).catch((error) => {
-		console.error("Unable to write Sanity live state watermark", error)
+		if (hasWarnedAboutWatermarkWrite) return
+		hasWarnedAboutWatermarkWrite = true
+		console.error(
+			"Unable to write Sanity live state watermark — startup catchup will fall back to its time-based window. Set SANITY_WRITE_TOKEN to a token with create/update access to persist it.",
+			error,
+		)
 	})
 }
 
@@ -283,10 +316,16 @@ async function runStartupCatchup(workerStartedAt: Date) {
 		const latestPublishedMs = Date.parse(latestPublishedUpdatedAt)
 		const isNearStartup =
 			latestPublishedMs >= workerStartedAt.getTime() - STARTUP_SAFETY_WINDOW_MS
-		const isNewerThanWatermark = isNewerTimestamp(
-			latestPublishedUpdatedAt,
-			stateEntry?.processedThroughUpdatedAt ?? undefined,
-		)
+		// Only a watermark we actually have is evidence of staleness. Treating
+		// "no watermark" as "everything is stale" means a full-site flush on
+		// every new subscription whenever the watermark can't be persisted,
+		// which stampedes every route's regeneration at once. isNearStartup
+		// remains the bounded catch for a publish landing around a cold start.
+		const watermark =
+			stateEntry?.processedThroughUpdatedAt ?? inMemoryWatermark ?? undefined
+		const isNewerThanWatermark = watermark
+			? isNewerTimestamp(latestPublishedUpdatedAt, watermark)
+			: false
 
 		shouldBroadRevalidate =
 			shouldBroadRevalidate || isNearStartup || isNewerThanWatermark
