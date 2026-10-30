@@ -6,7 +6,8 @@ import { createScrollLock, refreshScrollLocks } from "library/Scroll"
  * that's safe to pass to `querySelector` - ids can contain characters (most commonly a
  * leading digit) that are invalid as the start of an unescaped CSS identifier
  */
-export const toIdSelector = (anchor: string) => `#${CSS.escape(anchor.replace(/^#/, ""))}`
+export const toIdSelector = (anchor: string) =>
+	`#${CSS.escape(anchor.replace(/^#/, ""))}`
 
 export const scrollPage = ({ y, instant }: { y: number; instant: boolean }) => {
 	const unlock = createScrollLock("unlock")
