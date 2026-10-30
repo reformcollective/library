@@ -1,6 +1,14 @@
 import { ScrollTrigger } from "gsap/all"
 import { createScrollLock, refreshScrollLocks } from "library/Scroll"
 
+/**
+ * turns a `#id` anchor (e.g. from `location.hash` or a `URL`'s `.hash`) into a selector
+ * that's safe to pass to `querySelector` - ids can contain characters (most commonly a
+ * leading digit) that are invalid as the start of an unescaped CSS identifier
+ */
+export const toIdSelector = (anchor: string) =>
+	`#${CSS.escape(anchor.replace(/^#/, ""))}`
+
 export const scrollPage = ({ y, instant }: { y: number; instant: boolean }) => {
 	const unlock = createScrollLock("unlock")
 	setTimeout(
@@ -34,7 +42,7 @@ export const scrollPage = ({ y, instant }: { y: number; instant: boolean }) => {
  */
 export const getAnchorScrollPosition = (anchor: string) => {
 	if (!anchor) return 0
-	const anchorEl = document.querySelector(anchor)
+	const anchorEl = document.querySelector(toIdSelector(anchor))
 	if (!anchorEl) return 0
 
 	const trigger = ScrollTrigger.create({
@@ -66,7 +74,7 @@ export const instantScrollToAnchor = async (anchor: string) => {
 
 	return new Promise<void>((resolve) => {
 		const check = () => {
-			const anchorEl = document.querySelector(anchor)
+			const anchorEl = document.querySelector(toIdSelector(anchor))
 			if (!anchorEl) {
 				missingAnchorCount += 1
 				if (missingAnchorCount > attemptsNeeded) resolve()
