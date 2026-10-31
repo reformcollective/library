@@ -2,13 +2,12 @@
 import { readFileSync } from "node:fs"
 
 const BANNED = [
-	/co-authored-by:.*(claude|anthropic|noreply@anthropic)/i,
-	/generated with \[?claude/i,
+	// attribution only: plain mentions of the tool or its file names pass
+	/co-authored-by:.*(claude|anthropic)/i,
 	/\u{1F916}/u,
-	// CLAUDE.md and .claude/ are file names, not attribution
-	/(?<![.\w/-])claude(?![.\w/-])/i,
-	/\banthropic\b/i,
-	/\bai[- ]generated\b/i,
+	/claude\.(com|ai)\/claude-code/i,
+	/\b(generated|written|made|created|authored|built)\s+(with|by|using)\s+(\[?claude|anthropic|ai\b|an ai\b)/i,
+	/\bai[- ](generated|written|assisted)\b/i,
 ]
 
 const args = process.argv.slice(2)
