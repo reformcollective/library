@@ -5,7 +5,8 @@ const BANNED = [
 	/co-authored-by:.*(claude|anthropic|noreply@anthropic)/i,
 	/generated with \[?claude/i,
 	/\u{1F916}/u,
-	/\bclaude\b/i,
+	// CLAUDE.md and .claude/ are file names, not attribution
+	/(?<![.\w/-])claude(?![.\w/-])/i,
 	/\banthropic\b/i,
 	/\bai[- ]generated\b/i,
 ]

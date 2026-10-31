@@ -8,7 +8,7 @@ const MAX_CHARS = 100
 const CODE_FILE = /\.(m?[jt]sx?|css)$/
 const ALLOWED = /^(biome-ignore|@ts-expect-error|eslint-disable|oxlint-disable|stylelint-disable|prettier-ignore|@refresh|\/ <reference|#region|#endregion)/
 const REASONING = [/\bwe\b/i, /\bwe'(ll|re|ve|d)\b/i, /\bI\b/, /\blet's\b/i, /\bpreviously\b/i, /\binstead of\b/i, /\bthis ensures\b/i, /\bnote:/i, /\bin order to\b/i, /\bnow (we|it|this|the)\b/i]
-const AI = [/\bclaude\b/i, /\banthropic\b/i, /\bAI\b/, /\bai[- ]generated\b/i, /\bchatgpt\b/i, /\bcopilot\b/i]
+const AI = [/(?<![.\w/-])claude(?![.\w/-])/i, /\banthropic\b/i, /\bAI\b/, /\bai[- ]generated\b/i, /\bchatgpt\b/i, /\bcopilot\b/i]
 
 const git = (...args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
 
