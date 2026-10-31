@@ -36,11 +36,18 @@ These rules are locked. Only a rule owner changes them, through a reviewed libra
 Write a comment only when the code cannot say it: a non-obvious why, a browser bug workaround, where a magic number comes from. One line, two at most. Never write what the code does, how you got here, what changed, options you rejected, or notes to anyone. Never mention AI or Claude. JSDoc only on exported library functions: one sentence, plus params if not obvious.
 
 Good:
-  // Safari reports 0 height until the video's metadata loads
-  const TABLET = 768 // Figma "Tablet" frame width
+
+```ts
+// Safari reports 0 height until the video's metadata loads
+const TABLET = 768 // Figma "Tablet" frame width
+```
+
 Bad:
-  // We use a ref here instead of state because state would trigger a re-render,
-  // which previously caused the animation to restart. This ensures that...
+
+```ts
+// We use a ref here instead of state because state would trigger a re-render,
+// which previously caused the animation to restart. This ensures that...
+```
 
 ## Checking your work
 

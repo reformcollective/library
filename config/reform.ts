@@ -9,14 +9,17 @@ type RuleContext = {
 }
 
 const isNode = (value: unknown): value is AstNode =>
-	typeof value === "object" && value !== null && typeof (value as { type?: unknown }).type === "string"
+	typeof value === "object" &&
+	value !== null &&
+	typeof (value as { type?: unknown }).type === "string"
 
 const isStyleMember = (node: unknown) =>
 	isNode(node) &&
 	node.type === "MemberExpression" &&
 	isNode(node.property) &&
 	((node.property.type === "Identifier" && node.property.name === "style") ||
-		(node.property.type === "StringLiteral" && node.property.value === "style") ||
+		(node.property.type === "StringLiteral" &&
+			node.property.value === "style") ||
 		(node.property.type === "Literal" && node.property.value === "style"))
 
 const noInlineStyle = {
@@ -31,19 +34,31 @@ const noInlineStyle = {
 	create(context: RuleContext) {
 		return {
 			JSXAttribute(node: AstNode) {
-				if (isNode(node.name) && node.name.type === "JSXIdentifier" && node.name.name === "style") {
+				if (
+					isNode(node.name) &&
+					node.name.type === "JSXIdentifier" &&
+					node.name.name === "style"
+				) {
 					context.report({ node, messageId: "inlineStyle" })
 				}
 			},
 			AssignmentExpression(node: AstNode) {
 				const left = node.left
-				if (isNode(left) && left.type === "MemberExpression" && (isStyleMember(left.object) || isStyleMember(left))) {
+				if (
+					isNode(left) &&
+					left.type === "MemberExpression" &&
+					(isStyleMember(left.object) || isStyleMember(left))
+				) {
 					context.report({ node, messageId: "inlineStyle" })
 				}
 			},
 			CallExpression(node: AstNode) {
 				const callee = node.callee
-				if (isNode(callee) && callee.type === "MemberExpression" && isStyleMember(callee.object)) {
+				if (
+					isNode(callee) &&
+					callee.type === "MemberExpression" &&
+					isStyleMember(callee.object)
+				) {
 					context.report({ node, messageId: "inlineStyle" })
 					return
 				}
@@ -57,14 +72,18 @@ const noInlineStyle = {
 					callee.property.type === "Identifier" &&
 					callee.property.name === "assign"
 				const args = Array.isArray(node.arguments) ? node.arguments : []
-				if (isObjectAssign && isStyleMember(args[0])) context.report({ node, messageId: "inlineStyle" })
+				if (isObjectAssign && isStyleMember(args[0]))
+					context.report({ node, messageId: "inlineStyle" })
 			},
 		}
 	},
 }
 
 const isCssTag = (node: AstNode) =>
-	node.type === "TaggedTemplateExpression" && isNode(node.tag) && node.tag.type === "Identifier" && node.tag.name === "css"
+	node.type === "TaggedTemplateExpression" &&
+	isNode(node.tag) &&
+	node.tag.type === "Identifier" &&
+	node.tag.name === "css"
 
 // Walks literal arrays and objects in a styled() config, stopping at calls like f.responsive()
 function findBareCss(node: unknown, found: AstNode[]) {
@@ -77,7 +96,8 @@ function findBareCss(node: unknown, found: AstNode[]) {
 		for (const element of node.elements) findBareCss(element, found)
 	}
 	if (node.type === "ObjectExpression" && Array.isArray(node.properties)) {
-		for (const property of node.properties) if (isNode(property)) findBareCss(property.value, found)
+		for (const property of node.properties)
+			if (isNode(property)) findBareCss(property.value, found)
 	}
 }
 
@@ -86,17 +106,26 @@ const cssNeedsHelper = {
 		type: "problem",
 		docs: { description: "require an f.* helper around css passed to styled" },
 		messages: {
-			bareCss: "Wrap this css in f.responsive, f.small or another f.* helper, or pixel values will not scale.",
+			bareCss:
+				"Wrap this css in f.responsive, f.small or another f.* helper, or pixel values will not scale.",
 		},
 	},
 	create(context: RuleContext) {
 		return {
 			CallExpression(node: AstNode) {
-				if (!isNode(node.callee) || node.callee.type !== "Identifier" || node.callee.name !== "styled") return
-				const args = Array.isArray(node.arguments) ? node.arguments.slice(1) : []
+				if (
+					!isNode(node.callee) ||
+					node.callee.type !== "Identifier" ||
+					node.callee.name !== "styled"
+				)
+					return
+				const args = Array.isArray(node.arguments)
+					? node.arguments.slice(1)
+					: []
 				const found: AstNode[] = []
 				for (const argument of args) findBareCss(argument, found)
-				for (const bare of found) context.report({ node: bare, messageId: "bareCss" })
+				for (const bare of found)
+					context.report({ node: bare, messageId: "bareCss" })
 			},
 		}
 	},
@@ -107,16 +136,24 @@ const noRawImg = {
 		type: "problem",
 		docs: { description: "disallow raw img elements in site code" },
 		messages: {
-			rawImg: "Use StaticImage for raster assets or SanityImage for CMS images, not <img>.",
+			rawImg:
+				"Use StaticImage for raster assets or SanityImage for CMS images, not <img>.",
 		},
 	},
 	create(context: RuleContext) {
 		const path = context.filename.replaceAll("\\", "/")
-		const siteCode = path.includes("/app/") && !path.includes("/app/visual-tests/") && !path.includes("/library/")
+		const siteCode =
+			path.includes("/app/") &&
+			!path.includes("/app/visual-tests/") &&
+			!path.includes("/library/")
 		if (!siteCode) return {}
 		return {
 			JSXOpeningElement(node: AstNode) {
-				if (isNode(node.name) && node.name.type === "JSXIdentifier" && node.name.name === "img") {
+				if (
+					isNode(node.name) &&
+					node.name.type === "JSXIdentifier" &&
+					node.name.name === "img"
+				) {
 					context.report({ node, messageId: "rawImg" })
 				}
 			},

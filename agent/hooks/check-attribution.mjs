@@ -12,10 +12,13 @@ const BANNED = [
 ]
 
 const args = process.argv.slice(2)
-const text = args[0] === "--text" ? args.slice(1).join(" ") : readFileSync(args[0], "utf8")
+const text =
+	args[0] === "--text" ? args.slice(1).join(" ") : readFileSync(args[0], "utf8")
 const lines = text.split("\n").filter((line) => !line.startsWith("#"))
 
-const hits = lines.filter((line) => BANNED.some((pattern) => pattern.test(line)))
+const hits = lines.filter((line) =>
+	BANNED.some((pattern) => pattern.test(line)),
+)
 if (hits.length) {
 	console.error("No AI attribution in commits or PRs. Remove these lines:")
 	for (const line of hits) console.error(`  ${line}`)

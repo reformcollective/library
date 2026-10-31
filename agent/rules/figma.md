@@ -1,7 +1,9 @@
 ---
+
 paths:
-  - "app/**/*.tsx"
-  - "app/**/*.ts"
+- "app/**/*.tsx"
+- "app/**/*.ts"
+
 ---
 
 # Figma Design Matching
