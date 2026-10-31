@@ -56,12 +56,14 @@ export function FullViewport({
 					<StickyVariant
 						ref={stickyRef}
 						className={className}
+						// oxlint-disable-next-line reform/no-inline-style -- passes the caller's style through with the measured height
 						style={{ ...style, height }}
 					>
 						{children}
 					</StickyVariant>
 				</Page>
 			)}
+			{/* oxlint-disable-next-line reform/no-inline-style -- passes the caller's style through */}
 			<FixedVariant ref={fixedRef} className={className} style={style}>
 				{children}
 			</FixedVariant>

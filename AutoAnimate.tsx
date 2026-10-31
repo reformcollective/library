@@ -172,10 +172,14 @@ export default function AutoAnimate({
 		 * calculate the size of the new content
 		 * animate the container to that size
 		 */
+		// oxlint-disable-next-line reform/no-inline-style -- display is switched to measure sizes
 		sizer.current.style.display = "block"
+		// oxlint-disable-next-line reform/no-inline-style -- display is switched to measure sizes
 		wrapper.current.style.display = "none"
 		const size = getSize(sizer)
+		// oxlint-disable-next-line reform/no-inline-style -- display is switched to measure sizes
 		sizer.current.style.display = "none"
+		// oxlint-disable-next-line reform/no-inline-style -- display is switched to measure sizes
 		wrapper.current.style.display = "grid"
 
 		/**
@@ -316,6 +320,7 @@ export default function AutoAnimate({
 				ref={sizer}
 				alignment={alignment}
 				clip={clip}
+				// oxlint-disable-next-line reform/no-inline-style -- sizer starts hidden until it measures
 				style={{ display: "none" }}
 			>
 				<div>{getNodeFromKey(currentKey)}</div>

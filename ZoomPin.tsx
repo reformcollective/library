@@ -176,6 +176,7 @@ export const ZoomPinFrom = (props: ComponentProps<"div">) => {
 		<div
 			{...props}
 			ref={setFromEl}
+			// oxlint-disable-next-line reform/no-inline-style -- runtime transform for the pinned zoom
 			style={{
 				aspectRatio: `${width}/${height}`,
 			}}

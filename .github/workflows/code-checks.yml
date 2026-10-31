@@ -15,6 +15,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  agent-rules:
+    runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: No AI attribution in the PR or its commits
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node library/agent/hooks/check-attribution.mjs --text "$TITLE" "$BODY"
+          git log --format=%B "$BASE_SHA..HEAD" > "$RUNNER_TEMP/commits.txt"
+          node library/agent/hooks/check-attribution.mjs "$RUNNER_TEMP/commits.txt"
+      - name: Added comments follow the rule
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node library/agent/hooks/check-comments.mjs
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: true
+          cache: true
+          standalone: true
+      - name: React Compiler accepts the changed files
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: node library/agent/hooks/check-compiler.mjs
+
   formatting:
     runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
     steps:
