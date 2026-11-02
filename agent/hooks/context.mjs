@@ -1,7 +1,7 @@
 // Every prompt: gives the agent the real context use, read from the last reply's token count in the session log.
 import fs from "node:fs"
 
-const WINDOW = Number(process.env.REFORM_CONTEXT_WINDOW) || 200_000
+const WINDOW = Number(process.env.REFORM_CONTEXT_WINDOW) || 1_000_000
 
 function lastUsage(file) {
 	const lines = fs.readFileSync(file, "utf8").trimEnd().split("\n")
@@ -13,7 +13,14 @@ function lastUsage(file) {
 			continue
 		}
 		const usage = entry.message?.usage
-		if (entry.type === "assistant" && !entry.isSidechain && usage) return usage
+		// an API error leaves a reply with all-zero usage; skip it for the last real one
+		const total = usage
+			? (usage.input_tokens ?? 0) +
+				(usage.cache_read_input_tokens ?? 0) +
+				(usage.cache_creation_input_tokens ?? 0)
+			: 0
+		if (entry.type === "assistant" && !entry.isSidechain && total > 0)
+			return usage
 	}
 	return null
 }
