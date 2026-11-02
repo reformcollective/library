@@ -1,4 +1,5 @@
 ---
+
 name: builder
 description: Builds one section from the main session's brief, in its own worktree, and commits it. Used only in the static build's parallel pass and in QA rounds.
 tools: Read, Edit, Write, Grep, Glob, Bash

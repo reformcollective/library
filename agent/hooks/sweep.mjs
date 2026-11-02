@@ -65,7 +65,9 @@ function sweepWorktrees(removed, kept) {
 			kept.push(`${name} (uncommitted changes)`)
 			continue
 		}
-		if (busy.some((cwd) => cwd === folder || cwd.startsWith(folder + path.sep))) {
+		if (
+			busy.some((cwd) => cwd === folder || cwd.startsWith(folder + path.sep))
+		) {
 			kept.push(`${name} (a program is running in it)`)
 			continue
 		}
@@ -94,7 +96,13 @@ const kept = []
 try {
 	sweepWorktrees(removed, kept)
 	sweepOld(os.tmpdir(), `reform-${project}-`, DAY, "temp", removed)
-	sweepOld(path.join(os.homedir(), ".reform/reports", project), "", 14 * DAY, "reports", removed)
+	sweepOld(
+		path.join(os.homedir(), ".reform/reports", project),
+		"",
+		14 * DAY,
+		"reports",
+		removed,
+	)
 } catch (error) {
 	kept.push(`sweep stopped early: ${error.message}`)
 }
