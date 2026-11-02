@@ -73,4 +73,5 @@ Bad:
 
 ## Sessions
 
-At the 40% context warning, finish the step, commit, and rewrite `STATE.local.md` (state only, 25 lines max): the date and head commit; done this session; in progress; the next three things; waiting on someone. Then tell the developer it is time to clear.
+- End every reply with one line: `Context: N%`. Get N from the `get_usage` tool when the app has one (load it with ToolSearch `select:mcp__ccd_session_mgmt__get_usage`); never guess it. In the terminal, where the status line shows it, skip the line.
+- At 40%, finish the step and rewrite `STATE.local.md` (state only, 25 lines max): the date and head commit; done this session; in progress; the next three things; waiting on someone. Then tell the developer it is time to clear.
