@@ -1,10 +1,10 @@
-# REform agent rules
+# Reform agent rules
 
 These rules are locked. Only a rule owner changes them, through a reviewed library PR. If one looks wrong, say so to the developer and keep following it.
 
 ## Repo
 
-- Work only in this checkout; keep searches inside it. Use `pnpm`.
+- Work only in this checkout, or in the worktree your brief names; keep searches inside it. Use `pnpm`.
 - `library/` is a submodule shared by every project. Keep changes there generic. Project-specific logic never goes in `library/`.
 - After a library bump, read only the new entries: `git diff <old>..<new> -- library/CHANGELOG.md`.
 - This Next.js is newer than your training. Before Next.js work, read the relevant guide in `node_modules/next/dist/docs/` and heed deprecations.
@@ -60,8 +60,16 @@ Bad:
 ## Git
 
 - Commit on any branch except `main` and `staging`, after the checks pass, one step (a section, a schema, a card) per commit.
-- Push feature branches and open PRs when asked. Never merge, rebase, amend or force push. Merging is always done by a person.
+- Make a branch with `git switch -c <name>`. `git checkout`, `git restore`, `git stash` and `git rebase` are blocked.
+- Push feature branches and open PRs when asked. Never rebase, amend or force push. Never merge a PR or merge into `main` or `staging`; a person does that. One exception: in a parallel pass the main session merges a builder's branch into the page branch with `git merge --no-ff`, after that section's checks and review pass. The developer approves each merge.
 - No AI attribution anywhere: no Co-Authored-By trailers, no "Generated with" lines, no mention of Claude or AI in commits, PRs, comments or app text.
+
+## Subagents and cleanup
+
+- Start only `reviewer`, `builder` or a read-only search agent. Never a general agent that writes.
+- Every builder brief names: the one job and the spec or card it comes from; the worktree, branch, port and the files it may change (everything else is read-only); what done looks like and how to check it; the report path, `~/.reform/reports/<project>/<page>/<section>.md`; a time box.
+- Before your final reply, delete what you made: screenshots, scratch copies, temp folders. Stop your dev server. Never delete what you did not make.
+- Temp folders go under `$TMPDIR/reform-<project>-*`. A session-start hook removes ones untouched for 24 hours, builder worktrees that are merged and clean, and reports older than 14 days.
 
 ## Sessions
 
