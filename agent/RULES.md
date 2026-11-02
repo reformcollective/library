@@ -64,6 +64,14 @@ Bad:
 - Push feature branches and open PRs when asked. Never rebase, amend or force push. Never merge a PR or merge into `main` or `staging`; a person does that. One exception: in a parallel pass the main session merges a builder's branch into the page branch with `git merge --no-ff`, after that section's checks and review pass. The developer approves each merge.
 - No AI attribution anywhere: no Co-Authored-By trailers, no "Generated with" lines, no mention of Claude or AI in commits, PRs, comments or app text.
 
+## APIs
+
+- Read any API you need, in any step: Vercel, Slack, Notion, Sanity and third-party APIs.
+- Change Vercel, Slack or Notion only through their connector; it asks the developer first. The `vercel` command line is blocked.
+- Other APIs (curl, scripts): read freely. Ask the developer in chat before anything that sends or changes data.
+- Sanity: change and publish freely while the project notes say `Live: no`. Once they say `Live: yes`, ask in chat before any Sanity change or publish.
+- Builders and reviewers never change an API. Put what needs changing in the report.
+
 ## Subagents and cleanup
 
 - Start only `reviewer`, `builder` or a read-only search agent. Never a general agent that writes.
@@ -73,5 +81,5 @@ Bad:
 
 ## Sessions
 
-- End every reply with one line: `Context: N%`. Get N from the `get_usage` tool when the app has one (load it with ToolSearch `select:mcp__ccd_session_mgmt__get_usage`); never guess it. In the terminal, where the status line shows it, skip the line.
+- End every reply with the context line a hook gives you each turn (`Context: N% (...)`), exactly as given. If there is none, leave the line out. Never estimate it or write a placeholder.
 - At 40%, finish the step and rewrite `STATE.local.md` (state only, 25 lines max): the date and head commit; done this session; in progress; the next three things; waiting on someone. Then tell the developer it is time to clear.
