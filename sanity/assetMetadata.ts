@@ -1,3 +1,4 @@
+import type { VideoFieldAdditions } from "library/videos/types"
 import { documentPathProjection } from "sanity/lib/slug-resolver"
 import type {
 	MuxVideoAssetReference,
@@ -28,9 +29,10 @@ export type ImageField = {
 	}
 }
 
-export type VideoField = {
+export type VideoField = VideoFieldAdditions & {
 	_type: "video"
 	sourceType?:
+		| "cloudflare"
 		| "mux"
 		| "spotify"
 		| "tiktok"
@@ -49,6 +51,10 @@ export type VideoField = {
 			videoBlurUrl: string | null
 			videoAspectRatio: string | null
 			videoDuration: number | null
+			thumbTime: number | null
+			createdAt: string | null
+			staticRenditions: unknown
+			playbackPolicy: string | null
 		}
 	} | null
 	posterImage: ImageField | null
@@ -113,7 +119,11 @@ const muxVideoDataProjection = `{
 			defined(asset->data.aspect_ratio) =>
 				string::split(asset->data.aspect_ratio, ":")[0] + "/" + string::split(asset->data.aspect_ratio, ":")[1]
 		),
-		"videoDuration": asset->data.duration
+		"videoDuration": asset->data.duration,
+		"thumbTime": asset->thumbTime,
+		"createdAt": asset->data.created_at,
+		"staticRenditions": asset->data.static_renditions,
+		"playbackPolicy": asset->data.playback_ids[0].policy
 	}` as const
 
 const linkProjection = `{ ..., ${internalSlugField}, ${fileFields} }` as const

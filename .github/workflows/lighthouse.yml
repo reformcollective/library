@@ -25,9 +25,16 @@ concurrency:
 
 jobs:
   run:
-    timeout-minutes: 15
+    timeout-minutes: 25
     runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
     steps:
+      - name: Mask secrets
+        run: |
+          [ -n "$SECRETS_JSON" ] || exit 0
+          jq -r 'to_entries[] | .value | select(type == "string") | split("\n")[] | rtrimstr("\r") | select(length > 0) | gsub("%";"%25") | gsub("\r";"%0D") | "::add-mask::" + .' <<< "$SECRETS_JSON"
+        env:
+          SECRETS_JSON: ${{ secrets.SECRETS_JSON }}
+
       - name: Load .env file
         uses: oNaiPs/secrets-to-env-action@v1.5
         with:
@@ -38,6 +45,7 @@ jobs:
         with:
           submodules: recursive
           lfs: true
+          persist-credentials: false
       - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
@@ -58,13 +66,26 @@ jobs:
         if: github.event.action != 'closed'
         run: pnpm run build
 
-      - name: Serve
+      - name: Serve and wait for server
         if: github.event.action != 'closed'
-        run: PORT=3000 pnpm run serve & exit 0
-
-      - name: Wait for server...
-        if: github.event.action != 'closed'
-        run: sleep 5
+        run: |
+          PORT=3000 nohup pnpm run serve > "$RUNNER_TEMP/server.log" 2>&1 &
+          pid=$!
+          for _ in $(seq 1 150); do
+            if curl -s -o /dev/null --max-time 10 http://localhost:3000/; then
+              echo "Server is up"
+              exit 0
+            fi
+            if ! kill -0 "$pid" 2>/dev/null; then
+              echo "Server exited before answering. Server log:"
+              cat "$RUNNER_TEMP/server.log"
+              exit 1
+            fi
+            sleep 2
+          done
+          echo "Server did not respond within 5 minutes. Server log:"
+          cat "$RUNNER_TEMP/server.log"
+          exit 1
 
       - name: Run Unlighthouse
         id: unlighthouse
@@ -72,41 +93,55 @@ jobs:
         continue-on-error: true
         run: pnpm exec unlighthouse-ci --site http://localhost:3000/ --router-prefix "/lighthouse/${{ github.repository }}/pr-${{ github.event.pull_request.number }}" --build-static --output-path ./report
 
+      - name: Fail if no routes were scanned
+        id: routes_check
+        if: github.event.action != 'closed' && steps.unlighthouse.outcome == 'success'
+        run: |
+          count=$(jq 'length' ./report/ci-result.json 2>/dev/null)
+          if [ "${count:-0}" -eq 0 ]; then
+            echo "::error::Unlighthouse scanned 0 routes. The server was likely unreachable or no routes were found."
+            exit 1
+          fi
+          echo "Scanned $count routes"
+
       - name: kill the server
         # don't skip if unlighthouse fails
         if: always()
-        run: kill -9 $(lsof -t -i:3000)
+        run: lsof -t -i:3000 | xargs -r kill -9
         continue-on-error: true
 
       - name: Determine Lighthouse conclusion
         id: determine_conclusion
         if: always()
         run: |
-          if [ "${UNLIGHTHOUSE_OUTCOME}" = "failure" ]; then
+          if [ "${EVENT_ACTION}" != "closed" ] && { [ "${UNLIGHTHOUSE_OUTCOME}" != "success" ] || [ "${ROUTES_OUTCOME}" != "success" ]; }; then
             echo "result=neutral" >> "$GITHUB_OUTPUT"
           else
             echo "result=success" >> "$GITHUB_OUTPUT"
           fi
         env:
           UNLIGHTHOUSE_OUTCOME: ${{ steps.unlighthouse.outcome }}
+          ROUTES_OUTCOME: ${{ steps.routes_check.outcome }}
+          EVENT_ACTION: ${{ github.event.action }}
 
       - name: Determine Lighthouse check name
         id: determine_check_name
         if: always()
         run: |
-          if [ "${UNLIGHTHOUSE_OUTCOME}" = "failure" ]; then
+          if [ "${EVENT_ACTION}" != "closed" ] && { [ "${UNLIGHTHOUSE_OUTCOME}" != "success" ] || [ "${ROUTES_OUTCOME}" != "success" ]; }; then
             echo "value=Lighthouse Failed" >> "$GITHUB_OUTPUT"
           else
             echo "value=Lighthouse Passed" >> "$GITHUB_OUTPUT"
           fi
         env:
           UNLIGHTHOUSE_OUTCOME: ${{ steps.unlighthouse.outcome }}
+          ROUTES_OUTCOME: ${{ steps.routes_check.outcome }}
+          EVENT_ACTION: ${{ github.event.action }}
 
       - name: Deploy preview
         id: deployment
         # don't skip if unlighthouse fails
         if: always()
-        continue-on-error: true
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: ./report/

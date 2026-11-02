@@ -1,0 +1,25 @@
+import type { VideoLabels } from "library/videos/types"
+
+export const DEFAULT_LABELS: VideoLabels = {
+	play: "Play",
+	pause: "Pause",
+	mute: "Mute",
+	unmute: "Unmute",
+	volume: "Volume",
+	seek: "Seek",
+	fullscreen: "Enter fullscreen",
+	exitFullscreen: "Exit fullscreen",
+	captions: "Captions",
+	captionsOff: "Captions off",
+	playbackRate: "Playback speed",
+	quality: "Quality",
+	audioTrack: "Audio track",
+	chapters: "Chapters",
+	pictureInPicture: "Picture in picture",
+	cast: "Cast",
+	loading: "Loading",
+	retry: "Retry",
+	errorGeneric: "This video could not be played.",
+	playOverlay: "Play video",
+	live: "Live",
+}

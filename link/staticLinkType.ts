@@ -1,4 +1,4 @@
-import { LinkIcon } from "@sanity/icons"
+import { LinkIcon } from "@sanity/icons/Link"
 import { compileTime } from "library/compile-time"
 import { listStaticRoutes } from "library/list-pages"
 import type { CustomLinkType } from "sanity-plugin-link-field"

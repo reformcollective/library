@@ -4,6 +4,28 @@ on:
   merge_group:
 
 jobs:
+  agent-rules:
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: No AI attribution in the PR or its commits
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node agent/hooks/check-attribution.mjs --text "$TITLE" "$BODY"
+          git log --format=%B "$BASE_SHA..HEAD" > "$RUNNER_TEMP/commits.txt"
+          node agent/hooks/check-attribution.mjs "$RUNNER_TEMP/commits.txt"
+      - name: Added comments follow the rule
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          CHECK_COMMENTS_LIBRARY: "1"
+        run: node agent/hooks/check-comments.mjs
+
   Check_Linting:
     runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:

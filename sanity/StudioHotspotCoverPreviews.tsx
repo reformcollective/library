@@ -24,6 +24,7 @@ function updateHotspotPreviewScale(container: Element) {
 
 	const scale = Math.max(100 / width, 100 / height)
 	container.dataset.hotspotCoverPreview = ""
+	// oxlint-disable-next-line reform/no-inline-style -- Sanity Studio UI, not site styles
 	container.style.setProperty("--studio-hotspot-cover-scale", scale.toString())
 }
 

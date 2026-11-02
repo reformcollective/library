@@ -105,12 +105,14 @@ export async function libraryFetch<const QueryString extends string>({
 	const resolvedParams = await params
 	const compactedQuery = compactQuery(query) as QueryString
 	warnIfQueryTooLarge(compactedQuery, resolvedParams)
-	return internalFetch({
+	const result = await internalFetch({
 		query: compactedQuery,
 		params: resolvedParams,
 		stega: disableStega ? false : undefined,
 		perspective,
 	})
+	// next-sanity 13.4 types `data` as StegaBranded unless `stega` is the literal `false`.
+	return result as unknown as LibraryFetchResult<QueryString>
 }
 
 export const LibraryRuntime = async () => {
