@@ -37,11 +37,17 @@ function useHookify<Args extends unknown[], R>(
 const createMeasuringElement = () => {
 	if (!isBrowser) return
 	const div = document.createElement("div")
+	// oxlint-disable-next-line reform/no-inline-style -- measuring element created in plain DOM, outside React
 	div.style.position = "absolute"
+	// oxlint-disable-next-line reform/no-inline-style -- measuring element created in plain DOM, outside React
 	div.style.top = "0"
+	// oxlint-disable-next-line reform/no-inline-style -- measuring element created in plain DOM, outside React
 	div.style.left = "0"
+	// oxlint-disable-next-line reform/no-inline-style -- measuring element created in plain DOM, outside React
 	div.style.width = "100%"
+	// oxlint-disable-next-line reform/no-inline-style -- measuring element created in plain DOM, outside React
 	div.style.height = "100vh"
+	// oxlint-disable-next-line reform/no-inline-style -- measuring element created in plain DOM, outside React
 	div.style.visibility = "hidden"
 	document.body.append(div)
 	return div

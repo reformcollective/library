@@ -60,6 +60,7 @@ export const createSectionPreview = (
 		const bg = background
 		return (
 			<div
+				// oxlint-disable-next-line reform/no-inline-style -- Sanity Studio UI, not site styles
 				style={{
 					width: "160px",
 					height: "90px",
@@ -72,6 +73,7 @@ export const createSectionPreview = (
 				<img
 					alt=""
 					src={image.src}
+					// oxlint-disable-next-line reform/no-inline-style -- Sanity Studio UI, not site styles
 					style={{
 						width: "100%",
 						height: "100%",
@@ -553,6 +555,7 @@ export const calloutField = ({
 		components: {
 			field: () => (
 				<div
+					// oxlint-disable-next-line reform/no-inline-style -- Sanity Studio UI, not site styles
 					style={{
 						display: "flex",
 						alignItems: "center",
@@ -565,6 +568,7 @@ export const calloutField = ({
 						opacity: 0.75,
 					}}
 				>
+					{/* oxlint-disable-next-line reform/no-inline-style -- Sanity Studio UI, not site styles */}
 					<InfoOutlineIcon style={{ flexShrink: 0 }} />
 					{message}
 				</div>

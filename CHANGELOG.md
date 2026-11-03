@@ -10,6 +10,19 @@ That step is now an inline script that registers each value with `::add-mask::` 
 
 Nothing changes in the calling workflows; bump the pinned library hash in each `call-*.yml` as usual. Any secret that has appeared in an old run's logs should be treated as exposed: rotate it, and delete the runs that printed it, since masking doesn't rewrite past logs.
 
+# 2026-10-31
+
+## Agent rules move to `library/agent/`
+
+- `agent/RULES.md` is the one agent rulebook for every project. `CLAUDE.md` is now a one-line import of it, so projects whose `CLAUDE.md` is a symlink to `library/CLAUDE.md` pick it up on this bump with no change.
+- `agent/agents/reviewer.md` replaces each project's `.claude/agents/reviewer.md`. `agent/rules/figma.md` replaces `.claude/rules/figma.md`.
+- `agent/hooks/`: `check-comments.mjs` (only comments added in the diff), `check-attribution.mjs` (no AI attribution in commits or PRs), `no-big-reads.mjs` (no whole reads of generated files). `check-compiler.mjs` runs the real React Compiler on changed files, with the build's `panicThreshold: "all_errors"`, so compiler errors show up after each edit instead of at build time. `agent/statusline.sh` warns at 40% context.
+- CI: a new `agent-rules` job in `code-checks.yml` runs the comment and attribution checks on every PR.
+
+**Migration Advice**
+
+Copy the starter's `CLAUDE.md`, `.claude/settings.json`, the `.claude/agents` and `.claude/rules` symlinks, the `commit-msg` job in `lefthook.yml`, the `check:comments` script and `agentRules: false` in `next.config.ts`. Delete the project's `AGENTS.md`. Run `pnpm exec lefthook install` once so the new `commit-msg` hook is active. Add `library / agent-rules` to the repo's required checks once it has passed once.
+
 # 2026-10-28
 
 ## UniversalVideo: `trigger="custom"`, steadier `useVideoScrollTrigger`, poster stays mounted

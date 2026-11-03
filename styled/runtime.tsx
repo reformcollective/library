@@ -85,6 +85,7 @@ export function runtimeStyled({
 			<Render
 				className={mergedClassName}
 				// @ts-expect-error
+				// oxlint-disable-next-line reform/no-inline-style -- the styled system applying token values
 				style={{ ...style, ...tokenStyle }}
 				{...domProps}
 			>

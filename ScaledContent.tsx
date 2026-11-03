@@ -23,7 +23,9 @@ export default function ScaledContent({
 		const update = () => {
 			if (!outer.current || !inner.current) return
 			const { width, height } = inner.current.getBoundingClientRect()
+			// oxlint-disable-next-line reform/no-inline-style -- size measured at runtime
 			outer.current.style.width = `${width}px`
+			// oxlint-disable-next-line reform/no-inline-style -- size measured at runtime
 			outer.current.style.height = `${height}px`
 		}
 
@@ -46,6 +48,7 @@ export default function ScaledContent({
 
 	return (
 		<Outer ref={outer}>
+			{/* oxlint-disable-next-line reform/no-inline-style -- scale measured at runtime */}
 			<Inner ref={inner} style={{ scale: `${scale ?? 1}` }}>
 				{children}
 			</Inner>

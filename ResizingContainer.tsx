@@ -25,6 +25,7 @@ export function ResizingContainer({
 			const sizerBounds = sizer.current?.getBoundingClientRect()
 
 			// respect the containers min height
+			// oxlint-disable-next-line reform/no-inline-style -- height is reset to measure content
 			container.style.height = "0"
 			const minHeight = container.getBoundingClientRect().height
 
@@ -39,6 +40,7 @@ export function ResizingContainer({
 
 	return (
 		<div ref={ref} className={className}>
+			{/* oxlint-disable-next-line reform/no-inline-style -- sizer that measures content height */}
 			<div ref={sizer} style={{ height: "fit-content" }}>
 				{children}
 			</div>

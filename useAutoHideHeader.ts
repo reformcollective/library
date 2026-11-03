@@ -104,6 +104,7 @@ export default function useAutoHideHeader(
 			// a custom property written to :root invalidates style for the whole
 			// document, which is far too expensive to do per frame
 			const publishHeaderHeight = () => {
+				// oxlint-disable-next-line reform/no-inline-style -- global CSS variable on html, outside any styled component
 				document.documentElement.style.setProperty(
 					HEADER_HEIGHT_VAR,
 					`${cachedHeaderHeight + extraOffset}px`,

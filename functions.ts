@@ -54,8 +54,10 @@ export function measureSticky<T>(
 	return () => {
 		if (!element) return value
 		if (!(element instanceof HTMLElement)) return value
+		// oxlint-disable-next-line reform/no-inline-style -- position is switched off briefly to measure, then restored
 		element.style.position = "static"
 		queueMicrotask(() => {
+			// oxlint-disable-next-line reform/no-inline-style -- restores the position switched off for measuring
 			element.style.removeProperty("position")
 		})
 
