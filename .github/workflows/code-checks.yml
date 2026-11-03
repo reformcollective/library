@@ -49,9 +49,22 @@ jobs:
     runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
     steps:
       - name: Load .env file
-        uses: oNaiPs/secrets-to-env-action@v1.5
-        with:
-          secrets: ${{ secrets.SECRETS_JSON }}
+        env:
+          SECRETS_JSON: ${{ secrets.SECRETS_JSON }}
+        run: |
+          # mask every value before exporting it: GitHub only masks the JSON blob as a whole,
+          # so each value would otherwise print in plain text in later steps' env.
+          # masked line by line so multi-line values (keys, certs) are covered too
+          json="${SECRETS_JSON:-}"
+          if [ -z "$json" ]; then json='{}'; fi
+
+          echo "$json" | jq -r 'to_entries[] | .value' | while IFS= read -r line; do
+            if [ -n "$line" ]; then echo "::add-mask::$line"; fi
+          done
+
+          # heredoc syntax keeps multi-line values intact
+          echo "$json" | jq -r 'to_entries[] |
+            "\(.key)<<__EOF_\(.key)__\n\(.value)\n__EOF_\(.key)__"' >> "$GITHUB_ENV"
       - uses: actions/checkout@v6
         with:
           submodules: recursive
@@ -80,9 +93,22 @@ jobs:
     runs-on: ${{ inputs.runOnGithubActions && 'ubuntu-latest' || 'blacksmith-4vcpu-ubuntu-2204' }}
     steps:
       - name: Load .env file
-        uses: oNaiPs/secrets-to-env-action@v1.5
-        with:
-          secrets: ${{ secrets.SECRETS_JSON }}
+        env:
+          SECRETS_JSON: ${{ secrets.SECRETS_JSON }}
+        run: |
+          # mask every value before exporting it: GitHub only masks the JSON blob as a whole,
+          # so each value would otherwise print in plain text in later steps' env.
+          # masked line by line so multi-line values (keys, certs) are covered too
+          json="${SECRETS_JSON:-}"
+          if [ -z "$json" ]; then json='{}'; fi
+
+          echo "$json" | jq -r 'to_entries[] | .value' | while IFS= read -r line; do
+            if [ -n "$line" ]; then echo "::add-mask::$line"; fi
+          done
+
+          # heredoc syntax keeps multi-line values intact
+          echo "$json" | jq -r 'to_entries[] |
+            "\(.key)<<__EOF_\(.key)__\n\(.value)\n__EOF_\(.key)__"' >> "$GITHUB_ENV"
       - uses: actions/checkout@v6
         with:
           submodules: recursive
