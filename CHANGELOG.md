@@ -1,3 +1,15 @@
+# 2026-11-03
+
+## Workflow secrets are masked in CI logs
+
+The reusable workflows (`code-checks`, `lighthouse`, `claude`, `claude-code-review`) receive every repository secret as one JSON blob, `SECRETS_JSON: ${{ toJSON(secrets) }}`, and their "Load .env file" step split it back into environment variables with `oNaiPs/secrets-to-env-action`. GitHub only masks the values it was handed as secrets, which here was the blob as a whole, never the individual values inside it. So once they were exported, every value printed in plain text in the `env:` header of each later step, readable by anyone with access to the repo's Action logs.
+
+That step is now an inline script that registers each value with `::add-mask::` before writing it to `$GITHUB_ENV`. Multi-line values are masked line by line and exported with heredoc syntax so they stay intact, and a missing `SECRETS_JSON` exports nothing instead of failing. The third-party action is no longer used.
+
+**Migration Advice**
+
+Nothing changes in the calling workflows; bump the pinned library hash in each `call-*.yml` as usual. Any secret that has appeared in an old run's logs should be treated as exposed: rotate it, and delete the runs that printed it, since masking doesn't rewrite past logs.
+
 # 2026-09-21
 
 ## Reversed marquees no longer flip forward on screen
