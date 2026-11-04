@@ -209,6 +209,9 @@ export function verticalLoop(items, config) {
 			tl.reverse()
 		}
 		if (config.draggable && typeof Draggable === "function") {
+			// REFORM CHANGE: optional throw tuning, the defaults match the old fixed values
+			const maxThrowDistance = config.maxThrowDistance ?? 1000
+			const throwGuard = Math.max(10_000, maxThrowDistance * 4)
 			proxy = document.createElement("div")
 			let wrap = gsap.utils.wrap(0, 1),
 				ratio,
@@ -249,20 +252,36 @@ export function verticalLoop(items, config) {
 				onThrowUpdate: align,
 				overshootTolerance: 0,
 				inertia: true,
+				throwResistance: config.throwResistance,
+				// only when set: Draggable reads "maxDuration" in vars, so an undefined one breaks it
+				...(config.minThrowDuration !== undefined && {
+					minDuration: config.minThrowDuration,
+				}),
+				...(config.maxThrowDuration !== undefined && {
+					maxDuration: config.maxThrowDuration,
+				}),
 				// REFORM CHANGE: snap is optional, value is clamped
 				snap: !config.snap
 					? (value) => {
 							const current = draggable.y
 							const diff = current - value
-							if (Math.abs(diff) > 10_000) return current
-							const clampedDiff = gsap.utils.clamp(-1000, 1000, diff)
+							if (Math.abs(diff) > throwGuard) return current
+							const clampedDiff = gsap.utils.clamp(
+								-maxThrowDistance,
+								maxThrowDistance,
+								diff,
+							)
 							return current - clampedDiff
 						}
 					: function (value) {
 							const current = draggable.y
 							const diff = current - value
-							if (Math.abs(diff) > 10_000) return current
-							const clampedDiff = gsap.utils.clamp(-1000, 1000, diff)
+							if (Math.abs(diff) > throwGuard) return current
+							const clampedDiff = gsap.utils.clamp(
+								-maxThrowDistance,
+								maxThrowDistance,
+								diff,
+							)
 							const clampedValue = current - clampedDiff
 
 							if (Math.abs(startProgress / -ratio - this.y) < 10) {

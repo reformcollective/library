@@ -32,6 +32,7 @@ export function Marquee({
 	reversed = false,
 	disableDrag = false,
 	disableSnap = false,
+	throwConfig,
 	scrollVelocity,
 	onChange,
 	onLoopChange,
@@ -65,6 +66,19 @@ export function Marquee({
 	 * if true, the marquee will not snap to the nearest index
 	 */
 	disableSnap?: boolean
+	/**
+	 * tuning for the momentum after a drag is released. anything left out keeps the default
+	 * - resistance: how quickly it slows down, lower coasts further (default 1000)
+	 * - minDuration: shortest coast in seconds, so even a slow release eases out (default 0)
+	 * - maxDuration: longest coast in seconds (default 2)
+	 * - maxDistance: furthest it can coast in px (default 1000)
+	 */
+	throwConfig?: {
+		resistance?: number
+		minDuration?: number
+		maxDuration?: number
+		maxDistance?: number
+	}
 	/**
 	 * if specified, will scrub based on scroll velocity
 	 * can also be negative to reverse the direction
@@ -113,6 +127,12 @@ export function Marquee({
 
 	const isVertical = mode === "vertical"
 
+	// primitives, so an inline throwConfig object doesn't rebuild the loop on every render
+	const throwResistance = throwConfig?.resistance
+	const minThrowDuration = throwConfig?.minDuration
+	const maxThrowDuration = throwConfig?.maxDuration
+	const maxThrowDistance = throwConfig?.maxDistance
+
 	const { result: loop } = useAnimation(
 		() => {
 			if (!rowRef.current) return
@@ -153,6 +173,10 @@ export function Marquee({
 				speed: marqueeSpeed === 0 ? 2 : marqueeSpeed,
 				reversed,
 				repeat: -1,
+				throwResistance,
+				minThrowDuration,
+				maxThrowDuration,
+				maxThrowDistance,
 				// external code manages teardown on width/height changes
 				manageResize: false,
 				onChange: (_: unknown, index: number) => {
@@ -273,6 +297,10 @@ export function Marquee({
 			reversed,
 			disableDrag,
 			disableSnap,
+			throwResistance,
+			minThrowDuration,
+			maxThrowDuration,
+			maxThrowDistance,
 			scrollVelocity,
 			numberNeeded,
 			internalLoopRef,
