@@ -10,6 +10,14 @@ interface HorizontalLoopConfig {
 	paddingRight?: number
 	snap?: boolean | number | ((value: number) => number)
 	draggable?: boolean
+	/** how quickly a released drag slows down. lower coasts further. default 1000 */
+	throwResistance?: number
+	/** shortest coast after a release, seconds. by default a slow release can stop almost at once */
+	minThrowDuration?: number
+	/** longest coast after a release, seconds. default 2 */
+	maxThrowDuration?: number
+	/** furthest a release can coast, px. default 1000 */
+	maxThrowDistance?: number
 	center?: boolean | gsap.DOMTarget
 	/** Pixel offset from the container's left edge where items snap. Ignored when center is true. */
 	snapOffset?: number
