@@ -26,12 +26,19 @@ export const MouseFollower = ({
 	},
 	onShow,
 	onHide,
+	fade = true,
 }: {
 	children: ReactNode
 	hoverTargetRef?: React.RefObject<HTMLElement | null>
 	animationVars?: gsap.TweenVars
 	onShow?: () => void
 	onHide?: () => void
+	/**
+	 * fades the follower in and out as it scales. turn it off for a follower with a
+	 * backdrop-filter: while the wrapper is part-transparent the blur can't reach the page, so it
+	 * would pop in once the fade finished
+	 */
+	fade?: boolean
 }) => {
 	const followerRef = useRef<HTMLDivElement | null>(null)
 	const stableVars = useDeepCompareMemo(() => animationVars, [animationVars])
@@ -55,7 +62,8 @@ export const MouseFollower = ({
 				xPercent: -50,
 				yPercent: -50,
 				scale: 0,
-				autoAlpha: 0,
+				// without the fade, scale 0 is what hides it
+				autoAlpha: fade ? 0 : 1,
 			})
 
 			const xTo = gsap.quickTo(follower, "x", stableVars)
@@ -72,7 +80,7 @@ export const MouseFollower = ({
 				lastTween?.kill()
 				lastTween = gsap.to(followerElement, {
 					scale: 1,
-					autoAlpha: 1,
+					...(fade && { autoAlpha: 1 }),
 					duration: SHOW_DURATION,
 					ease: SHOW_EASE,
 					delay: 0.1,
@@ -89,7 +97,7 @@ export const MouseFollower = ({
 				lastTween?.kill()
 				lastTween = gsap.to(followerElement, {
 					scale: 0,
-					autoAlpha: 0,
+					...(fade && { autoAlpha: 0 }),
 					duration: HIDE_DURATION,
 					ease: HIDE_EASE,
 				})
@@ -124,10 +132,15 @@ export const MouseFollower = ({
 			onHideLatest,
 			onShowLatest,
 			entering,
+			fade,
 		],
 	)
 
-	return <Wrapper ref={followerRef}>{children}</Wrapper>
+	return (
+		<Wrapper ref={followerRef} data-no-fade={!fade || undefined}>
+			{children}
+		</Wrapper>
+	)
 }
 
 const Wrapper = styled(
@@ -141,6 +154,12 @@ const Wrapper = styled(
 		z-index: 1000;
 		pointer-events: none;
 		opacity: 0;
+
+		/* will-change: opacity makes this a backdrop root, so a backdrop-filter inside would only
+		   blur the follower itself. without the fade, opacity never animates anyway */
+		&[data-no-fade] {
+			will-change: transform;
+		}
 
 		@media (hover: none) {
 			visibility: hidden;
