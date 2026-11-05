@@ -117,12 +117,6 @@ export const useAnimation = <InputFn extends Creation>(
 		cleanups.current = []
 	}
 
-	// tracks whether this hook instance has run before, so the lenis-jump workaround below
-	// only applies to a genuine recreation mid-session, never to the very first mount - on
-	// first mount the page's own (or native) scroll position is already correct, and jumping
-	// to 0 and back can land in the wrong place if layout is still settling (fonts/images)
-	const hasMountedRef = useRef(false)
-
 	// output state
 	const [returnValue, setReturnValue] = useState<OutputType>()
 	const [context, setContext] = useState<gsap.Context>(gsap.context(() => {}))
@@ -180,9 +174,6 @@ export const useAnimation = <InputFn extends Creation>(
 	useIsomorphicLayoutEffect(() => {
 		if (!shouldHydrateUtilities) return
 
-		const isInitialMount = !hasMountedRef.current
-		hasMountedRef.current = true
-
 		const newContext = gsap.context((self) => {
 			const lenis = window.lenisInstance
 
@@ -194,13 +185,11 @@ export const useAnimation = <InputFn extends Creation>(
 				// this animation is expecting to be cleaned up
 				updateBehavior === "revert" &&
 				// there's not already a microtask waiting
-				!microtaskWaiting &&
-				// this is a genuine recreation, not the first mount
-				!isInitialMount
+				!microtaskWaiting
 			) {
 				microtaskWaiting = true
 				queueMicrotask(() => {
-					const savedPosition = lenis.animatedScroll
+					const savedPosition = window.scrollY
 					lenis.scrollTo(0, {
 						immediate: true,
 						force: true,
