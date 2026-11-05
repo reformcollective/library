@@ -32,6 +32,7 @@ export function CarouselBackgroundVideo({
 	safariOptimized = false,
 	eager = false,
 	posterFetchPriority,
+	posterSizes,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -101,6 +102,10 @@ export function CarouselBackgroundVideo({
 	 * behind scripts at the browser's default low image priority
 	 */
 	posterFetchPriority?: "high" | "low" | "auto"
+	/**
+	 * `sizes` for the poster image. defaults to the image component's own default (100vw)
+	 */
+	posterSizes?: string
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
@@ -247,11 +252,21 @@ export function CarouselBackgroundVideo({
 	let posterElement: React.ReactNode = null
 	if (poster && "src" in poster) {
 		posterElement = (
-			<PosterImage src={poster} alt="" fetchPriority={posterFetchPriority} />
+			<PosterImage
+				src={poster}
+				alt=""
+				fetchPriority={posterFetchPriority}
+				sizes={posterSizes}
+			/>
 		)
 	} else if (poster) {
 		posterElement = (
-			<PosterImage src={poster} alt="" fetchPriority={posterFetchPriority} />
+			<PosterImage
+				src={poster}
+				alt=""
+				fetchPriority={posterFetchPriority}
+				sizes={posterSizes}
+			/>
 		)
 	}
 	if (posterElement) {
