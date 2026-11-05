@@ -189,7 +189,7 @@ export const useAnimation = <InputFn extends Creation>(
 			) {
 				microtaskWaiting = true
 				queueMicrotask(() => {
-					const savedPosition = lenis.animatedScroll
+					const savedPosition = window.scrollY
 					lenis.scrollTo(0, {
 						immediate: true,
 						force: true,
