@@ -31,6 +31,7 @@ export function CarouselBackgroundVideo({
 	onPlaying,
 	safariOptimized = false,
 	eager = false,
+	posterFetchPriority,
 }: {
 	/**
 	 * asset metadata from sanity
@@ -94,6 +95,12 @@ export function CarouselBackgroundVideo({
 	 * @default false
 	 */
 	eager?: boolean
+	/**
+	 * fetch priority for the poster image. set "high" when the poster is the
+	 * page's LCP element (e.g. an above-the-fold hero) so it isn't queued
+	 * behind scripts at the browser's default low image priority
+	 */
+	posterFetchPriority?: "high" | "low" | "auto"
 	// other video props
 	onEnded?: (e?: React.SyntheticEvent<HTMLVideoElement, Event>) => void
 	onTimeUpdate?: (currentTime: number, duration: number) => void
@@ -239,9 +246,13 @@ export function CarouselBackgroundVideo({
 
 	let posterElement: React.ReactNode = null
 	if (poster && "src" in poster) {
-		posterElement = <PosterImage src={poster} alt="" />
+		posterElement = (
+			<PosterImage src={poster} alt="" fetchPriority={posterFetchPriority} />
+		)
 	} else if (poster) {
-		posterElement = <PosterImage src={poster} alt="" />
+		posterElement = (
+			<PosterImage src={poster} alt="" fetchPriority={posterFetchPriority} />
+		)
 	}
 	if (posterElement) {
 		posterElement = <EagerImages>{posterElement}</EagerImages>
