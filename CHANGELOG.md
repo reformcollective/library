@@ -1,3 +1,9 @@
+# 2026-11-09
+
+## `universalLink` takes `components`
+
+- `universalLink({ components })` sets Studio components on a link field, such as a `field` wrapper. Setting `components` on a link field directly replaced the link type's own, so the field lost the link plugin's picker and showed the plain object form. Through this option the picker stays, unless you pass your own `input`.
+
 # 2026-10-31
 
 ## Agent rules move to `library/agent/`
