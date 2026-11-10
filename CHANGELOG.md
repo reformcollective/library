@@ -1,3 +1,16 @@
+# 2026-11-10
+
+## `video` field: `options: { background: true }`
+
+- A `video` field with `options: { background: true }` shows only its source and poster image in the Studio, with a note that it plays on a loop, muted, with no controls. Playback mode, loop, muted, controls, start and end time, chapters, title, structured data and Generate from source are hidden.
+- `UniversalVideo` still reads loop, controls, start and end time, chapters, title and main content from the data in background mode. A hidden setting that already holds a value, or has a validation error, stays visible with a note to clear it. Playback mode stays hidden, since the `mode` prop overrides it, and privacy shows only when it is turned off.
+- Validation rejects sources that can't play as a background video (Twitch and Spotify). The check is on the `video` type, so a field that sets its own `validation` replaces it.
+- The option only changes the Studio. Render the video with `mode="background"`, as background sections already do. Fields without the option are unchanged, and no stored data changes.
+
+**Migration Advice**
+
+Add `background: true` to the `options` of each `video` field your sections render with `mode="background"`, such as hero, footer and section backgrounds. Then open documents that use those fields and clear any settings the Studio still shows under the source.
+
 # 2026-11-09
 
 ## `universalLink` takes `components`
