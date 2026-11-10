@@ -9,7 +9,12 @@ import { toLookupTarget } from "./lookupClient"
 import { PosterPanel } from "./PosterPanel"
 import { providerOf } from "./videoFields"
 
-const BACKGROUND_FIELDS = new Set(["sourceType", "url", "muxVideo", "posterImage"])
+const BACKGROUND_FIELDS = new Set([
+	"sourceType",
+	"url",
+	"muxVideo",
+	"posterImage",
+])
 // the section's mode prop overrides mode; thumbnail is filled by the poster lookup
 const OVERRIDDEN_FIELDS = new Set(["mode", "thumbnail"])
 
