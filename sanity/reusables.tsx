@@ -15,6 +15,7 @@ import {
 	getValueAtPath,
 	type ImageDefinition,
 	type ObjectDefinition,
+	type ObjectInputProps,
 	type Path,
 	type SanityDocument,
 } from "sanity"
@@ -151,11 +152,18 @@ export const universalImage = <
 		},
 	})
 
+// Field-level `components` replace the `link` type's, which hold the link plugin's picker
+function LinkPluginInput(props: ObjectInputProps) {
+	const PluginInput = props.schemaType.type?.components?.input
+	return PluginInput ? <PluginInput {...props} /> : props.renderDefault(props)
+}
+
 export const universalLink = ({
 	withText = true,
 	required,
 	defaultType = "internal",
 	defaultToNewTab,
+	components,
 	...props
 }: {
 	name: string
@@ -164,11 +172,16 @@ export const universalLink = ({
 	required?: boolean
 	defaultType?: "external" | "internal" | "email" | "phone"
 	defaultToNewTab?: boolean
+	/** Studio components for this field; the link picker is kept unless `input` is given */
+	components?: ObjectDefinition["components"]
 }) =>
 	defineField({
 		...props,
 		type: "link",
 		options: { enableText: withText },
+		...(components && {
+			components: { ...components, input: components.input ?? LinkPluginInput },
+		}),
 		validation: (rule) =>
 			rule.custom((field?: { type?: string; url?: string }) => {
 				if (
