@@ -118,12 +118,16 @@ export default function useAutoHideHeader(
 				(entries) => {
 					for (const entry of entries) {
 						const index = overlapping.indexOf(entry.target)
-						if (entry.isIntersecting && index < 0) overlapping.push(entry.target)
-						if (!entry.isIntersecting && index >= 0) overlapping.splice(index, 1)
+						if (entry.isIntersecting && index < 0)
+							overlapping.push(entry.target)
+						if (!entry.isIntersecting && index >= 0)
+							overlapping.splice(index, 1)
 					}
 					dataLockOverlapsHeader.current = overlapping.length > 0
 				},
-				{ rootMargin: `0px 0px -${Math.max(0, window.innerHeight - height)}px 0px` },
+				{
+					rootMargin: `0px 0px -${Math.max(0, window.innerHeight - height)}px 0px`,
+				},
 			)
 			for (const element of document.querySelectorAll("[data-header-lock]"))
 				observer.observe(element)
