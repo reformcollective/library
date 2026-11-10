@@ -22,7 +22,11 @@ import {
 import { requiredLinkField } from "sanity-plugin-link-field"
 
 import { VideoInput } from "./video/VideoInput"
-import { videoOptionFields, videoSourceFields } from "./video/videoFields"
+import {
+	featureSupport,
+	videoOptionFields,
+	videoSourceFields,
+} from "./video/videoFields"
 
 type HiddenValidationContext = {
 	currentUser?: unknown
@@ -317,6 +321,13 @@ export const video = defineType({
 	title: "Video",
 	icon: PlayIcon,
 	components: { input: VideoInput },
+	validation: (rule) =>
+		rule.custom((value, context) =>
+			context.type?.options?.background === true &&
+			featureSupport(value, "background") === "no"
+				? "This source can't play as a background video. Upload a file or use an MP4 or HLS URL."
+				: true,
+		),
 	fields: [
 		...videoSourceFields,
 		universalImage({
