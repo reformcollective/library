@@ -175,6 +175,12 @@ const toPx = (
 	return `${str}px`.replace(".00px", "px")
 }
 
+/** scales with the viewport up to the design size, then holds the design px */
+const toCapped = (px: number, designSize: number): string => {
+	const limit = px < 0 ? "max" : "min"
+	return `${limit}(${px}px, ${toVw(px, designSize)})`
+}
+
 const computeResponsiveValue = (
 	px: number,
 	rule: BreakpointRule,
@@ -187,6 +193,8 @@ const computeResponsiveValue = (
 			return toVw(px, designSize)
 		case "pixel":
 			return toPx(px, designSize, rule.breakpoint)
+		case "fluidCapped":
+			return toCapped(px, designSize)
 		case "scaleFullyConfig": {
 			const shouldScale = options?.scaleFully ?? config.scaleFully
 			return shouldScale
