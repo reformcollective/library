@@ -51,3 +51,19 @@ test("media engine preserves pixels marked with neverResponsive", async () => {
 	expect(generated).toContain("font-size:16px")
 	expect(generated).not.toContain("neverpx")
 })
+
+test("fluidCapped scales to the design size then holds the design px", async () => {
+	const { f } = await import("./vanilla")
+	const generated = getGeneratedCss(
+		f.capped(
+			css`
+				width: 935px;
+				margin-left: -20px;
+			`,
+			{ engine: "calc" },
+		),
+	)
+
+	expect(generated).toContain("min(935px, 64.931vw)")
+	expect(generated).toContain("max(-20px, -1.389vw)")
+})
