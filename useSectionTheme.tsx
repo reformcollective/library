@@ -114,7 +114,9 @@ export default function useSectionTheme(
 		const getStripY = () => {
 			const rect = elementRef.current?.getBoundingClientRect()
 			if (!rect) return 0
-			return Math.round(rect.top + rect.height * (offset / 100))
+			// a header slid off the top reads negative, which is not a valid rootMargin
+			const y = Math.round(rect.top + rect.height * (offset / 100))
+			return Math.min(Math.max(y, 0), Math.max(window.innerHeight - 1, 0))
 		}
 
 		const createObserver = () => {
