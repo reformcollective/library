@@ -2,7 +2,7 @@
 
 name: reviewer
 description: Independent review of a code diff against project conventions and the stated request. Use after non-trivial changes pass lint, passing only the diff range and the original request.
-tools: Read, Grep, Glob, Bash, mcp__claude_ai_Vercel__*, mcp__claude_ai_Slack__*, mcp__claude_ai_Notion__*
+tools: Read, Grep, Glob, Bash, mcp__claude_ai_Figma__*, mcp__claude_ai_Vercel__*, mcp__claude_ai_Slack__*, mcp__claude_ai_Notion__*
 model: sonnet
 ---
 
