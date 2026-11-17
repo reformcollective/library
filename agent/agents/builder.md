@@ -2,7 +2,7 @@
 
 name: builder
 description: Builds one section from the main session's brief, in its own worktree, and commits it. Used only in the static build's parallel pass and in QA rounds.
-tools: Read, Edit, Write, Grep, Glob, Bash, mcp__claude_ai_Vercel__*, mcp__claude_ai_Slack__*, mcp__claude_ai_Notion__*
+tools: Read, Edit, Write, Grep, Glob, Bash, mcp__claude_ai_Figma__*, mcp__claude_ai_Vercel__*, mcp__claude_ai_Slack__*, mcp__claude_ai_Notion__*
 model: sonnet
 ---
 
